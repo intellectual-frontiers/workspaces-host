@@ -9,8 +9,7 @@ what the code does, and the editor can teach it by letting a person run each
 step. The guide, a book in four editions, is a reference and an overview: it
 explains how the pieces fit, generates its command and kit reference from the
 code, and links to `help` for everything a person does by hand. The guide
-carries the mascot and graphics of the earlier environment,
-the earlier environment. This spec also states what the guide says about shells:
+carries the project's mascot and graphics. This spec also states what the guide says about shells:
 `bash` and `oh-my-posh` are fully supported, `fish` 4 is the best experience, and
 everything is extended with AI, in Python, through the registry.
 (0041-command-line FR-065 governs `help`.)
@@ -42,22 +41,22 @@ everything is extended with AI, in Python, through the registry.
 ## The guide
 
 - **FR-006**: The guide MUST be written in AsciiDoc under `docs-src/` and built
-  by `docs build` (build) into single-page HTML, multi-page HTML where the
-  converter is on the machine, a PDF, and an EPUB where the converter is on
-  the machine, under the `press` kit's programs. A converter that is missing
-  MUST be said in the result, never reported as built.
+  by `docs build` (build) into single-page HTML, a multi-page HTML site
+  (0006-onboarding FR-011), a PDF where the converter is on the machine, and an
+  EPUB where the converter is on the machine. A converter that is missing MUST be
+  said in the result, never reported as built, and `docs build` MUST name the
+  `press` kit when `asciidoctor` itself is missing.
 - **FR-007**: The guide MUST be a reference and an overview. Its chapters on
   the commands, the kits, the files and the help topics MUST be generated from
   the registry, the kits and the topics by `docs generate` (generate), each file
   carrying a header naming its generator, and proven current by `fresh`. A
   chapter MUST NOT repeat a step that a topic gives: it names the topic
   (`ws-host help repos`) instead.
-- **FR-008**: The guide MUST use the mascot and graphics of
-  the earlier environment (its logo, its two mascot pictures and its social
-  preview), copied into `docs/` unchanged with the earlier project's MIT
-  licence kept and credited in the colophon, and MUST use its IF Press theme
-  for the PDF (a format asciidoctor-pdf owns, which 0041-command-line FR-049 allows), its stylesheet for HTML and its stylesheet for EPUB. The
-  extension MUST use the logo as its icon (0004-editor-extension FR-001).
+- **FR-008**: The guide MUST use the project's mascot and graphics (its logo,
+  its two mascot pictures and its social preview) from `docs/`, the IF Press
+  theme for the PDF (a format asciidoctor-pdf owns, which 0041-command-line
+  FR-049 allows), and one stylesheet each for HTML and EPUB. The extension MUST
+  use the logo as its icon (0004-editor-extension FR-001).
 - **FR-009**: The guide MUST be written in the voice the repository's writing
   rules set: it starts with the point, in the first person, in plain words,
   with no hedging and no throat-clearing.
@@ -117,7 +116,7 @@ everything is extended with AI, in Python, through the registry.
 
 - The `press` kit supplies `asciidoctor` and its PDF converter on Debian and
   Ubuntu; EPUB and multi-page HTML converters may be absent there.
-- The mascot and graphics may be reused under the earlier project's licence.
+- The repository's licence covers the mascot and graphics.
 
 ## Open questions
 

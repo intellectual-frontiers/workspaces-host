@@ -1,6 +1,7 @@
 """auth (with a fake gh on PATH) and the one command, workspace advance (0002 FR-011, FR-016, FR-017)."""
 import json
 import os
+import shutil
 import stat
 import subprocess
 from pathlib import Path
@@ -106,19 +107,57 @@ class Advance(Workspace):
         self.site = self.remote("acme", "site", {"README.md": "x", ".workspaces-host/ws-host.env": 'WS_HOST_REPOS="github.com/acme/lib"\n'})
         self.lib = self.remote("acme", "lib")
         self.config(WS_HOST_REPOS=self.rid("acme", "site"))
-        os.environ["PATH"] = os.environ["PATH"]
+        self.fakebin = self.home.parent / "fakebin"
+        fake(self.fakebin, "gh", "exit 0\n")           # signed in
+        os.environ["PATH"] = f"{self.fakebin}:{os.environ['PATH']}"
 
     def advance(self, *extra):
         code, out = self.run_cmd("workspace", "advance", "--json", *extra)
         return code, [json.loads(l) for l in out.strip().splitlines()]
 
+    def test_not_signed_in_stops_before_anything_is_copied_with_one_next_step(self):
+        fake(self.fakebin, "gh", "echo no >&2; exit 1\n")
+        code, docs = self.advance()
+        final = docs[-1]
+        self.assertEqual((code, final["id"]), (0, "needs-sign-in"))
+        self.assertIn("Sign in to GitHub first", final["data"]["plain"])
+        self.assertEqual(final["actions"][0]["cli"], "ws-host auth new github")
+        self.assertFalse(self.root.exists())
+
+    def test_your_kits_default_to_base_and_an_empty_setting_means_none(self):
+        from ws_host.core import config
+        self.assertEqual(config.load().kits(), [])                  # the helper writes WS_HOST_KIT="" 
+        self.paths.config_file().write_text('WS_HOST_REPOS="github.com/a/b"\n')
+        self.assertEqual(config.load().kits(), ["base"])
+        self.paths.config_file().write_text('WS_HOST_KIT="shell press"\n')
+        self.assertEqual(config.load().kits(), ["shell", "press"])
+
+    def test_the_editor_step_says_what_to_do_when_vscode_is_not_reachable(self):
+        code, docs = self.advance()
+        editor = [s for s in docs[-1]["data"]["steps"] if s["name"] == "editor"][0]
+        if not shutil.which("code"):
+            self.assertEqual(editor["status"], "warn")
+            self.assertIn("ws-host vscode advance", editor["plain"])
+
+    def test_with_vscode_present_the_extension_is_installed_and_setup_is_offered_not_applied(self):
+        fake(self.fakebin, "code", 'echo "$@" >> "$HOME/code.calls"\nexit 0\n')
+        ext = self.home / ".vscode" / "extensions"
+        ext.mkdir(parents=True)
+        (ext / "extensions.json").write_text("[]")
+        code, docs = self.advance()
+        editor = [s for s in docs[-1]["data"]["steps"] if s["name"] == "editor"][0]
+        self.assertEqual(editor["status"], "ok")
+        self.assertTrue(any(p.is_symlink() for p in ext.iterdir()))
+        self.assertIn("ws-host vscode advance", [a["cli"] for a in docs[-1]["actions"]])
+        self.assertFalse((self.home / ".config" / "Code").exists())       # no setting was written
+
     def test_the_one_command_copies_updates_and_reports_each_step(self):
         code, docs = self.advance()
         self.assertEqual(code, 0, docs[-1])
-        self.assertEqual([d["kind"] for d in docs[:-1]], ["progress"] * 5)  # one streamed line per step
+        self.assertEqual([d["kind"] for d in docs[:-1]], ["progress"] * 7)  # one streamed line per step
         final = docs[-1]
         self.assertEqual(final["kind"], "workspace-advance")
-        self.assertEqual([s["name"] for s in final["data"]["steps"]], ["sign-in", "copy", "update", "kits", "doctor"])
+        self.assertEqual([s["name"] for s in final["data"]["steps"]], ["your-kits", "sign-in", "copy", "update", "kits", "editor", "doctor"])
         for n in ("site", "lib"):
             self.assertTrue((self.clone_path("acme", n) / ".git").is_dir())
 

@@ -147,3 +147,27 @@ class Check(Home):
     def test_an_unknown_section_is_a_usage_error(self):
         code, _ = self.run_cmd("check", "nope")
         self.assertEqual(code, 2)
+
+
+class Grammar(Home):
+    def test_check_registry_fails_a_verb_outside_the_closed_set(self):
+        from ws_host.core import registry as reg
+        r = reg.discover()
+        r.commands[("zed", "setup")] = reg.Command(("zed", "setup"), "setup", "x", lambda ctx: None, module="m")
+        try:
+            code, doc = self.run_json("check", "registry")
+        finally:
+            del r.commands[("zed", "setup")]
+        self.assertEqual(code, 1)
+        self.assertIn("closed set", doc["data"]["sections"][0]["findings"][0]["message"])
+
+    def test_every_finding_has_the_wire_shape(self):
+        from ws_host.core import registry as reg
+        r = reg.discover()
+        r.conflicts.append("two commands are named 'x': a and b")
+        try:
+            code, doc = self.run_json("check", "registry")
+        finally:
+            r.conflicts.pop()
+        for f in doc["data"]["sections"][0]["findings"]:
+            self.assertEqual(set(f), {"level", "where", "message", "next"})

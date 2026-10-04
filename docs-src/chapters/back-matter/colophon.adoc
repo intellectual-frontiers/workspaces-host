@@ -5,9 +5,5 @@ This book is AsciiDoc under `docs-src/`, built by `ws-host docs build` with the 
 HTML where the converter is installed, a PDF under the IF Press imprint, and an EPUB where the converter is installed. Its
 reference chapters are generated from the code by `ws-host docs generate`.
 
-The mascot, the logo and the illustrations come from the earlier environment, the earlier environment, which this project
-replaces, and are used under its MIT licence (`docs/LICENSE-the earlier environment`). Its IF Press theme and style sheets are
-used here too.
-
 *intellectual-frontiers/workspaces-host* +
 https://github.com/intellectual-frontiers/workspaces-host

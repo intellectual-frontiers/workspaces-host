@@ -6,24 +6,44 @@ from ..core.registry import Step, topic
 INSTALL = "curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh"
 
 
-@topic("start", "Your first day: install ws-host and bring your workspace up.")
+@topic("start", "Your first steps: sign in, copy your starter repositories, and move into VS Code.")
 def start():
     return {
-        "plain": "You need two commands today: one to install ws-host, and one to set up everything else.",
+        "plain": "🎉 ws-host is installed. Do these things in order, and you will be working in VS Code.",
         "sections": (
-            ("Install it", f"Paste this into a terminal on Debian or Ubuntu, including Ubuntu under WSL on Windows:\n\n    {INSTALL}\n\n"
-                           "It needs python3 and git, and installs uv for you if it is missing. Run it again any time; it never touches your work."),
-            ("Bring everything up", "ws-host workspace advance signs you in if you are not, copies the repositories your workspace lists, "
-                                    "brings the ones you already have up to date without touching your changes, installs the kits they ask for, "
-                                    "and checks your machine. Run it as often as you like."),
-            ("Put the editor on top", "ws-host vscode add installs the VS Code extension. After that you can do all of this with buttons: "
-                                      "open the Workspace view and use Learn to read these same pages."),
+            ("1️⃣  Sign in to GitHub (you only do this once)",
+             "Type the line below. It shows a short code and a web address. Open the address in your browser, type the code, and press Authorize. "
+             "You never type a password into this window.\n\n    ws-host auth new github"),
+            ("2️⃣  Copy your starter repositories",
+             "Two repositories come with you: .github, the shared examples and rules, and workspaces-host, this tool. This copies them to your "
+             "workspaces folder and keeps them up to date without ever touching your own changes. Run it as often as you like.\n\n    ws-host workspace advance"),
+            ("3️⃣  Open VS Code",
+             "Install VS Code on Windows from https://code.visualstudio.com/ and add its WSL extension, then open your first repository from here:\n\n"
+             "    cd ~/workspaces/github.com/intellectual-frontiers/.github\n    code ."),
+            ("4️⃣  Let ws-host set VS Code up",
+             "It installs the Workspace extension, a short list of helpful extensions and a few safe settings, and never changes a setting you made. "
+             "Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.\n\n    ws-host vscode advance"),
+            ("5️⃣  Keep going in VS Code",
+             "Press Ctrl+Shift+P and run Workspace: Learn. Every page there has a button for each step, and the status line at the bottom says in plain words whether "
+             "your machine is well. You can do everything else from VS Code."),
+            ("📂 Choose which repositories you work in",
+             "To add one, type its address. It is copied now and every time you update:\n\n    ws-host repo add github.com/ORG/REPO\n\n"
+             "To remove one or change the list, open your settings file in VS Code and edit the line that starts with WS_HOST_REPOS:\n\n"
+             "    code ~/.config/workspaces-host/ws-host.env"),
+            ("🐟 Try fish, a friendlier terminal",
+             "fish suggests and colors what you type. Install it, then type fish to try it. Nothing else changes, and bash keeps working.\n\n"
+             "    ws-host kit add shell\n    fish\n\nTo make fish what every new window opens, ask ws-host: ws-host help shell."),
+            ("🆘 Stuck?",
+             "Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help in VS Code for a report with no passwords in it, and paste it to "
+             "someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/"),
         ),
         "steps": (
-            Step("Check your machine", ("doctor",)),
-            Step("Install the VS Code extension", ("vscode", "add")),
-            Step("Bring everything up", ("workspace", "advance")),
+            Step("Sign in to GitHub", ("auth", "new"), {"forge": "github"}),
+            Step("Copy your starter repositories", ("workspace", "advance")),
+            Step("Set VS Code up", ("vscode", "advance")),
+            Step("Try fish", ("kit", "add"), {"kit": "shell"}, "asks for your password"),
             Step("See where things stand", ("workspace", "status")),
+            Step("Check your machine", ("doctor",)),
         ),
     }
 

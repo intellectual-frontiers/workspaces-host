@@ -1,7 +1,7 @@
 # What enforces each requirement in this repository's specs (0020-spec-format FR-011 – FR-014).
 # mechanism: check | gate | review | none. by: "<repo>: <command>" for check and gate, the defining requirement for review, "-" for none.
 requirement	mechanism	by	note
-0001-ws-host FR-001	none	-	scope; superseding the earlier environment is a decision, not a check
+0001-ws-host FR-001	none	-	scope
 0001-ws-host FR-002	check	workspaces-host: ws-host doctor	doctor reports python, uv and the distribution; tests run the install in fresh Debian and Ubuntu containers
 0001-ws-host FR-003	check	workspaces-host: ws-host test	tests run the launcher from another directory, through absolute and relative links, and without uv
 0001-ws-host FR-004	check	workspaces-host: ws-host test	a test reads pyproject.toml and the presence of uv.lock; the core's imports are parsed
@@ -81,3 +81,22 @@ requirement	mechanism	by	note
 0005-help-and-docs FR-012	check	workspaces-host: ws-host test	tests check the extend topic and chapter describe the Python registry way and nothing else
 0005-help-and-docs FR-013	check	workspaces-host: ws-host test	tests check the skill lists every command and says decisions are for a person; fresh proves it current
 0005-help-and-docs FR-014	check	workspaces-host: ws-host test	tests hand-edit and delete generated files and check fresh and check fresh fail naming the command
+0006-onboarding FR-001	check	workspaces-host: ws-host test	tests run install.sh as an ordinary user with a stand-in package manager: it says what it will install and that it needs a password, installs through sudo, names the command when it cannot, and does nothing with WS_HOST_NO_APT
+0006-onboarding FR-002	check	workspaces-host: ws-host test	a test runs the installer to its end with the workspace setup and checks the plain sign-in message
+0006-onboarding FR-003	check	workspaces-host: ws-host test	the container verification runs install on Debian 13 and Ubuntu 24.04 from a minimal image; the instructions are checked by the guide's tests
+0006-onboarding FR-004	check	workspaces-host: ws-host test	tests check the WS_HOST_KIT default, an empty setting, and that advance installs those kits first
+0006-onboarding FR-005	check	workspaces-host: ws-host test	tests check advance stops before copying when GitHub says not signed in, with one action and exit 0, and the guide prescribes one sign-in
+0006-onboarding FR-006	check	workspaces-host: ws-host test	tests check advance installs the extension when code is present, offers vscode advance and applies no setting, and says what to do when code is missing
+0006-onboarding FR-007	check	workspaces-host: ws-host test	tests run vscode advance: extensions installed or skipped, settings added and never changed, repeatable, dry run
+0006-onboarding FR-008	check	workspaces-host: ws-host test	tests check the recommended set and baseline and that the generated reference lists them
+0006-onboarding FR-009	check	workspaces-host: ws-host test	tests check the WSL machine settings path, a commented file left alone with the values listed, and the backup
+0006-onboarding FR-010	check	workspaces-host: ws-host test	a test reads pages.yml for the Pages actions, main, the tests and fresh before the build, and the maintainer note on the one setting; the deploy itself runs on GitHub
+0006-onboarding FR-011	check	workspaces-host: ws-host test	tests build the site with a stand-in asciidoctor: a page per chapter with navigation and a pager, cross-references resolved; the container builds it with the real one
+0006-onboarding FR-012	check	workspaces-host: ws-host test	tests check the chapters exist in the required order and each start page says where to type
+0006-onboarding FR-013	check	workspaces-host: ws-host test	tests check every blocker the spec names is a symptom with a cause and a fix
+0006-onboarding FR-014	check	workspaces-host: ws-host test	tests check the vendor links are https and present
+0006-onboarding FR-015	check	workspaces-host: ws-host test	a test checks the README is five steps and links the site
+0006-onboarding FR-016	check	workspaces-host: ws-host test	tests check no escape codes or emoji off a terminal, bold and marks and a coloured command on one, NO_COLOR, TERM=dumb and WS_HOST_COLOR, and none in JSON or HTML
+0006-onboarding FR-017	check	workspaces-host: ws-host test	tests check the start page's sections, their order, and the lines to type, with and without colour, and that install.sh ends by showing it
+0006-onboarding FR-018	check	workspaces-host: ws-host test	tests check the starter repositories, an explicit list and an empty one, and cloning them into the layout
+0006-onboarding FR-019	check	workspaces-host: ws-host test	tests check repo add puts a new address on the person's list, keeps their other lines and the starters, copies it, and changes nothing in a dry run

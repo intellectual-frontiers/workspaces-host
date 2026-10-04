@@ -54,21 +54,110 @@ def _lines(value, indent: int = 0) -> list[str]:
     return out
 
 
-def to_text(r: Resource, registry=None) -> str:
+class Style:
+    """Colour and emoji for a person's terminal (0006-onboarding FR-016). Off when the output is a pipe, a file or NO_COLOR is set."""
+
+    def __init__(self, on: bool):
+        self.on = on
+
+    def _c(self, code: str, s: str) -> str:
+        return f"\033[{code}m{s}\033[0m" if self.on else s
+
+    def bold(self, s): return self._c("1", s)
+    def dim(self, s): return self._c("2", s)
+    def cyan(self, s): return self._c("1;36", s)
+    def green(self, s): return self._c("32", s)
+    def yellow(self, s): return self._c("33", s)
+    def red(self, s): return self._c("31", s)
+
+    def mark(self, status: str) -> str:
+        if not self.on:
+            return {"ok": "ok", "passed": "passed", "warn": "warning", "fail": "FAILED", "failed": "FAILED", "skip": "skipped", "skipped": "skipped"}.get(status, status)
+        return {"ok": "✅", "passed": "✅", "warn": "⚠️ ", "fail": "❌", "failed": "❌", "skip": "⏭️ ", "skipped": "⏭️ "}.get(status, status)
+
+
+PLAIN = Style(False)
+
+
+def use_color(out) -> bool:
+    """Colour only for a person at a terminal; NO_COLOR and TERM=dumb turn it off, WS_HOST_COLOR=always or never decides."""
+    import os
+    want = os.environ.get("WS_HOST_COLOR", "")
+    if want in ("always", "never"):
+        return want == "always"
+    if os.environ.get("NO_COLOR") or os.environ.get("TERM") == "dumb":
+        return False
+    try:
+        return bool(out.isatty())
+    except (AttributeError, ValueError):
+        return False
+
+
+def _wrap(text: str, indent: str = "  ") -> list[str]:
+    import shutil
+    import textwrap
+    width = max(50, min(shutil.get_terminal_size((90, 24)).columns, 96))
+    return textwrap.wrap(text, width=width, initial_indent=indent, subsequent_indent=indent) or [""]
+
+
+def _help_text(r: Resource, d: dict, st: Style) -> str:
+    """A help topic as a page a person can follow: its sections, then the commands to type, in order (0005-help-and-docs FR-001)."""
+    lines = [st.bold(r.plain), ""]
+    for sec in r.data.get("sections", []):
+        lines.append(st.bold(sec["heading"]))
+        for ln in str(sec["text"]).splitlines():
+            if ln.startswith("    "):
+                lines.append("  " + st.cyan(ln.strip()))
+            elif ln.strip():
+                lines += _wrap(ln.strip())
+            else:
+                lines.append("")
+        lines.append("")
+    steps = r.data.get("steps", [])
+    if steps:
+        lines.append(st.bold("👉 The commands, in order" if st.on else "The commands, in order"))
+        for s in steps:
+            lines.append(f"  {s['n']}. {s['name']}")
+            lines.append("     " + (st.cyan(s["command"]) if s["command"] else "use the button in VS Code") + (f"   {st.dim('(' + s['note'] + ')')}" if s.get("note") else ""))
+        lines.append("")
+    lines.append(st.dim(f"audience: {AUDIENCE}"))
+    return "\n".join(lines)
+
+
+def to_text(r: Resource, registry=None, color: bool = False) -> str:
     """0041 FR-054: the first line is plain language; jargon only in the lines after it."""
+    st = Style(color)
     d = r.to_dict(registry)
-    lines = [r.plain or f"{r.kind}", f"audience: {AUDIENCE}"]
-    lines += _lines(r.data)
+    if r.kind == "help":
+        return _help_text(r, d, st)
+    if r.kind == "progress":      # a step reporting as it goes: one friendly line, not a page (0041 FR-019)
+        return (f"⏳ {r.plain}" if st.on else r.plain)
+    lines = [st.bold(r.plain or f"{r.kind}"), st.dim(f"audience: {AUDIENCE}")]
+    lines += [_mark_line(x, st) for x in _lines(r.data)]
     printable = [a for a in d["actions"] if a["enabled"]]
     if printable:
         lines.append("")
-        lines.append("What you can do next:")
+        lines.append(st.bold("👉 What you can do next:" if st.on else "What you can do next:"))
         for a in printable:
-            lines.append(f"  {a['label']}: {a['cli']}" if a["cli"] else f"  {a['label']}: use the button in VS Code")
+            lines.append(f"  {a['label']}: {st.cyan(a['cli'])}" if a["cli"] else f"  {a['label']}: use the button in VS Code")
     for a in d["actions"]:
         if not a["enabled"] and a["reason"]:
             lines.append(f"  ({a['label']} is not available: {a['reason']})")
     return "\n".join(lines)
+
+
+_MARKS = {"ok": "ok", "passed": "passed", "warning": "warn", "FAILED": "fail", "skipped": "skip"}
+
+
+def _mark_line(line: str, st: Style) -> str:
+    """Swap the words _lines wrote for a status ([ok], [FAILED]...) for a mark a person reads at a glance."""
+    if not st.on:
+        return line
+    for word, status in _MARKS.items():
+        tag = f" [{word}]"
+        if tag in line:
+            return line.replace(tag, " " + st.mark(status), 1)
+    return line
 
 
 def _h(v) -> str:
@@ -106,5 +195,7 @@ def to_html(r: Resource, registry=None) -> str:
         + "</body></html>")
 
 
-def render(r: Resource, mode: str, registry=None) -> str:
+def render(r: Resource, mode: str, registry=None, color: bool = False) -> str:
+    if mode == "text":
+        return to_text(r, registry, color)
     return {"json": to_json, "html": to_html}.get(mode, to_text)(r, registry)

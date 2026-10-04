@@ -1,0 +1,28 @@
+[#maintainers]
+== Notes for maintainers
+
+=== How this site is built and published
+
+Every push to `main` runs `.github/workflows/pages.yml`. It runs the tests and `ws-host fresh`, builds the site with `ws-host docs build`, and
+publishes it with GitHub's Pages actions. The reference part is generated from the code, so a change to a command, a kit, a help topic or the
+recommended VS Code setup changes the site with no hand edit, and the build fails until the generated files are current.
+
+One setting only the repository's owner can change: in the repository's *Settings*, open *Pages*, and set *Source* to *GitHub Actions*. Until
+that is done the deploy job fails with a message that says so.
+
+Build it yourself with the `press` kit:
+
+----
+ws-host kit add press
+ws-host docs build
+----
+
+The result is in `_site/`: a home page, one page per chapter with a navigation beside it, the whole guide on a single page, and a PDF where
+`asciidoctor-pdf` is installed.
+
+=== Where to change what
+
+* The first steps for new people are in `docs-src/chapters/start/`.
+* Troubleshooting is `docs-src/chapters/faq/troubleshooting.adoc`.
+* The daily work lives only in `ws_host/help/`, so edit it there and let the reference follow.
+* The home page, `docs/index.html`, is the one page written by hand.

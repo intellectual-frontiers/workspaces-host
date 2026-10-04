@@ -1,21 +1,6 @@
-/* HTML stylesheet for the the earlier environment book's web editions
-   (multi-page and single-page), reusing the retired docs/index.html
-   single-page-app's own design tokens so the book's web editions look
-   like a continuation of the same site, not a different product.
-
-   Targets Asciidoctor's stock HTML5 converter class names (#header,
-   #content, #footer, #toc/#toctitle, .sect1/.sect2/.sect3,
-   .admonitionblock, .listingblock/.literalblock, .tableblock,
-   .imageblock, .exampleblock, .quoteblock, .ulist/.olist/.dlist) --
-   these are stable across Asciidoctor's article and book doctypes.
-
-   Verified against a real asciidoctor-multipage build: it needs no
-   hand-rolled navigation at all, unlike the old single-file site's
-   custom JS router/sidebar. Every chapter page already carries a full
-   table-of-contents tree in #toc (current chapter marked
-   .toc-current, nested .sectlevel1/.sectlevel2 lists) plus an
-   Up/Home/Previous/Next pager in .nav-footer -- the rules below style
-   what it generates rather than building new chrome. */
+/* Content styling for the Workspaces Host guide's HTML pages. It targets Asciidoctor's stock HTML5 class names (#content,
+   .sect1/.sect2, .admonitionblock, .listingblock, .tableblock, .imageblock, .ulist/.olist/.dlist), which are stable across
+   Asciidoctor's article and book doctypes. site.css adds the multi-page layout around it. */
 
 :root {
   --bg: #ffffff;

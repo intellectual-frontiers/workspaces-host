@@ -1,0 +1,34 @@
+[#extension]
+== How the extension works
+
+The Workspace extension is not on the VS Code Marketplace, and that is on purpose. It lives in the `workspaces-host` copy on your computer,
+in a folder called `vscode`. `ws-host vscode add` links that folder into VS Code's extensions folder (`~/.vscode-server/extensions` when
+VS Code works inside Debian). Because it is the same folder, updating `ws-host` updates the extension: run `ws-host workspace advance`, then
+reload the VS Code window. There is nothing to download, nothing to approve, and no account.
+
+If VS Code cannot see the extension folder yet, `ws-host vscode add` builds a `.vsix` file and installs it with VS Code's own `code`
+command instead. That is the same thing as VS Code's
+https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix[install from a VSIX] feature.
+
+=== What it does and does not do
+
+It is a window onto `ws-host`, and it holds no rules of its own:
+
+* The status line at the bottom says whether your machine is well, in plain words.
+* The *Workspace* view lists every tool your trusted repositories bring, with who each is for.
+* Every result is a page with buttons for what you can do next. Under every button is a *Show command* link that gives you the one line
+  you could paste into Debian instead.
+* When it needs a value only you can give, such as which repository, it asks with a pick list.
+* Problems from the checks appear in VS Code's *Problems* panel, at the file and line.
+* *Get help* gathers a report with no passwords in it. Paste it to a person or an AI.
+
+=== What it will not do for you
+
+It will never decide for you. Trusting a repository asks you in a dialog, and nothing in VS Code, including an AI assistant, can press that
+button for you. It runs nothing in Restricted Mode, and nothing from a repository you have not trusted. It does not change your settings or
+write files; the tools it runs do, and only when you press a button.
+
+=== Why trust matters
+
+Copying a repository does not let its code run. You trust a repository on purpose, once, and you can stop trusting it any time.
+`ws-host help trust` explains it, and so does Learn.

@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from .. import NAME, VERSION
 from . import logs, registry as reg
 from .registry import Command, Registry
-from .render import render
+from .render import render, use_color
 from .resource import Action, Resource, WsError, usage_error
 from .types import TYPES
 
@@ -131,8 +131,9 @@ def _programs(cmd: Command, registry: Registry) -> None:
 
 def _emit(results, mode: str, registry: Registry, out) -> int:
     code = 0
+    color = mode == "text" and use_color(out)
     for r in results:
-        out.write(render(r, mode, registry) + "\n")
+        out.write(render(r, mode, registry, color) + "\n")
         code = max(code, r.exit_code)
         out.flush()
     return code
@@ -176,7 +177,7 @@ def run(argv: list[str], surface: str = "cli", out=None, err=None) -> int:
         code = _emit(result if isinstance(result, _types.GeneratorType) else [result], mode, registry, out)
     except WsError as e:
         r = e.resource()
-        out.write(render(r, mode, registry) + "\n")
+        out.write(render(r, mode, registry, mode == "text" and use_color(out)) + "\n")
         code = e.exit_code if e.exit_code is not None else r.exit_code
     except BrokenPipeError:
         return 0

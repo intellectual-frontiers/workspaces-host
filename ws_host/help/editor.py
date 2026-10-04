@@ -18,7 +18,8 @@ def editor():
                                "It changes no setting and writes no file; the tools it runs do, when you choose."),
         ),
         "steps": (
-            Step("Install the extension", ("vscode", "add")),
+            Step("Set up VS Code with the extension, helpful extensions and safe settings", ("vscode", "advance")),
+            Step("Install only the extension", ("vscode", "add")),
             Step("Run the checks", ("check",)),
         ),
     }

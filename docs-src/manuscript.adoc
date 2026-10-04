@@ -13,15 +13,25 @@ Intellectual Frontiers
 [preface]
 include::chapters/front-matter/preface.adoc[]
 
-= Part I: Overview
+= Part I: Get started
+
+include::chapters/start/windows-wsl.adoc[]
+
+include::chapters/start/sign-in.adoc[]
+
+include::chapters/start/vscode.adoc[]
+
+include::chapters/start/extension.adoc[]
+
+include::chapters/start/typical-uses.adoc[]
+
+= Part II: Overview
 
 include::chapters/overview/what-it-is.adoc[]
 
 include::chapters/overview/day-to-day.adoc[]
 
 include::chapters/overview/shells.adoc[]
-
-include::chapters/overview/editor.adoc[]
 
 include::chapters/overview/trust.adoc[]
 
@@ -31,7 +41,7 @@ include::chapters/overview/architecture.adoc[]
 
 include::chapters/overview/moving-over.adoc[]
 
-= Part II: Reference
+= Part III: Reference
 
 include::chapters/reference/commands.adoc[]
 
@@ -39,10 +49,16 @@ include::chapters/reference/kits.adoc[]
 
 include::chapters/reference/files.adoc[]
 
+include::chapters/reference/vscode-setup.adoc[]
+
 include::chapters/reference/help-topics.adoc[]
 
-= Part III: Questions
+= Part IV: Questions and troubleshooting
 
 include::chapters/overview/faq.adoc[]
+
+include::chapters/faq/troubleshooting.adoc[]
+
+include::chapters/overview/maintainers.adoc[]
 
 include::chapters/back-matter/colophon.adoc[]

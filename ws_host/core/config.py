@@ -15,7 +15,8 @@ KEYS = {
     "WS_HOST_GIT_EMAIL": "the email to put on your commits",
     "WS_HOST_WORKSPACES": "the folder repositories are copied under (default ~/workspaces)",
     "WS_HOST_GITLAB_HOSTS": "GitLab hosts you sign in to, space-separated",
-    "WS_HOST_REPOS": "the repositories you work in, as host/org/repo, space-separated",
+    "WS_HOST_REPOS": "the repositories you work in, as host/org/repo, space-separated (the two starter repositories when you say nothing)",
+    "WS_HOST_KIT": "kits to install for you whatever your repositories ask, space-separated (base when you say nothing; empty for none)",
     "WS_HOST_TRUSTED": "organizations whose repositories you trust, space-separated; only your own file can set this",
 }
 # The keys a repository's own `.workspaces-host/ws-host.env` may hold (0001-ws-host, 0002-repositories-and-trust FR-002).
@@ -24,6 +25,10 @@ REPO_KEYS = {
     "WS_HOST_REPOS": "the repositories it is worked beside, as host/org/repo, space-separated",
     "WS_HOST_VERSION": "the release of ws-host the repository is pinned to, where it pins one",
 }
+
+
+# The repositories a person gets until they choose their own: the shared public examples and this tool (0006-onboarding FR-010).
+STARTER_REPOS = ("github.com/intellectual-frontiers/.github", "github.com/intellectual-frontiers/workspaces-host")
 
 
 @dataclass
@@ -36,6 +41,14 @@ class Config:
 
     def words(self, key: str) -> list[str]:
         return env.words(self.values.get(key))
+
+    def repos(self) -> list[str]:
+        """The repositories the person lists, or the starter repositories until their own file says otherwise."""
+        return self.words("WS_HOST_REPOS") if "WS_HOST_REPOS" in self.values else list(STARTER_REPOS)
+
+    def kits(self) -> list[str]:
+        """The kits the person always wants: base unless their own file says otherwise (0006-onboarding FR-004)."""
+        return self.words("WS_HOST_KIT") if "WS_HOST_KIT" in self.values else ["base"]
 
     @property
     def workspaces(self) -> Path:
@@ -74,3 +87,28 @@ def load_secrets() -> dict[str, str]:
         return env.load(paths.secrets_file())
     except env.EnvError:
         return {}
+
+
+def add_repo(identifier: str) -> bool:
+    """Put a repository on the person's own list, keeping every other line of their file. True when it was added."""
+    cfg = load()
+    current = cfg.repos()
+    if identifier in current:
+        return False
+    new = " ".join(current + [identifier])
+    f = paths.config_file()
+    f.parent.mkdir(parents=True, exist_ok=True)
+    lines = f.read_text(encoding="utf-8").splitlines() if f.exists() else []
+    out, done = [], False
+    for ln in lines:
+        if ln.strip().startswith("WS_HOST_REPOS="):
+            out.append(f'WS_HOST_REPOS="{new}"')
+            done = True
+        else:
+            out.append(ln)
+    if not done:
+        out.append(f'WS_HOST_REPOS="{new}"')
+    tmp = f.with_suffix(".env.new")
+    tmp.write_text("\n".join(out) + "\n", encoding="utf-8")
+    os.replace(tmp, f)
+    return True

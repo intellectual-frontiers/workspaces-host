@@ -1,0 +1,51 @@
+# Builds the guide and publishes it to GitHub Pages on every push to main (0006-onboarding FR-010).
+#
+# One setting only the repository's owner can change: Settings > Pages > Source must be "GitHub Actions". Until it is, the deploy
+# job fails and says so.
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Tests and generated files
+        run: |
+          ./ws-host test
+          ./ws-host fresh
+      - name: The converters the guide needs
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq asciidoctor ruby-asciidoctor-pdf
+      - name: Build the site
+        run: ./ws-host docs build --output _site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -43,7 +43,8 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `skill generate` | generate | terminal, editor, mcp | Rewrite the skill that tells an AI agent how to use ws-host |
 | `test` | check | terminal, editor, mcp | Run this repository's tests |
 | `vscode add` | setup | terminal | Install the VS Code extension that is the interface for every orchestrator |
-| `workspace advance` | setup | terminal, editor | Check sign-in, copy missing repositories, update the rest, install kits, check health |
+| `vscode advance` | setup | terminal, editor | Put VS Code in its recommended state: the extension, helpful extensions and safe settings |
+| `workspace advance` | setup | terminal, editor | Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health |
 | `workspace set` | setup | terminal, editor | Make git's Sync button safe: set pull.ff to only |
 | `workspace status` | read | terminal, editor, mcp | Say how this machine and your repositories stand |
 
@@ -64,7 +65,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - `repos`: Copy your repositories and keep them up to date without risking your work.
 - `shell`: bash and oh-my-posh work fine; fish 4 is the best experience.
 - `signin`: Sign in to GitHub or GitLab with a one-time code.
-- `start`: Your first day: install ws-host and bring your workspace up.
+- `start`: Your first steps: sign in, copy your starter repositories, and move into VS Code.
 - `trust`: Decide whose code may run on your machine.
 
 ## Checks
