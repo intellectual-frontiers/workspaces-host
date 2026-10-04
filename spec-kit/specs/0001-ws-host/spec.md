@@ -20,9 +20,10 @@ and 0026-workspaces, held in the public root, govern all of them.
   follows 0041-command-line in every respect these specs do not state
   otherwise. It is a new repository with no legacy path.
 - **FR-002**: `ws-host` MUST need only `python3` (3.11 or later) and `uv` on the
-  host. It targets a Debian-family Linux distribution, bare metal, including
-  Ubuntu under WSL, and MUST NOT require a container, a Nix, a version manager
-  or macOS support (0026-workspaces FR-001).
+  host. It targets a Debian-family Linux distribution, on bare metal, under
+  WSL, or inside a virtual machine or container (which is how macOS is
+  supported), and MUST NOT require a container, a Nix or a version manager
+  (0026-workspaces FR-001).
 - **FR-003**: The launcher MUST be `ws-host` at the repository root, in POSIX
   `sh`, finding the repository from its own location even when it is run
   through a symbolic link, and running the orchestrator on the plain
@@ -114,8 +115,8 @@ and 0026-workspaces, held in the public root, govern all of them.
 ## Out of scope
 
 - Repositories, trust, kits and the extension: the other specs.
-- Generated containers, MCP, repo-shipped kits' loading, a `shell` kit,
-  macOS and other distributions: later specs.
+- Generated container files, MCP, repo-shipped kits' loading, running on
+  macOS itself and other distributions: later specs.
 
 ## Edge cases
 
