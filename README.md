@@ -15,3 +15,11 @@ ws-host workspace advance
 
 Specs are in `spec-kit/specs/`, written to the public root's spec format;
 `ws-host test` runs the tests and `ws-host check` the checks.
+
+## Kits
+
+`ws-host kit list` shows the kits; `ws-host kit add KIT` installs one (packages through
+`sudo`, which it says before it runs; tools fetched and checksum-verified into
+`~/.local/share/workspaces-host/tools`). v0.1 has `base`, `press` and `rust`.
+
+`tests/containers/verify.sh` runs the install and the kits in a fresh Debian or Ubuntu container.
