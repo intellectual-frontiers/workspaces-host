@@ -32,6 +32,10 @@ class Home(unittest.TestCase):
         self.home = Path(self._tmp.name).resolve() / "home"
         self.home.mkdir()
         self._saved = dict(os.environ)
+        real_home = Path(os.environ.get("HOME", "~")).expanduser()
+        for var, sub in (("RUSTUP_HOME", ".rustup"), ("CARGO_HOME", ".cargo")):   # a throwaway HOME must not hide the machine's own toolchains
+            if var not in os.environ and (real_home / sub).exists():
+                os.environ[var] = str(real_home / sub)
         os.environ.update({"HOME": str(self.home), **GIT_ENV})
         for k in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "WS_HOST_SURFACE", "WS_HOST_OFFLINE",
                   "WS_HOST_PUBLIC_ROOT", "WS_HOST_IN_GROUP"):

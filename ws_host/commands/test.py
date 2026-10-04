@@ -15,12 +15,13 @@ def test(ctx):
     buf = io.StringIO()
     res = unittest.TextTestRunner(stream=buf, verbosity=0).run(suite)
     failing = [str(t) for t, _ in res.failures + res.errors]
+    why = {str(t): tb.strip().splitlines()[-1][:300] for t, tb in res.failures + res.errors}
     ok = res.testsRun > 0 and res.wasSuccessful()
     plain = (f"All {res.testsRun} tests passed." if ok else
              "No tests ran, so nothing is proven." if res.testsRun == 0 else f"{len(failing)} of {res.testsRun} tests failed.")
     data = {"plain": plain, "ran": res.testsRun, "failures": len(res.failures), "errors": len(res.errors),
             "skipped": len(res.skipped), "passed": res.testsRun - len(res.failures) - len(res.errors) - len(res.skipped),
-            "failing": failing}
+            "failing": failing, "why": why}
     if failing and ctx.debug:
         data["output"] = buf.getvalue()
     return Resource("test", "ws-host", data, status=OK if ok else FAILED)
