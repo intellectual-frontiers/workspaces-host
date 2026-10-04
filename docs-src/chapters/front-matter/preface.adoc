@@ -12,8 +12,8 @@ program: run `ws-host help`, or use Learn in VS Code, where every step is a butt
 repeats what the program says is wrong the day the program changes, so this book links to the help pages and takes its
 reference from the same code.
 
-Everything here targets Debian and Ubuntu on bare metal, including Ubuntu under WSL on Windows. There are no containers,
-no Nix and no version managers. Simplicity beats determinism: your machine and mine can carry different package versions,
+Everything here targets Debian and Ubuntu, on bare metal or under WSL on Windows. A Mac works through a Debian or Ubuntu
+virtual machine or container, and inside it the steps are the same. There is no Nix and there are no version managers. Simplicity beats determinism: your machine and mine can carry different package versions,
 and `ws-host doctor` shows you the difference.
 
 image::mascot-workflows.jpg[Workhorse in Action: the mascot across eight everyday tasks,width=90%]

@@ -2,8 +2,10 @@
 == Why it works this way
 
 === Why only Debian and Ubuntu?
-Because one family on bare metal is what I can keep working. macOS and other distributions come later, and containers come
-back later too, as generated files, when someone needs every package version fixed.
+Because one family is what I can keep working. `ws-host` itself runs on Debian and Ubuntu, on bare metal or under WSL on
+Windows. A Mac works too, through a Debian or Ubuntu virtual machine or container: inside it you have the same environment
+and the same steps. Other distributions come later, and generated files that fix every package version come back when
+someone needs them.
 
 === Why is configuration code and not a file?
 An AI changes code easily and a test can run it. Configuration files were for humans. The few things that are information,
