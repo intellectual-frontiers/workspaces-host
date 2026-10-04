@@ -17,3 +17,21 @@ requirement	mechanism	by	note
 0001-ws-host FR-014	check	workspaces-host: ws-host test	test is itself the runner; its result fails when no test ran
 0001-ws-host FR-015	check	workspaces-host: ws-host test	tests check the first line of text renderings and that actions print as one line or not at all
 0001-ws-host FR-016	check	workspaces-host: ws-host test	tests check what is logged, with its surface, and that a read is not
+0002-repositories-and-trust FR-001	check	workspaces-host: ws-host test	the listing tests resolve full, short and ambiguous names
+0002-repositories-and-trust FR-002	check	workspaces-host: ws-host test	tests read the person's list and a cloned repository's file, to any depth, ignore a malformed entry, and need no trust
+0002-repositories-and-trust FR-003	check	workspaces-host: ws-host test	tests run repo list and repo status against real clones: ahead, behind, dirty, branch
+0002-repositories-and-trust FR-004	check	workspaces-host: ws-host test	tests clone into the layout, trust nothing, and take --dry-run
+0002-repositories-and-trust FR-005	check	workspaces-host: ws-host test	tests run a failed clone, a clone of a private repository without sign-in (git's own reason and the auth action), and one failure among several
+0002-repositories-and-trust FR-006	check	workspaces-host: ws-host test	tests clone a repository only another's file names and leave it untrusted
+0002-repositories-and-trust FR-007	check	workspaces-host: ws-host test	tests spy on every git call: no pull, rebase, stash, reset or checkout, and merge only with --ff-only
+0002-repositories-and-trust FR-008	check	workspaces-host: ws-host test	tests leave dirty, diverged, no-upstream, detached, mid-rebase and unpushed-conflicting repositories exactly as they were (HEAD, index, status, no stash, no rebase or merge state) with exit 0
+0002-repositories-and-trust FR-009	check	workspaces-host: ws-host test	tests read the plain-language reason of each skip and the note on unpushed work
+0002-repositories-and-trust FR-010	check	workspaces-host: ws-host test	tests read each outcome: updated with a count, current, skipped, failed
+0002-repositories-and-trust FR-011	check	workspaces-host: ws-host test	tests run auth status and auth new against a fake gh and glab: signed in or out, the streamed code and address, a failed login, a missing program (exit 3)
+0002-repositories-and-trust FR-012	check	workspaces-host: ws-host test	tests grant and revoke trust through the relative link, an organization in the person's configuration, and a name collision
+0002-repositories-and-trust FR-013	check	workspaces-host: ws-host test	tests list a repository named by a trusted one as untrusted and ignore a repository's own WS_HOST_TRUSTED, with doctor saying so
+0002-repositories-and-trust FR-014	check	workspaces-host: ws-host test	tests confirm a decision only from a terminal answer or the editor's confirmation, refuse it otherwise, keep it off MCP, and list what --trust trusts
+0002-repositories-and-trust FR-015	check	workspaces-host: ws-host test	tests record the commit and make doctor warn, not fail, when a trusted repository's kits changed
+0002-repositories-and-trust FR-016	check	workspaces-host: ws-host test	tests run workspace advance end to end: steps, a repeat that changes nothing, past a failure, dry run, status
+0002-repositories-and-trust FR-017	check	workspaces-host: ws-host test	tests check doctor recommends pull.ff only, never applies it, and workspace set applies it on request
+0002-repositories-and-trust FR-018	check	workspaces-host: ws-host test	tests check a clone's ignored and untracked state and the person's git configuration after advance
