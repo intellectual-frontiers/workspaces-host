@@ -21,7 +21,7 @@ DEFAULT_SURFACES = {
     "build": ("cli", "editor", "mcp"), "generate": ("cli", "editor", "mcp"),
     "decision": ("cli", "editor"), "setup": ("cli",),
 }
-REPOWIDE = ("check", "test", "doctor", "context")
+REPOWIDE = ("check", "fresh", "test", "doctor", "lock", "context", "help")
 
 
 @dataclass
@@ -77,7 +77,37 @@ class Section:
 
 
 @dataclass
+class Step:
+    """A thing a person does, as an action (0005-help-and-docs FR-002)."""
+    label: str
+    words: tuple[str, ...]
+    fields: dict = field(default_factory=dict)
+    note: str = ""
+
+
+@dataclass
+class Topic:
+    name: str
+    summary: str                       # one plain sentence
+    plain: str                         # the plain first line of the topic's page
+    sections: tuple[tuple[str, str], ...] = ()     # (heading, text) in plain language
+    steps: tuple[Step, ...] = ()
+    module: str = ""
+
+
+@dataclass
+class Generator:
+    name: str
+    command: str                       # the command that rewrites its files, e.g. "docs generate"
+    render: Callable                   # () -> {relative path: text}
+    summary: str = ""
+    module: str = ""
+
+
+@dataclass
 class Registry:
+    topics: dict[str, Topic] = field(default_factory=dict)
+    generators: dict[str, Generator] = field(default_factory=dict)
     commands: dict[tuple[str, ...], Command] = field(default_factory=dict)
     sections: dict[str, Section] = field(default_factory=dict)
     conflicts: list[str] = field(default_factory=list)
@@ -125,6 +155,31 @@ def command(*words: str, category: str, summary: str, args: tuple[Arg, ...] = ()
     return deco
 
 
+def topic(name: str, summary: str):
+    """Declare a help topic: `@topic("repos", "...")` on a function returning Topic fields (0005-help-and-docs FR-001)."""
+    def deco(fn):
+        body = fn()
+        t = Topic(name, summary, body["plain"], tuple(body.get("sections", ())), tuple(body.get("steps", ())), _loading or fn.__module__)
+        if name in REGISTRY.topics:
+            REGISTRY.conflicts.append(f"two help topics are named '{name}': {REGISTRY.topics[name].module} and {t.module}")
+        else:
+            REGISTRY.topics[name] = t
+        return fn
+    return deco
+
+
+def generator(name: str, command: str, summary: str = ""):
+    """Declare a generator: its function returns {relative path: text}; `fresh` proves the files current (0041 FR-035, FR-036)."""
+    def deco(fn):
+        g = Generator(name, command, fn, summary, _loading or fn.__module__)
+        if name in REGISTRY.generators:
+            REGISTRY.conflicts.append(f"two generators are named '{name}': {REGISTRY.generators[name].module} and {g.module}")
+        else:
+            REGISTRY.generators[name] = g
+        return fn
+    return deco
+
+
 def section(name: str, *, suites: tuple[str, ...] = (), programs: tuple[str, ...] = (), watched: tuple[str, ...] = (), summary: str = ""):
     def deco(fn):
         REGISTRY.add_section(Section(name, fn, tuple(suites), tuple(programs), tuple(watched), summary, _loading or fn.__module__))
@@ -143,7 +198,7 @@ def discover() -> Registry:
     if REGISTRY.modules:
         return REGISTRY
     from .kit import Kit
-    for package in ("ws_host.commands", "ws_host.kits"):
+    for package in ("ws_host.commands", "ws_host.kits", "ws_host.help"):
         for name in _modules(package):
             REGISTRY.modules.append(name)
             _loading = name
@@ -166,7 +221,7 @@ def module_level_imports(package_dirs=None) -> list[str]:
     """0041 FR-005: a command or kit module imports only the standard library at module level."""
     from .paths import repo_root
     out = []
-    dirs = package_dirs or [repo_root() / "ws_host" / "commands", repo_root() / "ws_host" / "kits"]
+    dirs = package_dirs or [repo_root() / "ws_host" / "commands", repo_root() / "ws_host" / "kits", repo_root() / "ws_host" / "help"]
     stdlib = set(sys.stdlib_module_names) | {"ws_host", "__future__"}
     for d in dirs:
         for f in sorted(Path(d).glob("*.py")):

@@ -11,7 +11,7 @@ from pathlib import Path
 from ws_host.core import registry as reg
 from ws_host.core.kit import Check, Download, Kit
 from ws_host.install import fetch
-from .helpers import Home
+from .helpers import REPO, Home
 
 
 def sha(p: Path) -> str:
@@ -150,7 +150,7 @@ class Fetch(Home):
 class Contract(Home):
     def test_kits_are_found_by_presence_with_unique_names(self):
         r = reg.discover()
-        self.assertEqual(sorted(r.kits), ["base", "press", "rust"])
+        self.assertEqual(sorted(r.kits), ["base", "press", "rust", "shell"])
         self.assertEqual(r.conflicts, [])
         for name, cls in r.kits.items():
             self.assertTrue(issubclass(cls, Kit))
@@ -209,7 +209,7 @@ class Commands(Home):
     def test_list_show_and_an_unknown_kit(self):
         code, doc = self.run_json("kit", "list")
         self.assertEqual(code, 0)
-        self.assertEqual({k["name"] for k in doc["data"]["kits"]}, {"base", "press", "rust"})
+        self.assertEqual({k["name"] for k in doc["data"]["kits"]}, {"base", "press", "rust", "shell"})
         code, doc = self.run_json("kit", "show", "rust")
         self.assertEqual(code, 0)
         self.assertEqual(doc["data"]["downloads"][0]["name"], "rust")
@@ -245,3 +245,53 @@ class Commands(Home):
         self.assertEqual(steps["download rust"]["status"], "missing")
         self.assertIn("offline", steps["download rust"]["plain"])
         self.assertEqual(code, 3)
+
+
+class ShellKit(Home):
+    def test_the_shell_kit_provides_fish_4_and_oh_my_posh_and_the_coach_theme(self):
+        from ws_host.kits import shell
+        kit = reg.discover().kits["shell"]()
+        deb = {"id": "debian", "codename": "trixie", "id_like": ""}
+        ubu = {"id": "ubuntu", "codename": "noble", "id_like": "debian"}
+        self.assertEqual(kit.apt(deb), ["fish"])                                   # Debian 13 ships fish 4.0
+        self.assertEqual([d.name for d in kit.downloads(deb)], ["oh-my-posh"])
+        self.assertEqual([d.name for d in kit.downloads(ubu)], ["oh-my-posh", "fish"])   # Ubuntu 24.04 ships 3.7: fish 4 is fetched
+        fish = kit.downloads(ubu)[1]
+        self.assertEqual(fish.kind, "deb")
+        self.assertEqual(fish.steps[0][0], "dpkg-deb")
+        self.assertTrue(shell.theme_path().is_file())
+        self.assertEqual({c.program for c in kit.checks(deb) if c.program}, {"fish", "oh-my-posh"})
+        self.assertGreaterEqual(len([c for c in kit.checks(deb) if c.run]), 3)
+
+    def test_a_deb_download_is_unpacked_by_its_step_into_the_versioned_directory(self):
+        tool = self.home.parent / "bin"
+        tool.mkdir()
+        (tool / "dpkg-deb").write_text('#!/bin/sh\nmkdir -p "$3/usr/bin" && printf "#!/bin/sh\\necho fish, version 4.9.3\\n" > "$3/usr/bin/fish" && chmod +x "$3/usr/bin/fish"\n')
+        (tool / "dpkg-deb").chmod(0o755)
+        os.environ["PATH"] = f"{tool}:{os.environ['PATH']}"
+        src = self.home.parent / "src"
+        src.mkdir()
+        deb = src / "fish.deb"
+        deb.write_bytes(b"not really a deb")
+        a = fetch.arch()
+        d = Download("fish", "4.9.3", deb.as_uri(), {a: sha(deb)}, binaries={"fish": "usr/bin/fish"}, kind="deb", steps=(("dpkg-deb", "-x", "{src}/fish.deb", "{dest}"),))
+        fetch.install(d)
+        self.assertEqual(os.popen(str(self.paths.bin_dir() / "fish")).read().strip(), "fish, version 4.9.3")
+
+    def test_a_single_downloaded_program_is_executable(self):
+        src = self.home.parent / "src"
+        src.mkdir()
+        f = src / "posh"
+        f.write_text("#!/bin/sh\necho 31\n")
+        f.chmod(0o644)
+        a = fetch.arch()
+        fetch.install(Download("posh", "1", f.as_uri(), {a: sha(f)}, binaries={"posh": "posh"}, kind="file"))
+        self.assertEqual(os.popen(str(self.paths.bin_dir() / "posh")).read().strip(), "31")
+
+    def test_nothing_in_ws_host_changes_a_login_shell_or_shell_files(self):
+        text = "".join(p.read_text() for p in (REPO / "ws_host").rglob("*.py"))
+        for needle in ("chsh", ".bashrc", "config.fish", "/etc/shells"):
+            for p in (REPO / "ws_host").rglob("*.py"):
+                if "help" in p.parts:
+                    continue
+                self.assertNotIn(needle, p.read_text(), f"{needle} in {p}")

@@ -1,0 +1,34 @@
+[#what-it-is]
+== One command per repository
+
+Every Intellectual Frontiers repository has one orchestrator: a single command that is the only way people, CI and AI
+agents run what that repository does. The public root has `agora`, other repositories have their own, and this repository has `ws-host`,
+which prepares your machine. The names are examples of a rule, not part of it.
+
+`ws-host` does four jobs. It copies your repositories to your machine and keeps them current without ever touching your
+work. It installs kits, the sets of tools a kind of work needs. It checks that your machine is healthy and says so in
+plain words. And it ships the VS Code extension that is the graphical interface for every orchestrator, not just its own.
+
+=== Commands look the same everywhere
+
+A command is `ws-host <noun> <verb> [ID] [--options]`. The nouns are the things it manages, such as `repo` and `kit`. The
+verbs are a closed set of thirteen words, so a command you have never seen is still guessable. A few commands take no noun:
+`check`, `fresh`, `test`, `doctor`, `context` and `help`.
+
+Every command returns a resource, not text: a kind, an id, a plain-language summary, the data, links to related
+resources and the actions you can take next. You see it three ways. The default is text, written for people, whose first
+line is always plain language. `--json` is the same resource for programs and AI agents. `--html` is the same resource for
+the editor's pages. All three say the same thing because each is a view of one resource.
+
+=== Categories decide who may do what
+
+Each command belongs to exactly one category: `read` changes nothing; `check` verifies and changes nothing tracked;
+`record`, `build` and `generate` write what their names say; `setup` changes your machine; and `decision` changes what
+only you decide, such as whom to trust. A `decision` is never offered to an AI agent, and in VS Code it opens a dialog
+that only you can click.
+
+=== Exit codes
+
+0 means it worked. 1 means it ran and what it tried failed. 2 means you typed something it cannot read. 3 means a program
+or prerequisite is missing. A repository that `ws-host` leaves alone to protect your work is not a failure: that exits 0,
+and the resource says why.

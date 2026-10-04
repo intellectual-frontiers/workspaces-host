@@ -1,0 +1,30 @@
+[#faq]
+== Why it works this way
+
+=== Why only Debian and Ubuntu?
+Because one family on bare metal is what I can keep working. macOS and other distributions come later, and containers come
+back later too, as generated files, when someone needs every package version fixed.
+
+=== Why is configuration code and not a file?
+An AI changes code easily and a test can run it. Configuration files were for humans. The few things that are information,
+names and places, are a small file in the syntax of `os-release`, parsed in a few lines by the standard library.
+
+=== Why no YAML, no Nix, no devcontainers?
+Each added a second language to learn and a way for two machines to differ in ways nobody could see. The earlier
+environment, the earlier environment, used all three. Its mascot stays.
+
+=== Why fast-forward only?
+Because the cost of being wrong is someone's unpushed work. `ws-host` moves a repository forward when that is trivially
+safe and otherwise leaves it alone and says why.
+
+=== Why does trust work with a symlink?
+Because it is the simplest thing that is also visible: `ls ~/.local/share/workspaces-host/enabled` tells you what you
+trust, deleting a link revokes it, and the same link is where kits are found.
+
+=== Why is the guide mostly generated?
+Because a guide that repeats the program is wrong the day the program changes. The reference is taken from the code, and
+`ws-host fresh` fails until it is current.
+
+=== Why is `help` in the program?
+So the daily work can be learned in the terminal and in VS Code, with a button on every step, and so there is exactly one
+copy of it.

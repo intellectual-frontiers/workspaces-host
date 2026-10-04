@@ -1,0 +1,27 @@
+[#editor]
+== VS Code is the interface
+
+The extension in `vscode/` is the graphical interface for every orchestrator, not only this one. It is plain JavaScript,
+two files and a logo, with no build step and no dependencies, and it holds no behavior of its own. It finds the
+launcher at the root of each repository you trust, runs `<name> command list --json`, and then runs commands and renders
+what comes back. If it ran something that does not follow the shared shape of a resource, it would show nothing, which is
+the point.
+
+`ws-host vscode add` installs it. It links the extension into `~/.vscode/extensions` (or `~/.vscode-server/extensions` when
+VS Code runs under WSL) and lists it in `extensions.json`, keeping every other extension. The clone is the installed
+extension, so updating the clone updates it after a window reload.
+
+What you get:
+
+* A status line that says in plain words whether your machine is well.
+* A Workspace view of every trusted orchestrator, with its audience, then its commands.
+* Every result as a page with buttons for what you can do next, and a Show command link on each that gives you the one line
+  to paste in a terminal.
+* Quick-picks instead of placeholders whenever a command needs a value only you can give.
+* Check findings in VS Code's Problems panel, at their file and line.
+* GitHub sign-in as a notification with Copy code and open browser.
+* Get help, one report with no passwords in it, and Learn, the `help` topics with a button for each step.
+
+It runs nothing in Restricted Mode and nothing from a repository you have not trusted. A `decision` always opens a modal
+dialog, and the extension registers no command that takes an action as an argument, so an AI agent working in the editor
+has nothing to call that could click it for you.

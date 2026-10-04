@@ -429,6 +429,21 @@ function activate(context) {
     vscode.window.showInformationMessage("Checks finished. Anything found is in the Problems panel.");
   }
 
+  /** Learn: the topics the orchestrator's own `help` lists, as a quick-pick, shown as any other resource (0004 FR-018). */
+  async function learn() {
+    if (refuseRestricted()) return;
+    const o = orchestrator(OWN);
+    if (!o || !o.commands.some(c => c.id === "help")) { vscode.window.showInformationMessage("There are no help pages to show yet."); return; }
+    const info = await commandInfo(o, "help");
+    const arg = ((info && info.arguments) || []).find(a => a.choices && a.choices.length);
+    const topic = arg ? await vscode.window.showQuickPick(arg.choices, { title: "Learn", placeHolder: "What do you want to learn?" }) : undefined;
+    if (!topic) return;
+    const argv = ["help", topic];
+    const r = await runPages(o.launcher, argv, { cwd: o.root });
+    const last = r.pages[r.pages.length - 1];
+    if (last && last.doc) await showPage(o, last, argv);
+  }
+
   async function getHelp() {
     const own = orchestrator(OWN) || { launcher: findOwn() };
     if (!own.launcher) { vscode.window.showErrorMessage("ws-host is not installed, so there is nothing to report yet."); return; }
@@ -494,6 +509,7 @@ function activate(context) {
     vscode.commands.registerCommand("wsHost.signIn", () => signIn()),
     vscode.commands.registerCommand("wsHost.runChecks", () => runChecks()),
     vscode.commands.registerCommand("wsHost.getHelp", () => getHelp()),
+    vscode.commands.registerCommand("wsHost.learn", () => learn()),
     vscode.workspace.onDidGrantWorkspaceTrust(() => refresh()),
   );
   refresh();

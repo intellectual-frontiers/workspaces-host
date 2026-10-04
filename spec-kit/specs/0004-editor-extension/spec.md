@@ -14,7 +14,8 @@ language come from 0041-command-line and 0002-repositories-and-trust.
 ## What it is
 
 - **FR-001**: The extension MUST live in `vscode/` and nowhere else, as
-  `package.json` and `extension.js` with no TypeScript, no build step and no
+  `package.json`, `extension.js` and the one icon file the package names
+  (`logo.png`), with no TypeScript, no build step and no
   `node_modules`, so that the clone is the installed extension and advancing the
   clone updates it (after a window reload). Anything VS Code requires to be in
   `package.json` is permitted there, because VS Code owns that format
@@ -88,6 +89,9 @@ language come from 0041-command-line and 0002-repositories-and-trust.
   new github` as a stream, show the one-time code and its address in a
   notification with the action "Copy code and open browser", and report the
   result in plain words.
+- **FR-018**: The extension MUST offer "Learn", a command that lists the topics
+  of the orchestrator's `help` as a quick-pick and shows the chosen topic as a
+  resource, its steps as buttons (0005-help-and-docs FR-004).
 - **FR-015**: The extension MUST offer a "Get help" command that gathers
   `ws-host context` and `ws-host doctor`, which hold no secret, into one text
   the person can paste to a person or an AI, copies it, and shows it.

@@ -1,0 +1,24 @@
+[#day-to-day]
+== Where the daily work is documented
+
+The daily work, installing, copying repositories, updating them, signing in, trusting a repository, installing a kit,
+recovering when something fails, is documented by `ws-host help`, and nowhere else.
+
+----
+ws-host help            # the topics
+ws-host help repos      # one topic
+----
+
+In VS Code, use Learn. It lists the same topics and shows each as a page whose steps are buttons, so you learn by doing.
+Part II reproduces every topic from the same code (<<reference-help>>), which is the only reason that copy can be trusted:
+it is generated, and `ws-host fresh` fails if it is out of date.
+
+The one thing I put outside `help` is the first line you paste on a new machine, because `ws-host` is not there yet:
+
+----
+curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh
+ws-host workspace advance
+----
+
+The first checks for `python3` and `git`, installs `uv` if you lack it, copies `ws-host` beside your other repositories
+and links it into `~/.local/bin`. The second does everything else, and you can run it as often as you like.

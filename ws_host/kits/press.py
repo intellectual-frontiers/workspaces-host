@@ -38,6 +38,6 @@ class Press(Kit):
 
     def checks(self, distro):
         return [Check("lualatex", "lualatex"), Check("xelatex", "xelatex"), Check("latexmk", "latexmk", ("-v",)), Check("pdftotext", "pdftotext", ("-v",)),
-                Check("qpdf", "qpdf"), Check("rsvg-convert", "rsvg-convert"), Check("java", "java", ("-version",)), Check("asciidoctor", "asciidoctor"),
+                Check("qpdf", "qpdf"), Check("rsvg-convert", "rsvg-convert"), Check("java", "java", ("-version",)), Check("asciidoctor", "asciidoctor"), Check("asciidoctor-pdf", "asciidoctor-pdf"),
                 Check("potrace", "potrace"),
                 Check("lualatex compiles fontspec, unicode-math and lualatex-math", run=lualatex, needs=("lualatex",))]

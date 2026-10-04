@@ -20,7 +20,7 @@ class Download:
     url: str                              # a template: {version}, {arch}, {triple} and {goarch} are filled in
     sha256: dict[str, str]                # per architecture of ARCHS; an architecture not named is unsupported
     binaries: dict[str, str] = field(default_factory=dict)   # link name -> path inside the installed directory
-    kind: str = "tar"                     # tar (any tarball), zip, or file (one file, kept as it is)
+    kind: str = "tar"                     # tar (any tarball), zip, file (one program), or deb (a package unpacked by a step)
     strip: int = 1                        # leading path components removed when unpacking a tarball
     steps: tuple[tuple[str, ...], ...] = ()   # install steps run in the unpacked source: {src} and {dest} are filled in
 
@@ -36,6 +36,7 @@ class Check:
     """A program the kit provides, or a functional check that proves it works."""
     name: str
     program: str | None = None            # a program that must be on PATH
+    or_programs: tuple[str, ...] = ()     # ... or, failing that, one of these (ImageMagick 6 names its program convert)
     version_args: tuple[str, ...] = ("--version",)
     run: Callable | None = None           # a functional check: (workdir: Path) -> str, raising AssertionError on failure
     needs: tuple[str, ...] = ()           # programs the functional check runs; it is skipped when one is missing

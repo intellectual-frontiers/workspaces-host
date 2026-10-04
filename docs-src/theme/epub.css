@@ -1,0 +1,89 @@
+/* EPUB stylesheet for the the earlier environment book (asciidoctor-epub3).
+   Deliberately simple: an e-reader controls font size, line spacing, and
+   sometimes color scheme, so this sets typography intent (a serif body
+   face, an accent color for headings/links matching the web/PDF editions)
+   without fighting the reader's own reflow. Colors match the live site's
+   design tokens: --accent #0969da, --text #1a1d21, --text-soft #57606a,
+   --code-bg #f6f8fa, --code-border #e3e6ea. */
+
+body {
+  font-family: Georgia, "Noto Serif", serif;
+  color: #1a1d21;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: Georgia, "Noto Serif", serif;
+  color: #0969da;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+a, a:link {
+  color: #0969da;
+}
+
+code, pre, tt, kbd {
+  font-family: "DejaVu Sans Mono", monospace;
+}
+
+pre {
+  background: #f6f8fa;
+  border: 1px solid #e3e6ea;
+  border-radius: 4px;
+  padding: 0.6em 0.8em;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+code {
+  background: #f6f8fa;
+  border-radius: 3px;
+  padding: 0.1em 0.3em;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+}
+
+blockquote {
+  border-left: 3px solid #0969da;
+  margin-left: 0;
+  padding-left: 1em;
+  color: #57606a;
+}
+
+.admonitionblock {
+  border-left: 3px solid #0969da;
+  padding: 0.4em 0.8em;
+  margin: 1em 0;
+  background: #eaf2fe;
+}
+
+.admonitionblock .title,
+.admonitionblock td.icon .title {
+  color: #0969da;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.85em;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: 1px solid #e7e9ec;
+  padding: 0.4em 0.6em;
+  text-align: left;
+}
+
+th {
+  background: #f6f8fa;
+  font-weight: bold;
+}
+
+.imageblock img, img {
+  max-width: 100%;
+}

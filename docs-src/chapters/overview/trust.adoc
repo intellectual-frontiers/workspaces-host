@@ -1,0 +1,17 @@
+[#trust]
+== Trust
+
+Copying a repository never lets its code run. Trusting it is a separate act that only you take, and `ws-host` records it as
+one link in `~/.local/share/workspaces-host/enabled/`, pointing at the repository's `.workspaces-host` directory. That one
+link is the trust record, the place kits are searched for, and a configuration drop-in.
+
+Trust is not inherited. If a trusted repository lists another one, you get a copy of it and nothing more. A repository's own
+file can never grant trust, not even to its own organization; only your own configuration (`WS_HOST_TRUSTED`) or your own
+decision can. Trust applies to the repository, not to its content: `ws-host` records the commit you trusted it at, and
+`ws-host doctor` warns you, without blocking, when its kits have changed since.
+
+Reading a repository's `.workspaces-host/ws-host.env` needs no trust, because it is only information: which kit it wants and
+which repositories it is worked beside. Running its code does, and loading kits that a repository ships is a later phase.
+
+`repo set ID --trusted` is a `decision`. In a terminal it asks you to type yes at a prompt that needs a terminal. In VS Code
+it opens a dialog. It is never offered over MCP.

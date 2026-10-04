@@ -33,7 +33,10 @@ def report() -> dict:
     cfg = config.load()
     for p in cfg.problems:
         checks.append(_check("configuration", "fail", p))
-    if not cfg.problems:
+    unknown = sorted(set(cfg.values) - set(config.KEYS))
+    if unknown:
+        checks.append(_check("configuration", "warn", f"{paths.config_file()} has keys ws-host does not use: {', '.join(unknown)}"))
+    if not cfg.problems and not unknown:
         checks.append(_check("configuration", "ok", str(paths.config_file()) if paths.config_file().exists() else "no configuration file yet; none is needed"))
     sp = config.secrets_mode_problem()
     checks.append(_check("secrets file", "fail" if sp else "ok", sp or "not present or readable only by you"))

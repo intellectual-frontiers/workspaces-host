@@ -9,6 +9,23 @@ from pathlib import Path
 from . import env, paths
 
 
+# The keys a person's configuration may hold (0001-ws-host FR-008). The guide's file reference is generated from this.
+KEYS = {
+    "WS_HOST_GIT_NAME": "the name to put on your commits",
+    "WS_HOST_GIT_EMAIL": "the email to put on your commits",
+    "WS_HOST_WORKSPACES": "the folder repositories are copied under (default ~/workspaces)",
+    "WS_HOST_GITLAB_HOSTS": "GitLab hosts you sign in to, space-separated",
+    "WS_HOST_REPOS": "the repositories you work in, as host/org/repo, space-separated",
+    "WS_HOST_TRUSTED": "organizations whose repositories you trust, space-separated; only your own file can set this",
+}
+# The keys a repository's own `.workspaces-host/ws-host.env` may hold (0001-ws-host, 0002-repositories-and-trust FR-002).
+REPO_KEYS = {
+    "WS_HOST_KIT": "the kit the repository's tools need",
+    "WS_HOST_REPOS": "the repositories it is worked beside, as host/org/repo, space-separated",
+    "WS_HOST_VERSION": "the release of ws-host the repository is pinned to, where it pins one",
+}
+
+
 @dataclass
 class Config:
     values: dict[str, str] = field(default_factory=dict)

@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Workspaces Host</title>
+<meta name="description" content="Workspaces Host: reference and overview, online, as a single page, as a PDF, or as an EPUB. The daily work is in ws-host help." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#9107;</text></svg>" />
+<style>
+/* The guide's home page. This page alone stays
+   hand-authored (everything else under docs/ is generated - see
+   docs-src/manuscript.adoc and specs/019-asciidoc-manuscript-docs).
+   Its only job is handing a reader a format: the multi-page HTML
+   edition, a single-page HTML edition, a PDF under the "IF Press"
+   imprint, or an EPUB. */
+
+:root {
+  --bg: #ffffff;
+  --text: #1a1d21;
+  --text-soft: #57606a;
+  --accent: #0969da;
+  --accent-soft: #eaf2fe;
+  --border: #e7e9ec;
+  --content-max: 1040px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+}
+
+.page-hero {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 56px 24px 0;
+}
+
+.splash-hero-img {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  border-radius: 12px;
+}
+
+.page {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 24px 24px 80px;
+}
+
+.splash-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 8px 0 40px;
+}
+
+.splash-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 28px 26px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  text-decoration: none;
+}
+
+.splash-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.splash-btn-title {
+  font-size: 1.3em;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.splash-btn-desc {
+  color: var(--text-soft);
+  font-size: 0.96em;
+  line-height: 1.5;
+}
+
+.mascot-wide {
+  display: block;
+  max-width: 780px;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 12px;
+}
+
+footer.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 24px 48px;
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 0.88em;
+}
+
+footer.site-footer a {
+  color: var(--text-soft);
+}
+
+@media (max-width: 640px) {
+  .splash-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="page-hero">
+  <img class="splash-hero-img" src="mascot.jpg" alt="Workspaces Host mascot: a Clydesdale draft horse pulling a cart loaded with CODE, CONFIG, and TOOLS crates, captioned 'Same reproducible workspace everywhere.'" width="900" height="688">
+</header>
+
+<div class="page">
+  <div class="splash-buttons">
+    <a class="splash-btn" href="book/html/index.html">
+      <span class="splash-btn-title">Read online</span>
+      <span class="splash-btn-desc">The multi-page edition, a chapter at a time. Where that converter is missing, this is the single page.</span>
+    </a>
+    <a class="splash-btn" href="book/single-page.html">
+      <span class="splash-btn-title">Single page</span>
+      <span class="splash-btn-desc">The whole book on one page - good for reading straight through or searching with your browser's own find.</span>
+    </a>
+    <a class="splash-btn" href="book/workspaces-host.pdf" download>
+      <span class="splash-btn-title">Download PDF</span>
+      <span class="splash-btn-desc">A typeset book under the IF Press imprint. Only built where the PDF converter is installed.</span>
+    </a>
+    <a class="splash-btn" href="book/workspaces-host.epub" download>
+      <span class="splash-btn-title">Download EPUB</span>
+      <span class="splash-btn-desc">For your e-reader. Only built where the EPUB converter is installed.</span>
+    </a>
+  </div>
+  <img class="mascot-wide" src="mascot-workflows.jpg" alt="Workhorse in Action: the mascot horse illustrated across eight everyday tasks - Develop, Explore, Guide, Automate, Recharge, Adapt, Stay Secure, and Go Further - captioned 'Different tasks. Same reliable companion.'" width="1000" height="485">
+</div>
+
+<footer class="site-footer">
+  <p><a href="https://github.com/intellectual-frontiers/workspaces-host">intellectual-frontiers/workspaces-host</a> &middot; mascot and graphics from the earlier environment, MIT License</p>
+</footer>
+
+</body>
+</html>

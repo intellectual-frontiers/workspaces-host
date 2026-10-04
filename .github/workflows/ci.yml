@@ -1,0 +1,26 @@
+# The repository's own checks, on a GitHub Ubuntu runner: the tests, the checks, and proof that the generated files are current.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Tests
+        run: ./ws-host test
+      - name: Checks and generated files
+        run: |
+          ./ws-host doctor
+          ./ws-host check registry launcher help fresh
+          ./ws-host fresh

@@ -62,6 +62,10 @@
         "title": "Workspace: Run checks"
       },
       {
+        "command": "wsHost.learn",
+        "title": "Workspace: Learn"
+      },
+      {
         "command": "wsHost.getHelp",
         "title": "Workspace: Get help"
       }
@@ -75,5 +79,6 @@
         }
       ]
     }
-  }
+  },
+  "icon": "logo.png"
 }

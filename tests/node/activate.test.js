@@ -129,7 +129,7 @@ test("it registers no command that takes an action, a command line or a resource
   const f = new Fake();
   const { vscode, restore } = await boot(f);
   try {
-    assert.deepStrictEqual([...vscode.calls.commands.keys()].sort(), ["wsHost.advance", "wsHost.getHelp", "wsHost.refresh", "wsHost.runChecks", "wsHost.signIn"]);
+    assert.deepStrictEqual([...vscode.calls.commands.keys()].sort(), ["wsHost.advance", "wsHost.getHelp", "wsHost.learn", "wsHost.refresh", "wsHost.runChecks", "wsHost.signIn"]);
     const before = f.calls().length;
     for (const [, fn] of vscode.calls.commands) { if (fn.length > 0) assert.fail("a command declares parameters"); }
     // fabricated arguments change nothing: none of them runs a decision
@@ -240,5 +240,22 @@ test("a resource with a newer schema shows update needed, not its content", asyn
     const html = vscode.calls.panels[0].webview.html;
     assert.match(html, /Update needed/);
     assert.ok(!html.includes("SECRET FUTURE CONTENT"));
+  } finally { restore(); f.done(); }
+});
+
+test("Learn lists the topics help offers, and shows the chosen topic as a page with its steps as buttons", async () => {
+  const f = new Fake();
+  f.put("ws-host", "command list --json", doc("ws-host/command-list@1", { count: 1, commands: [{ id: "help", category: "read", group: null, surfaces: ["terminal", "editor", "mcp"], help: "Learn" }] }));
+  f.put("ws-host", "command show help --json", doc("ws-host/command@1", { id: "help", arguments: [{ name: "topic", type: "TOPIC", required: false, choices: ["repos", "start"] }], options: [] }));
+  f.put("ws-host", "help repos --html", page(doc("ws-host/help@1", { plain: "Your repositories live in one folder." }, [act("Copy the missing ones", "repo add", { fields: { all: true }, cli: "ws-host repo add --all" })])));
+  const { vscode, restore } = await boot(f, { answers: { quickPick: "repos" } });
+  try {
+    vscode.calls.inputs.length = 0;
+    await vscode.calls.commands.get("wsHost.learn")();
+    assert.deepStrictEqual(vscode.calls.inputs[0].items, ["repos", "start"]);
+    const panel = vscode.calls.panels[0];
+    assert.ok(panel, "no page");
+    assert.match(panel.title, /Your repositories/);
+    assert.match(panel.webview.html, /script-src 'nonce-/);
   } finally { restore(); f.done(); }
 });

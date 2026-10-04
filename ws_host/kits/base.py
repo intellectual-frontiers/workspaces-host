@@ -141,9 +141,9 @@ class Base(Kit):
         c = [Check(n, n, a) for n, a in USERLAND]
         c += [Check("git", "git"), Check("gh", "gh"), Check("glab", "glab"), Check("jq", "jq"), Check("rg", "rg"), Check("fd", "fd"),
               Check("curl", "curl"), Check("python3", "python3"), Check("uv", "uv"), Check("node", "node"),
-              Check("magick", "magick" if shutil.which("magick") else "convert"), Check("cwebp", "cwebp", ("-version",)), Check("dwebp", "dwebp", ("-version",)),
+              Check("ImageMagick", "magick", or_programs=("convert",)), Check("cwebp", "cwebp", ("-version",)), Check("dwebp", "dwebp", ("-version",)),
               Check("sqlite3", "sqlite3"), Check("duckdb", "duckdb"), Check("shellcheck", "shellcheck"), Check("chromium", "chromium")]
         c += [Check("userland works", run=userland, needs=("sed", "find", "xargs", "diff", "cmp", "patch", "tar", "gzip", "bzip2", "xz", "zip", "unzip", "file", "which", "ps", "hostname", "tput", "rsync", "bc", "grep", "awk", "less")),
-              Check("ImageMagick reads and writes WebP", run=webp, needs=("cwebp", "dwebp", "identify" if not shutil.which("magick") else "magick")),
+              Check("ImageMagick reads and writes WebP", run=webp, needs=("cwebp", "dwebp", "magick|identify")),
               Check("Chromium prints a page", run=chromium, needs=("chromium",))]
         return c

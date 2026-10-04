@@ -1,0 +1,19 @@
+= Preface
+
+image::mascot.jpg[Workspaces Host mascot: a Clydesdale draft horse pulling a cart loaded with CODE, CONFIG and TOOLS crates,width=90%]
+
+I built this so every person, every CI job and every AI agent that works on Intellectual Frontiers code finds the same
+thing under their hands: one command per repository, the same place for repositories, the same answer to "is my machine
+well?", and the same way to bring everything up to date. The command for the machine itself is `ws-host`.
+
+This book is a reference and an overview. It tells you how the pieces fit and why they are built the way they are, and
+its second part lists every command, kit and file. It does not teach you the daily work. That lives in one place, in the
+program: run `ws-host help`, or use Learn in VS Code, where every step is a button. I did that on purpose. A guide that
+repeats what the program says is wrong the day the program changes, so this book links to the help pages and takes its
+reference from the same code.
+
+Everything here targets Debian and Ubuntu on bare metal, including Ubuntu under WSL on Windows. There are no containers,
+no Nix and no version managers. Simplicity beats determinism: your machine and mine can carry different package versions,
+and `ws-host doctor` shows you the difference.
+
+image::mascot-workflows.jpg[Workhorse in Action: the mascot across eight everyday tasks,width=90%]

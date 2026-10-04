@@ -4,3 +4,4 @@ node_modules/
 .venv/
 *.vsix
 .vscode-test/
+_site/
