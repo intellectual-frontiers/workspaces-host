@@ -27,6 +27,22 @@ class Ctx:
     debug: bool = False
     offline: bool = False
     values: dict = field(default_factory=dict)
+    confirmed: bool = False     # the extension passes --confirmed only after its modal (0041 FR-051)
+
+    def confirm(self, question: str) -> None:
+        """A `decision` needs a confirmation only a person can give: a typed answer at a terminal, or the editor's modal
+        (0041 FR-014, FR-051). Raises when neither is possible, so an agent without a terminal cannot decide."""
+        if self.dry_run:
+            return
+        if self.surface == "editor" and self.confirmed:
+            return
+        if sys.stdin.isatty() and sys.stdout.isatty():
+            sys.stdout.write(f"{question} Type yes to go ahead: ")
+            sys.stdout.flush()
+            if sys.stdin.readline().strip().lower() == "yes":
+                return
+            raise WsError("not-confirmed", "the person did not confirm", "Nothing was changed, because you did not answer yes.", exit_code=1)
+        raise WsError("needs-person", "a decision needs a person", "This changes who is trusted, so only you can do it. Run it yourself in a terminal, or use the button in VS Code.", exit_code=1)
 
 
 class _Parser(argparse.ArgumentParser):
@@ -49,6 +65,8 @@ def build_parser(cmd: Command) -> argparse.ArgumentParser:
             p.add_argument(_opt(a.name), dest=a.name, action="append" if a.multiple else "store", default=None)
     if cmd.writes:
         p.add_argument("--dry-run", dest="dry_run", action="store_true")
+    if cmd.category == "decision":
+        p.add_argument("--confirmed", dest="confirmed", action="store_true")
     p.add_argument("--debug", action="store_true")
     p.add_argument("--offline", action="store_true")
     return p
@@ -134,15 +152,13 @@ def run(argv: list[str], surface: str = "cli", out=None, err=None) -> int:
                                   [Action(("command", "list"), "See every command")])
         ns = build_parser(cmd).parse_args(rest)
         ctx.dry_run, ctx.debug = bool(getattr(ns, "dry_run", False)), ns.debug
+        ctx.confirmed = bool(getattr(ns, "confirmed", False))
         ctx.offline = ctx.offline or ns.offline
         ctx.values = _validate(cmd, ns, ctx)
         _plan(cmd, argv)
         result = cmd.fn(ctx, **ctx.values)
-        if isinstance(result, _types.GeneratorType):
-            results = list(result)
-        else:
-            results = [result]
-        code = _emit(results, mode, registry, out)
+        # A stream is emitted as it is produced, one document per line under --json (0041 FR-019).
+        code = _emit(result if isinstance(result, _types.GeneratorType) else [result], mode, registry, out)
     except WsError as e:
         r = e.resource()
         out.write(render(r, mode, registry) + "\n")

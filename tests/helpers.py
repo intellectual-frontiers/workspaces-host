@@ -70,3 +70,55 @@ def make_remote(base: Path, name="remote", files=None) -> tuple[Path, Path]:
     git(work, "remote", "add", "origin", str(bare))
     git(work, "push", "-u", "origin", "main")
     return bare, work
+
+
+class Workspace(Home):
+    """A person's machine: HOME, a configuration file, and local bare 'remotes' that stand in for GitHub.
+
+    git's own `url.<base>.insteadOf` maps https://github.com/ to a local directory, so the code under test runs its real
+    `git clone` and `git fetch` with no hook of its own.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.remotes = self.home.parent / "remotes"
+        self.work = self.home.parent / "work"
+        os.environ.update({"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": f"url.{self.remotes}/github.com/.insteadOf",
+                           "GIT_CONFIG_VALUE_0": "https://github.com/"})
+        from ws_host.core import paths
+        self.paths = paths
+        self.root = self.home / "workspaces"
+
+    def config(self, **kw):
+        self.paths.config_dir().mkdir(parents=True, exist_ok=True)
+        self.paths.config_file().write_text("".join(f'{k}="{v}"\n' for k, v in kw.items()))
+
+    def remote(self, org, name, files=None):
+        bare = self.remotes / "github.com" / org / name
+        bare.mkdir(parents=True)
+        git(bare, "init", "--bare", "-b", "main")
+        w = self.work / org / name
+        w.mkdir(parents=True)
+        git(w, "init", "-b", "main")
+        for fn, content in (files or {"README.md": "hello\n"}).items():
+            f = w / fn
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_text(content)
+        git(w, "add", "-A")
+        git(w, "commit", "-m", "first")
+        git(w, "remote", "add", "origin", str(bare))
+        git(w, "push", "-u", "origin", "main")
+        return w
+
+    def upstream_commit(self, work, fn, content, msg="upstream"):
+        (work / fn).parent.mkdir(parents=True, exist_ok=True)
+        (work / fn).write_text(content)
+        git(work, "add", "-A")
+        git(work, "commit", "-m", msg)
+        git(work, "push", "origin", "main")
+
+    def clone_path(self, org, name):
+        return self.root / "github.com" / org / name
+
+    def rid(self, org, name):
+        return f"github.com/{org}/{name}"
