@@ -35,3 +35,16 @@ requirement	mechanism	by	note
 0002-repositories-and-trust FR-016	check	workspaces-host: ws-host test	tests run workspace advance end to end: steps, a repeat that changes nothing, past a failure, dry run, status
 0002-repositories-and-trust FR-017	check	workspaces-host: ws-host test	tests check doctor recommends pull.ff only, never applies it, and workspace set applies it on request
 0002-repositories-and-trust FR-018	check	workspaces-host: ws-host test	tests check a clone's ignored and untracked state and the person's git configuration after advance
+0003-kits FR-001	check	workspaces-host: ws-host test	tests run kit list, show and an unknown kit, and that actions print as one line
+0003-kits FR-002	check	workspaces-host: ws-host test	tests check kit add is setup and cli only, says it will use sudo before running, uses sudo -n without a terminal and says what to run when refused
+0003-kits FR-003	check	workspaces-host: ws-host test	tests resolve a|b names and report a package the distribution lacks without stopping the install
+0003-kits FR-004	check	workspaces-host: ws-host test	tests and the container runs end with the kit's programs, versions and functional checks
+0003-kits FR-005	check	workspaces-host: ws-host test	tests run the package installer against a stand-in apt-get, installing only what is missing, as root without sudo
+0003-kits FR-006	check	workspaces-host: ws-host test	tests run the download installer with real archives: verification, a wrong checksum, atomic current, links, a repeat, an older version kept, a failed step, unsafe paths
+0003-kits FR-007	check	workspaces-host: ws-host test	tests check --dry-run and --offline fetch and install nothing and exit 3 naming the download
+0003-kits FR-008	check	workspaces-host: ws-host test	tests check base's programs and the userland, WebP and Chromium checks; the container runs on Debian and Ubuntu
+0003-kits FR-009	check	workspaces-host: ws-host test	tests check press's packages; the container runs the lualatex check on Debian and Ubuntu
+0003-kits FR-010	check	workspaces-host: ws-host test	tests check rust's version and download; the container runs the rustc check and a cargo build of a reqwest and rustls crate
+0003-kits FR-011	check	workspaces-host: ws-host test	tests check every download's checksum form, address template and architecture
+0003-kits FR-012	check	workspaces-host: ws-host test	tests run workspace advance over declared kits (see 0002 FR-016); a declared kit that is unknown is reported
+0003-kits FR-013	check	workspaces-host: ws-host test	tests check doctor says a trusted repository's kits are not loaded yet

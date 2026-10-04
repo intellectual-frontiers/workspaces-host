@@ -37,6 +37,8 @@ class Home(unittest.TestCase):
                   "WS_HOST_PUBLIC_ROOT", "WS_HOST_IN_GROUP"):
             os.environ.pop(k, None)
         self.addCleanup(self._restore)
+        from ws_host.core import paths
+        self.paths = paths
 
     def _restore(self):
         os.environ.clear()
@@ -85,8 +87,6 @@ class Workspace(Home):
         self.work = self.home.parent / "work"
         os.environ.update({"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": f"url.{self.remotes}/github.com/.insteadOf",
                            "GIT_CONFIG_VALUE_0": "https://github.com/"})
-        from ws_host.core import paths
-        self.paths = paths
         self.root = self.home / "workspaces"
 
     def config(self, **kw):

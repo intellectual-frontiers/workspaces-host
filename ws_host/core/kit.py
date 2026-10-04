@@ -9,19 +9,26 @@ from dataclasses import dataclass, field
 from typing import Callable
 
 ARCHS = ("x86_64", "aarch64")
+GOARCH = {"x86_64": "amd64", "aarch64": "arm64"}
 
 
 @dataclass
 class Download:
+    """A fetched tool: verified by SHA-256 per architecture before anything is unpacked (0003-kits FR-006)."""
     name: str
     version: str
-    url: str                              # a template: {version} and {arch} are filled in
-    sha256: dict[str, str]                # per architecture
-    binaries: dict[str, str] = field(default_factory=dict)   # link name -> path inside the unpacked directory
-    strip: int = 1                        # leading path components removed when unpacking
+    url: str                              # a template: {version}, {arch}, {triple} and {goarch} are filled in
+    sha256: dict[str, str]                # per architecture of ARCHS; an architecture not named is unsupported
+    binaries: dict[str, str] = field(default_factory=dict)   # link name -> path inside the installed directory
+    kind: str = "tar"                     # tar (any tarball), zip, or file (one file, kept as it is)
+    strip: int = 1                        # leading path components removed when unpacking a tarball
+    steps: tuple[tuple[str, ...], ...] = ()   # install steps run in the unpacked source: {src} and {dest} are filled in
 
     def url_for(self, arch: str) -> str:
-        return self.url.format(version=self.version, arch=arch)
+        return self.url.format(version=self.version, arch=arch, triple=f"{arch}-unknown-linux-gnu", goarch=GOARCH.get(arch, arch))
+
+    def supports(self, arch: str) -> bool:
+        return arch in self.sha256
 
 
 @dataclass
@@ -30,23 +37,25 @@ class Check:
     name: str
     program: str | None = None            # a program that must be on PATH
     version_args: tuple[str, ...] = ("--version",)
-    run: Callable | None = None           # a functional check: (workdir: Path) -> None, raising AssertionError on failure
-    needs: tuple[str, ...] = ()           # programs the functional check runs
-    note: str = ""
+    run: Callable | None = None           # a functional check: (workdir: Path) -> str, raising AssertionError on failure
+    needs: tuple[str, ...] = ()           # programs the functional check runs; it is skipped when one is missing
 
 
 class Kit:
     name: str = ""
     summary: str = ""
     plain: str = ""                       # one plain sentence for a person: what this kit lets them do
-    needs: tuple[str, ...] = ()           # names of kits that must be installed first
 
     def apt(self, distro: dict) -> list[str]:
-        """Packages the host's package manager installs; a name MAY differ by distribution (`distro` is os-release)."""
+        """Packages the host's package manager installs; `a|b` is the first the distribution has; a name MAY differ by distribution."""
         return []
 
-    def downloads(self) -> list[Download]:
+    def downloads(self, distro: dict) -> list[Download]:
         return []
 
-    def checks(self) -> list[Check]:
+    def links(self, distro: dict) -> dict[str, tuple[str, ...]]:
+        """Names to link into the person's bin directory to the first program that exists, such as fd -> fdfind."""
+        return {}
+
+    def checks(self, distro: dict) -> list[Check]:
         return []

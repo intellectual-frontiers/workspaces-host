@@ -48,6 +48,8 @@ def report() -> dict:
         ok, _why = trust.trust_state(rid, cfg)
         if ok and trust.kits_changed_since_trust(rid, cfg):
             checks.append(_check("trust", "warn", f"{rid}'s kits have changed since you trusted it; look at them before relying on them"))
+        if ok and any((rid.path(cfg) / ".workspaces-host" / "kits").glob("*.py")):
+            checks.append(_check("trust", "warn", f"{rid} ships kits of its own; this version of ws-host does not load them yet"))
         theirs = repos.read_needs(rid.path(cfg)).get("WS_HOST_TRUSTED")
         if theirs:
             checks.append(_check("trust", "warn", f"{rid} names organizations as trusted in its own file; that is ignored, only your own configuration can trust"))
@@ -56,7 +58,11 @@ def report() -> dict:
         checks.append(_check("registry", "fail", c))
     if not registry.conflicts:
         checks.append(_check("registry", "ok", f"{len(registry.commands)} commands, {len(registry.kits)} kits, no conflicts"))
-    kits = kits_state.kit_report()
+    kits = kits_state.kit_report(functional=True)
+    for k in kits:
+        for f in k.get("functional", []):
+            if f["status"] != "ok":
+                checks.append(_check(f"{k['name']} kit: {f['name']}", "fail" if f["status"] == "fail" else "warn", f["detail"]))
     return {"distro": d, "python": py, "uv": uv, "git": git_v, "checks": checks, "kits": kits}
 
 
