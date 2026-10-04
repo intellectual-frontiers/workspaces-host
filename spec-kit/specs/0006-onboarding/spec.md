@@ -123,7 +123,7 @@ detail, troubleshooting, and how to take over in VS Code.
 ## Out of scope
 
 - Installing WSL or VS Code: the vendors' instructions.
-- Windows 10, macOS and other distributions.
+- Windows 10, running on macOS itself and other distributions; a Mac works through a Debian or Ubuntu virtual machine or container.
 
 ## Edge cases
 
