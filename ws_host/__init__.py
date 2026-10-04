@@ -1,0 +1,5 @@
+"""ws-host, the environment orchestrator (0001-ws-host)."""
+NAME = "ws-host"
+VERSION = "0.1.0"
+AUDIENCE = "private"
+SCHEMA_PREFIX = "ws-host"

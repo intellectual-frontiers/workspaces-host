@@ -1,0 +1,44 @@
+#!/bin/sh
+# ws-host, the environment orchestrator (0001-ws-host FR-003, 0041-command-line FR-001).
+# POSIX sh. Needs python3 (3.11 or later) and uv from the host, runs from a fresh clone with no other step, and finds the
+# clone from its own location even when run through a symbolic link such as ~/.local/bin/ws-host. Everything else is
+# ws_host/: this file only finds the clone, finds the prerequisites, and hands over.
+#
+#   WS_HOST_OFFLINE=1 or --offline   never download anything
+set -eu
+
+self=$0
+while [ -h "$self" ]; do
+  dir=$(cd "$(dirname "$self")" && pwd -P)
+  link=$(readlink "$self")
+  case $link in
+    /*) self=$link ;;
+    *) self=$dir/$link ;;
+  esac
+done
+here=$(cd "$(dirname "$self")" && pwd -P)
+
+if ! command -v uv >/dev/null 2>&1; then
+  echo "ws-host needs a small tool called uv, and it is not installed." >&2
+  echo "Install it with: curl -LsSf https://astral.sh/uv/install.sh | sh" >&2
+  exit 3
+fi
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ws-host needs python3, and it is not installed." >&2
+  echo "Install it with: sudo apt install python3" >&2
+  exit 3
+fi
+
+for arg in "$@"; do
+  [ "$arg" = "--offline" ] && WS_HOST_OFFLINE=1
+done
+if [ "${WS_HOST_OFFLINE:-}" = 1 ]; then
+  UV_OFFLINE=1
+  export UV_OFFLINE WS_HOST_OFFLINE
+fi
+
+PYTHONPATH="$here${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH PYTHONDONTWRITEBYTECODE=1
+
+# No packages: the plain standard-library interpreter, through uv so that no host site-packages is involved.
+exec uv run --no-project --no-config --no-python-downloads --python ">=3.11" python -m ws_host "$@"

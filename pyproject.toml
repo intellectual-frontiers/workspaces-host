@@ -1,0 +1,8 @@
+[project]
+name = "ws-host"
+version = "0.1.0"
+description = "The environment orchestrator for Intellectual Frontiers repositories"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]

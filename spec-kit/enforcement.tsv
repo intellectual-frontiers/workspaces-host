@@ -1,0 +1,19 @@
+# What enforces each requirement in this repository's specs (0020-spec-format FR-011 – FR-014).
+# mechanism: check | gate | review | none. by: "<repo>: <command>" for check and gate, the defining requirement for review, "-" for none.
+requirement	mechanism	by	note
+0001-ws-host FR-001	none	-	scope; superseding the earlier environment is a decision, not a check
+0001-ws-host FR-002	check	workspaces-host: ws-host doctor	doctor reports python, uv and the distribution; tests run the install in fresh Debian and Ubuntu containers
+0001-ws-host FR-003	check	workspaces-host: ws-host test	tests run the launcher from another directory, through absolute and relative links, and without uv
+0001-ws-host FR-004	check	workspaces-host: ws-host test	a test reads pyproject.toml and the presence of uv.lock; the core's imports are parsed
+0001-ws-host FR-005	check	workspaces-host: ws-host test	tests run install.sh against a local remote: clone, link, doctor, a repeat, a clone with edits, a missing prerequisite
+0001-ws-host FR-006	check	workspaces-host: ws-host test	the install tests use WS_HOST_URL and WS_HOST_HOME
+0001-ws-host FR-007	check	workspaces-host: ws-host test	tests run in a temporary HOME and read the paths from the XDG variables
+0001-ws-host FR-008	check	workspaces-host: ws-host test	tests parse the configuration, refuse a secrets file others can read, and keep secrets out of doctor and context
+0001-ws-host FR-009	none	-	WORKSPACES_HOME is exported when programs are run, which arrives with the commands that run them
+0001-ws-host FR-010	check	workspaces-host: ws-host check registry	finds conflicts and module-level third-party imports; tests cover both
+0001-ws-host FR-011	check	workspaces-host: ws-host test	tests run every command that takes no required argument in three renderings
+0001-ws-host FR-012	check	workspaces-host: ws-host test	tests run doctor against a malformed configuration, a loose secrets file and a registry conflict
+0001-ws-host FR-013	check	workspaces-host: ws-host test	tests run the sections, an unknown section, and a section that could not run
+0001-ws-host FR-014	check	workspaces-host: ws-host test	test is itself the runner; its result fails when no test ran
+0001-ws-host FR-015	check	workspaces-host: ws-host test	tests check the first line of text renderings and that actions print as one line or not at all
+0001-ws-host FR-016	check	workspaces-host: ws-host test	tests check what is logged, with its surface, and that a read is not
