@@ -86,7 +86,13 @@ def _safe(member_name: str, dest: Path) -> Path:
 def _unpack(archive: Path, d: Download, dest: Path) -> None:
     dest.mkdir(parents=True)
     if d.kind == "file":
-        shutil.copy2(archive, dest / next(iter(d.binaries.values()), d.name))
+        target = dest / next(iter(d.binaries.values()), d.name)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(archive, target)
+        target.chmod(0o755)       # a single downloaded file is a program
+        return
+    if d.kind == "deb":
+        shutil.copy2(archive, dest / f"{d.name}.deb")   # unpacked by an install step (dpkg-deb -x), which every Debian-family host has
         return
     if d.kind == "zip":
         with zipfile.ZipFile(archive) as z:

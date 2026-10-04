@@ -1,0 +1,148 @@
+# IF Press imprint theme for asciidoctor-pdf.
+#
+# Colors and typography are derived from the live docs site's own design
+# tokens (see docs-src/theme/html.css / the retired docs/index.html CSS):
+# --accent #0969da, --text #1a1d21, --text-soft #57606a, --border #e7e9ec,
+# --code-bg #f6f8fa, --code-border #e3e6ea. The cover uses docs/logo.png
+# (the existing icon-only mascot crop, already sized for small brand use)
+# rather than the full illustrated hero, which is too busy to sit behind
+# title text legibly at book-cover scale.
+#
+# This is a first draft. It has not yet been run through a real
+# asciidoctor-pdf build (see specs/019-asciidoc-manuscript-docs' toolchain
+# task) - expect to adjust exact key names/nesting once real output is in
+# hand; asciidoctor-pdf's theming DSL is particular about both.
+extends: default
+
+font:
+  catalog:
+    merge: true
+
+page:
+  background-color: #FFFFFF
+  layout: portrait
+  size: A4
+  margin: [36, 48, 40, 48]
+  margin-inner: 54
+  margin-outer: 42
+
+base:
+  font-color: #1A1D21
+  font-family: Noto Serif
+  font-size: 10.5
+  line-height: 1.45
+
+vertical-rhythm: 12
+
+link:
+  font-color: #0969DA
+
+title-page:
+  align: center
+  background-color: #FFFFFF
+  logo:
+    # Copied into place by docs-src/build.sh from docs/logo.png right
+    # before the PDF build, so this theme file references it by a plain
+    # relative path (unambiguous - asciidoctor-pdf theme image paths are
+    # resolved relative to the theme file itself) instead of duplicating
+    # the real logo in git or guessing at imagesdir resolution rules.
+    image: image:logo.png[width=90]
+    top: 18%
+  title:
+    top: 42%
+    font-color: #1A1D21
+    font-family: Noto Serif
+    font-size: 30
+    font-style: bold
+    line-height: 1.15
+  subtitle:
+    font-color: #57606A
+    font-size: 14
+    margin-top: 6
+  authors:
+    font-color: #0969DA
+    font-size: 12
+    margin-top: 24
+  revision:
+    font-color: #57606A
+    font-size: 10
+
+heading:
+  font-color: #0969DA
+  font-family: Noto Serif
+  font-style: bold
+  line-height: 1.2
+  h1:
+    font-size: 22
+    margin-top: 0
+  h2:
+    font-size: 16
+  h3:
+    font-size: 13
+  h4:
+    font-size: 11.5
+
+code:
+  font-family: M+ 1mn
+  font-size: 9
+  background-color: #F6F8FA
+  border-color: #E3E6EA
+  border-width: 0.75
+  padding: [6, 10, 6, 10]
+
+admonition:
+  column-rule-color: #0969DA
+  column-rule-width: 3
+  padding: [8, 12, 8, 12]
+  label:
+    font-color: #0969DA
+    font-style: bold
+    text-transform: uppercase
+
+table:
+  border-color: #E7E9EC
+  head:
+    background-color: #F6F8FA
+    font-style: bold
+  body:
+    stripe-background-color: #F6F8FA
+
+toc:
+  font-color: #1A1D21
+  dot-leader:
+    font-color: #E7E9EC
+  h1-font-size: 18
+
+header:
+  height: 24
+  font-size: 8.5
+  font-color: #57606A
+  border-color: #E7E9EC
+  recto:
+    center:
+      content: '{chapter-title}'
+  verso:
+    center:
+      content: '{document-title}'
+
+footer:
+  height: 24
+  font-size: 8.5
+  font-color: #57606A
+  recto:
+    right:
+      content: '{page-number}'
+  verso:
+    left:
+      content: '{page-number}'
+
+running-content:
+  start-at: title
+
+image:
+  align: center
+
+caption:
+  font-color: #57606A
+  font-style: italic
+  font-size: 9

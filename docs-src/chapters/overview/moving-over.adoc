@@ -1,0 +1,23 @@
+[#moving-over]
+== Moving a repository over
+
+A repository joins by adding `.workspaces-host/ws-host.env`. It is information, so it is a few `KEY=value` lines. This is the public
+root's, as a proposal for the people who own it:
+
+----
+WS_HOST_KIT=press
+WS_HOST_REPOS="github.com/intellectual-frontiers/workspaces-host"
+----
+
+A repository that builds Rust programs names the `rust` kit, one that typesets books names `press`, and several kits are a
+space-separated list in quotes:
+
+----
+WS_HOST_KIT="base rust"
+----
+
+I have not added these to any repository; they are proposals for the people who own them. A repository that wants to pin the release
+of `ws-host` it was tested with adds `WS_HOST_VERSION=` to the same file.
+
+A repository's CI uses the same path as a person: a GitHub Ubuntu runner runs `install.sh` and `ws-host kit add` for the
+repository's kit.

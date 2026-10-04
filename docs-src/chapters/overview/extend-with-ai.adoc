@@ -1,0 +1,44 @@
+[#extend-with-ai]
+== Extend it with AI, in Python
+
+Everything `ws-host` does is Python code, and everything you add is a Python module. I chose that over configuration files
+on purpose. A person edits a configuration file by hand; an AI agent changes code easily, and a test can run the result.
+Configuration files existed for people.
+
+The rule has two halves. Behavior is code: commands, kits, package lists, the versions and fingerprints of downloads, checks.
+Information is a small file in the syntax of `os-release`: names, places and identities. If changing it changes what the
+program does, it is code.
+
+=== The registry is discovered, not listed
+
+* A command is a Python module in `ws_host/commands/`.
+* A kit is a Python module in `ws_host/kits/`.
+* A help topic is a Python module in `ws_host/help/`.
+
+Adding the file adds the thing, and deleting it removes it. Nothing else lists it, so there is nothing to forget.
+
+=== Packages are uv's, and imports are lazy
+
+A module imports only the standard library at the top. That is what lets `help`, `command list` and `doctor` work on a
+machine with nothing installed. If a module needs a package, I follow one strategy: the package goes in a dependency group
+in `pyproject.toml`, `uv` locks it in `uv.lock`, the command declares the group, and the module imports the package inside
+the function that uses it. `uv.lock` and `pyproject.toml` are the only TOML in the repository, because `uv` owns that
+format. There is no other lock, no requirements file and no version manager. `doctor` fails if a module imports a package
+at the top, or if two modules declare the same command or kit.
+
+=== How to ask
+
+Tell the AI what you want in plain words. Point it at `.claude/skills/ws-host/SKILL.md`, which lists every command and is
+generated from the code so it is never out of date, and at an existing module to copy. Ask it to add tests. Then run the four
+checks:
+
+* `ws-host doctor` says whether the registry has a conflict.
+* `ws-host check` says whether the pieces agree.
+* `ws-host test` runs the tests.
+* `ws-host fresh` says whether the generated reference and the agent skill are current. `ws-host docs generate` and
+  `ws-host skill generate` rewrite them.
+
+If a change helps you it helps everyone, so open a pull request. Your own name, keys and repositories belong in your
+configuration file; everything else belongs here.
+
+`ws-host help extend` has the same instructions in a form where each step is a button.

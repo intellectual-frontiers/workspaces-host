@@ -116,6 +116,19 @@ def _plan(cmd: Command, argv: list[str]) -> None:
         os.execvpe(uv, [uv, "run", "--frozen", "--no-dev", "--group", cmd.group, *flags, "python", "-m", "ws_host", *argv], env)
 
 
+def _programs(cmd: Command, registry: Registry) -> None:
+    """0041 FR-006: a command whose program is missing fails with a hint naming the kit that supplies it."""
+    from . import machine
+    gone = [p for p in cmd.programs if shutil.which(p) is None]
+    if not gone:
+        return
+    d = machine.distro()
+    kits = [n for n, k in sorted(registry.kits.items()) if any(c.program in gone for c in k().checks(d))]
+    acts = [Action(("kit", "add"), f"Install the {k} kit", {"kit": k}) for k in kits]
+    raise WsError("missing-program", f"{', '.join(gone)} is not installed", f"I need {', '.join(gone)} for that, and it is not on this machine."
+                  + (f" The {kits[0]} kit has it." if kits else ""), acts, status="missing")
+
+
 def _emit(results, mode: str, registry: Registry, out) -> int:
     code = 0
     for r in results:
@@ -139,7 +152,7 @@ def run(argv: list[str], surface: str = "cli", out=None, err=None) -> int:
               offline=os.environ.get("WS_HOST_OFFLINE") == "1")
     cmd, rest = None, []
     try:
-        if not argv or argv[0] in ("-h", "--help", "help"):
+        if not argv or argv[0] in ("-h", "--help"):
             cmd, rest = registry.get(("command", "list")), []
         elif argv[0] == "--version":
             out.write(f"{NAME} {VERSION}\n")
@@ -156,6 +169,8 @@ def run(argv: list[str], surface: str = "cli", out=None, err=None) -> int:
         ctx.offline = ctx.offline or ns.offline
         ctx.values = _validate(cmd, ns, ctx)
         _plan(cmd, argv)
+        if not ctx.dry_run:
+            _programs(cmd, registry)
         result = cmd.fn(ctx, **ctx.values)
         # A stream is emitted as it is produced, one document per line under --json (0041 FR-019).
         code = _emit(result if isinstance(result, _types.GeneratorType) else [result], mode, registry, out)

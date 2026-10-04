@@ -3,7 +3,7 @@
 **Spec ID:** 0003-kits
 **Status:** Draft
 
-**Input:** The kits `ws-host` ships in v0.1 (`base`, `press`, `rust`), the two
+**Input:** The kits `ws-host` ships (`base`, `press`, `rust` and `shell`), the two
 installers that put them on a machine (the distribution's package manager, and
 a verified download), and the `kit` commands. A kit is what
 0041-command-line FR-058 to FR-062 define: a Python module declaring its
@@ -80,6 +80,17 @@ a kit installs what the distribution ships, so two machines may differ, and
 - **FR-011**: A kit's download versions, addresses and checksums MUST be in its
   code, and updating one MUST be a change of its own that the tests run
   against.
+
+## The shell kit
+
+- **FR-014**: The `shell` kit MUST provide `fish` 4 or later and `oh-my-posh`,
+  and its checks MUST include that `fish` is version 4 or later and runs a
+  command, and that `oh-my-posh` prints a prompt with the repository's coach
+  theme (`themes/coach.omp.json`) and sets up both `bash` and `fish`. Where the
+  distribution ships `fish` older than 4, the kit MUST fetch the fish project's
+  own release package for that distribution, verify it (FR-006) and unpack it
+  into the person's tools directory. The kit MUST NOT change the person's login
+  shell or their shell startup files (0005-help-and-docs FR-011).
 
 ## Declared kits
 

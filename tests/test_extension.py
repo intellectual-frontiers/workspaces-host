@@ -22,7 +22,8 @@ class Package(unittest.TestCase):
 
     def test_it_is_plain_javascript_with_no_build_and_no_dependencies(self):
         files = sorted(p.name for p in (REPO / "vscode").iterdir())
-        self.assertEqual(files, ["extension.js", "package.json"])
+        self.assertEqual(files, ["extension.js", "logo.png", "package.json"])
+        self.assertEqual(self.pkg["icon"], "logo.png")
         for key in ("dependencies", "devDependencies", "scripts"):
             self.assertNotIn(key, self.pkg)
         self.assertEqual(self.pkg["main"], "./extension.js")
@@ -44,7 +45,7 @@ class Package(unittest.TestCase):
 
     def test_every_contributed_command_is_the_documented_set_and_none_takes_arguments(self):
         cmds = sorted(c["command"] for c in self.pkg["contributes"]["commands"])
-        self.assertEqual(cmds, ["wsHost.advance", "wsHost.getHelp", "wsHost.refresh", "wsHost.runChecks", "wsHost.signIn"])
+        self.assertEqual(cmds, ["wsHost.advance", "wsHost.getHelp", "wsHost.learn", "wsHost.refresh", "wsHost.runChecks", "wsHost.signIn"])
 
 
 @unittest.skipUnless(shutil.which("node"), "node is needed to test the extension's logic")
@@ -108,6 +109,7 @@ class Contract(Workspace):
 
     def test_decisions_are_flagged_and_never_on_mcp(self):
         _, lst = self.run_json("command", "list")
+        self.assertIn("help", [c["id"] for c in lst["data"]["commands"]])
         decisions = [c for c in lst["data"]["commands"] if c["category"] == "decision"]
         self.assertEqual([c["id"] for c in decisions], ["repo set"])
         for c in decisions:

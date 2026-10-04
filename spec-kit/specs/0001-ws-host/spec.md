@@ -79,8 +79,9 @@ and 0026-workspaces, held in the public root, govern all of them.
   (0041-command-line FR-005). The core, in `ws_host/core/`, MUST use the
   standard library only.
 - **FR-011**: `ws-host` MUST provide `command list` and `command show ID`
-  (read); `doctor` and `check [SECTION...]` (check); `test` (check); and
-  `context [RESOURCE]` (read), each as 0041-command-line states them, with
+  (read); `doctor` and `check [SECTION...]` (check); `test` and `fresh` (check);
+  `context [RESOURCE]` and `help [TOPIC]` (read); `docs build` (build); and
+  `docs generate` and `skill generate` (generate), each as 0041-command-line states them, with
   `--json`, `--html` and, where a command writes, `--dry-run`. Its audience is
   `private`: what it reports is about one person's machine.
 - **FR-012**: `doctor` MUST change nothing and MUST report: the distribution
@@ -95,7 +96,8 @@ and 0026-workspaces, held in the public root, govern all of them.
 - **FR-013**: `check` MUST run its sections through
   0041-command-line FR-031 to FR-033. Its sections are `registry` (the
   conflicts of FR-012), `launcher` (the launcher and `install.sh` are
-  executable and pass `sh -n`) and `specs` (the repository's specs and
+  executable and pass `sh -n`), `help` and `fresh` (0005-help-and-docs FR-005,
+  FR-014) and `specs` (the repository's specs and
   register pass the public root's checker, where it is on the machine; a
   section whose program is missing is skipped and fails the run).
 - **FR-014**: `test` MUST run the repository's tests with the standard

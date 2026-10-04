@@ -33,14 +33,16 @@ def _lines(value, indent: int = 0) -> list[str]:
     elif isinstance(value, list):
         for item in value:
             if isinstance(item, dict):
-                head = _scalar(item.get("name", item.get("id", item.get("title", ""))))
+                head = _scalar(item.get("name", item.get("id", item.get("title", item.get("heading", "")))))
                 status = item.get("status")
-                rest = [f"{k}: {_scalar(v)}" for k, v in item.items() if k not in ("name", "id", "title", "status") and not isinstance(v, (dict, list))]
+                rest = [f"{k}: {_scalar(v)}" for k, v in item.items() if k not in ("name", "id", "title", "heading", "status", "text") and not isinstance(v, (dict, list))]
                 mark = {"ok": "ok", "passed": "passed", "warn": "warning", "fail": "FAILED", "failed": "FAILED", "skip": "skipped", "skipped": "skipped"}.get(status, status or "")
                 line = f"{pad}- {head}" + (f" [{mark}]" if mark else "")
                 if rest:
                     line += " - " + "; ".join(rest)
                 out.append(line)
+                if item.get("text"):
+                    out += [f"{pad}    {ln}" if ln else "" for ln in str(item["text"]).splitlines()]
                 for k, v in item.items():
                     if isinstance(v, (dict, list)) and v:
                         out.append(f"{pad}    {k}:")

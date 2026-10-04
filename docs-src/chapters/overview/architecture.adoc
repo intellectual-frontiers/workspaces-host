@@ -1,0 +1,44 @@
+[#architecture]
+== How it is built
+
+----
+ws-host                  a POSIX sh launcher: needs python3 and uv, finds the clone through any symlink
+install.sh               checks python3 and git, installs uv, clones, links ws-host, runs doctor
+ws_host/
+  core/                  standard library only: registry, resources, renderings, errors,
+                         typed arguments, the env-file parser, logging
+  commands/              one module per noun: workspace repo auth kit vscode docs skill
+                         doctor check test context help command fresh
+  kits/                  base press rust shell
+  help/                  the topics: start repos signin trust kits shell editor ai extend recover
+  install/               the two installers: apt.py and fetch.py
+  lib/                   code behind the commands: git, repositories, trust, kit planning
+vscode/                  the extension: package.json, extension.js, logo.png
+docs-src/                this book; Part II is generated
+tests/                   standard-library unittest with real temporary git repositories
+----
+
+The launcher runs the plain standard-library interpreter through `uv`, so no host site-packages are ever involved. The
+registry imports every module under the commands, kits and help packages and records what they declare. The core never
+imports a package. Every command returns one `Resource`, and the same resource becomes text, JSON or HTML.
+
+=== Two installers
+
+`apt` installs what your distribution ships, through `sudo`, and says so before it asks for your password. A package the
+distribution lacks is reported and skipped, and the kit's checks say whether that matters. `fetch` downloads a file,
+verifies its SHA-256 against the one in the kit's code before anything is unpacked, unpacks it into
+`~/.local/share/workspaces-host/tools/<name>/<version>`, repoints a `current` link atomically, and links the binaries into
+`~/.local/bin`. A wrong fingerprint installs nothing. There is no third installer.
+
+=== Safe updating
+
+`repo advance` runs `git fetch` and then `git merge --ff-only`. It never pulls, rebases, merges any other way, or stashes. A
+repository with uncommitted tracked changes, diverged commits, no upstream, no branch, or an operation in progress is left
+exactly as it was and reported in plain words. These rules come from real defects in the earlier environment, where a
+reattach rebased someone's unpushed work and failed clones were reported as done. Each one is a test.
+
+=== The wire shape
+
+Every orchestrator answers `command list`, `command show` and its resources in one shape, so the extension needs no
+knowledge of any of them. A document names its schema as `<name>/<kind>@<n>`; the extension reads versions up to the one it
+knows and says "update needed" in plain words about a newer one.

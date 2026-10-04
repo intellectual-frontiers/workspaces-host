@@ -1,0 +1,31 @@
+[#shells]
+== Shells: bash is supported, fish is best
+
+`bash` and `oh-my-posh` are fully supported. Your login shell stays `bash`, `oh-my-posh` draws your prompt in it, and
+nothing in `ws-host` depends on which shell you use.
+
+`fish` 4 is the best experience, and I recommend it. It suggests and colors as you type without any plugin, and
+`oh-my-posh` looks and behaves best in it. The `shell` kit installs `fish` 4 and `oh-my-posh` together with the coach
+prompt theme, `themes/coach.omp.json`:
+
+----
+ws-host kit add shell
+----
+
+On Debian 13 the kit uses the distribution's `fish` 4.0. Ubuntu 24.04 ships `fish` 3.7, so the kit fetches the fish
+project's own 4.x package, checks its fingerprint and unpacks it under `~/.local/share/workspaces-host/tools`; nothing in
+your system directories changes beyond the packages the kit names.
+
+Try it without changing anything by typing `fish`. Making it your login shell is one separate step that only you take, and
+`ws-host` never takes it for you:
+
+----
+command -v fish | sudo tee -a /etc/shells
+chsh -s $(command -v fish)
+----
+
+`oh-my-posh` draws icons, so set a Nerd Font in your terminal. The prompt lines for both shells are in `ws-host help
+shell`, where they stay current.
+
+The one rule I keep for shells is that `ws-host` never edits your login shell, your startup files, your git configuration
+or your VS Code settings unasked. It tells you what it recommends and offers a button; you press it or you do not.

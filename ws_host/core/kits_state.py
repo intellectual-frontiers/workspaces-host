@@ -21,17 +21,17 @@ def kit_report(functional: bool = False) -> list[dict]:
         programs, missing, functional_results = {}, [], []
         for c in kit.checks(d):
             if c.program:
-                v = machine.program_version(c.program, c.version_args)
-                if v is None:
+                found = next(((p, v) for p in (c.program, *c.or_programs) if (v := machine.program_version(p, c.version_args)) is not None), None)
+                if found is None:
                     missing.append(c.program)
                 else:
-                    programs[c.program] = v
+                    programs[found[0]] = found[1]
         installed = not missing and bool(programs)
         if functional and installed:
             for c in kit.checks(d):
                 if c.run is None:
                     continue
-                gone = [p for p in c.needs if not program_present(p)]
+                gone = [p for p in c.needs if not any(program_present(x) for x in p.split("|"))]
                 if gone:
                     functional_results.append({"name": c.name, "status": "skip", "detail": f"needs {', '.join(gone)}"})
                     continue

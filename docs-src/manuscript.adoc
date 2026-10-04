@@ -1,0 +1,48 @@
+= Workspaces Host: Reference and Overview
+Intellectual Frontiers
+:doctype: book
+:toc:
+:toclevels: 2
+:sectnums:
+:sectnumlevels: 2
+:experimental:
+:xrefstyle: short
+:partnums:
+:imagesdir: ../docs
+
+[preface]
+include::chapters/front-matter/preface.adoc[]
+
+= Part I: Overview
+
+include::chapters/overview/what-it-is.adoc[]
+
+include::chapters/overview/day-to-day.adoc[]
+
+include::chapters/overview/shells.adoc[]
+
+include::chapters/overview/editor.adoc[]
+
+include::chapters/overview/trust.adoc[]
+
+include::chapters/overview/extend-with-ai.adoc[]
+
+include::chapters/overview/architecture.adoc[]
+
+include::chapters/overview/moving-over.adoc[]
+
+= Part II: Reference
+
+include::chapters/reference/commands.adoc[]
+
+include::chapters/reference/kits.adoc[]
+
+include::chapters/reference/files.adoc[]
+
+include::chapters/reference/help-topics.adoc[]
+
+= Part III: Questions
+
+include::chapters/overview/faq.adoc[]
+
+include::chapters/back-matter/colophon.adoc[]
