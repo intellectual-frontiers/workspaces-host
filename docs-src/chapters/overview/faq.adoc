@@ -10,8 +10,7 @@ An AI changes code easily and a test can run it. Configuration files were for hu
 names and places, are a small file in the syntax of `os-release`, parsed in a few lines by the standard library.
 
 === Why no YAML, no Nix, no devcontainers?
-Each added a second language to learn and a way for two machines to differ in ways nobody could see. The earlier
-environment, the earlier environment, used all three. Its mascot stays.
+Each added a second language to learn and a way for two machines to differ in ways nobody could see.
 
 === Why fast-forward only?
 Because the cost of being wrong is someone's unpushed work. `ws-host` moves a repository forward when that is trivially

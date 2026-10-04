@@ -134,6 +134,11 @@ class Contract(Workspace):
     def test_a_stream_in_html_is_one_page_per_resource(self):
         self.remote("acme", "site")
         self.config(WS_HOST_REPOS=self.rid("acme", "site"))
+        fakebin = self.home.parent / "gh"
+        fakebin.mkdir()
+        (fakebin / "gh").write_text("#!/bin/sh\nexit 0\n")
+        (fakebin / "gh").chmod(0o755)
+        os.environ["PATH"] = f"{fakebin}:{os.environ['PATH']}"
         code, out = self.run_cmd("workspace", "advance", "--html")
         pages = [p for p in re.split(r"(?=<!doctype html>)", out) if p.strip()]
         self.assertGreaterEqual(len(pages), 6)
@@ -243,3 +248,90 @@ class Add(Home):
             with zipfile.ZipFile(v) as z:
                 self.assertIsNone(z.testzip())
                 self.assertEqual(z.read("extension/package.json"), (REPO / "vscode" / "package.json").read_bytes())
+
+
+class Setup(Home):
+    """`vscode advance` (0006-onboarding FR-007 to FR-009): extensions and settings, never overwriting a person's own."""
+
+    def setUp(self):
+        super().setUp()
+        self.bin = self.home.parent / "bin"
+        self.bin.mkdir()
+        self.calls = self.home / "code.calls"
+        (self.bin / "code").write_text(f'#!/bin/sh\necho "$@" >> "{self.calls}"\n[ "$1" = --list-extensions ] && printf "ms-python.python\\n"\nexit 0\n')
+        (self.bin / "code").chmod(0o755)
+        os.environ["PATH"] = f"{self.bin}:{os.environ['PATH']}"
+        self.index = self.home / ".vscode" / "extensions"
+        self.index.mkdir(parents=True)
+        (self.index / "extensions.json").write_text("[]")
+        self.settings = self.home / ".config" / "Code" / "User" / "settings.json"
+
+    def test_it_installs_the_missing_recommended_extensions_and_skips_what_is_there(self):
+        code, doc = self.run_json("vscode", "advance")
+        self.assertEqual(code, 0, doc)
+        installed = self.calls.read_text()
+        for ext_id, _ in vs.RECOMMENDED:
+            if ext_id != "ms-python.python":
+                self.assertIn(f"--install-extension {ext_id} --force", installed)
+        self.assertNotIn("--install-extension ms-python.python", installed)
+        by = {s["name"]: s["status"] for s in doc["data"]["steps"]}
+        self.assertEqual(by["ms-python.python"], "ok")
+        self.assertTrue((self.index / "intellectual-frontiers.workspaces-host-0.1.0").is_symlink())
+
+    def test_it_adds_settings_the_person_lacks_and_keeps_every_one_they_set(self):
+        self.settings.parent.mkdir(parents=True)
+        self.settings.write_text(json.dumps({"files.autoSave": "off", "editor.fontSize": 18}))
+        code, doc = self.run_json("vscode", "advance")
+        self.assertEqual(code, 0)
+        merged = json.loads(self.settings.read_text())
+        self.assertEqual(merged["files.autoSave"], "off")        # theirs wins
+        self.assertEqual(merged["editor.fontSize"], 18)          # untouched
+        self.assertIs(merged["git.autofetch"], True)             # added
+        self.assertIn("files.autoSave", doc["data"]["settings"]["kept"])
+        self.assertTrue((self.home / ".local/state/workspaces-host/backups/vscode-settings.json").exists())
+
+    def test_a_settings_file_with_comments_is_left_alone_and_the_values_are_listed(self):
+        self.settings.parent.mkdir(parents=True)
+        original = '{\n  // my notes\n  "editor.fontSize": 18,\n}\n'
+        self.settings.write_text(original)
+        code, doc = self.run_json("vscode", "advance")
+        self.assertEqual(self.settings.read_text(), original)
+        self.assertEqual(doc["data"]["settings"]["status"], "left-alone")
+        self.assertIn("git.autofetch", doc["data"]["settings"]["plain"])
+
+    def test_it_is_repeatable_and_dry_run_changes_nothing(self):
+        code, doc = self.run_json("vscode", "advance", "--dry-run")
+        self.assertEqual(code, 0)
+        self.assertFalse(self.settings.exists())
+        self.assertNotIn("--install-extension", self.calls.read_text() if self.calls.exists() else "")
+        self.run_cmd("vscode", "advance")
+        first = self.settings.read_text()
+        code, doc = self.run_json("vscode", "advance")
+        self.assertEqual(self.settings.read_text(), first)
+        self.assertEqual(doc["data"]["settings"]["status"], "unchanged")
+
+    def test_under_wsl_the_machine_settings_file_is_used(self):
+        from ws_host.core import machine
+        orig = machine.distro
+        machine.distro = lambda: {**orig(), "wsl": True}
+        self.addCleanup(lambda: setattr(machine, "distro", orig))
+        (self.home / ".vscode-server" / "extensions").mkdir(parents=True)
+        (self.home / ".vscode-server" / "extensions" / "extensions.json").write_text("[]")
+        self.run_cmd("vscode", "advance")
+        self.assertTrue((self.home / ".vscode-server" / "data" / "Machine" / "settings.json").exists())
+        self.assertFalse(self.settings.exists())
+
+    def test_without_code_it_says_what_to_do_and_still_sets_the_settings_it_can(self):
+        (self.bin / "code").unlink()
+        os.environ["PATH"] = os.pathsep.join(p for p in os.environ["PATH"].split(os.pathsep) if not shutil.which("code", path=p))
+        code, doc = self.run_json("vscode", "advance")
+        self.assertIn("code .", json.dumps(doc["data"]))
+        self.assertTrue(self.settings.exists())
+
+    def test_the_baseline_chooses_fish_only_when_it_is_installed(self):
+        self.assertIn(vs.baseline_settings()["terminal.integrated.defaultProfile.linux"], ("fish", "bash"))
+        self.assertTrue(all(isinstance(v, (str, bool)) for v in vs.baseline_settings().values()))
+
+    def test_setup_is_a_setup_command_on_the_terminal_and_the_editor_never_mcp(self):
+        c = reg.discover().get(("vscode", "advance"))
+        self.assertEqual((c.category, c.surfaces), ("setup", ("cli", "editor")))

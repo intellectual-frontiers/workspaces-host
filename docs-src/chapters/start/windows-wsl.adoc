@@ -1,0 +1,65 @@
+[#get-started]
+== Get started on Windows 11
+
+You will do four things: get Debian running inside Windows, paste one line, sign in to GitHub once, and open VS Code. Each step says
+where to type and what you will see. If anything differs, go to <<troubleshooting>>; every problem I know of is there.
+
+You need a Windows 11 computer, an internet connection, a GitHub account, and about thirty minutes the first time. If you have no
+GitHub account, https://docs.github.com/en/get-started/start-your-journey/creating-an-account-on-github[make one first].
+
+=== Step 1: Put Debian on your computer
+
+Debian is a version of Linux. Windows can run it inside a window, and that is called WSL.
+
+. Open the *Microsoft Store* (press the Windows key, type `Store`, press Enter).
+. Search for *Debian*. Choose *Debian GNU/Linux* and press *Get*.
+. When it finishes, press *Open*. A black window opens and says it is installing. Wait a minute or two.
+
+If the window says WSL is not enabled or shows an error that starts with `0x8007`, open *PowerShell as administrator* (Windows key,
+type `PowerShell`, right-click it, *Run as administrator*), paste this, and restart your computer when it finishes:
+
+----
+wsl --install --no-distribution
+----
+
+Then open Debian from the Start menu again. Microsoft's own page has the full details:
+https://learn.microsoft.com/en-us/windows/wsl/install[Install WSL].
+
+=== Step 2: Make your account in Debian
+
+The first time Debian opens it asks you to *create a UNIX username* and a *password*. Choose a short lowercase name, such as your first
+name. When you type the password nothing appears on the screen, not even dots. That is normal. Type it, press Enter, and type it again.
+
+Write the password down. You will need it every time something is installed. When you see a line ending in `$`, you are in.
+
+NOTE: From here on, "the Debian window" is this black window. You can also open it from *Windows Terminal*, which is the nicer way
+(https://learn.microsoft.com/en-us/windows/terminal/install[how to get it]); choose *Debian* from the drop-down.
+
+=== Step 3: Install curl and run the installer
+
+Paste each of these into the Debian window and press Enter. To paste in the Debian window, right-click, or press Ctrl+Shift+V. The first
+one asks for your password.
+
+----
+sudo apt update && sudo apt install -y curl
+----
+
+----
+curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh
+----
+
+The installer does the rest. It tells you what it is about to install and asks for your password if it needs it. It installs the small
+tools it needs, copies `ws-host` to your computer, checks your machine, installs the everyday tools (the `base` kit), and then stops
+and asks you to sign in to GitHub. That is expected.
+
+When it finishes it says `Sign in to GitHub first`, and then shows a page called *Your first steps*: five numbered steps with the
+line to type for each, in colour. It is the same page as `ws-host help start`, so you can show it again whenever you like. Go on to
+<<sign-in>>.
+
+=== What you have now
+
+* `ws-host`, a command that does everything on this page for you. Type `ws-host help` any time.
+* A folder called `workspaces` in your Debian home, where your repositories will go. Two come with you as starters: `.github`, the shared
+  examples and rules, and `workspaces-host`, this tool. You choose the rest; see <<typical-uses>>.
+
+I wrote the installer so you can run it again whenever you like. It never touches your work.

@@ -1,7 +1,7 @@
 """`repo list|status|add|advance|set` (0002-repositories-and-trust)."""
 from __future__ import annotations
 
-from ..core import config, registry as reg, types
+from ..core import config, paths, registry as reg, types
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
 from ..lib import repos, trust as trust_mod
@@ -35,7 +35,7 @@ def repo_list(ctx):
     n_missing = sum(not r["cloned"] for r in rows)
     plain = (f"I know {len(rows)} repositor{'ies' if len(rows) != 1 else 'y'}; "
              + (f"{n_missing} not copied to this machine yet." if n_missing else "all are on this machine.")) if rows else \
-            "I do not know any repositories yet. List some in WS_HOST_REPOS in your configuration."
+            "I do not know any repositories yet. Add one with: ws-host repo add github.com/ORG/REPO"
     actions = [Action(("repo", "add"), "Copy the missing repositories", {"all": True})] if n_missing else []
     return Resource("repo-list", "repositories", {"plain": plain, "repositories": rows, "ignored": invalid}, actions=actions)
 
@@ -70,21 +70,28 @@ def _actions_for(results, cfg) -> list[Action]:
          args=(REPO_ARG, Arg("all", flag=True, help="every known repository"), Arg("trust", flag=True, help="also trust them")))
 def repo_add(ctx, repo, all, trust: bool):
     cfg = config.load()
+    listed = None
+    rid_new = repos.parse_id(repo) if repo else None
+    if rid_new is not None and str(rid_new) not in set(cfg.repos()) and rid_new not in repos.known(cfg)[0]:
+        listed = str(rid_new)       # 0006-onboarding FR-011: naming a new repository puts it on the person's own list
     found, _ = repos.known(cfg)
     chosen = _selected(cfg, repo)
     trust_these: list[repos.RepoId] = []
     if trust:
         # Only repositories the person lists or names: never those only another repository's file names (0002 FR-014).
-        own = {repos.parse_id(e) for e in cfg.words("WS_HOST_REPOS")}
+        own = {repos.parse_id(e) for e in cfg.repos()}
         trust_these = [r for r in chosen if repo or r in own]
     if ctx.dry_run:
         rows = [{"id": str(r), "outcome": "would-copy" if not (r.path(cfg) / ".git").exists() else "present", "status": "ok",
                  "plain": f"I would copy {r.name} to {r.path(cfg)}." if not (r.path(cfg) / ".git").exists() else f"{r.name} is already here."}
                 for r in chosen]
         return Resource("repo-add", "dry-run", {"plain": "Nothing was changed. This is what I would do.", "repositories": rows,
-                                                 "would_trust": [str(r) for r in trust_these]})
+                                                 "would_trust": [str(r) for r in trust_these], **({"would_list": listed} if listed else {})})
     if trust:
         ctx.confirm("This lets these repositories' code run on your machine: " + ", ".join(map(str, trust_these)) + ".")
+    if listed:
+        config.add_repo(listed)
+        cfg = config.load()
     results, done, pending = [], set(), chosen
     # Cloning a repository can reveal more repositories in its own list: go until nothing new is missing.
     while pending:
@@ -100,7 +107,9 @@ def repo_add(ctx, repo, all, trust: bool):
                 except FileExistsError as e:
                     raise WsError("trust-conflict", str(e), "Another repository with the same name is already trusted, so I did not trust this one.")
     bad = any(r["outcome"] == "failed" for r in results)
-    data = {"plain": repos.summarize(results), "repositories": results}
+    data = {"plain": repos.summarize(results) + (f" I added {listed} to your list in {paths.config_file()}." if listed else ""), "repositories": results}
+    if listed:
+        data["listed"] = listed
     if trust:
         data["trusted"] = [str(r) for r in trust_these if (r.path(cfg) / ".git").exists()]
     return Resource("repo-add", "all" if not repo else repo, data, actions=_actions_for(results, cfg), status=FAILED if bad else OK)

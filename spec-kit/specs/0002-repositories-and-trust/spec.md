@@ -6,9 +6,9 @@
 **Input:** How `ws-host` finds, clones and updates a person's repositories,
 signs them in, and decides whose code may run. The `repo`, `auth` and
 `workspace` nouns follow 0041-command-line FR-063 and 0026-workspaces FR-015
-to FR-024, which govern them. The rules come from defects of the earlier
-environment: one reattach rebased a person's unpushed work, and failed clones
-were reported as done. Each is a test here.
+to FR-024, which govern them. The rules guard against two
+failures that cost people work: a reattach that rebases someone's unpushed
+work, and a failed clone reported as done. Each is a test here.
 
 ## Where repositories live and where they are listed
 

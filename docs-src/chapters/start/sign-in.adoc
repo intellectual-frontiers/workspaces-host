@@ -1,0 +1,44 @@
+[#sign-in]
+== Sign in to GitHub
+
+There is one way to sign in, and it is the only way I support. It uses a short code and your web browser. You never type a password into
+the Debian window, and you never create a token or an SSH key.
+
+=== Step 1: Ask for a code
+
+In the Debian window, type:
+
+----
+ws-host auth new github
+----
+
+It prints a line like this:
+
+----
+To sign in, open https://github.com/login/device and type this code: ABCD-1234
+----
+
+=== Step 2: Type the code in your browser
+
+. Hold Ctrl and click the address, or copy it and paste it into your normal web browser on Windows.
+. If GitHub asks you to sign in, do that as you normally do.
+. Type the code from the Debian window. Press *Continue*, then *Authorize*.
+. Go back to the Debian window. It says `You are signed in to github.com`.
+
+The code works for a few minutes. If it expires, run the command again for a new one. GitHub's own page explains the same login:
+https://cli.github.com/manual/gh_auth_login[gh auth login].
+
+=== Step 3: Run the setup again
+
+----
+ws-host workspace advance
+----
+
+This time it goes on. It copies your repositories into `workspaces`, brings them up to date, installs the tools they ask for, and checks
+your machine. It is safe to run as often as you like: if you have changes of your own in a repository, it leaves that repository
+exactly as it was and tells you your work is safe.
+
+If it says it could not copy a repository and mentions `Username`, you are not signed in yet or you cannot see that repository. See
+<<troubleshooting>>.
+
+NOTE: In VS Code the same sign-in is a notification with a button, *Copy code and open browser*. You will meet it in the next chapter.

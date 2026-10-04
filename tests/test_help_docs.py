@@ -11,6 +11,20 @@ from ws_host.commands import docs
 from ws_host.core import registry as reg
 from .helpers import REPO, Home
 
+FAKE_ASCIIDOCTOR = r"""#!/bin/sh
+# a stand-in for asciidoctor: one section per chapter file, with a link to another section when the file has one
+out=""; file=""
+while [ $# -gt 0 ]; do case "$1" in -o) out=$2; shift;; -*) ;; *) file=$1;; esac; shift; done
+id=$(sed -n 's/^\[#\([^]]*\)\]$/\1/p' "$file" | head -1)
+title=$(sed -n 's/^== \(.*\)$/\1/p' "$file" | head -1)
+ref=$(sed -n 's/.*<<\([a-z-]*\)>>.*/\1/p' "$file" | head -1)
+page="<div class=\"sect1\"><h2 id=\"${id:-none}\">${title:-Untitled}</h2><p>text"
+[ -n "$ref" ] && page="$page <a href=\"#$ref\">[$ref]</a>"
+page="$page</p></div>"
+if [ "$out" = "-" ]; then echo "$page"; elif [ -n "$out" ]; then echo "<html>$page</html>" > "$out"; fi
+exit 0
+"""
+
 TOPICS = {"start", "repos", "signin", "trust", "kits", "editor", "shell", "recover", "ai", "extend"}
 
 
@@ -163,13 +177,12 @@ class Generated(Home):
 
 
 class Guide(Home):
-    def test_the_graphics_of_the_earlier_environment_are_here_unchanged(self):
+    def test_the_graphics_are_here_and_the_licence_is_this_repositorys_own(self):
         expected = {"logo.png": "32375", "mascot.jpg": "183738", "mascot-workflows.jpg": "145214", "social-preview.jpg": "204239"}
         for name, size in expected.items():
             self.assertEqual(str((REPO / "docs" / name).stat().st_size), size, name)
         self.assertEqual((REPO / "docs" / "logo.png").read_bytes(), (REPO / "vscode" / "logo.png").read_bytes())
-        self.assertIn("MIT License", (REPO / "docs" / "LICENSE-the earlier environment").read_text())
-        self.assertIn("the earlier environment", (REPO / "docs-src" / "chapters" / "back-matter" / "colophon.adoc").read_text())
+        self.assertIn("MIT License", (REPO / "LICENSE").read_text())
 
     def test_the_theme_files_are_here_and_the_book_uses_the_mascot(self):
         for f in ("html.css", "epub.css", "if-press-pdf-theme.yml"):
@@ -214,7 +227,7 @@ class Guide(Home):
     def test_build_without_converters_says_which_are_missing_and_builds_nothing_it_cannot(self):
         bin_ = self.home.parent / "bin"
         bin_.mkdir()
-        (bin_ / "asciidoctor").write_text('#!/bin/sh\ncase "$*" in *--version*) exit 1;; esac\nout=""\nwhile [ $# -gt 0 ]; do [ "$1" = -o ] && out=$2; shift; done\n[ -n "$out" ] && echo "<html></html>" > "$out"\nexit 0\n')
+        (bin_ / "asciidoctor").write_text(FAKE_ASCIIDOCTOR)
         (bin_ / "asciidoctor").chmod(0o755)
         keep = self.home.parent / "keep"
         keep.mkdir()
@@ -225,7 +238,8 @@ class Guide(Home):
         code, doc = self.run_json("docs", "build", "--output", str(out))
         by = {e["name"]: e for e in doc["data"]["editions"]}
         self.assertEqual(by["single-page HTML"]["status"], "built")
-        for name in ("multi-page HTML", "PDF", "EPUB"):
+        self.assertEqual(by["multi-page HTML"]["status"], "built")
+        for name in ("PDF", "EPUB"):
             self.assertEqual(by[name]["status"], "skipped", name)
             self.assertIn("not on this machine", by[name]["reason"])
         self.assertTrue((out / "book" / "single-page.html").is_file())
@@ -245,3 +259,121 @@ class Guide(Home):
         code, doc = self.run_json("docs", "build", "--output", str(self.home / "x"), "--dry-run")
         self.assertEqual(code, 0)
         self.assertFalse((self.home / "x").exists())
+
+
+class Site(Home):
+    """0006-onboarding FR-010 to FR-015: the site, its content, and the README."""
+
+    def build(self, out):
+        bin_ = self.home.parent / "bin"
+        bin_.mkdir(exist_ok=True)
+        (bin_ / "asciidoctor").write_text(FAKE_ASCIIDOCTOR)
+        (bin_ / "asciidoctor").chmod(0o755)
+        keep = self.home.parent / "keep"
+        keep.mkdir(exist_ok=True)
+        for t in ("sh", "cat", "env", "sed", "head"):
+            if not (keep / t).exists():
+                (keep / t).symlink_to(shutil.which(t))
+        os.environ["PATH"] = f"{bin_}:{keep}"
+        return self.run_json("docs", "build", "--output", str(out))
+
+    def test_every_chapter_is_a_page_with_the_navigation_and_a_pager(self):
+        out = self.home / "site"
+        code, doc = self.build(out)
+        self.assertEqual(code, 0, doc)
+        slugs = [p.stem for p in (REPO / "docs-src" / "chapters").rglob("*.adoc")]
+        for slug in slugs:
+            page = (out / "book" / f"{slug}.html").read_text()
+            self.assertIn('<nav class="site-nav">', page, slug)
+            self.assertIn('class="current"', page, slug)
+            self.assertIn("../index.html", page)
+            self.assertIn('rel="stylesheet" href="site.css"', page)
+            for other in ("windows-wsl", "troubleshooting", "commands"):
+                self.assertIn(f'href="{other}.html"', page, f"{slug} does not link to {other}")
+        self.assertTrue((out / "book" / "index.html").is_file())
+        self.assertTrue((out / "book" / "site.css").is_file() and (out / "book" / "html.css").is_file())
+
+    def test_a_cross_reference_becomes_a_link_to_the_page_that_holds_it_with_its_title(self):
+        out = self.home / "site"
+        self.build(out)
+        page = (out / "book" / "windows-wsl.html").read_text()      # its source says <<troubleshooting>> and <<sign-in>>
+        self.assertIn('href="troubleshooting.html#troubleshooting">Troubleshooting</a>', page)
+        self.assertNotIn(">[troubleshooting]<", page)
+
+    def test_the_site_has_the_parts_the_spec_requires_in_order(self):
+        order = [re.search(r"/(\w[\w-]*)\.adoc", m).group(1) for m in re.findall(r"include::[^\[]+\[\]", (REPO / "docs-src" / "manuscript.adoc").read_text())]
+        for a, b in (("windows-wsl", "sign-in"), ("sign-in", "vscode"), ("vscode", "extension"), ("extension", "typical-uses"),
+                     ("typical-uses", "commands"), ("commands", "troubleshooting")):
+            self.assertLess(order.index(a), order.index(b), f"{a} must come before {b}")
+
+    def test_each_getting_started_step_says_where_to_type(self):
+        for name in ("windows-wsl", "sign-in", "vscode"):
+            text = (REPO / "docs-src" / "chapters" / "start" / f"{name}.adoc").read_text()
+            self.assertRegex(text, r"Debian window|PowerShell|VS Code", name)
+        text = (REPO / "docs-src" / "chapters" / "start" / "windows-wsl.adoc").read_text()
+        for needle in ("Microsoft Store", "sudo apt update && sudo apt install -y curl", "install.sh | sh", "Windows 11", "password"):
+            self.assertIn(needle, text)
+
+    def test_the_sign_in_chapter_prescribes_one_way_and_none_of_the_others(self):
+        text = (REPO / "docs-src" / "chapters" / "start" / "sign-in.adoc").read_text()
+        self.assertIn("ws-host auth new github", text)
+        self.assertIn("never create a token or an SSH key", " ".join(text.split()).replace("you never type a password into the Debian window, and you", "you"))
+        for forbidden in ("ssh-keygen", "personal access token", "gh auth login --with-token"):
+            self.assertNotIn(forbidden, text)
+
+    def test_the_faq_covers_every_blocker_the_spec_names(self):
+        text = (REPO / "docs-src" / "chapters" / "faq" / "troubleshooting.adoc").read_text()
+        for needle in ("WSL is not installed", "Debian window opens and closes", "password", "curl: command not found", "certificate", "sudo", "ws-host: command not found",
+                       "sign-in code", "clock", "could not read Username", "code: command not found", "opens on Windows, not inside Debian",
+                       "extension does not show up", "Restricted Mode", "settings alone", "left alone", "boxes instead of icons"):
+            self.assertIn(needle, text, needle)
+        self.assertGreaterEqual(text.count("*Why:*"), 16)
+        self.assertEqual(text.count("*Why:*"), text.count("*Fix:*"))
+
+    def test_the_guide_links_the_vendors_for_what_it_does_not_own_over_https(self):
+        text = "".join(p.read_text() for p in (REPO / "docs-src" / "chapters" / "start").glob("*.adoc")) + (REPO / "docs-src" / "chapters" / "faq" / "troubleshooting.adoc").read_text()
+        for needle in ("learn.microsoft.com/en-us/windows/wsl/install", "code.visualstudio.com/", "code.visualstudio.com/docs/remote/wsl", "cli.github.com/manual/gh_auth_login", "docs.github.com"):
+            self.assertIn("https://" + needle.split("//")[-1], text, needle)
+        self.assertNotRegex(text, r"http://(?!PROXY)")
+
+    def test_the_extension_chapter_says_it_is_local_and_not_from_the_marketplace(self):
+        text = (REPO / "docs-src" / "chapters" / "start" / "extension.adoc").read_text()
+        for needle in ("not on the VS Code Marketplace", "ws-host vscode add", "vscode", "reload", "decide", "Restricted Mode"):
+            self.assertIn(needle, text.replace("Reload", "reload").replace("Restricted Mode", "Restricted Mode"))
+
+    def test_the_readme_is_the_five_step_flow_and_links_the_site(self):
+        text = (REPO / "README.md").read_text()
+        self.assertIn("https://intellectual-frontiers.github.io/workspaces-host/", text)
+        flow = text[text.index("## The flow"):text.index("## For contributors")]
+        self.assertEqual(len(re.findall(r"^\d\. \*\*", flow, re.M)), 5)
+        for needle in ("Microsoft Store", "install.sh", "ws-host auth new github", "ws-host vscode advance", "Workspace: Learn"):
+            self.assertIn(needle, flow)
+        self.assertLess(len(text.splitlines()), 45)
+
+    def test_the_pages_workflow_deploys_main_with_the_pages_actions_after_tests_and_fresh(self):
+        text = (REPO / ".github" / "workflows" / "pages.yml").read_text()
+        for needle in ("branches: [main]", "pages: write", "id-token: write", "./ws-host test", "./ws-host fresh", "./ws-host docs build", "actions/configure-pages",
+                       "actions/upload-pages-artifact", "actions/deploy-pages", "environment:", "github-pages", "GitHub Actions"):
+            self.assertIn(needle, text, needle)
+        self.assertLess(text.index("./ws-host test"), text.index("./ws-host docs build"))
+        self.assertIn("Source", (REPO / "docs-src" / "chapters" / "overview" / "maintainers.adoc").read_text())
+
+    def test_the_home_page_links_every_part_and_the_links_exist_in_the_build(self):
+        home = (REPO / "docs" / "index.html").read_text()
+        for page in ("windows-wsl", "vscode", "troubleshooting", "commands"):
+            self.assertIn(f'href="book/{page}.html"', home)
+            self.assertTrue(list((REPO / "docs-src" / "chapters").rglob(f"{page}.adoc")), page)
+
+    def test_the_repository_never_names_the_environment_it_replaced(self):
+        import subprocess as sp
+        needle = "workspaces-host" + "-v3"
+        tracked = sp.run(["git", "ls-files", "-z"], cwd=REPO, capture_output=True, text=True).stdout.split("\0")
+        self.assertTrue(tracked)
+        for rel in filter(None, tracked):
+            f = REPO / rel
+            if f.is_file() and f.suffix not in (".png", ".jpg", ".pdf"):
+                try:
+                    self.assertNotIn(needle, f.read_text(), rel)
+                except UnicodeDecodeError:
+                    pass
+        self.assertFalse([r for r in tracked if r.startswith("docs/LICENSE-")])

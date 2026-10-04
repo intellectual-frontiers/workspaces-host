@@ -45,7 +45,8 @@ The extension runs only the tools of repositories you trust and does nothing in 
 
 .Steps
 
-* Install the extension: `ws-host vscode add`
+* Set up VS Code with the extension, helpful extensions and safe settings: `ws-host vscode advance`
+* Install only the extension: `ws-host vscode add`
 * Run the checks: `ws-host check`
 
 === extend
@@ -211,31 +212,76 @@ In the credential storage of gh and glab, which is where they keep it. ws-host s
 
 === start
 
-_Your first day: install ws-host and bring your workspace up._
+_Your first steps: sign in, copy your starter repositories, and move into VS Code._
 
-You need two commands today: one to install ws-host, and one to set up everything else.
+🎉 ws-host is installed. Do these things in order, and you will be working in VS Code.
 
-.Install it
-Paste this into a terminal on Debian or Ubuntu, including Ubuntu under WSL on Windows:
+.1️⃣  Sign in to GitHub (you only do this once)
+Type the line below. It shows a short code and a web address. Open the address in your browser, type the code, and press Authorize. You never type a password into this window.
 
 ----
-curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh
+ws-host auth new github
 ----
 
-It needs python3 and git, and installs uv for you if it is missing. Run it again any time; it never touches your work.
+.2️⃣  Copy your starter repositories
+Two repositories come with you: .github, the shared examples and rules, and workspaces-host, this tool. This copies them to your workspaces folder and keeps them up to date without ever touching your own changes. Run it as often as you like.
 
-.Bring everything up
-ws-host workspace advance signs you in if you are not, copies the repositories your workspace lists, brings the ones you already have up to date without touching your changes, installs the kits they ask for, and checks your machine. Run it as often as you like.
+----
+ws-host workspace advance
+----
 
-.Put the editor on top
-ws-host vscode add installs the VS Code extension. After that you can do all of this with buttons: open the Workspace view and use Learn to read these same pages.
+.3️⃣  Open VS Code
+Install VS Code on Windows from https://code.visualstudio.com/ and add its WSL extension, then open your first repository from here:
+
+----
+cd ~/workspaces/github.com/intellectual-frontiers/.github
+code .
+----
+
+.4️⃣  Let ws-host set VS Code up
+It installs the Workspace extension, a short list of helpful extensions and a few safe settings, and never changes a setting you made. Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.
+
+----
+ws-host vscode advance
+----
+
+.5️⃣  Keep going in VS Code
+Press Ctrl+Shift+P and run Workspace: Learn. Every page there has a button for each step, and the status line at the bottom says in plain words whether your machine is well. You can do everything else from VS Code.
+
+.📂 Choose which repositories you work in
+To add one, type its address. It is copied now and every time you update:
+
+----
+ws-host repo add github.com/ORG/REPO
+----
+
+To remove one or change the list, open your settings file in VS Code and edit the line that starts with WS_HOST_REPOS:
+
+----
+code ~/.config/workspaces-host/ws-host.env
+----
+
+.🐟 Try fish, a friendlier terminal
+fish suggests and colors what you type. Install it, then type fish to try it. Nothing else changes, and bash keeps working.
+
+----
+ws-host kit add shell
+fish
+----
+
+To make fish what every new window opens, ask ws-host: ws-host help shell.
+
+.🆘 Stuck?
+Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help in VS Code for a report with no passwords in it, and paste it to someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/
 
 .Steps
 
-* Check your machine: `ws-host doctor`
-* Install the VS Code extension: `ws-host vscode add`
-* Bring everything up: `ws-host workspace advance`
+* Sign in to GitHub: `ws-host auth new github`
+* Copy your starter repositories: `ws-host workspace advance`
+* Set VS Code up: `ws-host vscode advance`
+* Try fish: `ws-host kit add shell` (asks for your password)
 * See where things stand: `ws-host workspace status`
+* Check your machine: `ws-host doctor`
 
 === trust
 

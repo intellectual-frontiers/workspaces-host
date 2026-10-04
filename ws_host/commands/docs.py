@@ -2,7 +2,8 @@
 (0005-help-and-docs FR-006, FR-007, FR-013, FR-014, 0041-command-line FR-035, FR-036)."""
 from __future__ import annotations
 
-import filecmp
+import html
+import re
 import shutil
 import subprocess
 import tempfile
@@ -87,6 +88,20 @@ def reference_docs() -> dict:
     lines += ["|===", "", "A file is `KEY=value` lines, the value optionally in quotes, `#` for a comment, a list on one line separated by spaces. "
               "Nothing is expanded and a line does not continue.", ""]
     out["docs-src/chapters/reference/files.adoc"] = "\n".join(lines)
+
+    # VS Code setup (0006-onboarding FR-008)
+    from . import vscode as vs
+    lines = [h(), "[#reference-vscode]", "== VS Code setup", "",
+             f"What `{NAME} vscode advance` puts in place, taken from the code. It adds a setting only when you have not set it, and it never changes one you have.", "",
+             "=== Recommended extensions", "", '[cols="2,5"]', "|===", "|Extension |What it is for", ""]
+    lines += [f"|`{i}`|{_cell(w)}" for i, w in vs.RECOMMENDED]
+    lines += ["|===", "", "The Workspace extension itself is installed from your copy of `ws-host`, not from the Marketplace.", "",
+              "=== Settings", "", '[cols="3,3"]', "|===", "|Setting |Value", ""]
+    import json as _json
+    lines += [f"|`{k}`|`{_cell(_json.dumps(v))}`" for k, v in sorted(vs.baseline_settings().items()) if k != "terminal.integrated.defaultProfile.linux"]
+    lines += ["|`terminal.integrated.defaultProfile.linux`|`fish` when it is installed, otherwise `bash`", "|===", "",
+              "Under WSL they go in `~/.vscode-server/data/Machine/settings.json`; elsewhere in your own user settings file.", ""]
+    out["docs-src/chapters/reference/vscode-setup.adoc"] = "\n".join(lines)
 
     # topics
     lines = [h(), "[#reference-help]", "== Help topics", "",
@@ -230,14 +245,13 @@ def docs_build(ctx, output):
     out = Path(output) if output else root / "_site"
     book = out / "book"
     src, theme = root / "docs-src" / "manuscript.adoc", root / "docs-src" / "theme"
-    plan = [{"name": "single-page HTML", "needs": "asciidoctor"}, {"name": "multi-page HTML", "needs": "asciidoctor-multipage"},
+    plan = [{"name": "single-page HTML", "needs": "asciidoctor"}, {"name": "multi-page HTML", "needs": "asciidoctor"},
             {"name": "PDF", "needs": "asciidoctor-pdf"}, {"name": "EPUB", "needs": "asciidoctor-epub3"}]
     if ctx.dry_run:
         return Resource("docs", "build", {"plain": "Nothing was built. This is what I would build.", "output": str(out), "editions": plan})
     shutil.rmtree(out, ignore_errors=True)
-    (book / "html").mkdir(parents=True)
-    for d in (book, book / "html"):
-        shutil.copy(theme / "html.css", d / "html.css")
+    book.mkdir(parents=True)
+    shutil.copy(theme / "html.css", book / "html.css")
     attrs = ["-a", f"revnumber={VERSION}", "-a", "stylesheet=html.css", "-a", "linkcss"]
     results = []
 
@@ -251,13 +265,12 @@ def docs_build(ctx, output):
 
     # In the built site the pictures sit beside index.html, so HTML reads them from there; the PDF and EPUB read docs/ directly.
     edition("single-page HTML", ["asciidoctor", *attrs, "-a", "imagesdir=..", "-o", str(book / "single-page.html"), str(src)])
-    multi = _have("ruby") and _run(["ruby", "-e", "require 'asciidoctor-multipage'"]).returncode == 0
-    edition("multi-page HTML", ["asciidoctor", "-r", "asciidoctor-multipage", "-b", "multipage_html5", *attrs, "-a", "imagesdir=../..", "-D", str(book / "html"), str(src)],
-            multi, "the asciidoctor-multipage converter is not on this machine")
-    if multi and (book / "html" / "manuscript.html").exists():
-        shutil.copy(book / "html" / "manuscript.html", book / "html" / "index.html")
-    elif (book / "single-page.html").exists():
-        shutil.copy(book / "single-page.html", book / "html" / "index.html")
+    shutil.copy(theme / "site.css", book / "site.css")
+    try:
+        pages = build_site(root, book, theme)
+        results.append({"name": "multi-page HTML", "status": "built", "pages": len(pages)})
+    except SiteError as e:
+        results.append({"name": "multi-page HTML", "status": "failed", "reason": str(e)})
     with tempfile.TemporaryDirectory() as t:        # the PDF theme finds the logo beside itself; nothing in the repository is touched
         shutil.copytree(theme, Path(t) / "theme")
         shutil.copy(root / "docs" / "logo.png", Path(t) / "theme" / "logo.png")
@@ -275,3 +288,78 @@ def docs_build(ctx, output):
     return Resource("docs", "build", {"plain": plain, "output": str(out), "editions": results},
                     actions=[Action(("kit", "add"), "Install the press kit", {"kit": "press"})] if skipped else [],
                     status=FAILED if failed or not built else OK)
+
+
+class SiteError(Exception):
+    pass
+
+
+def _manuscript(root: Path) -> list[dict]:
+    """The chapters in manuscript order with the part each belongs to."""
+    out, part = [], ""
+    for line in (root / "docs-src" / "manuscript.adoc").read_text(encoding="utf-8").splitlines():
+        m = re.match(r"^= (Part [^\n]+)$", line)
+        if m:
+            part = m.group(1)
+            continue
+        m = re.match(r"^include::(chapters/[^\[]+\.adoc)\[\]", line)
+        if m:
+            rel = m.group(1)
+            out.append({"file": rel, "slug": Path(rel).stem, "part": part or "Start here"})
+    return out
+
+
+def _render_chapter(root: Path, rel: str) -> str:
+    p = subprocess.run(["asciidoctor", "-s", "-a", "imagesdir=..", "-a", "sectnums!", "-a", "icons!", "-o", "-", str(root / "docs-src" / rel)],
+                       capture_output=True, text=True, timeout=300)
+    if p.returncode != 0:
+        raise SiteError(f"asciidoctor could not convert {rel}: {(p.stderr or '').strip()[-200:]}")
+    return p.stdout
+
+
+def build_site(root: Path, book: Path, theme: Path) -> list[str]:
+    """One HTML page per chapter, each with the navigation beside it (0006-onboarding FR-011). Uses only asciidoctor."""
+    chapters = _manuscript(root)
+    if not chapters:
+        raise SiteError("the manuscript includes no chapters")
+    bodies, ids, titles = {}, {}, {}
+    for ch in chapters:
+        html_ = _render_chapter(root, ch["file"])
+        bodies[ch["slug"]] = html_
+        m = re.search(r"<h[12][^>]*>(.*?)</h[12]>", html_, re.S)
+        titles[ch["slug"]] = re.sub(r"<[^>]+>", "", m.group(1)).strip() if m else ch["slug"].replace("-", " ").capitalize()
+        for i in re.findall(r'\bid="([^"]+)"', html_):
+            ids.setdefault(i, ch["slug"])
+        for i, t in re.findall(r'<h[2-6] id="([^"]+)">(.*?)</h[2-6]>', html_, re.S):
+            titles.setdefault("#" + i, re.sub(r"<[^>]+>", "", t).strip())
+    names = []
+    for n, ch in enumerate(chapters):
+        slug = ch["slug"]
+        body = bodies[slug]
+
+        def fix(m):
+            target, text = m.group(1), m.group(2)
+            page = ids.get(target)
+            href = f"#{target}" if page in (None, slug) else f"{page}.html#{target}"
+            label = titles.get("#" + target, text.strip("[]")) if text.startswith("[") and text.endswith("]") else text
+            return f'<a href="{href}">{label}</a>'
+        body = re.sub(r'<a href="#([^"]+)">([^<]*)</a>', fix, body)
+        nav, last = [], None
+        for c in chapters:
+            if c["part"] != last:
+                nav.append(f'<div class="part">{html.escape(c["part"])}</div>')
+                last = c["part"]
+            cur = ' class="current"' if c["slug"] == slug else ""
+            nav.append(f'<ul><li><a href="{c["slug"]}.html"{cur}>{html.escape(titles[c["slug"]])}</a></li></ul>')
+        prev = f'<a href="{chapters[n - 1]["slug"]}.html">&larr; {html.escape(titles[chapters[n - 1]["slug"]])}</a>' if n else "<span></span>"
+        nxt = f'<a href="{chapters[n + 1]["slug"]}.html">{html.escape(titles[chapters[n + 1]["slug"]])} &rarr;</a>' if n + 1 < len(chapters) else "<span></span>"
+        page = (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
+                f'<title>{html.escape(titles[slug])} - Workspaces Host</title><link rel="stylesheet" href="html.css"><link rel="stylesheet" href="site.css"></head>'
+                f'<body class="site"><nav class="site-nav"><a class="brand" href="../index.html"><img src="../logo.png" alt="">Workspaces Host</a>'
+                f'<details open><summary>Contents</summary>{"".join(nav)}</details></nav>'
+                f'<main class="site-main"><div id="content">{body}</div><div class="pager">{prev}{nxt}</div>'
+                f'<footer>Workspaces Host {VERSION}. The reference is generated from the code.</footer></main></body></html>')
+        (book / f"{slug}.html").write_text(page, encoding="utf-8")
+        names.append(slug)
+    shutil.copy(book / f"{chapters[0]['slug']}.html", book / "index.html")
+    return names

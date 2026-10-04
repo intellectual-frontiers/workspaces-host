@@ -34,8 +34,7 @@ verifies its SHA-256 against the one in the kit's code before anything is unpack
 
 `repo advance` runs `git fetch` and then `git merge --ff-only`. It never pulls, rebases, merges any other way, or stashes. A
 repository with uncommitted tracked changes, diverged commits, no upstream, no branch, or an operation in progress is left
-exactly as it was and reported in plain words. These rules come from real defects in the earlier environment, where a
-reattach rebased someone's unpushed work and failed clones were reported as done. Each one is a test.
+exactly as it was and reported in plain words. Each rule is a test: a reattach that rebased someone's unpushed work, or a failed clone reported as done, would fail it.
 
 === The wire shape
 

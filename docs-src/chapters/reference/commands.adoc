@@ -139,6 +139,11 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |terminal
 |Install the VS Code extension that is the interface for every orchestrator
 
+|`ws-host vscode advance`
+|setup
+|terminal, editor
+|Put VS Code in its recommended state: the extension, helpful extensions and safe settings
+
 |===
 
 === workspace
@@ -150,7 +155,7 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |`ws-host workspace advance`
 |setup
 |terminal, editor
-|Check sign-in, copy missing repositories, update the rest, install kits, check health
+|Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health
 
 |`ws-host workspace set [--pull-ff-only]`
 |setup

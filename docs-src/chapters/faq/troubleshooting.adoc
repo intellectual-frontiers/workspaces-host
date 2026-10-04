@@ -1,0 +1,127 @@
+[#troubleshooting]
+== Troubleshooting
+
+Each entry gives what you see, why it happens, and what to do. They are in the order you will meet them. If yours is not here, press
+`Ctrl+Shift+P` in VS Code and run *Workspace: Get help*, or in Debian run `ws-host context` and `ws-host doctor`, and paste what they print
+to a person or an AI. They contain no passwords.
+
+=== WSL is not installed, or Debian says an error starting with 0x8007
+
+*Why:* Windows has WSL turned off, or the computer's virtualization is off.
+
+*Fix:* Open PowerShell as administrator and run `wsl --install --no-distribution`, then restart. If it complains about virtualization, turn
+it on in your computer's BIOS or firmware settings; Microsoft's page
+https://support.microsoft.com/en-us/windows/enable-virtualization-on-windows-c5578302-6e43-4b4b-a449-8ced115f58e1[Enable virtualization on
+Windows] shows how. More: https://learn.microsoft.com/en-us/windows/wsl/troubleshooting[Troubleshooting WSL].
+
+=== The Debian window opens and closes at once, or never gets to a prompt
+
+*Why:* The first-time setup did not finish, or WSL needs updating.
+
+*Fix:* In PowerShell run `wsl --update`, then `wsl --shutdown`, and open Debian again. If it still fails, run `wsl --unregister Debian` and
+install Debian again from the Store; this erases only the Debian you just made.
+
+=== I do not remember my password
+
+*Why:* The password you made in the Debian window is what `sudo` asks for, and Windows does not know it.
+
+*Fix:* In PowerShell run `wsl -d Debian -u root`, then `passwd YOURNAME` (your Debian username), type the new password twice, and type `exit`.
+
+=== `curl: command not found`, or `git: command not found`
+
+*Why:* A fresh Debian is small. It has neither.
+
+*Fix:* `sudo apt update && sudo apt install -y curl git`. The installer also installs what it needs by itself, after telling you.
+
+=== The installer says it cannot reach the network, or shows a certificate error
+
+*Why:* Your network blocks the download, you work behind a company proxy, or Debian's clock is wrong.
+
+*Fix:* Open a web browser on Windows and check that https://github.com loads. On a company network, ask your IT team for the proxy address
+and set it in Debian: `export https_proxy=http://PROXY:PORT` and run the installer again. A certificate error also appears when the
+clock is off; see the entry on the clock below.
+
+=== `sudo` says you are not in the sudoers file
+
+*Why:* You are using an account that cannot install things.
+
+*Fix:* Use the account you made when Debian first opened; it can. Or in PowerShell run `wsl -d Debian -u root`, then `usermod -aG sudo
+YOURNAME`, `exit`, and open Debian again.
+
+=== `ws-host: command not found`
+
+*Why:* The terminal you are in started before the installer finished, so it does not know the new folder `~/.local/bin`.
+
+*Fix:* Close the Debian window and open it again. If it still fails, run `echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc` and
+open a new window.
+
+=== The sign-in code does not work, or the browser does not open
+
+*Why:* The code lasts a few minutes, and Debian cannot open Windows' browser by itself.
+
+*Fix:* Run `ws-host auth new github` again for a new code. Copy the address it prints into your browser on Windows by hand. Make sure you are
+signed in to the right GitHub account in that browser.
+
+=== The browser says the code is wrong or expired, or sign-in fails, after a long wait
+
+*Why:* The clock in Debian can be far off after the computer sleeps, which makes secure connections and codes fail.
+
+*Fix:* In PowerShell run `wsl --shutdown`, open Debian again, and try once more. If the clock is still wrong, in Debian run
+`sudo hwclock -s`.
+
+=== "could not read Username", or a repository did not copy
+
+*Why:* You are not signed in to GitHub, or your account cannot see that repository.
+
+*Fix:* Run `ws-host auth status`. If it says you are not signed in, run `ws-host auth new github` (see <<sign-in>>) and then `ws-host workspace
+advance`. If you are signed in, ask the repository's owner to give your GitHub account access.
+
+=== `code: command not found` in Debian
+
+*Why:* VS Code is not installed on Windows, or its *Add to PATH* option was off, or Debian was open before you installed it.
+
+*Fix:* Install VS Code on Windows from https://code.visualstudio.com/[code.visualstudio.com]. Close the Debian window, open it again, and
+type `code --version`. If it still fails, open VS Code on Windows, press `Ctrl+Shift+P`, run *Shell Command: Install 'code' command in PATH*,
+and try again.
+
+=== VS Code opens on Windows, not inside Debian
+
+*Why:* You started it from the Start menu, or the WSL extension is missing. The bottom-left corner does not say *WSL: Debian*.
+
+*Fix:* Install the *WSL* extension from Microsoft (see <<vscode>>). Then in the Debian window go to your repository and run `code .`. Or
+in VS Code press `Ctrl+Shift+P` and run *WSL: Open Folder in WSL*.
+
+=== The Workspace extension does not show up
+
+*Why:* VS Code has not reloaded since `ws-host vscode add`, or you ran it before VS Code had opened a folder in Debian once.
+
+*Fix:* Open a folder with `code .` from Debian, then run `ws-host vscode add` again, then in VS Code press `Ctrl+Shift+P` and run *Developer:
+Reload Window*. Check *Extensions*, search `@installed`, and look for *Intellectual Frontiers Workspace*.
+
+=== VS Code says Restricted Mode, and nothing in the Workspace view works
+
+*Why:* VS Code does not trust the folder yet. The extension refuses to run anything in Restricted Mode, on purpose.
+
+*Fix:* Press *Manage* in the banner, then *Trust*. See https://code.visualstudio.com/docs/editor/workspace-trust[Workspace Trust].
+
+=== `ws-host vscode advance` says it left my settings alone
+
+*Why:* Your VS Code settings file has comments in it, and `ws-host` will not edit a file it cannot read safely.
+
+*Fix:* It listed the settings it wanted to add. Open your settings (`Ctrl+Shift+P`, *Preferences: Open User Settings (JSON)*) and add them
+by hand, or remove the comments and run it again.
+
+=== A repository was "left alone"
+
+*Why:* You have changes you have not committed, or your commits and the shared ones have both moved on. This is not an error; it protects
+your work.
+
+*Fix:* Commit or push your changes, then run `ws-host workspace advance` again. `ws-host help recover` explains each case.
+
+=== The prompt shows strange boxes instead of icons
+
+*Why:* The oh-my-posh prompt draws icons from a font Windows Terminal does not have.
+
+*Fix:* Install a Nerd Font such as https://www.nerdfonts.com/[Nerd Fonts' Meslo] on Windows, then choose it in Windows Terminal under
+*Settings*, *Profiles*, *Debian*, *Appearance*, *Font face*. Microsoft explains where:
+https://learn.microsoft.com/en-us/windows/terminal/customize-settings/profile-appearance#font-face[font face].

@@ -2,54 +2,29 @@
 
 # workspaces-host
 
-`ws-host` is the Intellectual Frontiers environment orchestrator. It prepares your machine, copies your repositories
-and keeps them current without touching your work, installs kits, checks health, and ships the VS Code extension that
-is the graphical interface for every orchestrator.
+`ws-host` sets up your machine for Intellectual Frontiers work, copies your repositories and keeps them current without touching your
+changes, installs the tools each kind of work needs, and gives VS Code a window onto all of it.
 
-It targets Debian and Ubuntu on bare metal, including Ubuntu under WSL. It needs `python3` (3.11 or later), `git` and
-`uv`; the installer adds `uv` if you lack it.
+**Read the guide: <https://intellectual-frontiers.github.io/workspaces-host/>**
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh
-ws-host workspace advance
-```
+## The flow
 
-## Learn it
+For Windows 11 with Debian from the Microsoft Store (WSL). The guide has every step in detail, with what you will see and what to do if
+something stops you.
 
-The daily work is documented in one place, the program: `ws-host help`, or **Learn** in VS Code, where every step is a
-button. The guide in `docs-src/` is a reference and an overview; build it with `ws-host docs build`. Its command, kit,
-file and help-topic chapters are generated from the code, so they cannot drift, and `ws-host fresh` fails until they
-are current.
+1. **Get Debian.** Install *Debian* from the Microsoft Store and open it.
+2. **Install.** In the Debian window run `sudo apt update && sudo apt install -y curl`, then
+   `curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh`. The installer does the
+   bootstrapping.
+3. **Sign in to GitHub.** Run `ws-host auth new github`, type the code into your browser, then run `ws-host workspace advance` again.
+4. **Open VS Code.** Install VS Code on Windows, run `code .` from a repository in the Debian window, then `ws-host vscode advance`.
+5. **Learn.** In VS Code press `Ctrl+Shift+P` and run *Workspace: Learn*. Everything you do every day is taught there, one button at a
+   time. In a terminal the same pages are `ws-host help`.
 
-| | |
-| --- | --- |
-| `ws-host help` | the topics: start, repos, signin, trust, kits, shell, editor, recover, ai, extend |
-| `ws-host doctor` | is my machine well? |
-| `ws-host workspace advance` | do everything: sign in, copy, update, install kits, check |
-| `ws-host kit add KIT` | install `base`, `press`, `rust` or `shell` |
-| `ws-host vscode add` | install the VS Code extension |
+## For contributors
 
-## Shells
+Everything is Python, found by presence: a module in `ws_host/commands/`, `ws_host/kits/` or `ws_host/help/` adds a command, a kit or a help
+topic. `ws-host test`, `check`, `doctor` and `fresh` say whether a change is sound. The guide's reference is generated from the code by
+`ws-host docs generate`. See *Extend it with AI* in the guide, and `.claude/skills/ws-host/SKILL.md` for an AI to read first.
 
-`bash` and `oh-my-posh` are fully supported. `fish` 4 is the best experience with `oh-my-posh`; the `shell` kit installs
-both with the coach theme. `ws-host` never changes your login shell or your shell files.
-
-## Extend it with AI
-
-Everything is Python, found by presence: add a module to `ws_host/commands/`, `ws_host/kits/` or `ws_host/help/` and it
-exists. A module imports only the standard library at the top; a package goes in a dependency group of `pyproject.toml`
-and `uv.lock` and is imported inside the function that uses it. Point an AI at `.claude/skills/ws-host/SKILL.md`, then
-run `ws-host doctor`, `check`, `test` and `fresh`.
-
-## The pieces
-
-- `ws-host`, `install.sh` — the launcher and the installer
-- `ws_host/` — the core (standard library only), commands, kits, help topics, installers
-- `vscode/` — the extension: `package.json`, `extension.js`, `logo.png`
-- `docs-src/` — the guide; `docs/` — its home page and the mascot and graphics from the earlier environment
-- `spec-kit/` — the specs, in the public root's format
-- `tests/` — standard-library `unittest` with real temporary git repositories, Node tests for the extension with a stand-in
-  VS Code, and `tests/containers/verify.sh` and `tests/vscode-host/run.js` for fresh Debian/Ubuntu containers and a real
-  VS Code
-
-The mascot and graphics come from the earlier environment (MIT; `docs/LICENSE-the earlier environment`).
+MIT licence.

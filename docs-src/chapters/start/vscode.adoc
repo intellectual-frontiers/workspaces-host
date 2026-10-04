@@ -1,0 +1,58 @@
+[#vscode]
+== Open VS Code and take over
+
+VS Code is where you will work from now on. It runs on Windows and reaches into your Debian window. Everything below is done once.
+
+=== Step 1: Install VS Code on Windows
+
+Download it from https://code.visualstudio.com/[code.visualstudio.com] and install it with the default choices. Leave *Add to PATH* ticked;
+it is what lets Debian start VS Code. Microsoft's own walkthrough is
+https://code.visualstudio.com/docs/getstarted/getting-started[Getting started with VS Code].
+
+=== Step 2: Add the WSL extension
+
+Open VS Code on Windows. Press the *Extensions* icon on the left (four squares), search for *WSL*, and install the one from *Microsoft*. It
+is what lets VS Code work inside Debian. Microsoft's page is https://code.visualstudio.com/docs/remote/wsl[Developing in WSL].
+
+=== Step 3: Open your workspace from Debian
+
+In the Debian window, go to your first repository and open it:
+
+----
+cd ~/workspaces/github.com/intellectual-frontiers/.github
+code .
+----
+
+The first time, VS Code installs a small helper inside Debian and takes a minute. A window opens, and in the bottom-left corner it says
+*WSL: Debian*. That is how you know you are working inside Debian and not in Windows.
+
+VS Code asks *Do you trust the authors of the files in this folder?* Press *Yes, I trust the authors*. If it says it is in *Restricted
+Mode*, that is the same question; press *Manage*, then *Trust*. See https://code.visualstudio.com/docs/editor/workspace-trust[Workspace Trust].
+
+=== Step 4: Let ws-host set VS Code up
+
+Back in the Debian window:
+
+----
+ws-host vscode add
+ws-host vscode advance
+----
+
+The first installs the Workspace extension. The second installs a short list of helpful extensions (GitHub pull requests, GitLens, Python,
+AsciiDoc and ShellCheck) and sets a few safe settings, such as saving files as you type. It never changes a setting you have already
+chosen. The exact list is in <<reference-vscode>>.
+
+Now reload VS Code so everything starts: press `Ctrl+Shift+P`, type `Reload Window`, press Enter.
+
+=== Step 5: Look around, then press Learn
+
+You now have:
+
+* A line at the bottom that says in plain words whether your machine is well.
+* A *Workspace* icon on the left, with every tool your repositories bring.
+* A command called *Workspace: Learn*. Press `Ctrl+Shift+P`, type `Workspace: Learn`, and pick a page. Every step on a page is a button.
+
+Start with *start*, then read *repos* and *signin*. Everything you do every day is taught there, and I keep it in the program so that
+it is never out of date.
+
+If something here does not match what you see, go to <<troubleshooting>>.

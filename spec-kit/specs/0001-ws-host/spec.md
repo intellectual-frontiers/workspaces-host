@@ -18,8 +18,7 @@ and 0026-workspaces, held in the public root, govern all of them.
 
 - **FR-001**: The repository MUST provide one orchestrator, `ws-host`, that
   follows 0041-command-line in every respect these specs do not state
-  otherwise. It has no history to preserve and no legacy path, and it
-  supersedes the earlier environment, which it MUST NOT touch or depend on.
+  otherwise. It is a new repository with no legacy path.
 - **FR-002**: `ws-host` MUST need only `python3` (3.11 or later) and `uv` on the
   host. It targets a Debian-family Linux distribution, bare metal, including
   Ubuntu under WSL, and MUST NOT require a container, a Nix, a version manager
@@ -37,13 +36,13 @@ and 0026-workspaces, held in the public root, govern all of them.
 ## Installing
 
 - **FR-005**: `install.sh` MUST be one POSIX `sh` script that a person runs
-  with one line. It MUST check for `python3` (3.11 or later) and `git`, install
+  with one line. It MUST install what the machine lacks to get going, install
   `uv` if it is missing, clone the repository into
   `~/workspaces/github.com/intellectual-frontiers/workspaces-host` or advance
-  an existing clone by fast-forward only, link `~/.local/bin/ws-host` to the
-  clone's launcher, and run `ws-host doctor`. It MUST be safe to run again,
-  MUST change nothing a person has changed in the clone, and MUST say in plain
-  words what it needs when a prerequisite is missing.
+  an existing clone by fast-forward only, link `~/.local/bin/ws-host`, run
+  `ws-host doctor`, and set the workspace up (0006-onboarding FR-001, FR-002). It
+  MUST be safe to run again, MUST change nothing a person has changed in the
+  clone, and MUST say in plain words what it needs when it cannot go on.
 - **FR-006**: `install.sh` MUST take its clone source and its target from
   environment variables (`WS_HOST_URL`, `WS_HOST_HOME`) so that it can be
   tested against a local repository, and MUST NOT write anywhere else.
@@ -80,8 +79,9 @@ and 0026-workspaces, held in the public root, govern all of them.
   standard library only.
 - **FR-011**: `ws-host` MUST provide `command list` and `command show ID`
   (read); `doctor` and `check [SECTION...]` (check); `test` and `fresh` (check);
-  `context [RESOURCE]` and `help [TOPIC]` (read); `docs build` (build); and
-  `docs generate` and `skill generate` (generate), each as 0041-command-line states them, with
+  `context [RESOURCE]` and `help [TOPIC]` (read); `docs build` (build);
+  `docs generate` and `skill generate` (generate); and `vscode add` and
+  `vscode advance` (setup), each as 0041-command-line states them, with
   `--json`, `--html` and, where a command writes, `--dry-run`. Its audience is
   `private`: what it reports is about one person's machine.
 - **FR-012**: `doctor` MUST change nothing and MUST report: the distribution

@@ -18,7 +18,16 @@ def _f(where: str, message: str, level: str = "error") -> dict:
 
 @section("registry", suites=("quick",), summary="no two commands or kits share a name; no module-level third-party import")
 def registry_section(ctx):
-    return [{"where": "registry", "message": m} for m in reg.discover().conflicts]
+    r = reg.discover()
+    out = [_f("registry", m) for m in r.conflicts]
+    for c in r.commands.values():       # 0041 FR-008, FR-010, FR-014: the grammar is closed
+        if c.category not in reg.CATEGORIES:
+            out.append(_f(c.module, f"'{c.id}' has category '{c.category}', which is not one of {', '.join(reg.CATEGORIES)}"))
+        if c.noun and c.verb not in reg.VERBS:
+            out.append(_f(c.module, f"'{c.id}' uses the verb '{c.verb}', which is not in the closed set ({', '.join(reg.VERBS)})"))
+        if not c.noun and c.words[0] not in reg.REPOWIDE:
+            out.append(_f(c.module, f"'{c.id}' has no noun and is not one of the repository-wide commands"))
+    return out
 
 
 @section("launcher", suites=("quick",), summary="the launcher and install.sh are executable and pass sh -n")

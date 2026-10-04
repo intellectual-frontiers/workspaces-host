@@ -47,7 +47,7 @@ def known(cfg: config.Config) -> tuple[dict[RepoId, list[str]], list[str]]:
     """Every known repository with what named it, and the entries that were not repository identifiers (0002 FR-002)."""
     found: dict[RepoId, list[str]] = {}
     invalid: list[str] = []
-    queue: list[tuple[str, str]] = [(e, "your configuration") for e in cfg.words("WS_HOST_REPOS")]
+    queue: list[tuple[str, str]] = [(e, "your configuration") for e in cfg.repos()]
     while queue:
         entry, source = queue.pop(0)
         rid = parse_id(entry)
