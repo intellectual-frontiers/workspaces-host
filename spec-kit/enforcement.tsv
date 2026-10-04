@@ -48,3 +48,20 @@ requirement	mechanism	by	note
 0003-kits FR-011	check	workspaces-host: ws-host test	tests check every download's checksum form, address template and architecture
 0003-kits FR-012	check	workspaces-host: ws-host test	tests run workspace advance over declared kits (see 0002 FR-016); a declared kit that is unknown is reported
 0003-kits FR-013	check	workspaces-host: ws-host test	tests check doctor says a trusted repository's kits are not loaded yet
+0004-editor-extension FR-001	check	workspaces-host: ws-host test	a test lists vscode/ (extension.js and package.json only), forbids dependencies and scripts, and checks no node_modules
+0004-editor-extension FR-002	check	workspaces-host: ws-host test	tests check the extension names no other orchestrator and discovers launchers only of trusted repositories
+0004-editor-extension FR-003	check	workspaces-host: ws-host test	tests check extensionKind and untrustedWorkspaces, and that nothing runs in Restricted Mode
+0004-editor-extension FR-004	check	workspaces-host: ws-host test	Node tests check the status text, colors and update-needed state; the VS Code run checks it activates and refreshes
+0004-editor-extension FR-005	check	workspaces-host: ws-host test	Node tests check the tree by orchestrator, audience and noun and that terminal-only commands are not in it
+0004-editor-extension FR-006	check	workspaces-host: ws-host test	Node and Python tests check the policy, the single nonce'd script, buttons per action, disabled actions and Show command
+0004-editor-extension FR-007	check	workspaces-host: ws-host test	Node tests check quick-picks from command show choices, cancellation, and the command line built from the arguments
+0004-editor-extension FR-008	check	workspaces-host: ws-host test	Node tests check the page and line splitters and progress reports
+0004-editor-extension FR-009	check	workspaces-host: ws-host test	Node tests check findings land in the Problems panel at their file and line
+0004-editor-extension FR-010	check	workspaces-host: ws-host test	Node tests check a newer schema shows update needed and none of its content
+0004-editor-extension FR-011	check	workspaces-host: ws-host test	Node tests check the modal, --confirmed after it only, and that no registered command takes an argument or runs a decision
+0004-editor-extension FR-012	check	workspaces-host: ws-host test	a test scans the extension for file writes and setting changes
+0004-editor-extension FR-013	check	workspaces-host: ws-host test	Node tests check every orchestrator call carries WS_HOST_SURFACE=editor
+0004-editor-extension FR-014	check	workspaces-host: ws-host test	Node tests check the sign-in offer, the code and address notification, and Copy code and open browser
+0004-editor-extension FR-015	check	workspaces-host: ws-host test	Node tests check Get help gathers context and doctor, copies and shows the report
+0004-editor-extension FR-016	check	workspaces-host: ws-host test	tests run vscode add: link, index entry kept beside others, repeat, WSL directory, vsix with code, link without code, dry run; also run against VS Code 1.140
+0004-editor-extension FR-017	check	workspaces-host: ws-host test	Python tests check the wire shapes of every resource, command list and show, the HTML and the schema; Node tests use a stand-in VS Code; tests/vscode-host runs a real VS Code

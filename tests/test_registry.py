@@ -65,10 +65,10 @@ class Registry(unittest.TestCase):
 class ActionsPrintOneLine(unittest.TestCase):
     def test_a_command_line_is_generated_from_the_call(self):
         r = reg.discover()
-        self.assertEqual(command_line(Action(("command", "show"), "x", {"ID": ["repo", "list"]}), r), "ws-host command show repo list")
+        self.assertEqual(command_line(Action(("command", "show"), "x", {"words": ["repo", "list"]}), r), "ws-host command show repo list")
         self.assertEqual(command_line(Action(("doctor",), "x"), r), "ws-host doctor")
 
     def test_a_value_that_needs_quoting_or_is_missing_is_never_printed(self):
         r = reg.discover()
-        self.assertIsNone(command_line(Action(("command", "show"), "x", {"ID": ["a b's"]}), r))
-        self.assertIsNone(command_line(Action(("command", "show"), "x", needs=("ID",)), r))
+        self.assertIsNone(command_line(Action(("command", "show"), "x", {"words": ["a b's"]}), r))
+        self.assertIsNone(command_line(Action(("command", "show"), "x", needs=("words",)), r))

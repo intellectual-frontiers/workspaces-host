@@ -12,6 +12,10 @@ from ..core.registry import Arg, section
 from ..core.resource import FAILED, MISSING, OK, Resource, WsError
 
 
+def _f(where: str, message: str, level: str = "error") -> dict:
+    return {"level": level, "where": where, "message": message, "next": f"edit {where.split(':')[0].split(' ')[0]}, then run `check`"}
+
+
 @section("registry", suites=("quick",), summary="no two commands or kits share a name; no module-level third-party import")
 def registry_section(ctx):
     return [{"where": "registry", "message": m} for m in reg.discover().conflicts]
@@ -23,13 +27,13 @@ def launcher_section(ctx):
     for name in ("ws-host", "install.sh"):
         f = paths.repo_root() / name
         if not f.is_file():
-            out.append({"where": name, "message": "is missing"})
+            out.append(_f(name, "is missing"))
             continue
         if not os.access(f, os.X_OK):
-            out.append({"where": name, "message": "is not executable"})
+            out.append(_f(name, "is not executable"))
         p = machine.run(["sh", "-n", str(f)])
         if p.returncode:
-            out.append({"where": name, "message": f"does not pass sh -n: {p.stderr.strip()}"})
+            out.append(_f(name, f"does not pass sh -n: {p.stderr.strip()}"))
     return out
 
 
@@ -53,15 +57,15 @@ def specs_section(ctx):
                        capture_output=True, text=True, timeout=300)
     if p.returncode == 0:
         return []
-    return [{"where": "spec-kit", "message": line.strip()} for line in (p.stdout + p.stderr).splitlines()
-            if line.strip().startswith(("❎", "🔴", "error", "spec-kit/"))] or [{"where": "spec-kit", "message": "the public root's checker failed"}]
+    found = [line.strip().lstrip("❎🔴 ") for line in (p.stdout + p.stderr).splitlines() if line.strip().startswith(("❎", "🔴", "error", "spec-kit/"))]
+    return [_f(*(m.split(": ", 1) if ": " in m else ("spec-kit", m))) for m in found] or [_f("spec-kit", "the public root's checker failed")]
 
 
 @reg.command("check", category="check", summary="Run the checks of this repository",
-             args=(Arg("SECTION", "SECTION", positional=True, multiple=True), Arg("suite", "SECTION", help="a named set of sections")))
-def check(ctx, SECTION, suite):
+             args=(Arg("sections", "SECTION", positional=True, multiple=True), Arg("suite", "SECTION", help="a named set of sections")))
+def check(ctx, sections, suite):
     registry = reg.discover()
-    names = list(SECTION)
+    names = list(sections)
     if suite:
         names += [s.name for s in registry.sections.values() if suite in s.suites]
         if not any(suite in s.suites for s in registry.sections.values()):
@@ -76,17 +80,19 @@ def check(ctx, SECTION, suite):
         missing = [p for p in s.programs if not shutil.which(p)] if s.name != "specs" else []
         try:
             findings = s.fn(ctx)
-            res = {"name": n, "status": "fail" if findings else "ok", "findings": findings}
+            res = {"name": n, "status": "failed" if findings else "passed", "findings": findings, "notes": [], "data": {}}
         except FileNotFoundError as e:
-            res = {"name": n, "status": "skip", "findings": [], "reason": f"{e} is not on this machine, so this check did not run"}
-        if res["status"] == "fail":
+            res = {"name": n, "status": "skipped", "findings": [], "notes": [], "data": {}, "reason": f"{e} is not on this machine, so this check did not run"}
+        if res["status"] == "failed":
             status = FAILED
-        elif res["status"] == "skip" and status == OK:
+        elif res["status"] == "skipped" and status == OK:
             status = MISSING   # 0041 FR-033: a skipped section never passes and makes the run non-zero
         results.append(res)
-    bad = sum(r["status"] == "fail" for r in results)
-    skipped = sum(r["status"] == "skip" for r in results)
+    bad = sum(r["status"] == "failed" for r in results)
+    skipped = sum(r["status"] == "skipped" for r in results)
     plain = ("Everything checked is in order." if status == OK else
              f"{bad} check{'s' if bad != 1 else ''} found problems." if bad else f"{skipped} check{'s' if skipped != 1 else ''} could not run, so nothing is proven for them.")
-    return Resource("check", "ws-host", {"plain": plain, "summary": {"run": len(results) - skipped, "failed": bad, "skipped": skipped},
-                                         "sections": results}, status=status)
+    return Resource("check", "ws-host", {"plain": plain, "suite": suite, "scope": None, "changed": False,
+                                         "status": {OK: "passed", FAILED: "failed", MISSING: "skipped"}[status],
+                                         "summary": {"run": len(results) - skipped, "passed": len(results) - skipped - bad, "failed": bad, "skipped": skipped},
+                                         "sections": results, "skipped_unchanged": []}, status=status)

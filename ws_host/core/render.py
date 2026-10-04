@@ -36,7 +36,7 @@ def _lines(value, indent: int = 0) -> list[str]:
                 head = _scalar(item.get("name", item.get("id", item.get("title", ""))))
                 status = item.get("status")
                 rest = [f"{k}: {_scalar(v)}" for k, v in item.items() if k not in ("name", "id", "title", "status") and not isinstance(v, (dict, list))]
-                mark = {"ok": "ok", "warn": "warning", "fail": "FAILED", "skip": "skipped"}.get(status, status or "")
+                mark = {"ok": "ok", "passed": "passed", "warn": "warning", "fail": "FAILED", "failed": "FAILED", "skip": "skipped", "skipped": "skipped"}.get(status, status or "")
                 line = f"{pad}- {head}" + (f" [{mark}]" if mark else "")
                 if rest:
                     line += " - " + "; ".join(rest)
@@ -62,7 +62,7 @@ def to_text(r: Resource, registry=None) -> str:
         lines.append("")
         lines.append("What you can do next:")
         for a in printable:
-            lines.append(f"  {a['label']}: {a['command']}" if a["command"] else f"  {a['label']}: use the button in VS Code")
+            lines.append(f"  {a['label']}: {a['cli']}" if a["cli"] else f"  {a['label']}: use the button in VS Code")
     for a in d["actions"]:
         if not a["enabled"] and a["reason"]:
             lines.append(f"  ({a['label']} is not available: {a['reason']})")
@@ -86,7 +86,7 @@ def to_html(r: Resource, registry=None) -> str:
     d = r.to_dict(registry)
     acts = "".join(
         f'<li><button type="button" data-action="{i}"{"" if a["enabled"] else " disabled"}>{_h(a["label"])}</button>'
-        + (f' <code>{_h(a["command"])}</code>' if a["command"] else " <em>asks you for a value</em>")
+        + (f' <code>{_h(a["cli"])}</code> <button type="button" class="link" data-show="{i}">Show command</button>' if a["cli"] else " <em>asks you for a value</em>")
         + (f' <small>{_h(a["reason"])}</small>' if a["reason"] else "") + "</li>"
         for i, a in enumerate(d["actions"]))
     return (
@@ -94,7 +94,10 @@ def to_html(r: Resource, registry=None) -> str:
         "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'\">"
         f"<title>{_h(r.plain or r.kind)}</title>"
         "<style>body{font-family:var(--vscode-font-family,sans-serif);margin:1.5rem;line-height:1.5}"
-        "code{background:rgba(127,127,127,.15);padding:0 .3em}dt{font-weight:600}dd{margin:0 0 .4rem 1rem}</style></head><body>"
+        "code{background:rgba(127,127,127,.15);padding:0 .3em}dt{font-weight:600}dd{margin:0 0 .4rem 1rem}"
+        "button{margin-right:.4rem}button.link{background:none;border:none;color:var(--vscode-textLink-foreground,#06c);cursor:pointer;text-decoration:underline}</style></head>"
+        # The page carries the whole resource, so a reader can act on it without running the command again (0004 FR-006).
+        f"<body data-resource=\"{_h(json.dumps(d, ensure_ascii=False))}\">"
         f"<h1>{_h(r.plain or r.kind)}</h1><p><small>audience: {_h(AUDIENCE)} &middot; {_h(d['schema'])}</small></p>"
         f"{_html_value(r.data)}"
         + (f"<h2>What you can do next</h2><ul>{acts}</ul>" if acts else "")

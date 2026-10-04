@@ -30,14 +30,15 @@ class Cli(Home):
     def test_command_show_names_arguments_and_unknown_is_a_usage_error(self):
         code, doc = self.run_json("command", "show", "command", "show")
         self.assertEqual(code, 0)
-        self.assertEqual(doc["data"]["args"][0]["name"], "ID")
+        self.assertEqual(doc["data"]["arguments"][0]["name"], "words")
+        self.assertEqual(doc["data"]["usage"], "ws-host command show WORDS...")
         code, doc = self.run_json("command", "show", "nope")
         self.assertEqual((code, doc["kind"], doc["data"]["code"]), (2, "error", "unknown-command"))
 
     def test_an_unknown_command_is_an_error_resource_with_a_next_action(self):
         code, doc = self.run_json("frobnicate")
         self.assertEqual((code, doc["data"]["code"]), (2, "usage"))
-        self.assertEqual(doc["actions"][0]["command"], "ws-host command list")
+        self.assertEqual(doc["actions"][0]["cli"], "ws-host command list")
 
     def test_a_bad_option_is_a_usage_error_not_a_trace(self):
         code, text = self.run_cmd("doctor", "--nope")
@@ -134,12 +135,12 @@ class Check(Home):
     def test_registry_and_launcher_sections_pass(self):
         code, doc = self.run_json("check", "registry", "launcher")
         self.assertEqual(code, 0, doc)
-        self.assertEqual(doc["data"]["summary"], {"run": 2, "failed": 0, "skipped": 0})
+        self.assertEqual(doc["data"]["summary"], {"run": 2, "passed": 2, "failed": 0, "skipped": 0})
 
     def test_a_section_that_could_not_run_is_skipped_and_fails_the_run(self):
         code, doc = self.run_json("check", "specs")
         # no public root on this machine unless WS_HOST_PUBLIC_ROOT is set: skipped, never passed
-        if doc["data"]["sections"][0]["status"] == "skip":
+        if doc["data"]["sections"][0]["status"] == "skipped":
             self.assertEqual(code, 3)
             self.assertEqual(doc["data"]["summary"]["skipped"], 1)
 

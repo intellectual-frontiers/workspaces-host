@@ -84,7 +84,7 @@ def doctor(ctx):
         status = MISSING if any(c.get("missing") for c in r["checks"]) else FAILED
     actions = []
     if any(c["name"] == "git" and c["status"] == "warn" for c in r["checks"]):
-        actions.append(Action(("kit", "add"), "Install the base kit", {"KIT": "base"}))
+        actions.append(Action(("kit", "add"), "Install the base kit", {"kit": "base"}))
     if any(c["name"] == "git pull setting" and c["status"] == "warn" for c in r["checks"]):
         actions.append(Action(("workspace", "set"), "Make git's Sync button safe", {"pull_ff_only": True}))
     return Resource("doctor", "machine", {"plain": _plain(r["checks"]), **r}, actions=actions, status=status)

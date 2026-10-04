@@ -39,13 +39,13 @@ class Auth(Workspace):
         fake(self.bin, "gh", 'echo "not logged in" >&2; exit 1\n')
         _, doc = self.run_json("auth", "status")
         self.assertFalse(doc["data"]["forges"][0]["signed_in"])
-        self.assertEqual(doc["actions"][0]["command"], "ws-host auth new github")
+        self.assertEqual(doc["actions"][0]["cli"], "ws-host auth new github")
 
     def test_status_without_gh_points_at_the_base_kit(self):
         _, doc = self.run_json("auth", "status")
         self.assertIsNone(doc["data"]["forges"][0]["signed_in"])
-        self.assertTrue(doc["actions"][0]["command"].startswith("ws-host kit add"))
-        self.assertEqual(doc["actions"][0]["fields"], {"KIT": "base"})
+        self.assertTrue(doc["actions"][0]["cli"].startswith("ws-host kit add"))
+        self.assertEqual(doc["actions"][0]["fields"], {"kit": "base"})
 
     def test_gitlab_hosts_come_from_the_persons_configuration(self):
         self.config(WS_HOST_GITLAB_HOSTS="git.example.org")
@@ -53,7 +53,7 @@ class Auth(Workspace):
         fake(self.bin, "glab", "exit 1\n")
         _, doc = self.run_json("auth", "status")
         self.assertEqual([f["name"] for f in doc["data"]["forges"]], ["github.com", "git.example.org"])
-        self.assertIn("ws-host auth new gitlab --host git.example.org", [a["command"] for a in doc["actions"]])
+        self.assertIn("ws-host auth new gitlab --host git.example.org", [a["cli"] for a in doc["actions"]])
 
     def test_new_streams_the_code_then_the_result(self):
         fake(self.bin, "gh", '''case "$1 $2" in
@@ -83,13 +83,13 @@ exit 0
         self.assertEqual(code, 1)
         last = json.loads(out.strip().splitlines()[-1])
         self.assertFalse(last["data"]["signed_in"])
-        self.assertEqual(last["actions"][0]["command"], "ws-host auth new github")
+        self.assertEqual(last["actions"][0]["cli"], "ws-host auth new github")
 
     def test_new_without_gh_is_exit_3_with_the_kit_action(self):
         code, doc = self.run_json("auth", "new", "github")
         self.assertEqual((code, doc["data"]["code"]), (3, "missing-program"))
-        self.assertTrue(doc["actions"][0]["command"].startswith("ws-host kit add"))
-        self.assertEqual(doc["actions"][0]["fields"], {"KIT": "base"})
+        self.assertTrue(doc["actions"][0]["cli"].startswith("ws-host kit add"))
+        self.assertEqual(doc["actions"][0]["fields"], {"kit": "base"})
 
     def test_new_is_setup_not_on_mcp_and_dry_run_runs_nothing(self):
         from ws_host.core import registry as reg
@@ -159,7 +159,7 @@ class Advance(Workspace):
     def test_status_changes_nothing_and_says_what_to_do(self):
         code, doc = self.run_json("workspace", "status")
         self.assertEqual(code, 0)
-        self.assertEqual(doc["actions"][0]["command"], "ws-host workspace advance")
+        self.assertEqual(doc["actions"][0]["cli"], "ws-host workspace advance")
         self.assertFalse(self.root.exists())
 
     def test_pull_ff_is_recommended_and_applied_only_on_request(self):
@@ -169,7 +169,7 @@ class Advance(Workspace):
         _, doc = self.run_json("doctor")
         rec = [c for c in doc["data"]["checks"] if c["name"] == "git pull setting"][0]
         self.assertEqual(rec["status"], "warn")
-        self.assertIn("ws-host workspace set --pull-ff-only", [a["command"] for a in doc["actions"]])
+        self.assertIn("ws-host workspace set --pull-ff-only", [a["cli"] for a in doc["actions"]])
         self.assertEqual(gc.read_text(), "")   # never applied unasked
         code, _ = self.run_cmd("workspace", "set", "--pull-ff-only")
         self.assertEqual(code, 0)

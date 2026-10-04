@@ -110,7 +110,7 @@ class Private(Workspace):
         self.assertIn("could not read Username", r["git"])
         self.assertTrue(r["auth"])
         self.assertIn("not signed in", r["plain"])
-        self.assertEqual([a["command"] for a in doc["actions"]], ["ws-host auth new github"])
+        self.assertEqual([a["cli"] for a in doc["actions"]], ["ws-host auth new github"])
         self.assertFalse(self.clone_path("acme", "secret").exists())
 
     def test_a_fetch_that_needs_sign_in_fails_without_touching_the_clone(self):
@@ -125,7 +125,7 @@ class Private(Workspace):
         self.assertEqual(code, 1)
         self.assertEqual(doc["data"]["repositories"][0]["outcome"], "failed")
         self.assertIn("could not read Username", doc["data"]["repositories"][0]["git"])
-        self.assertEqual(doc["actions"][0]["command"], "ws-host auth new github")
+        self.assertEqual(doc["actions"][0]["cli"], "ws-host auth new github")
         self.assertEqual(wgit.snapshot(path), before)
 
 

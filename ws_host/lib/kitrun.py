@@ -85,7 +85,7 @@ def ensure(ctx, declared: dict[str, list[str]]) -> dict:
             notes.append(f"{name}: " + "; ".join(r[2] for r in worst))
         elif todo:
             notes.append(f"{name}: " + "; ".join(r[2] for r in todo))
-            actions.append(Action(("kit", "add"), f"Finish installing {name}", {"KIT": name}))
+            actions.append(Action(("kit", "add"), f"Finish installing {name}", {"kit": name}))
         else:
             notes.append(f"{name} is installed")
     return {"status": "fail" if bad else "ok", "plain": "; ".join(notes) + ".", "actions": actions}

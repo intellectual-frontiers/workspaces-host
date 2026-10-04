@@ -18,9 +18,9 @@ def public_config(cfg: config.Config) -> dict:
 
 
 @reg.command("context", category="read", summary="Everything needed to get help with this machine, with secrets removed",
-             args=(Arg("RESOURCE", "STRING", positional=True, help="machine (default) or command:WORDS"),))
-def context(ctx, RESOURCE):
-    kind, _, ident = (RESOURCE or "machine").partition(":")
+             args=(Arg("resource", "STRING", positional=True, help="machine (default) or command:WORDS"),))
+def context(ctx, resource):
+    kind, _, ident = (resource or "machine").partition(":")
     registry = reg.discover()
     if kind == "command":
         c = registry.get(tuple(ident.replace("+", " ").split()))
