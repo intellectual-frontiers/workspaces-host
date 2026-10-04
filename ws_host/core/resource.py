@@ -25,17 +25,18 @@ class Action:
     reason: str | None = None
 
     def to_dict(self, registry=None) -> dict:
+        """The wire shape every orchestrator uses (0041-command-line FR-064): `command` is the words, `cli` the one line."""
         cmd = registry.get(self.words) if registry else None
         return {
             "label": self.label,
-            "words": list(self.words),
+            "command": " ".join(self.words),
             "fields": self.fields,
             "needs": list(self.needs),
             "category": cmd.category if cmd else None,
-            "surfaces": list(cmd.surfaces) if cmd else [],
+            "surfaces": wire_surfaces(cmd.surfaces) if cmd else [],
             "enabled": self.enabled,
             "reason": self.reason,
-            "command": command_line(self, registry),
+            "cli": command_line(self, registry),
         }
 
 
@@ -47,7 +48,11 @@ class Link:
 
     def to_dict(self, registry=None) -> dict:
         a = Action(self.words, self.rel, self.fields)
-        return {"rel": self.rel, "words": list(self.words), "fields": self.fields, "command": command_line(a, registry)}
+        return {"rel": self.rel, "command": " ".join(self.words), "fields": self.fields, "cli": command_line(a, registry)}
+
+
+def wire_surfaces(surfaces) -> list[str]:
+    return ["terminal" if s == "cli" else s for s in surfaces]
 
 
 def command_line(action: Action, registry=None) -> str | None:

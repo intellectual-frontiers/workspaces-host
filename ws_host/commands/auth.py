@@ -42,12 +42,12 @@ def auth_status(ctx):
         if s is None:
             rows.append({"name": host, "status": "warn", "signed_in": None, "program": prog,
                          "plain": f"I cannot tell: {prog}, the tool that signs you in, is not installed."})
-            actions.append(Action(("kit", "add"), "Install the base kit", {"KIT": "base"}))
+            actions.append(Action(("kit", "add"), "Install the base kit", {"kit": "base"}))
         elif s:
             rows.append({"name": host, "status": "ok", "signed_in": True, "program": prog, "plain": f"You are signed in to {label}."})
         else:
             rows.append({"name": host, "status": "warn", "signed_in": False, "program": prog, "plain": f"You are not signed in to {label}."})
-            fields = {"FORGE": forge} | ({"host": host} if forge == "gitlab" else {})
+            fields = {"forge": forge} | ({"host": host} if forge == "gitlab" else {})
             actions.append(Action(("auth", "new"), f"Sign in to {label}", fields))
     plain = rows[0]["plain"] if len(rows) == 1 else ("You are signed in everywhere I checked." if all(r["signed_in"] for r in rows) else "You are not signed in everywhere yet.")
     uniq = {(a.words, tuple(sorted(a.fields.items()))): a for a in actions}
@@ -55,16 +55,16 @@ def auth_status(ctx):
 
 
 @command("auth", "new", category="setup", summary="Sign in to GitHub or GitLab with a one-time code",
-         args=(Arg("FORGE", "FORGE", positional=True, required=True), Arg("host", help="the host, for a GitLab other than the first configured")),
+         args=(Arg("forge", "FORGE", positional=True, required=True), Arg("host", help="the host, for a GitLab other than the first configured")),
          surfaces=("cli", "editor"))
-def auth_new(ctx, FORGE, host):
+def auth_new(ctx, forge, host):
     cfg = config.load()
-    prog = "gh" if FORGE == "github" else "glab"
-    host = host or ("github.com" if FORGE == "github" else (cfg.words("WS_HOST_GITLAB_HOSTS") or ["gitlab.com"])[0])
+    prog = "gh" if forge == "github" else "glab"
+    host = host or ("github.com" if forge == "github" else (cfg.words("WS_HOST_GITLAB_HOSTS") or ["gitlab.com"])[0])
     exe = shutil.which(prog)
     if not exe:
         raise WsError("missing-program", f"{prog} is not installed", f"I need a tool called {prog} to sign you in, and it is not installed yet.",
-                      [Action(("kit", "add"), "Install the base kit", {"KIT": "base"})], status=MISSING)
+                      [Action(("kit", "add"), "Install the base kit", {"kit": "base"})], status=MISSING)
     argv = [exe, "auth", "login", "--hostname", host, "--web"] + (["--git-protocol", "https"] if prog == "gh" else [])
     if ctx.dry_run:
         yield Resource("auth", host, {"plain": f"Nothing was changed. I would sign you in to {host}.", "would_run": " ".join([prog, *argv[1:]])})
@@ -102,4 +102,4 @@ def auth_new(ctx, FORGE, host):
         subprocess.run([exe, "auth", "setup-git", "--hostname", host], capture_output=True, text=True, timeout=60, stdin=subprocess.DEVNULL)
     ok = rc == 0
     yield Resource("auth", host, {"plain": f"You are signed in to {host}." if ok else f"Signing in to {host} did not finish.", "signed_in": ok},
-                   actions=[] if ok else [Action(("auth", "new"), "Try again", {"FORGE": FORGE})], status=OK if ok else FAILED)
+                   actions=[] if ok else [Action(("auth", "new"), "Try again", {"forge": forge})], status=OK if ok else FAILED)

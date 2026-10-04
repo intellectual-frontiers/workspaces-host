@@ -23,3 +23,11 @@ Specs are in `spec-kit/specs/`, written to the public root's spec format;
 `~/.local/share/workspaces-host/tools`). v0.1 has `base`, `press` and `rust`.
 
 `tests/containers/verify.sh` runs the install and the kits in a fresh Debian or Ubuntu container.
+
+## The editor extension
+
+`ws-host vscode add` installs the VS Code extension in `vscode/`: a status bar, a sidebar of every trusted
+orchestrator, buttons for actions, GitHub sign-in with a code, a Problems-panel view of check findings, and a
+"Get help" report. It holds no behavior; it runs orchestrators and renders what they return.
+`tests/node/` tests its logic with a stand-in VS Code, and `tests/vscode-host/run.js` runs a real one
+(see the comments there).

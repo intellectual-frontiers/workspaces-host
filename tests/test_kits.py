@@ -218,7 +218,7 @@ class Commands(Home):
 
     def test_actions_print_as_pasteable_lines(self):
         _, doc = self.run_json("kit", "show", "press")
-        self.assertEqual(doc["actions"][0]["command"], "ws-host kit add press")
+        self.assertEqual(doc["actions"][0]["cli"], "ws-host kit add press")
 
     def test_kit_add_is_setup_cli_only_and_never_mcp(self):
         c = reg.discover().get(("kit", "add"))

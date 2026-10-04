@@ -85,9 +85,9 @@ def resolve(cfg: config.Config, text: str) -> RepoId:
 def sign_in_action(rid: RepoId, cfg: config.Config) -> list[Action]:
     gitlab = set(cfg.words("WS_HOST_GITLAB_HOSTS")) | set(GITLAB_HOSTS_DEFAULT)
     if rid.host == "github.com":
-        return [Action(("auth", "new"), "Sign in to GitHub", {"FORGE": "github"})]
+        return [Action(("auth", "new"), "Sign in to GitHub", {"forge": "github"})]
     if rid.host in gitlab:
-        return [Action(("auth", "new"), "Sign in to GitLab", {"FORGE": "gitlab", "host": rid.host})]
+        return [Action(("auth", "new"), "Sign in to GitLab", {"forge": "gitlab", "host": rid.host})]
     return []
 
 
