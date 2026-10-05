@@ -69,10 +69,11 @@ everything is extended with AI, in Python, through the registry.
 - **FR-011**: The guide and the `shell` topic MUST say that `bash` and
   `oh-my-posh` are fully supported, that `fish` 4 is the best experience with
   `oh-my-posh`, that `fish` 4 comes in the `shell` kit with `oh-my-posh` and the
-  coach prompt theme (0003-kits FR-014), and how to try it and how to make it
+  prompt themes (0003-kits FR-014), and how to try it and how to make it
   the login shell, as a separate step that only the person takes. `ws-host` MUST
   NOT change a person's login shell, and MUST edit a shell startup file only
-  when the person runs `shell add` (0003-kits FR-015).
+  to add the marked prompt block of `shell add`, which setup runs by default
+  and a person's `WS_HOST_PROMPT=no` stops (0003-kits FR-015, 0006-onboarding FR-022).
 - **FR-012**: The guide and the `extend` topic MUST say that everything is
   extended with AI, in Python: a new command or kit is a Python module added by
   presence to `ws_host/commands/` or `ws_host/kits/`, importing only the

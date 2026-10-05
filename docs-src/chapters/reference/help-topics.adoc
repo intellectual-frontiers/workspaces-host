@@ -153,27 +153,30 @@ VS Code's Sync button follows your git settings. Set pull.ff to only so it behav
 
 === shell
 
-_bash and oh-my-posh work fine; fish 4 is the best experience._
+_Your prompt, bash and fish._
 
-bash with oh-my-posh is fully supported, and fish 4 with oh-my-posh is the best way to work.
+Setup gave your terminal its prompt. bash with oh-my-posh is fully supported, and fish 4 with oh-my-posh is the best way to work.
 
 .bash
-Your login shell is bash, and it stays bash. oh-my-posh works in it with the coach theme. One command adds a few marked lines to ~/.bashrc, after keeping a copy of the file, and a second run changes nothing:
+Your login shell is bash, and it stays bash. Setup added a few marked lines to ~/.bashrc, after keeping a copy of the file, so oh-my-posh draws the ws-host-pretty prompt in every new window. To see it in this one, type exec bash -l. To put the lines back after deleting them, or after an edit, run:
 
 ----
 ws-host shell add bash
 ----
 
-To go back, delete the lines between '>>> workspaces-host' and '<<< workspaces-host'.
+To go back to your old prompt, delete the lines between '>>> workspaces-host' and '<<< workspaces-host'. To stop setup adding them again, put WS_HOST_PROMPT=no in ~/.config/workspaces-host/ws-host.env.
+
+.A Nerd Font, once, on Windows
+ws-host-pretty draws icons from a Nerd Font, a font made for terminals. Install one on Windows, then choose it in Windows Terminal. Without one you see boxes. The guide has the three steps with links. If you would rather not install a font, use the plain theme:
+
+----
+ws-host shell add bash --plain
+----
+
+and put WS_HOST_PROMPT=plain in ~/.config/workspaces-host/ws-host.env so setup keeps it plain.
 
 .fish 4
-fish suggests and colors as you type, and oh-my-posh looks best in it. The shell kit installs fish 4 and oh-my-posh, and the same command gives fish the coach prompt in ~/.config/fish/config.fish. Try it without changing anything by typing fish:
-
-----
-ws-host kit add shell
-ws-host shell add fish
-fish
-----
+fish suggests and colors as you type, and oh-my-posh looks best in it. The shell kit installs fish 4 and oh-my-posh by default, and setup gives fish the same prompt in ~/.config/fish/config.fish. Try it without changing anything by typing fish.
 
 .Making fish your login shell
 That is one separate step, and only you take it:
@@ -185,14 +188,15 @@ chsh -s $(command -v fish)
 
 ws-host never changes your login shell, and it edits a shell file only when you run shell add.
 
-.The theme
-The coach theme is themes/coach.omp.json in your workspaces-host copy. oh-my-posh draws icons, so use a Nerd Font in your terminal.
+.The themes
+Both are in the themes folder of your workspaces-host copy. ws-host-pretty is the default, with Nerd Font icons. ws-host-plain uses only emoji and lines, so it needs no special font. To change one, copy it to your own folder, edit it (the settings are explained at https://ohmyposh.dev/docs/configuration/overview), and put its path in the marked lines of ~/.bashrc, or of fish's config.fish, in place of the theme path.
 
 .Steps
 
-* Give bash the coach prompt: `ws-host shell add bash`
-* Install fish and oh-my-posh: `ws-host kit add shell` (Run this one in a terminal; it asks for your password.)
-* Give fish the coach prompt: `ws-host shell add fish`
+* Give bash the prompt again: `ws-host shell add bash`
+* Use the plain prompt, with no Nerd Font: `ws-host shell add bash --plain`
+* Give fish the prompt: `ws-host shell add fish`
+* Install fish and oh-my-posh if setup could not: `ws-host kit add shell` (Run this one in a terminal; it asks for your password.)
 * Check the shell kit: `ws-host kit show shell`
 
 === signin
@@ -267,22 +271,27 @@ To remove one or change the list, open your settings file in VS Code and edit th
 code ~/.config/workspaces-host/ws-host.env
 ----
 
-.🎨 A friendlier terminal
-bash gets a clear, colorful prompt with the coach theme when you ask for it. It adds a few marked lines to your ~/.bashrc, keeps a copy of the file first, and you can delete the lines any time:
+.🎨 Your prompt is ready
+Setup already gave your terminal a colorful prompt that shows where you are and what git is doing. It lives in a few marked lines of your ~/.bashrc, which you can delete any time, and you will see it in a new terminal window, or right now if you type:
 
 ----
-ws-host shell add bash
+exec bash -l
 ----
 
-fish is nicer still: it suggests and colors what you type. Install it, give it the same prompt, and type fish to try it. bash keeps working either way.
+fish is nicer still: it suggests and colors what you type as you go. It is installed too. Type fish to try it, and bash is still there when you want it.
 
 ----
-ws-host kit add shell
-ws-host shell add fish
 fish
 ----
 
 To make fish what every new window opens, see: ws-host help shell.
+
+.🔤 One thing on Windows: a Nerd Font
+The prompt draws small icons from a Nerd Font. Install one on Windows and choose it in Windows Terminal, and the boxes turn into icons. The guide has the three steps, and ws-host help shell has the rest. To skip the font, use the plain prompt:
+
+----
+ws-host shell add bash --plain
+----
 
 .🆘 Stuck?
 Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help in VS Code for a report with no passwords in it, and paste it to someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/
@@ -292,8 +301,7 @@ Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help i
 * Sign in to GitHub: `ws-host auth new github`
 * Copy your starter repositories: `ws-host workspace advance`
 * Set VS Code up: `ws-host vscode advance`
-* Give bash the coach prompt: `ws-host shell add bash` (adds a few marked lines to ~/.bashrc)
-* Try fish: `ws-host kit add shell` (asks for your password)
+* Give your terminal the prompt again: `ws-host shell add bash` (setup already did this once)
 * See where things stand: `ws-host workspace status`
 * Check your machine: `ws-host doctor`
 

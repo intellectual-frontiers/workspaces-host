@@ -248,7 +248,7 @@ class Commands(Home):
 
 
 class ShellKit(Home):
-    def test_the_shell_kit_provides_fish_4_and_oh_my_posh_and_the_coach_theme(self):
+    def test_the_shell_kit_provides_fish_4_and_oh_my_posh_and_both_prompt_themes(self):
         from ws_host.kits import shell
         kit = reg.discover().kits["shell"]()
         deb = {"id": "debian", "codename": "trixie", "id_like": ""}
@@ -260,6 +260,7 @@ class ShellKit(Home):
         self.assertEqual(fish.kind, "deb")
         self.assertEqual(fish.steps[0][0], "dpkg-deb")
         self.assertTrue(shell.theme_path().is_file())
+        self.assertTrue(shell.theme_path(shell.PLAIN).is_file())
         self.assertEqual({c.program for c in kit.checks(deb) if c.program}, {"fish", "oh-my-posh"})
         self.assertGreaterEqual(len([c for c in kit.checks(deb) if c.run]), 3)
 

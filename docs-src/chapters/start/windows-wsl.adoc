@@ -35,13 +35,16 @@ Write the password down. You will need it every time something is installed. Whe
 NOTE: From here on, "the Debian window" is this black window. You can also open it from *Windows Terminal*, which is the nicer way
 (https://learn.microsoft.com/en-us/windows/terminal/install[how to get it]); choose *Debian* from the drop-down.
 
-=== Step 3: Install curl and run the installer
+=== Step 3: Install curl and wget, and run the installer
 
 Paste each of these into the Debian window and press Enter. To paste in the Debian window, right-click, or press Ctrl+Shift+V. The first
 one asks for your password.
 
+The `cd` at the start matters. A new Debian window can open in your Windows folder, and `cd` with nothing after it takes you to your Linux
+home, where everything below belongs. VS Code needs `wget`, which is why it is installed with `curl`.
+
 ----
-sudo apt update && sudo apt install -y curl
+cd && sudo apt update && sudo apt install -y curl wget
 ----
 
 ----
@@ -49,7 +52,8 @@ curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-h
 ----
 
 The installer does the rest. It tells you what it is about to install and asks for your password if it needs it. It installs the small
-tools it needs, copies `ws-host` to your computer, checks your machine, installs the everyday tools (the `base` kit), and then stops
+tools it needs, copies `ws-host` to your computer, checks your machine, installs the everyday tools (the `base` kit) and your terminal
+(the `shell` kit: `fish`, `oh-my-posh` and your prompt), and then stops
 and asks you to sign in to GitHub. That is expected.
 
 When it finishes it says `Sign in to GitHub first`, and then shows a page called *Your first steps*: five numbered steps with the
@@ -59,6 +63,17 @@ line to type for each, in colour. It is the same page as `ws-host help start`, s
 While it works you see one line at the bottom with a spinner and the seconds that have passed, for example `⠴ Installing uv (42s)`. On a slow
 network that is normal: a download can take minutes, and a finished step leaves a tick. The very last thing it shows is one line to type,
 `exec bash -l`. Type it once so this window finds the new `ws-host` command (or close the window and open a new one).
+
+=== One thing for the prompt: a Nerd Font
+
+Setup gives your terminal a colorful prompt, `ws-host-pretty`, that draws small icons from a Nerd Font. Windows does not have one yet, so until
+you install one you will see boxes in place of the icons. It takes two minutes and you do it once, in Windows:
+
+. Download https://www.nerdfonts.com/font-downloads[CaskaydiaCove Nerd Font] and unzip it.
+. Select the font files, right-click, and choose *Install for all users*.
+. In Windows Terminal open *Settings*, *Profiles*, *Debian*, *Appearance*, and set *Font face* to `CaskaydiaCove Nerd Font`.
+
+If you would rather not install a font, `ws-host shell add bash --plain` gives you the same prompt made of emoji and lines. See <<shells>>.
 
 === What you have now
 

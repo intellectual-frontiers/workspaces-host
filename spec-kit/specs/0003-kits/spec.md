@@ -59,7 +59,7 @@ a kit installs what the distribution ships, so two machines may differ, and
 - **FR-008**: The `base` kit MUST provide a standard userland (`sed`, `find`,
   `xargs`, `diff`, `cmp`, `patch`, `tar`, `gzip`, `unzip`, `zip`, `bzip2`, `xz`,
   `file`, `less`, `which`, `ps`, `hostname`, `tput`, `rsync`, `bc`, `grep` and
-  `awk`), `git`, `gh`, `glab`, `jq`, `ripgrep`, `fd`, `curl`, `python3`, `uv`,
+  `awk`), `git`, `gh`, `glab`, `jq`, `ripgrep`, `fd`, `curl`, `wget`, `python3`, `uv`,
   Node.js, ImageMagick able to read and write WebP together with `cwebp` and
   `dwebp`, `sqlite3`, `duckdb`, `shellcheck`, and a Chromium that Playwright
   can drive. Its checks MUST include a functional check of the userland, one
@@ -85,15 +85,17 @@ a kit installs what the distribution ships, so two machines may differ, and
 
 - **FR-014**: The `shell` kit MUST provide `fish` 4 or later and `oh-my-posh`,
   and its checks MUST include that `fish` is version 4 or later and runs a
-  command, and that `oh-my-posh` prints a prompt with the repository's coach
-  theme (`themes/coach.omp.json`) and sets up both `bash` and `fish`. Where the
+  command, and that `oh-my-posh` prints a prompt with each of the
+  repository's themes (`themes/ws-host-pretty.omp.json` and
+  `themes/ws-host-plain.omp.json`) and sets up both `bash` and `fish`. Where the
   distribution ships `fish` older than 4, the kit MUST fetch the fish project's
   own release package for that distribution, verify it (FR-006) and unpack it
   into the person's tools directory. Installing the kit MUST NOT change the
   person's login shell or their shell startup files (0005-help-and-docs FR-011);
   FR-015 is the one command that edits a startup file, and only when asked.
 - **FR-015**: `shell add bash|fish` MUST give that shell the `oh-my-posh` prompt
-  with the coach theme, and nothing else does. It MUST add one block between
+  with the `ws-host-pretty` theme, or `ws-host-plain` with `--plain`, and `workspace advance` MUST do the same by default
+  (0006-onboarding FR-022); nothing else does. It MUST add one block between
   marker lines to `~/.bashrc` or to fish's `config.fish`, naming the marker so a
   person can delete it, MUST keep a copy of the file in the person's state
   directory first, MUST change nothing outside the markers, MUST change nothing

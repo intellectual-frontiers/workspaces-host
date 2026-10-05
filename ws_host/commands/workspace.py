@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import shutil
 
-from ..core import config, env, registry as reg
+from ..core import config, env, paths, registry as reg
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
 from ..lib import git, kitrun, repos, trust as trust_mod
@@ -53,6 +53,9 @@ def workspace_advance(ctx):
     r = kitrun.ensure(ctx, mine) if not ctx.dry_run else {"status": "ok", "plain": "Would install: " + (", ".join(mine) or "nothing") + "."}
     steps.append({"name": "your-kits", "status": r["status"], "plain": r["plain"]})
     kit_actions = list(r.get("actions", []))
+    if cfg.prompt_theme() and not ctx.dry_run:
+        yield _step("prompt", "Giving your terminal its prompt...")
+        steps.append(_prompt_step(ctx, cfg.prompt_theme()))
     yield _step("sign-in", "Checking that you are signed in...")
     a = auth_cmd.auth_status(ctx)
     github = next((f for f in a.data["forges"] if f["name"] == "github.com"), None)
@@ -68,6 +71,8 @@ def workspace_advance(ctx):
     if ctx.dry_run:
         rows = [repos.state(r, cfg) for r in sorted(found, key=str)]
         todo = [("would copy " if not r["cloned"] else "would check ") + r["id"] for r in rows]
+        if cfg.prompt_theme():
+            todo.append(f"would give your terminal the {cfg.prompt_theme()} prompt")
         yield Resource("workspace-advance", "dry-run", {"plain": "Nothing was changed. This is what I would do.", "steps": steps,
                                                         "would": todo, "kits": declared_kits(cfg)})
         return
@@ -110,12 +115,29 @@ def workspace_advance(ctx):
     steps.append({"name": "doctor", "status": "fail" if bad else "ok", "plain": doctor_cmd._plain(d["checks"])})
     results = added + updated
     failed = any(s["status"] == "fail" for s in steps)
-    prompt_actions = [] if shell_cmd.configured("bash") else [Action(("shell", "add"), "Give bash the coach prompt", {"shell": "bash"})]
-    actions = _auth_actions(results, cfg) + kit_actions + kit_result.get("actions", []) + editor_actions + prompt_actions
+    actions = _auth_actions(results, cfg) + kit_actions + kit_result.get("actions", []) + editor_actions
     plain = ("Everything is up to date." if not failed and not any(r["outcome"] in ("skipped",) for r in results) else
              "Done, with a few things to look at." if not failed else "Done, but some things did not work. The steps below say which.")
     yield Resource("workspace-advance", "workspace", {"plain": plain, "steps": steps, "repositories": results, "ignored": invalid},
                    actions=actions, status=FAILED if failed else OK)
+
+
+def _prompt_step(ctx, theme: str) -> dict:
+    """0006-onboarding FR-022: setup gives bash, and fish when it is there, its prompt; it never fails the setup."""
+    done, notes = [], []
+    for sh in ("bash", "fish"):
+        if sh == "fish" and not (shutil.which("fish") or (paths.bin_dir() / "fish").exists()):
+            continue
+        try:
+            r = shell_cmd.add_prompt(sh, ctx.offline, theme_name=theme, keep_existing=True)
+            done.append(sh)
+            if r["changed"]:
+                notes.append(sh)
+        except WsError as e:
+            return {"name": "prompt", "status": "warn", "plain": f"{e.plain} Run `ws-host shell add {sh}` to try again."}
+    changed = " and ".join(notes)
+    return {"name": "prompt", "status": "ok", "plain": (f"Gave {changed} the {theme} prompt; it shows in a new terminal window." if notes
+                                                      else "Your terminal already has its prompt.")}
 
 
 def _auth_actions(results, cfg):

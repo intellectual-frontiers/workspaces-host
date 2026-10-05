@@ -30,12 +30,15 @@ def start():
              "To add one, type its address. It is copied now and every time you update:\n\n    ws-host repo add github.com/ORG/REPO\n\n"
              "To remove one or change the list, open your settings file in VS Code and edit the line that starts with WS_HOST_REPOS:\n\n"
              "    code ~/.config/workspaces-host/ws-host.env"),
-            ("🎨 A friendlier terminal",
-             "bash gets a clear, colorful prompt with the coach theme when you ask for it. It adds a few marked lines to your ~/.bashrc, keeps a copy "
-             "of the file first, and you can delete the lines any time:\n\n    ws-host shell add bash\n\n"
-             "fish is nicer still: it suggests and colors what you type. Install it, give it the same prompt, and type fish to try it. "
-             "bash keeps working either way.\n\n    ws-host kit add shell\n    ws-host shell add fish\n    fish\n\n"
-             "To make fish what every new window opens, see: ws-host help shell."),
+            ("🎨 Your prompt is ready",
+             "Setup already gave your terminal a colorful prompt that shows where you are and what git is doing. It lives in a few marked "
+             "lines of your ~/.bashrc, which you can delete any time, and you will see it in a new terminal window, or right now if you type:\n\n"
+             "    exec bash -l\n\n"
+             "fish is nicer still: it suggests and colors what you type as you go. It is installed too. Type fish to try it, and bash is still "
+             "there when you want it.\n\n    fish\n\nTo make fish what every new window opens, see: ws-host help shell."),
+            ("🔤 One thing on Windows: a Nerd Font",
+             "The prompt draws small icons from a Nerd Font. Install one on Windows and choose it in Windows Terminal, and the boxes turn into icons. "
+             "The guide has the three steps, and ws-host help shell has the rest. To skip the font, use the plain prompt:\n\n    ws-host shell add bash --plain"),
             ("🆘 Stuck?",
              "Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help in VS Code for a report with no passwords in it, and paste it to "
              "someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/"),
@@ -44,8 +47,7 @@ def start():
             Step("Sign in to GitHub", ("auth", "new"), {"forge": "github"}),
             Step("Copy your starter repositories", ("workspace", "advance")),
             Step("Set VS Code up", ("vscode", "advance")),
-            Step("Give bash the coach prompt", ("shell", "add"), {"shell": "bash"}, "adds a few marked lines to ~/.bashrc"),
-            Step("Try fish", ("kit", "add"), {"kit": "shell"}, "asks for your password"),
+            Step("Give your terminal the prompt again", ("shell", "add"), {"shell": "bash"}, "setup already did this once"),
             Step("See where things stand", ("workspace", "status")),
             Step("Check your machine", ("doctor",)),
         ),

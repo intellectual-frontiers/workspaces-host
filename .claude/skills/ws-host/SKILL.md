@@ -40,7 +40,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `repo list` | read | terminal, editor, mcp | List the repositories I know |
 | `repo set` | decision | terminal, editor | Trust or stop trusting a repository's code |
 | `repo status` | read | terminal, editor, mcp | Show the state of one or all repositories |
-| `shell add` | setup | terminal, editor | Give bash or fish the oh-my-posh prompt with the coach theme |
+| `shell add` | setup | terminal, editor | Give bash or fish the ws-host oh-my-posh prompt (again, or the plain one) |
 | `skill generate` | generate | terminal, editor, mcp | Rewrite the skill that tells an AI agent how to use ws-host |
 | `test` | check | terminal, editor, mcp | Run this repository's tests |
 | `vscode add` | setup | terminal | Install the VS Code extension that is the interface for every orchestrator |
@@ -51,10 +51,10 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 
 ## Kits
 
-- `base`: Standard userland, git, gh, glab, jq, ripgrep, fd, curl, python3, uv, Node.js, ImageMagick with WebP, sqlite3, DuckDB, shellcheck, Chromium
+- `base`: Standard userland, git, gh, glab, jq, ripgrep, fd, curl, wget, python3, uv, Node.js, ImageMagick with WebP, sqlite3, DuckDB, shellcheck, Chromium
 - `press`: TeX Live (LuaLaTeX, XeTeX), latexmk, poppler, qpdf, rsvg, Java, epubcheck, asciidoctor, potrace
 - `rust`: Rust stable (official tarball, no rustup), build-essential, cmake, pkg-config, perl
-- `shell`: fish 4 and oh-my-posh, with the coach prompt theme; bash works as well
+- `shell`: fish 4 and oh-my-posh, with the ws-host-pretty and ws-host-plain prompt themes; bash works as well
 
 ## Help topics
 
@@ -64,7 +64,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - `kits`: Install the tools a kind of work needs, one kit at a time.
 - `recover`: What to do when something fails, or when a repository was left alone.
 - `repos`: Copy your repositories and keep them up to date without risking your work.
-- `shell`: bash and oh-my-posh work fine; fish 4 is the best experience.
+- `shell`: Your prompt, bash and fish.
 - `signin`: Sign in to GitHub or GitLab with a one-time code.
 - `start`: Your first steps: sign in, copy your starter repositories, and move into VS Code.
 - `trust`: Decide whose code may run on your machine.

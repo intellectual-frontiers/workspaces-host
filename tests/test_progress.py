@@ -121,7 +121,7 @@ class ShellAdd(Home):
         self.assertTrue(text.startswith("alias a=b\nexport X=1\n"))
         self.assertEqual(text.count("# >>> workspaces-host: prompt (ws-host shell add bash) >>>"), 1)
         self.assertIn("oh-my-posh init bash --config", text)
-        self.assertIn("coach.omp.json", text)
+        self.assertIn("ws-host-pretty.omp.json", text)
         self.assertTrue(text.rstrip().endswith("# <<< workspaces-host <<<"))
         backups = list((self.paths.state_dir() / "backups").iterdir())
         self.assertEqual([b.read_text() for b in backups], ["alias a=b\nexport X=1"])
@@ -193,3 +193,110 @@ class ShellAdd(Home):
     def test_the_start_page_offers_it(self):
         code, doc = self.run_json("help", "start")
         self.assertIn("shell add bash", str(doc))
+
+
+class Themes(ShellAdd):
+    def test_the_plain_theme_holds_no_font_glyph_and_the_pretty_one_does(self):
+        from ws_host.kits import shell
+        def private(path):
+            import json
+            return [c for c in json.dumps(json.loads(path.read_text(encoding="utf-8")), ensure_ascii=False) if 0xE000 <= ord(c) <= 0xF8FF]
+        self.assertEqual(private(shell.theme_path(shell.PLAIN)), [])
+        self.assertTrue(private(shell.theme_path(shell.PRETTY)))
+        for name in (shell.PRETTY, shell.PLAIN):
+            import json
+            json.loads(shell.theme_path(name).read_text(encoding="utf-8"))
+
+    def test_both_themes_print_a_prompt_when_oh_my_posh_is_here(self):
+        import shutil
+        import subprocess
+        from ws_host.kits import shell
+        omp = shutil.which("oh-my-posh") or next(iter(__import__("glob").glob("/tmp/*/.local/bin/oh-my-posh")), None)
+        if not omp or not os.access(omp, os.X_OK) or os.path.getsize(omp) < 1000:
+            self.skipTest("oh-my-posh is not on this machine")
+        for name in (shell.PRETTY, shell.PLAIN):
+            p = subprocess.run([omp, "print", "primary", "--config", str(shell.theme_path(name)), "--shell", "bash"], capture_output=True, text=True, timeout=60)
+            self.assertTrue(p.returncode == 0 and p.stdout.strip(), name)
+
+    def test_the_plain_flag_chooses_the_plain_theme_and_the_default_goes_back(self):
+        self.run_cmd("shell", "add", "bash", "--plain")
+        self.assertIn("ws-host-plain.omp.json", self.bashrc.read_text())
+        self.assertNotIn("ws-host-pretty.omp.json", self.bashrc.read_text())
+        self.run_cmd("shell", "add", "bash")
+        text = self.bashrc.read_text()
+        self.assertIn("ws-host-pretty.omp.json", text)
+        self.assertEqual(text.count("workspaces-host: prompt"), 1)
+
+    def test_the_prompt_theme_setting(self):
+        from ws_host.core import config
+        for value, expect in ((None, "ws-host-pretty"), ("yes", "ws-host-pretty"), ("pretty", "ws-host-pretty"), ("plain", "ws-host-plain"),
+                              ("no", None), ("off", None), ("NO", None)):
+            self.paths.config_dir().mkdir(parents=True, exist_ok=True)
+            self.paths.config_file().write_text("" if value is None else f'WS_HOST_PROMPT="{value}"\n')
+            self.assertEqual(config.load().prompt_theme(), expect, value)
+
+
+class SetupPrompt(Home):
+    """workspace advance gives the shells the prompt by default (0006-onboarding FR-022)."""
+
+    def setUp(self):
+        super().setUp()
+        import shutil
+        self.bin = self.home / ".local" / "bin"
+        self.bin.mkdir(parents=True)
+        (self.bin / "oh-my-posh").write_text("#!/bin/sh\n")
+        (self.bin / "oh-my-posh").chmod(0o755)
+        self.bashrc = self.home / ".bashrc"
+        self.bashrc.write_text("alias a=b\n")
+        self.paths.config_dir().mkdir(parents=True, exist_ok=True)
+        self.fakebin = self.home.parent / "fakebin"
+        self.fakebin.mkdir()
+        (self.fakebin / "gh").write_text("#!/bin/sh\nexit 0\n")
+        (self.fakebin / "gh").chmod(0o755)
+        os.environ["PATH"] = f"{self.fakebin}:{os.environ['PATH']}"
+
+    def advance(self, **conf):
+        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\n' + "".join(f'{k}="{v}"\n' for k, v in conf.items()))
+        code, doc = self.run_json("workspace", "advance")
+        return code, doc
+
+    def step(self, doc):
+        return [s for s in doc["data"]["steps"] if s["name"] == "prompt"]
+
+    def test_it_is_given_by_default_with_nothing_to_add(self):
+        code, doc = self.advance()
+        self.assertEqual(code, 0)
+        self.assertIn("ws-host-pretty.omp.json", self.bashrc.read_text())
+        self.assertEqual(self.step(doc)[0]["status"], "ok")
+
+    def test_the_plain_setting_gives_the_plain_theme(self):
+        self.advance(WS_HOST_PROMPT="plain")
+        self.assertIn("ws-host-plain.omp.json", self.bashrc.read_text())
+
+    def test_no_keeps_the_persons_own_prompt(self):
+        _, doc = self.advance(WS_HOST_PROMPT="no")
+        self.assertEqual(self.bashrc.read_text(), "alias a=b\n")
+        self.assertEqual(self.step(doc), [])
+
+    def test_a_dry_run_changes_nothing(self):
+        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\n')
+        code, doc = self.run_json("workspace", "advance", "--dry-run")
+        self.assertEqual(self.bashrc.read_text(), "alias a=b\n")
+        self.assertIn("would give your terminal the ws-host-pretty prompt", doc["data"]["would"])
+
+    def test_a_block_the_person_edited_is_never_put_back(self):
+        self.advance()
+        edited = self.bashrc.read_text().replace("ws-host-pretty.omp.json", "my-own.omp.json")
+        self.bashrc.write_text(edited)
+        _, doc = self.advance()
+        self.assertEqual(self.bashrc.read_text(), edited)
+        self.assertIn("already has its prompt", self.step(doc)[0]["plain"])
+
+    def test_a_prompt_that_cannot_be_set_up_never_fails_the_setup(self):
+        (self.bin / "oh-my-posh").unlink()
+        os.environ["WS_HOST_OFFLINE"] = "1"
+        code, doc = self.advance()
+        self.assertEqual(code, 0, doc)
+        self.assertEqual(self.step(doc)[0]["status"], "warn")
+        self.assertIn("ws-host shell add bash", self.step(doc)[0]["plain"])
+        self.assertEqual(self.bashrc.read_text(), "alias a=b\n")

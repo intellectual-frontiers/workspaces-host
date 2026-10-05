@@ -97,6 +97,7 @@ class Workspace(Home):
         self.paths.config_dir().mkdir(parents=True, exist_ok=True)
         kw.setdefault("WS_HOST_KIT", "")      # a test never installs kits unless it says so
         kw.setdefault("WS_HOST_REPOS", "")    # nor copies the starter repositories
+        kw.setdefault("WS_HOST_PROMPT", "no")  # nor edits a shell file
         self.paths.config_file().write_text("".join(f'{k}="{v}"\n' for k, v in kw.items()))
 
     def remote(self, org, name, files=None):

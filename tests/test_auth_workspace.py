@@ -128,7 +128,7 @@ class Advance(Workspace):
         from ws_host.core import config
         self.assertEqual(config.load().kits(), [])                  # the helper writes WS_HOST_KIT="" 
         self.paths.config_file().write_text('WS_HOST_REPOS="github.com/a/b"\n')
-        self.assertEqual(config.load().kits(), ["base"])
+        self.assertEqual(config.load().kits(), ["base", "shell"])          # the everyday tools and a beautiful terminal
         self.paths.config_file().write_text('WS_HOST_KIT="shell press"\n')
         self.assertEqual(config.load().kits(), ["shell", "press"])
 

@@ -27,25 +27,34 @@ def kits():
     }
 
 
-@topic("shell", "bash and oh-my-posh work fine; fish 4 is the best experience.")
+@topic("shell", "Your prompt, bash and fish.")
 def shell():
     return {
-        "plain": "bash with oh-my-posh is fully supported, and fish 4 with oh-my-posh is the best way to work.",
+        "plain": "Setup gave your terminal its prompt. bash with oh-my-posh is fully supported, and fish 4 with oh-my-posh is the best way to work.",
         "sections": (
-            ("bash", "Your login shell is bash, and it stays bash. oh-my-posh works in it with the coach theme. One command adds a few marked lines "
-                     "to ~/.bashrc, after keeping a copy of the file, and a second run changes nothing:\n\n    ws-host shell add bash\n\n"
-                     "To go back, delete the lines between '>>> workspaces-host' and '<<< workspaces-host'."),
-            ("fish 4", "fish suggests and colors as you type, and oh-my-posh looks best in it. The shell kit installs fish 4 and oh-my-posh, "
-                       "and the same command gives fish the coach prompt in ~/.config/fish/config.fish. Try it without changing anything by typing fish:\n\n"
-                       "    ws-host kit add shell\n    ws-host shell add fish\n    fish"),
+            ("bash", "Your login shell is bash, and it stays bash. Setup added a few marked lines to ~/.bashrc, after keeping a copy of the file, so "
+                     "oh-my-posh draws the ws-host-pretty prompt in every new window. To see it in this one, type exec bash -l. To put the lines back "
+                     "after deleting them, or after an edit, run:\n\n    ws-host shell add bash\n\n"
+                     "To go back to your old prompt, delete the lines between '>>> workspaces-host' and '<<< workspaces-host'. To stop setup "
+                     "adding them again, put WS_HOST_PROMPT=no in ~/.config/workspaces-host/ws-host.env."),
+            ("A Nerd Font, once, on Windows", "ws-host-pretty draws icons from a Nerd Font, a font made for terminals. Install one on Windows, "
+                                              "then choose it in Windows Terminal. Without one you see boxes. The guide has the three steps with links. "
+                                              "If you would rather not install a font, use the plain theme:\n\n    ws-host shell add bash --plain\n\n"
+                                              "and put WS_HOST_PROMPT=plain in ~/.config/workspaces-host/ws-host.env so setup keeps it plain."),
+            ("fish 4", "fish suggests and colors as you type, and oh-my-posh looks best in it. The shell kit installs fish 4 and oh-my-posh by default, "
+                       "and setup gives fish the same prompt in ~/.config/fish/config.fish. Try it without changing anything by typing fish."),
             ("Making fish your login shell", "That is one separate step, and only you take it:\n\n    command -v fish | sudo tee -a /etc/shells\n    chsh -s $(command -v fish)\n\n"
                                               "ws-host never changes your login shell, and it edits a shell file only when you run shell add."),
-            ("The theme", "The coach theme is themes/coach.omp.json in your workspaces-host copy. oh-my-posh draws icons, so use a Nerd Font in your terminal."),
+            ("The themes", "Both are in the themes folder of your workspaces-host copy. ws-host-pretty is the default, with Nerd Font icons. "
+                         "ws-host-plain uses only emoji and lines, so it needs no special font. To change one, copy it to your own folder, edit it "
+                         "(the settings are explained at https://ohmyposh.dev/docs/configuration/overview), and put its path in the marked lines "
+                         "of ~/.bashrc, or of fish's config.fish, in place of the theme path."),
         ),
         "steps": (
-            Step("Give bash the coach prompt", ("shell", "add"), {"shell": "bash"}),
-            Step("Install fish and oh-my-posh", ("kit", "add"), {"kit": "shell"}, "Run this one in a terminal; it asks for your password."),
-            Step("Give fish the coach prompt", ("shell", "add"), {"shell": "fish"}),
+            Step("Give bash the prompt again", ("shell", "add"), {"shell": "bash"}),
+            Step("Use the plain prompt, with no Nerd Font", ("shell", "add"), {"shell": "bash", "plain": True}),
+            Step("Give fish the prompt", ("shell", "add"), {"shell": "fish"}),
+            Step("Install fish and oh-my-posh if setup could not", ("kit", "add"), {"kit": "shell"}, "Run this one in a terminal; it asks for your password."),
             Step("Check the shell kit", ("kit", "show"), {"kit": "shell"}),
         ),
     }

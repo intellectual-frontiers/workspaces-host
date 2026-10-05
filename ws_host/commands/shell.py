@@ -1,6 +1,6 @@
-"""`shell add bash|fish`: the oh-my-posh prompt with the coach theme, in the shell a person names (0003-kits FR-015).
+"""`shell add bash|fish [--plain]`: the oh-my-posh prompt with a ws-host theme, in the shell a person names (0003-kits FR-015).
 
-It is the one place ws-host edits a shell startup file, and only when a person runs it: a clearly marked block is added to
+It is the one place ws-host edits a shell startup file. Setup runs it by default (WS_HOST_PROMPT=no opts out); a clearly marked block is added to
 ~/.bashrc or to fish's config.fish, a copy of the file is kept first, and a second run changes nothing."""
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from ..kits import shell as shell_kit
 BEGIN = "# >>> workspaces-host: prompt (ws-host shell add {shell}) >>>"
 END = "# <<< workspaces-host <<<"
 SHELL_ARG = Arg("shell", "SHELL", positional=True, required=True, help="bash or fish")
+PLAIN_ARG = Arg("plain", flag=True, help="use ws-host-plain, which needs no Nerd Font")
 
 
 def startup_file(shell: str) -> Path:
@@ -27,24 +28,29 @@ def startup_file(shell: str) -> Path:
     return (Path(xdg) if xdg and os.path.isabs(xdg) else paths.home() / ".config") / "fish" / "config.fish"
 
 
-def _theme_text() -> str:
-    t = shell_kit.theme_path()
+def _theme_text(name: str) -> str:
+    t = shell_kit.theme_path(name)
     try:
         return "$HOME/" + str(t.relative_to(paths.home()))
     except ValueError:
         return str(t)
 
 
-def block(shell: str) -> str:
-    theme = _theme_text()
+COMMENT = ("# Delete these lines to go back to your old prompt. To change the look, edit the theme name on the next lines: ws-host-pretty needs a\n"
+           "# Nerd Font in your terminal, ws-host-plain does not. Or run: ws-host shell add {shell} --plain")
+
+
+def block(shell: str, theme_name: str = shell_kit.PRETTY) -> str:
+    theme = _theme_text(theme_name)
+    comment = COMMENT.format(shell=shell)
     if shell == "bash":
-        body = ('# Delete these lines to go back to your old prompt. The prompt draws icons, so use a Nerd Font in your terminal.\n'
+        body = (f'{comment}\n'
                 'case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) PATH="$HOME/.local/bin:$PATH" ;; esac\n'
                 'if command -v oh-my-posh >/dev/null 2>&1; then\n'
                 f'  eval "$(oh-my-posh init bash --config "{theme}")"\n'
                 'fi')
     else:
-        body = ('# Delete these lines to go back to your old prompt. The prompt draws icons, so use a Nerd Font in your terminal.\n'
+        body = (f'{comment}\n'
                 'if status is-interactive\n'
                 '  fish_add_path -g $HOME/.local/bin\n'
                 '  if command -q oh-my-posh\n'
@@ -61,9 +67,9 @@ def configured(shell: str) -> bool:
         return False
 
 
-def _with_block(text: str, shell: str) -> str:
+def _with_block(text: str, shell: str, theme_name: str = shell_kit.PRETTY) -> str:
     """The file's text with the block added, or the existing block replaced; nothing outside the markers is touched."""
-    new = block(shell)
+    new = block(shell, theme_name)
     begin = BEGIN.format(shell=shell)
     if begin in text:
         head, _, rest = text.partition(begin)
@@ -76,24 +82,23 @@ def _with_block(text: str, shell: str) -> str:
     return text + ("" if not text or text.endswith("\n") else "\n") + ("\n" if text else "") + new
 
 
-@command("shell", "add", category="setup", summary="Give bash or fish the oh-my-posh prompt with the coach theme",
-         args=(SHELL_ARG,), surfaces=("cli", "editor"))
-def shell_add(ctx, shell):
+def add_prompt(shell: str, offline: bool = False, dry_run: bool = False, theme_name: str = shell_kit.PRETTY, keep_existing: bool = False) -> dict:
+    """Give `shell` the prompt block; raises WsError when it cannot. `shell add` replaces an existing block; `workspace advance` passes
+    keep_existing, so a theme a person edited into the block is never put back."""
     target = startup_file(shell)
     real = target.resolve() if target.is_symlink() else target
     before = real.read_text(encoding="utf-8") if real.exists() else ""
-    after = _with_block(before, shell)
+    after = before if keep_existing and BEGIN.format(shell=shell) in before else _with_block(before, shell, theme_name)
     if shell == "fish" and not shutil.which("fish") and not (paths.bin_dir() / "fish").exists():
         raise WsError("no-fish", "fish is not installed", "fish is not installed yet. Install it first, then run this again.",
                       [Action(("kit", "add"), "Install fish and oh-my-posh", {"kit": "shell"})], status="missing")
-    if ctx.dry_run:
-        return Resource("shell-add", shell, {"plain": f"Nothing was changed. I would add a few marked lines to {target}.", "file": str(target),
-                                              "changed": after != before, "lines": block(shell).splitlines()})
+    if dry_run:
+        return {"file": str(target), "changed": after != before, "lines": block(shell, theme_name).splitlines(), "backup": None}
     if not (shutil.which("oh-my-posh") or (paths.bin_dir() / "oh-my-posh").exists()):
         from ..core import progress
         try:
             with progress.working("Downloading oh-my-posh"):
-                fetch.install(shell_kit.POSH, offline=ctx.offline)
+                fetch.install(shell_kit.POSH, offline=offline)
         except fetch.FetchError as e:
             raise WsError("download", e.message, "I could not download oh-my-posh, so I left your shell file alone. Check your network and run this again.")
     backup = None
@@ -108,10 +113,17 @@ def shell_add(ctx, shell):
         if real.exists():
             shutil.copymode(real, tmp)
         os.replace(tmp, real)
+    return {"file": str(target), "theme": theme_name, "changed": after != before, "backup": str(backup) if backup else None}
+
+
+@command("shell", "add", category="setup", summary="Give bash or fish the ws-host oh-my-posh prompt (again, or the plain one)",
+         args=(SHELL_ARG, PLAIN_ARG), surfaces=("cli", "editor"))
+def shell_add(ctx, shell, plain=False):
+    r = add_prompt(shell, ctx.offline, ctx.dry_run, shell_kit.PLAIN if plain else shell_kit.PRETTY)
+    if ctx.dry_run:
+        return Resource("shell-add", shell, {"plain": f"Nothing was changed. I would add a few marked lines to {r['file']}.", **r})
     reload = f"exec {shell}"
-    plain = (f"Your {shell} prompt is set up. Open a new terminal window, or type {reload} to see it here." if after != before
+    plain = (f"Your {shell} prompt is set up. Open a new terminal window, or type {reload} to see it here." if r["changed"]
              else f"Your {shell} prompt was already set up, so nothing changed.")
-    return Resource("shell-add", shell, {"plain": plain, "file": str(target), "changed": after != before,
-                                          "backup": str(backup) if backup else None,
-                                          "undo": f"Delete the lines between '>>> workspaces-host' and '<<< workspaces-host' in {target}.",
+    return Resource("shell-add", shell, {"plain": plain, **r, "undo": f"Delete the lines between '>>> workspaces-host' and '<<< workspaces-host' in {r['file']}.",
                                           "next": reload}, status=OK)

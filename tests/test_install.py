@@ -87,7 +87,7 @@ class Bootstrap(Home):
         if not git(REPO, "rev-parse", "HEAD", check=False):
             self.skipTest("the repository has no commit yet")
         p = self.run_install()
-        self.assertIn("I need to install: python3 git.", p.stdout)
+        self.assertIn("I need to install: python3 git curl wget.", p.stdout)
         self.assertIn("administrator rights", p.stdout)
         log = self.log.read_text()
         self.assertIn("sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq", log)
@@ -99,12 +99,12 @@ class Bootstrap(Home):
     def test_it_ends_with_the_one_line_that_makes_this_window_find_ws_host(self):
         p = self.run_install(SHELL="/bin/bash")
         self.assertIn("exec bash -l", p.stdout)
-        self.assertIn("this window does not know the ws-host command yet", p.stdout)
+        self.assertIn("this window does not know the ws-host command, or your new prompt, yet", p.stdout)
 
     def test_it_says_nothing_about_the_window_when_ws_host_is_already_on_the_path(self):
         p = self.run_install(PATH=f"{self.tools}:{self.home}/.local/bin")
-        self.assertNotIn("exec bash -l", p.stdout)
         self.assertNotIn("One last thing", p.stdout)
+        self.assertNotIn("this window does not know", p.stdout)
 
     def test_uvs_own_installer_is_told_not_to_edit_shell_files(self):
         (self.tools / "uv").unlink()

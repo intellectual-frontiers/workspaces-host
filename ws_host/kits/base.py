@@ -108,13 +108,13 @@ USERLAND = [("sed", ("--version",)), ("find", ("--version",)), ("xargs", ("--ver
 
 class Base(Kit):
     name = "base"
-    summary = "Standard userland, git, gh, glab, jq, ripgrep, fd, curl, python3, uv, Node.js, ImageMagick with WebP, sqlite3, DuckDB, shellcheck, Chromium"
+    summary = "Standard userland, git, gh, glab, jq, ripgrep, fd, curl, wget, python3, uv, Node.js, ImageMagick with WebP, sqlite3, DuckDB, shellcheck, Chromium"
     plain = "the everyday tools every repository assumes: git, GitHub and GitLab sign-in, search, images, a browser."
 
     def apt(self, distro):
         pkgs = ["coreutils", "sed", "findutils", "diffutils", "patch", "tar", "gzip", "unzip", "zip", "bzip2", "xz-utils", "file", "less",
                 "debianutils", "procps", "hostname", "ncurses-bin", "rsync", "bc", "grep", "gawk",
-                "git", "gh", "jq", "ripgrep", "fd-find", "curl", "ca-certificates", "python3", "nodejs", "npm",
+                "git", "gh", "jq", "ripgrep", "fd-find", "curl", "wget", "ca-certificates", "python3", "nodejs", "npm",
                 "imagemagick", "webp", "libmagickcore-7.q16-10-extra|libmagickcore-6.q16-7-extra|libmagickcore-6.q16-6-extra", "sqlite3", "shellcheck"]
         if distro["id"] == "debian":
             pkgs.append("chromium")
@@ -140,7 +140,7 @@ class Base(Kit):
     def checks(self, distro):
         c = [Check(n, n, a) for n, a in USERLAND]
         c += [Check("git", "git"), Check("gh", "gh"), Check("glab", "glab"), Check("jq", "jq"), Check("rg", "rg"), Check("fd", "fd"),
-              Check("curl", "curl"), Check("python3", "python3"), Check("uv", "uv"), Check("node", "node"),
+              Check("curl", "curl"), Check("wget", "wget"), Check("python3", "python3"), Check("uv", "uv"), Check("node", "node"),
               Check("ImageMagick", "magick", or_programs=("convert",)), Check("cwebp", "cwebp", ("-version",)), Check("dwebp", "dwebp", ("-version",)),
               Check("sqlite3", "sqlite3"), Check("duckdb", "duckdb"), Check("shellcheck", "shellcheck"), Check("chromium", "chromium")]
         c += [Check("userland works", run=userland, needs=("sed", "find", "xargs", "diff", "cmp", "patch", "tar", "gzip", "bzip2", "xz", "zip", "unzip", "file", "which", "ps", "hostname", "tput", "rsync", "bc", "grep", "awk", "less")),
