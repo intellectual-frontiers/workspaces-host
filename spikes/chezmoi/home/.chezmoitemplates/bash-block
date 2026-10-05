@@ -1,0 +1,8 @@
+# >>> workspaces-host: prompt (ws-host shell add bash) >>>
+# Delete these lines to go back to your old prompt. To change the look, edit the theme name on the next lines: ws-host-pretty needs a
+# Nerd Font in your terminal, ws-host-plain does not. Or run: ws-host shell add bash --plain
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) PATH="$HOME/.local/bin:$PATH" ;; esac
+if command -v oh-my-posh >/dev/null 2>&1; then
+  eval "$(oh-my-posh init bash --config "$HOME/.local/share/workspaces-host/themes/{{ .theme }}.omp.json")"
+fi
+# <<< workspaces-host <<<

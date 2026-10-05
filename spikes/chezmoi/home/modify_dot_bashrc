@@ -1,0 +1,22 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Add, replace or remove ws-host's marked block; nothing outside the markers is touched (0003-kits FR-015). */ -}}
+{{- $begin := "# >>> workspaces-host: prompt (ws-host shell add bash) >>>" -}}
+{{- $end := "# <<< workspaces-host <<<" -}}
+{{- $cur := .chezmoi.stdin -}}
+{{- $has := contains $begin $cur -}}
+{{- if and $has (not (contains $end $cur)) -}}
+{{-   fail "your .bashrc has the ws-host start line and no end line; delete the lines from '>>> workspaces-host' on, then run this again" -}}
+{{- end -}}
+{{- /* regexReplaceAllLiteral, not regexReplaceAll: the block holds $PATH and $HOME, which the other one would read as group references. */ -}}
+{{- $pattern := printf "(?s)%s.*?%s\n?" (regexQuoteMeta $begin) (regexQuoteMeta $end) -}}
+{{- $removing := printf "(?s)\n?%s.*?%s\n?" (regexQuoteMeta $begin) (regexQuoteMeta $end) -}}
+{{- $block := includeTemplate "bash-block" . -}}
+{{- if eq .prompt "yes" -}}
+{{-   if $has -}}
+{{ regexReplaceAllLiteral $pattern $cur $block }}
+{{-   else -}}
+{{ $cur }}{{ if and $cur (not (hasSuffix "\n" $cur)) }}{{ "\n" }}{{ end }}{{ if $cur }}{{ "\n" }}{{ end }}{{ $block }}
+{{-   end -}}
+{{- else -}}
+{{ regexReplaceAllLiteral $removing $cur "" }}
+{{- end -}}
