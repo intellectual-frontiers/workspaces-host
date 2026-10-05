@@ -96,6 +96,21 @@ requirements of an extension of its own are retired and say what governs now.
   section MUST be skipped, naming the cause, where the public root or VS Code is
   not on the machine, and MUST run only when named.
 
+- **FR-028**: A person MUST be taught one way to open several repositories in
+  VS Code: always from the workspace file `workspaces.code-workspace` in the
+  workspaces folder (`~/workspaces`, where every `*.code-workspace` file lives),
+  never one repository at a time and never by adding a
+  folder by hand. `vscode ensure` MUST write that file with a folder and a short
+  name for each repository that is copied here, each folder's `path` relative to
+  the workspaces folder itself (`github.com/<owner>/<repo>`, so the file works
+  wherever the folder is and is never written with an absolute path), the window title `Workspaces`
+  first, folders not compacted, and the IF Console recommended; it MUST add only
+  what is missing, keep every folder, setting and recommendation the person
+  wrote, and leave a file it cannot read as JSON alone, saying so. The
+  `workspace-file` help page and a chapter of the guide MUST teach the rule, how
+  to open the file from a terminal and from VS Code, how to add a repository and
+  what to do when only one repository shows.
+
 ## Out of scope- The IF Console's own behavior: 0043-if-console in the public root.
 - Repo-shipped kits and MCP.
 - Editors other than VS Code.

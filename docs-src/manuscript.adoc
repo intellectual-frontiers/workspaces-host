@@ -23,6 +23,8 @@ include::chapters/start/vscode.adoc[]
 
 include::chapters/start/extension.adoc[]
 
+include::chapters/start/workspace-file.adoc[]
+
 include::chapters/start/typical-uses.adoc[]
 
 = Part II: Overview

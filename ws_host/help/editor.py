@@ -29,6 +29,30 @@ def editor():
     }
 
 
+@topic("workspace-file", "Open all your repositories in one VS Code window, from one file.")
+def workspace_file():
+    return {
+        "plain": "One file, workspaces.code-workspace, lists every repository you work in. Open it and they are all in one window.",
+        "sections": (
+            ("The rule", "Always start VS Code from workspaces.code-workspace in your workspaces folder. Do not open repositories one by one, and do not use "
+                         "Add Folder to Workspace. ws-host keeps the file's list of repositories up to date, so nothing is added by hand."),
+            ("Open it", "In a terminal, run: code ~/workspaces/workspaces.code-workspace. In VS Code, choose File, Open Workspace from File. "
+                        "Afterwards VS Code reopens it by itself, and File, Open Recent lists it first; its title bar starts with the word Workspaces, "
+                        "so you can tell it from a single-repository window."),
+            ("Add a repository", "Run ws-host repo add with its address, then ws-host vscode ensure. The repository appears in the window's Explorer."),
+            ("Where the files live", "Workspace files go in your workspaces folder, ~/workspaces, and every repository is listed relative to that folder, "
+                                     "for example github.com/acme/tools. That is why the file keeps working if you move or rename the folder."),
+            ("What is in the file", "A list of repositories with short names, a title that starts with Workspaces, and the recommendation to use the IF Console. "
+                                    "ws-host adds what is missing and never changes a line you wrote yourself."),
+            ("When it looks wrong", "If the Explorer shows one repository, you opened a folder instead of the file: close the window and open the file. "
+                                    "If a repository is missing, run ws-host vscode ensure."),
+        ),
+        "steps": (
+            Step("Write or refresh the workspace file", ("vscode", "ensure")),
+        ),
+    }
+
+
 @topic("ai", "Work with an AI agent without handing it your decisions.")
 def ai():
     return {
