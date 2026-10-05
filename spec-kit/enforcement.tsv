@@ -18,6 +18,8 @@ requirement	mechanism	by	note
 0001-ws-host FR-015	check	workspaces-host: ws-host test	tests check the first line of text renderings and that actions print as one line or not at all
 0001-ws-host FR-016	check	workspaces-host: ws-host test	tests check what is logged, with its surface, and that a read is not
 0001-ws-host FR-017	check	workspaces-host: ws-host test	tests check by reading the source that every check which can warn or fail carries an action, a line or what to do, that a finding with none gets a plain line asking for help, the fixes of a loose secrets file, a bad configuration, a missing launcher, an unset pull setting and a waiting update, and that the sentence says nothing of below
+0001-ws-host FR-018	check	workspaces-host: ws-host test	tests check the title and icon of every command, the ellipsis rule, the views, nouns and lists, that the rows of each list carry the fields it names and a status that maps, the pinned icons against the public root's, each mistake FR-072 names failing check registry, and .if-console.env
+0001-ws-host FR-019	check	workspaces-host: ws-host test	a test reads every tracked file for the name of a confidential repository and what it holds; the history is not checked
 0002-repositories-and-trust FR-001	check	workspaces-host: ws-host test	the listing tests resolve full, short and ambiguous names
 0002-repositories-and-trust FR-002	check	workspaces-host: ws-host test	tests read the person's list and a cloned repository's file, to any depth, ignore a malformed entry, and need no trust
 0002-repositories-and-trust FR-003	check	workspaces-host: ws-host test	tests run repo list and repo status against real clones: ahead, behind, dirty, branch

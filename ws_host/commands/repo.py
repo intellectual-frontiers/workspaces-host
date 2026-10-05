@@ -30,7 +30,8 @@ def repo_list(ctx):
     rows = []
     for rid in sorted(found, key=str):
         ok, why = trust_mod.trust_state(rid, cfg)
-        rows.append({"id": str(rid), "path": str(rid.path(cfg)), "cloned": (rid.path(cfg) / ".git").exists(),
+        cloned = (rid.path(cfg) / ".git").exists()
+        rows.append({"id": str(rid), "path": str(rid.path(cfg)), "cloned": cloned, "status": "ok" if cloned else "pending",
                      "trusted": ok, "trust": why, "listed_by": found[rid]})
     n_missing = sum(not r["cloned"] for r in rows)
     plain = (f"I know {len(rows)} repositor{'ies' if len(rows) != 1 else 'y'}; "

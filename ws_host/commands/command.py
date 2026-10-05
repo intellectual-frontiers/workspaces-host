@@ -1,6 +1,7 @@
 """`command list` and `command show` (0041-command-line FR-012): the registry, read through the orchestrator itself."""
 from __future__ import annotations
 
+from ..core import presentation
 from ..core.registry import Arg, command, discover
 from ..core.types import TYPES
 from ..core.resource import Action, Link, Resource, WsError, wire_surfaces
@@ -28,6 +29,7 @@ def _describe(c) -> dict:
         "options": [{"flag": "--" + _flag(a.name), "type": "flag" if a.flag else a.type, "help": a.help, "multiple": a.multiple,
                      "required": a.required, "choices": list(a.choices or _choices(a))} for a in c.args if not a.positional],
         "usage": " ".join(usage), "surfaces": wire_surfaces(c.surfaces), "programs": list(c.programs), "isolated": False,
+        **presentation.of_command(c),
     }
 
 
@@ -37,10 +39,13 @@ def _flag(name: str) -> str:
 
 @command("command", "list", category="read", summary="List every command")
 def command_list(ctx):
-    cmds = sorted(discover().commands.values(), key=lambda c: c.id)
+    registry = discover()
+    cmds = sorted(registry.commands.values(), key=lambda c: c.id)
     return Resource("command-list", "commands", {
         "plain": f"ws-host can do {len(cmds)} things. Here they are.", "count": len(cmds),
-        "commands": [{"id": c.id, "category": c.category, "group": c.group, "surfaces": wire_surfaces(c.surfaces), "help": c.summary} for c in cmds],
+        "commands": [{"id": c.id, "noun": c.noun, "verb": c.verb, "category": c.category, "group": c.group, "surfaces": wire_surfaces(c.surfaces),
+                      "help": c.summary, **presentation.of_command(c)} for c in cmds],
+        "presentation": presentation.block(registry),
     })
 
 

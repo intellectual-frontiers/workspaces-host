@@ -47,6 +47,8 @@ class Command:
     programs: tuple[str, ...] = ()
     group: str | None = None       # a dependency group of pyproject.toml, None for the plain interpreter
     module: str = ""
+    title: str | None = None       # its title in the editor's command palette (0041-command-line FR-064)
+    icon: str | None = None        # a codicon id
 
     @property
     def id(self) -> str:
@@ -105,7 +107,29 @@ class Generator:
 
 
 @dataclass
+class View:
+    """A view the orchestrator asks the editor for (0041-command-line FR-064)."""
+    id: str
+    title: str
+    icon: str
+    order: int
+    description: str = ""
+
+
+@dataclass
+class Noun:
+    """How a noun is presented: its title and icon, the view that lists it, and what its `list` command's rows show."""
+    name: str
+    title: str
+    icon: str
+    view: str | None = None
+    list: dict | None = None
+
+
+@dataclass
 class Registry:
+    views: dict[str, View] = field(default_factory=dict)
+    nouns: dict[str, Noun] = field(default_factory=dict)
     topics: dict[str, Topic] = field(default_factory=dict)
     generators: dict[str, Generator] = field(default_factory=dict)
     commands: dict[tuple[str, ...], Command] = field(default_factory=dict)
@@ -153,6 +177,30 @@ def command(*words: str, category: str, summary: str, args: tuple[Arg, ...] = ()
                              tuple(programs), group, _loading or fn.__module__))
         return fn
     return deco
+
+
+def view(id: str, title: str, icon: str, order: int, description: str = ""):
+    """Ask the editor for a view: `view("workspace", "Workspace", "repo", 20)`. Called at module level in a command module."""
+    if id in REGISTRY.views:
+        REGISTRY.conflicts.append(f"two views are named '{id}'")
+    else:
+        REGISTRY.views[id] = View(id, title, icon, order, description)
+
+
+def noun(name: str, title: str, icon: str, view: str | None = None, list: dict | None = None):
+    """Present a noun: its title, icon, the view that holds it and, where it has a `list` command, how its rows read."""
+    if name in REGISTRY.nouns:
+        REGISTRY.conflicts.append(f"two nouns are presented as '{name}'")
+    else:
+        REGISTRY.nouns[name] = Noun(name, title, icon, view, list)
+
+
+def present(command_id: str, title: str, icon: str | None = None):
+    """Give a command its palette title and, optionally, an icon. Applied once every command is known (see `discover`)."""
+    PRESENT[command_id] = (title, icon)
+
+
+PRESENT: dict[str, tuple[str, str | None]] = {}
 
 
 def topic(name: str, summary: str):
@@ -213,6 +261,12 @@ def discover() -> Registry:
                             REGISTRY.conflicts.append(f"two kits are named '{obj.name}': {REGISTRY.kits[obj.name].__module__} and {name}")
                         else:
                             REGISTRY.kits[obj.name] = obj
+    for cid, (title, icon) in PRESENT.items():
+        c = REGISTRY.commands.get(tuple(cid.split()))
+        if c is None:
+            REGISTRY.conflicts.append(f"a title is given to '{cid}', which is not a command")
+        else:
+            c.title, c.icon = title, icon
     REGISTRY.conflicts.extend(module_level_imports())
     return REGISTRY
 
