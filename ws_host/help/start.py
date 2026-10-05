@@ -35,7 +35,8 @@ def start():
              "lines of your ~/.bashrc, which you can delete any time, and you will see it in a new terminal window, or right now if you type:\n\n"
              "    exec bash -l\n\n"
              "fish is nicer still: it suggests and colors what you type as you go. It is installed too. Type fish to try it, and bash is still "
-             "there when you want it.\n\n    fish\n\nTo make fish what every new window opens, see: ws-host help shell."),
+             "there when you want it.\n\n    fish\n\nTo make fish what every new window opens, see: ws-host help shell.\n\n"
+             "Try pressing Tab after typing ws-host and a space: the shell shows every command, and finishes the one you start."),
             ("🔤 One thing on Windows: a Nerd Font",
              "The prompt draws small icons from a Nerd Font. Install one on Windows and choose it in Windows Terminal, and the boxes turn into icons. "
              "The guide has the three steps, and ws-host help shell has the rest. To skip the font, use the plain prompt:\n\n    ws-host shell add bash --plain"),

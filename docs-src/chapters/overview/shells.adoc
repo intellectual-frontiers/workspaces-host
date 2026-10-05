@@ -33,6 +33,17 @@ long the last command took and whether it worked.
 It adds a few lines between marker comments to `~/.bashrc` or to fish's `config.fish`, after keeping a copy of the file in
 `~/.local/state/workspaces-host/backups`. A second run changes nothing. To see it in the window you are in, type `exec bash -l`.
 
+=== Tab completion
+
+Type `ws-host`, a space, and press `Tab`: the shell lists every command, finishes the one you start, offers its options when you type `--` and
+fills in the things it works on, such as your repositories and kits. It works in bash and in fish.
+
+Setup puts one file where each shell already looks for completions (`~/.local/share/bash-completion/completions/ws-host` for bash, and
+`~/.config/fish/completions/ws-host.fish` for fish), so no startup file is touched. The file is made from the same list of commands that
+`ws-host command list` shows, so it never falls behind, and setup renews it each time it runs. bash needs the `bash-completion` package, which
+the `base` kit installs. To redo it by hand: `ws-host completion add bash` or `ws-host completion add fish`. It starts in a new terminal window.
+A completion file of your own with that name is never overwritten.
+
 === Two themes: pretty and plain
 
 [cols="1,3"]

@@ -41,6 +41,24 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 
 |===
 
+=== completion
+
+[cols="3,1,2,5"]
+|===
+|Usage |Category |Where it runs |What it does
+
+|`ws-host completion add SHELL`
+|setup
+|terminal, editor
+|Set up Tab completion for ws-host in bash or fish
+
+|`ws-host completion list KIND`
+|read
+|terminal, editor, mcp
+|List the values an argument can take, which is what Tab offers
+
+|===
+
 === docs
 
 [cols="3,1,2,5"]

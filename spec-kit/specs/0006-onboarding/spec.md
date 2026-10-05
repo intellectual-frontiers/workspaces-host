@@ -98,6 +98,19 @@ detail, troubleshooting, and how to take over in VS Code.
   on Windows and choose it in Windows Terminal, how to choose the plain theme,
   and how to edit a theme or keep their own prompt.
 
+- **FR-023**: Pressing Tab MUST complete `ws-host` in `bash` and in `fish`: its
+  commands, each noun's verbs, each command's options, and the values of its
+  arguments. The scripts MUST be generated from the registry, so a new command
+  completes without anyone editing a script, MUST hold the command tree so that
+  completing a command or an option runs no program, and MUST ask `ws-host
+  completion list KIND` only for values that change while a person works, such
+  as their repositories. `workspace advance` MUST write each script where its
+  shell looks by itself (`~/.local/share/bash-completion/completions/ws-host`,
+  `~/.config/fish/completions/ws-host.fish`), MUST NOT edit a startup file for
+  it, MUST renew a file it wrote, and MUST leave a file it did not write alone.
+  `completion add bash|fish` MUST do the same on request, and the `base` kit MUST
+  install `bash-completion`.
+
 ## Setting VS Code up
 
 - **FR-007**: `vscode advance` (setup) MUST install the extension, install the

@@ -7,9 +7,11 @@ import stat
 import subprocess
 from pathlib import Path
 
-from ..core import machine, paths, registry as reg
+from ..core import machine, paths, registry as reg, types
 from ..core.registry import Arg, section
 from ..core.resource import FAILED, MISSING, OK, Resource, WsError
+
+types.SECTION.complete = lambda ctx: sorted(reg.discover().sections)
 
 
 def _f(where: str, message: str, level: str = "error") -> dict:

@@ -6,7 +6,7 @@ import shutil
 from ..core import config, env, paths, registry as reg
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
-from ..lib import git, kitrun, repos, trust as trust_mod
+from ..lib import completion as completion_lib, git, kitrun, repos, trust as trust_mod
 from . import auth as auth_cmd, doctor as doctor_cmd, shell as shell_cmd, vscode as vscode_cmd
 
 
@@ -56,6 +56,8 @@ def workspace_advance(ctx):
     if cfg.prompt_theme() and not ctx.dry_run:
         yield _step("prompt", "Giving your terminal its prompt...")
         steps.append(_prompt_step(ctx, cfg.prompt_theme()))
+    yield _step("completions", "Setting up Tab completion...")
+    steps.append(_completion_step())
     yield _step("sign-in", "Checking that you are signed in...")
     a = auth_cmd.auth_status(ctx)
     github = next((f for f in a.data["forges"] if f["name"] == "github.com"), None)
@@ -122,6 +124,23 @@ def workspace_advance(ctx):
              "Done, with a few things to look at." if not failed else "Done, but some things did not work. The steps below say which.")
     yield Resource("workspace-advance", "workspace", {"plain": plain, "steps": steps, "repositories": results, "ignored": invalid},
                    actions=actions, status=FAILED if failed else OK)
+
+
+def _completion_step() -> dict:
+    """0006-onboarding FR-023: Tab completes ws-host in bash, and in fish when it is there. Files only; no startup file is touched."""
+    done, notes = [], []
+    for sh in ("bash", "fish"):
+        if sh == "fish" and not (shutil.which("fish") or (paths.bin_dir() / "fish").exists()):
+            continue
+        try:
+            r = completion_lib.install(sh)
+        except OSError as e:
+            return {"name": "completions", "status": "warn", "plain": f"I could not set up Tab completion for {sh}: {e.strerror or e}. Run `ws-host completion add {sh}` to try again."}
+        done.append(sh)
+        if r["status"] == "left-alone":
+            notes.append(r["plain"])
+    return {"name": "completions", "status": "warn" if notes else "ok",
+            "plain": " ".join(notes) if notes else f"Tab completes ws-host in {' and '.join(done)}; it starts in a new terminal window."}
 
 
 def _prompt_step(ctx, theme: str) -> dict:
