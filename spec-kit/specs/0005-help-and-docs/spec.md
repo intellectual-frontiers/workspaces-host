@@ -33,7 +33,7 @@ everything is extended with AI, in Python, through the registry.
   (adding a command or a kit with an AI).
 - **FR-004**: The editor MUST offer the topics as "Learn", a quick-pick of the
   topics `help` lists, and MUST show a topic as any other resource, its steps
-  as buttons (0004-editor-extension FR-005, FR-006).
+  as buttons (0043-if-console FR-031, FR-043, in the public root).
 - **FR-005**: Topics MUST NOT name a command, a kit or a path that does not
   exist, and every action in a topic MUST name a command the registry has.
   `check` MUST fail when one does.
@@ -55,8 +55,7 @@ everything is extended with AI, in Python, through the registry.
 - **FR-008**: The guide MUST use the project's mascot and graphics (its logo,
   its two mascot pictures and its social preview) from `docs/`, the IF Press
   theme for the PDF (a format asciidoctor-pdf owns, which 0041-command-line
-  FR-049 allows), and one stylesheet each for HTML and EPUB. The extension MUST
-  use the logo as its icon (0004-editor-extension FR-001).
+  FR-049 allows), and one stylesheet each for HTML and EPUB.
 - **FR-009**: The guide MUST be written in the voice the repository's writing
   rules set: it starts with the point, in the first person, in plain words,
   with no hedging and no throat-clearing.

@@ -7,7 +7,7 @@ which prepares your machine. The names are examples of a rule, not part of it.
 
 `ws-host` does four jobs. It copies your repositories to your machine and keeps them current without ever touching your
 work. It installs kits, the sets of tools a kind of work needs. It checks that your machine is healthy and says so in
-plain words. And it ships the VS Code extension that is the graphical interface for every orchestrator, not just its own.
+plain words. And it sets VS Code up with the IF Console, the one extension that is the graphical interface for every orchestrator, not just its own.
 
 === Commands look the same everywhere
 

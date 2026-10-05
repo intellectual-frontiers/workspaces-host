@@ -34,23 +34,25 @@ Mode*, that is the same question; press *Manage*, then *Trust*. See https://code
 Back in the Debian window:
 
 ----
-ws-host vscode add
 ws-host vscode ensure
 ----
 
-The first installs the Workspace extension. The second installs a short list of helpful extensions (GitHub pull requests, GitLens, Python,
-AsciiDoc and ShellCheck) and sets a few safe settings, such as saving files as you type. It never changes a setting you have already
-chosen. The exact list is in <<reference-vscode>>.
+It builds and installs the IF Console, the extension that shows your workspace in VS Code. Building runs the public root's own code, so it asks you
+once to trust that repository: type `yes`. The first time can take a few minutes while VS Code downloads a small helper into Debian and the IF Console
+is built; a spinner shows how it is going and there is nothing for you to do. It then installs a short list of helpful extensions (GitHub pull requests,
+GitLens, Python, AsciiDoc and ShellCheck), sets a few safe settings, such as saving files as you type, and never changes a setting you have already
+chosen. The exact list is in <<reference-vscode>>. It also writes `workspaces.code-workspace`, a file that lists your repositories.
 
-Now reload VS Code so everything starts: press `Ctrl+Shift+P`, type `Reload Window`, press Enter.
+Now reload VS Code so everything starts: press `Ctrl+Shift+P`, type `Reload Window`, press Enter. Then open your workspace file: *File*, *Open
+Workspace from File*, and pick `workspaces.code-workspace` in your workspaces folder (`~/workspaces`).
 
 === Step 5: Look around, then press Learn
 
 You now have:
 
-* A line at the bottom that says in plain words whether your machine is well.
-* A *Workspace* icon on the left, with every tool your repositories bring.
-* A command called *Workspace: Learn*. Press `Ctrl+Shift+P`, type `Workspace: Learn`, and pick a page. Every step on a page is a button.
+* A line at the bottom that says whether your machine is well, and how many things need you.
+* An *IF Console* icon on the left. Its *Home* view says what needs you, and below it are the views `ws-host` asks for.
+* A command called *IF Console: Learn a Topic*. Press `Ctrl+Shift+P`, type `IF Console: Learn`, and pick a page. Every step on a page is a button.
 
 Start with *start*, then read *repos* and *signin*. Everything you do every day is taught there, and I keep it in the program so that
 it is never out of date.

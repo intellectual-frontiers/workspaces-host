@@ -139,16 +139,13 @@ class Advance(Workspace):
             self.assertEqual(editor["status"], "warn")
             self.assertIn("ws-host vscode ensure", editor["plain"])
 
-    def test_with_vscode_present_the_extension_is_installed_and_setup_is_offered_not_applied(self):
+    def test_with_vscode_present_it_says_what_to_do_and_installs_and_changes_nothing_itself(self):
         fake(self.fakebin, "code", 'echo "$@" >> "$HOME/code.calls"\nexit 0\n')
-        ext = self.home / ".vscode" / "extensions"
-        ext.mkdir(parents=True)
-        (ext / "extensions.json").write_text("[]")
         code, docs = self.ensure()
         editor = [s for s in docs[-1]["data"]["steps"] if s["name"] == "editor"][0]
-        self.assertEqual(editor["status"], "ok")
-        self.assertTrue(any(p.is_symlink() for p in ext.iterdir()))
+        self.assertEqual(editor["status"], "warn")
         self.assertIn("ws-host vscode ensure", [a["cli"] for a in docs[-1]["actions"]])
+        self.assertFalse((self.home / "code.calls").exists(), "workspace ensure called VS Code")
         self.assertFalse((self.home / ".config" / "Code").exists())       # no setting was written
 
     def test_the_one_command_copies_updates_and_reports_each_step(self):

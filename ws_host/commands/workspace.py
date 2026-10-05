@@ -103,20 +103,14 @@ def workspace_ensure(ctx):
     declared = {k: v for k, v in declared_kits(cfg).items() if k not in mine}
     kit_result = kitrun.ensure(ctx, declared)
     steps.append({"name": "kits", "status": kit_result["status"], "plain": kit_result["plain"]})
-    slow_first = bool(shutil.which("code")) and vscode_cmd.first_time_in_wsl() and not vscode_cmd.extension_installed()
-    yield _step("editor", "Setting up VS Code..." + (" The first time, VS Code downloads a small helper into Debian, which can take a few minutes on a slow network;"
-                                                      " the line below shows how much has arrived." if slow_first else ""))
+    yield _step("editor", "Checking VS Code...")
     editor_actions = []
     if shutil.which("code"):
-        try:
-            if not vscode_cmd.extension_installed():
-                er = vscode_cmd.install_extension(False)
-                steps.append({"name": "editor", "status": "ok", "plain": er["plain"]})
-            else:
-                steps.append({"name": "editor", "status": "ok", "plain": "The VS Code extension is installed."})
-            editor_actions.append(Action(("vscode", "ensure"), "Set up VS Code with the recommended extensions and settings"))
-        except WsError as e:
-            steps.append({"name": "editor", "status": "fail", "plain": e.plain})
+        if vscode_cmd.console_installed_here():
+            steps.append({"name": "editor", "status": "ok", "plain": "VS Code is here and the IF Console is installed."})
+        else:
+            steps.append({"name": "editor", "status": "warn", "plain": "VS Code is here. Set it up with the IF Console, the helpful extensions and safe settings with `ws-host vscode ensure`."})
+            editor_actions.append(Action(("vscode", "ensure"), "Set up VS Code with the IF Console, helpful extensions and safe settings"))
     else:
         steps.append({"name": "editor", "status": "warn", "plain": "VS Code is not reachable from this terminal yet. Install it on Windows, open it once from here with `code .`, then run `ws-host vscode ensure`."})
     yield _step("doctor", "Checking this machine's health...")

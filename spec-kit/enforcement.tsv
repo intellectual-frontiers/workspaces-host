@@ -51,27 +51,33 @@ requirement	mechanism	by	note
 0003-kits FR-011	check	workspaces-host: ws-host test	tests check every download's checksum form, address template and architecture
 0003-kits FR-012	check	workspaces-host: ws-host test	tests run workspace ensure over declared kits (see 0002 FR-016); a declared kit that is unknown is reported
 0003-kits FR-013	check	workspaces-host: ws-host test	tests check doctor says a trusted repository's kits are not loaded yet
-0004-editor-extension FR-001	check	workspaces-host: ws-host test	a test lists vscode/ (extension.js and package.json only), forbids dependencies and scripts, and checks no node_modules
-0004-editor-extension FR-002	check	workspaces-host: ws-host test	tests check the extension names no other orchestrator and discovers launchers only of trusted repositories
-0004-editor-extension FR-003	check	workspaces-host: ws-host test	tests check extensionKind and untrustedWorkspaces, and that nothing runs in Restricted Mode
-0004-editor-extension FR-004	check	workspaces-host: ws-host test	Node tests check the status text, colors and update-needed state; the VS Code run checks it activates and refreshes
-0004-editor-extension FR-005	check	workspaces-host: ws-host test	Node tests check the tree by orchestrator, audience and noun and that terminal-only commands are not in it
-0004-editor-extension FR-006	check	workspaces-host: ws-host test	Node and Python tests check the policy, the single nonce'd script, buttons per action, disabled actions and Show command
-0004-editor-extension FR-007	check	workspaces-host: ws-host test	Node tests check quick-picks from command show choices, cancellation, and the command line built from the arguments
-0004-editor-extension FR-008	check	workspaces-host: ws-host test	Node tests check the page and line splitters and progress reports
-0004-editor-extension FR-009	check	workspaces-host: ws-host test	Node tests check findings land in the Problems panel at their file and line
-0004-editor-extension FR-010	check	workspaces-host: ws-host test	Node tests check a newer schema shows update needed and none of its content
-0004-editor-extension FR-011	check	workspaces-host: ws-host test	Node tests check the modal, --confirmed after it only, and that no registered command takes an argument or runs a decision
-0004-editor-extension FR-012	check	workspaces-host: ws-host test	a test scans the extension for file writes and setting changes
-0004-editor-extension FR-013	check	workspaces-host: ws-host test	Node tests check every orchestrator call carries WS_HOST_SURFACE=editor
-0004-editor-extension FR-014	check	workspaces-host: ws-host test	Node tests check the sign-in offer, the code and address notification, and Copy code and open browser
-0004-editor-extension FR-015	check	workspaces-host: ws-host test	Node tests check Get help gathers context and doctor, copies and shows the report
-0004-editor-extension FR-016	check	workspaces-host: ws-host test	tests run vscode add: link, index entry kept beside others, repeat, WSL directory, vsix with code, link without code, dry run; also run against VS Code 1.140
-0004-editor-extension FR-017	check	workspaces-host: ws-host test	Python tests check the wire shapes of every resource, command list and show, the HTML and the schema; Node tests use a stand-in VS Code; tests/vscode-host runs a real VS Code
+0004-editor-extension FR-001	none	-	retired: ws-host ships no extension; the IF Console is the one extension (0043-if-console FR-001, FR-002).
+0004-editor-extension FR-002	none	-	retired: the IF Console discovers launchers by their own declaration and holds no rule of any orchestrator (0043-if-console FR-003 to FR-005).
+0004-editor-extension FR-003	none	-	retired: the IF Console runs only in a trusted workspace for a trusted repository (0043-if-console FR-006).
+0004-editor-extension FR-004	none	-	retired: the IF Console's status bar item names how many things need a person and what to do (0043-if-console FR-016, FR-048).
+0004-editor-extension FR-005	none	-	retired: the IF Console's views and tree come from the command line's own presentation (0043-if-console FR-008, FR-036; 0001-ws-host FR-018).
+0004-editor-extension FR-006	none	-	retired: the IF Console draws a resource in one panel from its JSON (0043-if-console FR-003, FR-042).
+0004-editor-extension FR-007	none	-	retired: the IF Console builds the input of a command from its typed arguments (0043-if-console FR-013).
+0004-editor-extension FR-008	none	-	retired: the IF Console follows a stream as progress (0043-if-console FR-020).
+0004-editor-extension FR-009	none	-	retired: the IF Console shows the findings of a check in the Problems panel (0043-if-console FR-009).
+0004-editor-extension FR-010	none	-	retired: the IF Console checks each document's schema (0043-if-console FR-021).
+0004-editor-extension FR-011	none	-	retired: a decision needs a modal and no command takes an action (0043-if-console FR-015).
+0004-editor-extension FR-012	none	-	retired: the IF Console writes nothing itself (0043-if-console FR-026).
+0004-editor-extension FR-013	none	-	retired: what a command logs names its surface (0041-command-line FR-042).
+0004-editor-extension FR-014	none	-	retired: signing in is an action like any other (0043-if-console FR-013 to FR-015); the sign-in code is shown by the resource `auth new` returns.
+0004-editor-extension FR-015	none	-	retired: the IF Console offers Get Help and Copy Context (0043-if-console FR-012, FR-018).
+0004-editor-extension FR-016	none	-	retired: `vscode ensure` installs the IF Console from the public root (FR-021).
+0004-editor-extension FR-017	none	-	retired: the contract the IF Console relies on is tested from Python (FR-025).
 0003-kits FR-014	check	workspaces-host: ws-host test	tests check the shell kit's packages, fetched fish 4 package and oh-my-posh by distribution, its checks, a deb download unpacked by its step, and that nothing but the shell add command edits a startup file; the containers run the checks on Debian 13 and Ubuntu 24.04
 0003-kits FR-015	check	workspaces-host: ws-host test	tests check shell add for bash and fish: the marked block, the kept copy, no change outside the markers, a second run and a dry run changing nothing, a block missing its end refused, fish asked for first, and the login shell untouched
-0004-editor-extension FR-018	check	workspaces-host: ws-host test	a Node test checks Learn lists the topics help offers and shows the chosen one as a page
-0004-editor-extension FR-019	check	workspaces-host: ws-host test	Node tests check the status text for one, several and failing suggestions, that every suggestion has words and an action, a line or what to do, the list a click opens, Run and Copy, the notification once with Run and Show all, and that a click when all is well checks again
+0004-editor-extension FR-018	none	-	retired: the IF Console offers Learn on the same panel (0043-if-console FR-031, FR-043).
+0004-editor-extension FR-019	none	-	retired: every suggestion is actionable in the IF Console (0043-if-console FR-048); `doctor` supplies the actions (0001-ws-host FR-017).
+0004-editor-extension FR-020	check	workspaces-host: ws-host test	a test checks the repository holds no extension and no vscode add command
+0004-editor-extension FR-021	check	workspaces-host: ws-host test	tests use a stand-in code and a stand-in agora in a clone of the public root to check no build before trust, trust offered as a decision, one build per change of the public root, install, a failed build, a missing public root and a dry run
+0004-editor-extension FR-022	check	workspaces-host: ws-host test	a test checks the older extension is uninstalled where VS Code has it
+0004-editor-extension FR-023	check	workspaces-host: ws-host test	tests check the workspace file lists cloned repositories, keeps the person's folders and settings and is left alone when it has comments
+0004-editor-extension FR-024	check	workspaces-host: ws-host test	a test checks workspace ensure says what to do until the IF Console is installed and then says it is, calling no VS Code
+0004-editor-extension FR-025	check	workspaces-host: ws-host test	tests check the wire shape of commands, resources, actions and the HTML, and that every warning is actionable
 0005-help-and-docs FR-001	check	workspaces-host: ws-host test	tests list the topics, show each, and check unknown topics and offline use
 0005-help-and-docs FR-002	check	workspaces-host: ws-host test	tests check every topic's steps are actions that print as one line or none
 0005-help-and-docs FR-003	check	workspaces-host: ws-host test	tests require the ten topics

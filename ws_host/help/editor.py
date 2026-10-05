@@ -7,19 +7,22 @@ from ..core.registry import Step, topic
 @topic("editor", "Use VS Code as the way to do everything ws-host does.")
 def editor():
     return {
-        "plain": "VS Code shows your workspace's state and lets you act on it with buttons.",
+        "plain": "VS Code shows your workspace's state, through the IF Console, and lets you act on it with buttons.",
         "sections": (
-            ("What you see", "A status line that says in plain words whether your machine is well. A Workspace view with every trusted tool, grouped by what "
-                             "it is for. Every result is a page with buttons for what you can do next, and each button has a Show command link that gives "
-                             "you the one line to paste in a terminal."),
-            ("Learn", "The Learn command lists these same pages. Each step on a page is a button."),
+            ("The IF Console", "ws-host does not ship an editor extension of its own. VS Code's window onto every repository's command line, ws-host's included, "
+                               "is the IF Console, which is built from the public root's code. ws-host vscode ensure builds and installs it, and asks you once to "
+                               "trust that repository, because building it runs that repository's code."),
+            ("What you see", "A Home view that says what needs you, each with the exact line that fixes it and a Run button; the views each command line asks "
+                             "for (ws-host asks for Workspace, Kits and Setup); checks as tests; and a page for every resource."),
+            ("Open your repositories together", "vscode ensure writes workspaces.code-workspace in your workspaces folder, listing the repositories you work in. "
+                                                "Open it with File, Open Workspace from File, and the IF Console shows each repository's own commands."),
+            ("Learn", "IF Console: Learn a Topic lists the same pages as ws-host help. Each step on a page is a button."),
             ("Decisions", "Anything only you may decide, such as trusting a repository, asks you in a dialog. Nothing, including an AI agent in the editor, can click it for you."),
-            ("Safe by design", "The extension runs only the tools of repositories you trust and does nothing in VS Code's Restricted Mode. "
-                               "It changes no setting and writes no file; the tools it runs do, when you choose."),
+            ("Safe by design", "The IF Console runs only the command lines of repositories you trust and does nothing in VS Code's Restricted Mode. "
+                               "It collects nothing and opens no network connection."),
         ),
         "steps": (
-            Step("Set up VS Code with the extension, helpful extensions and safe settings", ("vscode", "ensure")),
-            Step("Install only the extension", ("vscode", "add")),
+            Step("Set up VS Code with the IF Console, helpful extensions and safe settings", ("vscode", "ensure")),
             Step("Run the checks", ("check",)),
         ),
     }

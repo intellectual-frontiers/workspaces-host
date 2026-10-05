@@ -177,7 +177,7 @@ def _html_value(v) -> str:
 
 
 def to_html(r: Resource, registry=None) -> str:
-    """A page of local markup only: no script, no remote reference. The extension's webview hosts it under a strict CSP."""
+    """A page of local markup only: no script, no remote reference. An editor's webview can host it under a strict CSP."""
     d = r.to_dict(registry)
     acts = "".join(
         f'<li><button type="button" data-action="{i}"{"" if a["enabled"] else " disabled"}>{_h(a["label"])}</button>'

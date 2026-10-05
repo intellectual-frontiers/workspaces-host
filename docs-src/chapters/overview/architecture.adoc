@@ -13,7 +13,6 @@ ws_host/
   help/                  the topics: start repos signin trust kits shell editor ai extend recover
   install/               the two installers: apt.py and fetch.py
   lib/                   code behind the commands: git, repositories, trust, kit planning
-vscode/                  the extension: package.json, extension.js, logo.png
 docs-src/                this book; Part II is generated
 tests/                   standard-library unittest with real temporary git repositories
 ----
@@ -38,8 +37,8 @@ exactly as it was and reported in plain words. Each rule is a test: a reattach t
 
 === The wire shape
 
-Every orchestrator answers `command list`, `command show` and its resources in one shape, so the extension needs no
-knowledge of any of them. A document names its schema as `<name>/<kind>@<n>`; the extension reads versions up to the one it
+Every orchestrator answers `command list`, `command show` and its resources in one shape, so the editor needs no
+knowledge of any of them. A document names its schema as `<name>/<kind>@<n>`; the IF Console reads versions up to the one it
 knows and says "update needed" in plain words about a newer one.
 
 === How the editor draws `ws-host`

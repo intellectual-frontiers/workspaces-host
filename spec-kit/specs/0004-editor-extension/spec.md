@@ -1,187 +1,124 @@
-# Feature Specification: The editor extension
+# Feature Specification: The editor
 
 **Spec ID:** 0004-editor-extension
 **Status:** Draft
 
-**Input:** The VS Code extension that is the graphical interface of every
-orchestrator (0041-command-line FR-050 to FR-053), and the `vscode add`
-command that installs it. It lives only in `vscode/` of this repository, is
-plain JavaScript with no build step, holds no behavior of its own, and only
-renders the resources an orchestrator returns and runs their actions by
-invoking that orchestrator. Its rules about decisions, trust and plain
-language come from 0041-command-line and 0002-repositories-and-trust.
+**Input:** How `ws-host` is used from VS Code. `ws-host` ships no extension of
+its own: the editor surface of every orchestrator is the one IF Console
+extension of the public root (0041-command-line FR-050, 0043-if-console), which
+finds a repository's command line by its own declaration and draws what it
+returns. This spec states what `ws-host` does so that the IF Console works with
+it: it builds and installs the IF Console, tells the editor how it looks
+(0001-ws-host FR-018), removes the extension it used to ship, and writes a
+workspace file that lists the repositories a person works in. The older
+requirements of an extension of its own are retired and say what governs now.
 
-## What it is
+## What it was
 
-- **FR-001**: The extension MUST live in `vscode/` and nowhere else, as
-  `package.json`, `extension.js` and the one icon file the package names
-  (`logo.png`), with no TypeScript, no build step and no
-  `node_modules`, so that the clone is the installed extension and advancing the
-  clone updates it (after a window reload). Anything VS Code requires to be in
-  `package.json` is permitted there, because VS Code owns that format
-  (0041-command-line FR-049).
-- **FR-002**: The extension MUST be a generic orchestrator client. It MUST
-  discover the launcher at the root of each trusted repository, run
-  `<name> command list --json` and `<name> <noun> <verb> ... --json` or
-  `--html`, and run nothing else. It MUST NOT contain a rule, a path, a
-  command name or a repository name of any one orchestrator, except that it
-  runs `ws-host`, its own, for the list of trusted repositories and for what
-  only `ws-host` does.
-- **FR-003**: The extension MUST declare `extensionKind: ["workspace"]` and
-  `capabilities.untrustedWorkspaces: false`, MUST run no orchestrator in VS
-  Code's Restricted Mode and say so in plain words, and MUST run the
-  orchestrator of a repository only when `ws-host` reports the repository as
-  trusted (0002-repositories-and-trust FR-012).
+- **FR-001**: Retired. Ws-host ships no extension; the IF Console is the one extension (0043-if-console FR-001, FR-002).
+- **FR-002**: Retired. The IF Console discovers launchers by their own declaration and holds no rule of any orchestrator (0043-if-console FR-003 to FR-005).
+- **FR-003**: Retired. The IF Console runs only in a trusted workspace for a trusted repository (0043-if-console FR-006).
+- **FR-004**: Retired. The IF Console's status bar item names how many things need a person and what to do (0043-if-console FR-016, FR-048).
+- **FR-005**: Retired. The IF Console's views and tree come from the command line's own presentation (0043-if-console FR-008, FR-036; 0001-ws-host FR-018).
+- **FR-006**: Retired. The IF Console draws a resource in one panel from its JSON (0043-if-console FR-003, FR-042).
+- **FR-007**: Retired. The IF Console builds the input of a command from its typed arguments (0043-if-console FR-013).
+- **FR-008**: Retired. The IF Console follows a stream as progress (0043-if-console FR-020).
+- **FR-009**: Retired. The IF Console shows the findings of a check in the Problems panel (0043-if-console FR-009).
+- **FR-010**: Retired. The IF Console checks each document's schema (0043-if-console FR-021).
+- **FR-011**: Retired. A decision needs a modal and no command takes an action (0043-if-console FR-015).
+- **FR-012**: Retired. The IF Console writes nothing itself (0043-if-console FR-026).
+- **FR-013**: Retired. What a command logs names its surface (0041-command-line FR-042).
+- **FR-014**: Retired. Signing in is an action like any other (0043-if-console FR-013 to FR-015); the sign-in code is shown by the resource `auth new` returns.
+- **FR-015**: Retired. The IF Console offers Get Help and Copy Context (0043-if-console FR-012, FR-018).
+- **FR-018**: Retired. The IF Console offers Learn on the same panel (0043-if-console FR-031, FR-043).
+- **FR-019**: Retired. Every suggestion is actionable in the IF Console (0043-if-console FR-048); `doctor` supplies the actions (0001-ws-host FR-017).
 
-## What it shows
+## Installing the IF Console
 
-- **FR-004**: The extension MUST show a status bar item whose text is plain
-  language (the first line of a text rendering, 0041-command-line FR-054) and
-  which is shown as well, as a warning, or as a failure, from `ws-host doctor`.
-  When there is something to do, its text MUST name how many things and what to
-  do ("2 suggestions \u2014 click to fix"), not repeat a sentence written for the
-  terminal (FR-019).
-- **FR-005**: The extension MUST show a sidebar tree grouped by orchestrator,
-  each showing its audience, then its nouns, then its commands that the editor
-  exposes (0041-command-line FR-022). Choosing a command that needs no value
-  MUST run it and show its resource; one that needs a value MUST ask for it
-  (FR-007).
-- **FR-006**: The extension MUST show a resource as its HTML rendering in a
-  webview with a content security policy that allows only its own nonce'd
-  script and inline style, no remote resource, and no other script. Each
-  action MUST be a button; an action the editor does not expose
-  (0041-command-line FR-022) MUST be shown as disabled with its reason; and
-  every action that has a command MUST have a "Show command" link that shows the
-  one pasteable line (0041-command-line FR-055) and offers to copy it.
-- **FR-007**: A typed argument (0041-command-line FR-013) MUST be asked for
-  with a quick-pick when the orchestrator supplies its choices and an input box
-  otherwise, never by printing a command with a placeholder. The extension MUST
-  take the argument's name, type, choices and whether it is positional from
-  `command show`, and MUST build the command line from them.
-- **FR-008**: A stream (0041-command-line FR-019) MUST be shown as a progress
-  notification that follows each document's plain first line, and the last
-  document MUST be shown as a resource.
-- **FR-009**: The extension MUST show the findings of `check` in VS Code's
-  Problems panel, each at its file and line where the finding names one and
-  otherwise at the repository.
-- **FR-010**: When a resource's schema (`<name>/<kind>@<n>`,
-  0041-command-line FR-019) has a version newer than the extension understands,
-  the extension MUST say in plain words that an update is needed, offer to
-  update, and show nothing it cannot read.
-
-## What it will not do
-
-- **FR-011**: A `decision` action MUST require a modal confirmation that names
-  what will change. No path in the extension MUST run a `decision` without it,
-  and the extension MUST register no VS Code command that takes an action, a
-  command line or a resource as an argument, so that an AI agent in the
-  editor cannot trigger one through VS Code's commands
-  (0041-command-line FR-051). The extension MUST pass `--confirmed` only after
-  the modal, with the surface `editor`.
-- **FR-012**: The extension MUST NOT write any file, change any setting, or
-  change any configuration of git, of VS Code or of the person: only the
-  orchestrators it runs do, and only by the actions a person chose.
-- **FR-013**: The extension MUST run orchestrators with the environment
-  variable `WS_HOST_SURFACE=editor`, so that what they log names the surface
-  (0041-command-line FR-042).
-
-## Signing in and help
-
-- **FR-014**: When `ws-host` reports the person is not signed in, the extension
-  MUST offer, as a notification, to sign in. Signing in MUST run `ws-host auth
-  new github` as a stream, show the one-time code and its address in a
-  notification with the action "Copy code and open browser", and report the
-  result in plain words.
-- **FR-018**: The extension MUST offer "Learn", a command that lists the topics
-  of the orchestrator's `help` as a quick-pick and shows the chosen topic as a
-  resource, its steps as buttons (0005-help-and-docs FR-004).
-- **FR-015**: The extension MUST offer a "Get help" command that gathers
-  `ws-host context` and `ws-host doctor`, which hold no secret, into one text
-  the person can paste to a person or an AI, copies it, and shows it.
-
-- **FR-019**: Every suggestion the extension shows, in the status bar, a
-  notification or a list, MUST be actionable, as 0043-if-console FR-048 states
-  for the IF Console: it MUST say what is wrong in plain words; give the exact
-  line that fixes it, with a button that copies it; and, where `doctor` gives
-  an action for it, a button named for it that runs it through the one path
-  every action takes (FR-007, FR-010); or, where no line does, say what the
-  person does themselves. It MUST NOT say or point at "below", "above" or
-  "a suggestion" that the person cannot see. Choosing the status bar item MUST
-  open the list of suggestions, each with its words, its line and its buttons,
-  and MUST NOT only refresh; when all is well it MUST check again and say so. A
-  notification shown for suggestions MUST be shown once for each set of them,
-  with a button that runs the fix, named for it, where there is one suggestion
-  with an action, and a "Show all" button that opens the list.
-
-## Installing it
-
-- **FR-016**: `vscode add` (setup) MUST link `vscode/` into
-  `~/.vscode/extensions`, or into `~/.vscode-server/extensions` where VS Code
-  runs in WSL mode, as `<publisher>.<name>-<version>`; and MUST register it in
-  that directory's `extensions.json` index when one is present, keeping every
-  other entry. Where the index is absent it MUST build a `.vsix` with Python's
-  `zipfile` and install it with `code --install-extension`, and where `code` is
-  absent it MUST link the directory and say in plain words what remains. It MUST
-  take `--dry-run`, be repeatable, and change no VS Code setting.
-- **FR-017**: The contract the extension relies on MUST be tested from
-  Python: the shape of `command list`, `command show`, every resource and its
-  actions, the HTML rendering's buttons and security policy, the schema string,
-  the `decision` category, and the surfaces. The extension's own logic MUST be
-  structured so that Node can test it with VS Code's API replaced by a stand-in,
-  and its activation MUST be tested in VS Code where one can run.
+- **FR-016**: Retired. `vscode ensure` installs the IF Console from the public root (FR-021).
+- **FR-017**: Retired. The contract the IF Console relies on is tested from Python (FR-025).
+- **FR-020**: `ws-host` MUST ship no editor extension and MUST NOT provide a
+  command that installs one of its own; the editor surface is the IF Console
+  (0041-command-line FR-050).
+- **FR-021**: `vscode ensure` (setup) MUST build the IF Console with the public
+  root's own command line (`agora extension build`, 0043-if-console FR-027) and
+  install the package it makes with `code --install-extension`, only when the
+  public root is on the machine, `code` is reachable and the person has trusted
+  the public root, because building runs that repository's code. Trusting it is
+  a decision (0041-command-line FR-051): asked for with a typed confirmation at
+  a terminal, and otherwise offered as the one action `repo set --trusted`.
+  The build MUST be repeated only when the public root has moved, the package
+  MUST be installed when it is absent, a build that fails MUST be said in plain
+  words with the last lines of its output and nothing installed, a call of
+  `code` MUST be a visible step that ends plainly when it takes more than
+  fifteen minutes (0006-onboarding FR-020), and `--dry-run` MUST build and install
+  nothing.
+- **FR-022**: `vscode ensure` MUST uninstall the extension `ws-host` shipped
+  before it used the IF Console, `intellectual-frontiers.workspaces-host`,
+  where VS Code has it.
+- **FR-023**: `vscode ensure` MUST write `workspaces.code-workspace` in the
+  person's workspaces folder (never in a clone), listing the cloned repositories
+  they work in as relative folders, so that the IF Console finds each one's
+  command line (0043-if-console FR-007). It MUST add only folders that are not
+  there, keep every folder and setting the person has, and leave a file it
+  cannot read safely exactly as it was, saying so.
+- **FR-024**: `workspace ensure` MUST say, from a record `vscode ensure` keeps
+  and without calling VS Code, whether the IF Console is installed, and when it
+  is not give the one action `vscode ensure`; it MUST NOT build or install it.
+- **FR-025**: The contract the IF Console relies on MUST be tested from Python:
+  the shape of `command list` and `command show` with their titles and icons,
+  every resource and its actions, the HTML rendering, the schema string, the
+  `decision` category, the surfaces, and that every warning has an action, a
+  line or what to do (0001-ws-host FR-017, FR-018).
 
 ## Out of scope
 
+- The IF Console's own behavior: 0043-if-console in the public root.
 - Repo-shipped kits and MCP.
 - Editors other than VS Code.
 
 ## Edge cases
 
-- VS Code is in Restricted Mode: nothing runs and the status bar says why, per
-  FR-003.
-- A repository is cloned but not trusted: its orchestrator does not appear and
-  nothing of it runs, per FR-003.
-- An orchestrator answers with a newer schema: "update needed", per FR-010.
-- A decision is offered by a resource: it is a button, and clicking it opens a
-  modal; cancelling changes nothing, per FR-011.
-- An AI agent calls a VS Code command to run a decision: no such command
-  exists, per FR-011.
-- An action needs a repository name: a quick-pick lists the known ones, per
-  FR-007.
-- An action is `setup` and not exposed to the editor: disabled, with its
-  command to show, per FR-006.
-- A `check` finding names `src/a.py:12`: it is shown at that file and line, per
-  FR-009.
-- The person is not signed in: a notification offers it; the code and address
-  appear in a second notification, per FR-014.
-- `vscode add` run twice: one link and one index entry, per FR-016.
-- `~/.vscode/extensions/extensions.json` holds other extensions: they are kept,
-  per FR-016.
-- VS Code runs under WSL: the link is in `~/.vscode-server/extensions`, per
-  FR-016.
+- The public root is not trusted: nothing of it runs, and the trust is offered as
+  a decision, per FR-021.
+- The public root is not cloned: the step says to copy it first, per FR-021.
+- The build fails: plain words, the end of its output, nothing installed, per
+  FR-021.
+- The public root has not moved since the last build: it is not built again, per
+  FR-021.
+- The older extension is installed: it is removed, per FR-022.
+- The workspace file has the person's own folders and settings: they are kept,
+  per FR-023.
+- The workspace file has comments: it is left alone, per FR-023.
+- VS Code is not reachable from the terminal: the step says to open it once with
+  `code .` and run this again, per FR-021.
 
 ## Assumptions
 
 - VS Code 1.85 or later, with the extension host in the same machine or WSL
   distribution as the repositories.
-- `ws-host` is installed and on the person's `PATH` or at `~/.local/bin`.
+- The public root builds its extension with `python3` and `uv` alone
+  (0043-if-console FR-027).
 
 ## Open questions
 
-- **OQ-1**: Whether the extension should offer to run `workspace ensure` when
-  a window opens, and how often.
+- **OQ-1**: Whether `vscode ensure` should fetch a built package from a release
+  when one exists instead of building, so that trusting the public root's code is
+  not needed to get the IF Console.
 
 ## Key entities
 
-- **The extension** — `vscode/`, the one graphical interface.
-- **An editor view** — a resource and its actions, shown in a webview.
+- **The IF Console** — the public root's one extension, built and installed by
+  `vscode ensure`.
+- **The workspace file** — `workspaces.code-workspace`, the repositories a person
+  works in, as one VS Code window.
 
 ## Success criteria
 
-- **SC-001**: With the extension installed, a person sees whether their machine
-  is well, signs in with a code, and brings their repositories up to date
-  without typing a command.
-- **SC-002**: No decision runs without a person's click on a modal.
+- **SC-001**: A person runs `ws-host vscode ensure`, trusts the public root once,
+  opens the workspace file, and sees what needs them and the commands of every
+  repository in VS Code.
+- **SC-002**: No code of the public root runs before the person trusts it.
 
 ## Review & acceptance checklist
 

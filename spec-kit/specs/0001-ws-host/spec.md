@@ -6,11 +6,11 @@
 **Input:** `workspaces-host` is the Intellectual Frontiers environment
 orchestrator, built to 0041-command-line. Its command, `ws-host`, prepares a
 person's machine, clones and updates their repositories, installs kits,
-checks health, and ships the VS Code extension that is the graphical
-interface of every orchestrator. This spec states what it is, what it needs
+checks health, and sets VS Code up with the IF Console, the one extension that
+is the graphical interface of every orchestrator. This spec states what it is, what it needs
 on a host, how it is installed, where it keeps files, and its first commands:
 `doctor`, `check`, `test`, `context` and `command`. Repositories and trust
-are 0002-repositories-and-trust, kits 0003-kits, the extension
+are 0002-repositories-and-trust, kits 0003-kits, the editor
 0004-editor-extension. The specs of 0041-command-line, 0025-tooling-environment
 and 0026-workspaces, held in the public root, govern all of them.
 
@@ -81,8 +81,8 @@ and 0026-workspaces, held in the public root, govern all of them.
 - **FR-011**: `ws-host` MUST provide `command list` and `command show ID`
   (read); `doctor` and `check [SECTION...]` (check); `test` and `fresh` (check);
   `context [RESOURCE]` and `help [TOPIC]` (read); `docs build` (build);
-  `docs generate` and `skill generate` (generate); and `vscode add` and
-  `vscode ensure` (setup), each as 0041-command-line states them, with
+  `docs generate` and `skill generate` (generate); `vscode ensure`, `shell add`,
+  `completion add`, `workspace ensure` and `repo sync` (setup); and `update`, each as 0041-command-line states them, with
   `--json`, `--html` and, where a command writes, `--dry-run`. Its audience is
   `private`: what it reports is about one person's machine.
 - **FR-012**: `doctor` MUST change nothing and MUST report: the distribution
@@ -114,7 +114,7 @@ and 0026-workspaces, held in the public root, govern all of them.
 
 ## Out of scope
 
-- Repositories, trust, kits and the extension: the other specs.
+- Repositories, trust, kits and the editor: the other specs.
 - Generated container files, MCP, repo-shipped kits' loading, running on
   macOS itself and other distributions: later specs.
 

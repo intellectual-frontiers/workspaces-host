@@ -29,24 +29,29 @@ ws-host context gives it everything about your machine with no passwords in it, 
 
 _Use VS Code as the way to do everything ws-host does._
 
-VS Code shows your workspace's state and lets you act on it with buttons.
+VS Code shows your workspace's state, through the IF Console, and lets you act on it with buttons.
+
+.The IF Console
+ws-host does not ship an editor extension of its own. VS Code's window onto every repository's command line, ws-host's included, is the IF Console, which is built from the public root's code. ws-host vscode ensure builds and installs it, and asks you once to trust that repository, because building it runs that repository's code.
 
 .What you see
-A status line that says in plain words whether your machine is well. A Workspace view with every trusted tool, grouped by what it is for. Every result is a page with buttons for what you can do next, and each button has a Show command link that gives you the one line to paste in a terminal.
+A Home view that says what needs you, each with the exact line that fixes it and a Run button; the views each command line asks for (ws-host asks for Workspace, Kits and Setup); checks as tests; and a page for every resource.
+
+.Open your repositories together
+vscode ensure writes workspaces.code-workspace in your workspaces folder, listing the repositories you work in. Open it with File, Open Workspace from File, and the IF Console shows each repository's own commands.
 
 .Learn
-The Learn command lists these same pages. Each step on a page is a button.
+IF Console: Learn a Topic lists the same pages as ws-host help. Each step on a page is a button.
 
 .Decisions
 Anything only you may decide, such as trusting a repository, asks you in a dialog. Nothing, including an AI agent in the editor, can click it for you.
 
 .Safe by design
-The extension runs only the tools of repositories you trust and does nothing in VS Code's Restricted Mode. It changes no setting and writes no file; the tools it runs do, when you choose.
+The IF Console runs only the command lines of repositories you trust and does nothing in VS Code's Restricted Mode. It collects nothing and opens no network connection.
 
 .Steps
 
-* Set up VS Code with the extension, helpful extensions and safe settings: `ws-host vscode ensure`
-* Install only the extension: `ws-host vscode add`
+* Set up VS Code with the IF Console, helpful extensions and safe settings: `ws-host vscode ensure`
 * Run the checks: `ws-host check`
 
 === extend
@@ -261,14 +266,14 @@ code .
 ----
 
 .4️⃣  Let ws-host set VS Code up
-It installs the Workspace extension, a short list of helpful extensions and a few safe settings, and never changes a setting you made. Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.
+It builds and installs the IF Console, the extension that shows your workspace in VS Code, adds a short list of helpful extensions and a few safe settings, and never changes a setting you made. The IF Console is built from the .github repository's own code, so it asks you once to trust it. It also makes a workspace file that lists your repositories. Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.
 
 ----
 ws-host vscode ensure
 ----
 
 .5️⃣  Keep going in VS Code
-Press Ctrl+Shift+P and run Workspace: Learn. Every page there has a button for each step, and the status line at the bottom says in plain words whether your machine is well. You can do everything else from VS Code.
+In VS Code choose File, Open Workspace from File, and pick workspaces.code-workspace in your workspaces folder. Then press Ctrl+Shift+P and run IF Console: Learn a Topic. Every page there has a button for each step, and the Home view says what needs you. You can do everything else from VS Code.
 
 .📂 Choose which repositories you work in
 To add one, type its address. It is copied now and every time you update:
@@ -315,7 +320,7 @@ ws-host update
 ----
 
 .🆘 Stuck?
-Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help in VS Code for a report with no passwords in it, and paste it to someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/
+Run ws-host doctor to see what is wrong in plain words, or IF Console: Get Help in VS Code for a report with no passwords in it, and paste it to someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/
 
 .Steps
 
