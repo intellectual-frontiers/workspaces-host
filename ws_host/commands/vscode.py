@@ -6,19 +6,23 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
+import urllib.request
 from pathlib import Path
 
 from ..core import config, machine, paths, progress, registry as reg
 from ..core.resource import Action, FAILED, OK, Resource, WsError
+from ..install import fetch
 from ..lib import git, repos, trust as trust_mod
 
 CONSOLE_ID = "intellectual-frontiers.if-console"
 OLD_IDS = ("intellectual-frontiers.workspaces-host",)       # the extension ws-host shipped before it used the IF Console
 PUBLIC_ROOT = config.STARTER_REPOS[0]
 BUILD_WAIT = 1800
+RELEASE_API = "https://api.github.com/repos/intellectual-frontiers/.github/releases/latest"
 
 
 CODE_WAIT = 900     # seconds: the first call downloads VS Code's Linux helper into WSL, which is slow on a slow network
@@ -96,12 +100,71 @@ def build_console(root: Path) -> Path:
     return vsix
 
 
+def _get_json(url: str):
+    req = urllib.request.Request(url, headers={"User-Agent": "ws-host", "Accept": "application/vnd.github+json"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return json.loads(r.read().decode("utf-8"))
+
+
+def release_package(offline: bool = False) -> dict | None:
+    """The public root's newest release that carries the IF Console's package with a SHA-256 digest, as {tag, name, url, sha256}; None when it
+    has none, when GitHub cannot be reached or when the package has no digest to check (0004-editor-extension FR-026). Never raises."""
+    if offline:
+        return None
+    try:
+        rel = _get_json(RELEASE_API)
+        for a in rel.get("assets", []):
+            m = re.fullmatch(r"if-console-[0-9][A-Za-z0-9._-]*\.vsix", str(a.get("name", "")))
+            digest = str(a.get("digest") or "")
+            if m and digest.startswith("sha256:") and re.fullmatch(r"[0-9a-f]{64}", digest[7:]) and str(a.get("browser_download_url", "")).startswith("https://"):
+                return {"tag": str(rel.get("tag_name", "")), "name": a["name"], "url": a["browser_download_url"], "sha256": digest[7:]}
+    except (OSError, ValueError, AttributeError, KeyError):
+        pass
+    return None
+
+
+def download_release(rel: dict) -> Path:
+    """Fetch the release package, verify its SHA-256 before anything uses it, and give it the name VS Code needs. Raises fetch.FetchError."""
+    with progress.working("Downloading the IF Console"):
+        got = fetch.download(rel["url"], rel["sha256"])
+    out = paths.cache_dir() / "if-console" / rel["name"]
+    out.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(got, out)
+    return out
+
+
+def release_step(ctx, rel: dict, have: set) -> dict:
+    name = "IF Console extension"
+    current = read_stamp().get("release") == rel["tag"] and CONSOLE_ID in have
+    if ctx.dry_run:
+        return {"name": name, "status": "already" if current else "would-install",
+                "plain": "The IF Console is installed and current." if current else f"I would download and install the IF Console {rel['tag']} from the public root's release."}
+    if not current:
+        vsix = download_release(rel)
+        r = run_code(["--install-extension", str(vsix), "--force"], "Installing the IF Console")
+        if r.returncode != 0:
+            raise WsError("code-install", (r.stderr or r.stdout).strip()[-300:], "VS Code's `code` command could not install the IF Console.", [Action(("vscode", "ensure"), "Try again")])
+        write_stamp(release=rel["tag"], installed=rel["tag"])
+    for old in OLD_IDS:
+        if old in have:
+            run_code(["--uninstall-extension", old], f"Removing the older {old.split('.')[-1]} extension")
+    return {"name": name, "status": "already" if current else "installed",
+            "plain": "The IF Console is installed and current." if current else f"Installed the IF Console {rel['tag']} from the public root's release, after checking its fingerprint. Reload VS Code's window to start it."}
+
+
 def console_step(ctx, cfg, code: str | None, have: set) -> tuple[dict, list[Action]]:
     """Build the IF Console if the public root changed, install it if it is not there, and remove the extension ws-host used to ship."""
     name = "IF Console extension"
     rid, root = public_root(cfg)
     if not code:
         return {"name": name, "status": "skipped", "plain": "VS Code's `code` command is not available here yet; open VS Code from this terminal once with `code .`, then run this again."}, []
+    note = ""
+    rel = release_package(ctx.offline)
+    if rel:
+        try:
+            return release_step(ctx, rel, have), []      # a published, verified package needs no build and no trust (FR-026)
+        except fetch.FetchError as e:
+            note = f" The release package could not be used ({e.message[:120]}), so I built it instead."
     if not (root / ".git").exists():
         return {"name": name, "status": "skipped", "plain": f"The public root ({rid.name}) is not on this machine yet, and the IF Console is built from it. Copy it first."}, \
                [Action(("workspace", "ensure"), "Ensure everything is set up and up to date")]
@@ -137,8 +200,8 @@ def console_step(ctx, cfg, code: str | None, have: set) -> tuple[dict, list[Acti
     for old in OLD_IDS:
         if old in have:
             run_code(["--uninstall-extension", old], f"Removing the older {old.split('.')[-1]} extension")
-    plain = ("Built and installed the IF Console. Reload VS Code's window to start it." if built else
-             "Installed the IF Console. Reload VS Code's window to start it." if not installed else "The IF Console is installed and current.")
+    plain = (("Built and installed the IF Console. Reload VS Code's window to start it." if built else
+             "Installed the IF Console. Reload VS Code's window to start it." if not installed else "The IF Console is installed and current.") + note)
     return {"name": name, "status": "installed" if (built or not installed) else "already", "plain": plain}, []
 
 

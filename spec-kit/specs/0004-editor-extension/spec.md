@@ -71,9 +71,32 @@ requirements of an extension of its own are retired and say what governs now.
   `decision` category, the surfaces, and that every warning has an action, a
   line or what to do (0001-ws-host FR-017, FR-018).
 
-## Out of scope
+- **FR-026**: Where the public root's latest release carries the IF Console's
+  package, named `if-console-<version>.vsix`, with a SHA-256 digest and an
+  `https` address, `vscode ensure` MUST install that package instead of
+  building: it MUST download it, verify the digest before anything uses it,
+  install it with `code --install-extension`, and need neither the public root on
+  the machine nor the person's trust of it. It MUST install the same release
+  only once, MUST ignore a release whose package has no digest, a wrong name or
+  an address that is not `https`, and, when the release cannot be reached or its
+  download does not match its digest, MUST say so in plain words and fall back
+  to building (FR-021). It MUST NOT ask GitHub for a release under `--offline` or
+  `--dry-run` beyond reading the release's description, and a release that cannot
+  be read MUST never be an error.
 
-- The IF Console's own behavior: 0043-if-console in the public root.
+- **FR-027**: The IF Console serving `ws-host` MUST be tested in a real VS Code,
+  with the public root's own runner (`agora extension test`, 0043-if-console
+  FR-034) and this repository's suite in `tests/if_console/vscode/`, run by `ws-host
+  check console`. It MUST cover: the IF Console finding `ws-host` by its
+  `.if-console.env` and reading its name and audience; the views `ws-host` asks
+  for, planned in the order it asks; the repository and kit lists with a status
+  icon for each row; every editor command titled and All commands listing its nouns
+  and repository-wide commands; what doctor says needs a person shown on Home with
+  the exact line that fixes it; and that a decision is never offered over MCP. The
+  section MUST be skipped, naming the cause, where the public root or VS Code is
+  not on the machine, and MUST run only when named.
+
+## Out of scope- The IF Console's own behavior: 0043-if-console in the public root.
 - Repo-shipped kits and MCP.
 - Editors other than VS Code.
 
@@ -82,6 +105,10 @@ requirements of an extension of its own are retired and say what governs now.
 - The public root is not trusted: nothing of it runs, and the trust is offered as
   a decision, per FR-021.
 - The public root is not cloned: the step says to copy it first, per FR-021.
+- The public root has published a release with the package and its digest: it is
+  installed without a build or trust, per FR-026.
+- The release's download does not match its digest: plain words, and the build
+  is tried after trust, per FR-026.
 - The build fails: plain words, the end of its output, nothing installed, per
   FR-021.
 - The public root has not moved since the last build: it is not built again, per
@@ -102,9 +129,7 @@ requirements of an extension of its own are retired and say what governs now.
 
 ## Open questions
 
-- **OQ-1**: Whether `vscode ensure` should fetch a built package from a release
-  when one exists instead of building, so that trusting the public root's code is
-  not needed to get the IF Console.
+- **OQ-1**: Answered by FR-026.
 
 ## Key entities
 

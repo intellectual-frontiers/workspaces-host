@@ -8,8 +8,10 @@ thing as VS Code's
 https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix[install from a VSIX] feature. There is nothing to
 download, no account, and no network connection from the extension itself.
 
-Building runs code that lives in the public root, so `ws-host` asks you once to trust that repository, with a typed `yes`. It builds again only
-when the public root has changed, which is when you run `ws-host update` or `ws-host workspace ensure` and then `ws-host vscode ensure`.
+If the public root has published a release with the IF Console's package and its SHA-256 fingerprint, `ws-host` downloads that package, checks the
+fingerprint, and installs it. That needs no build and no trust. Otherwise it builds the package, and building runs code that lives in the public
+root, so `ws-host` asks you once to trust that repository, with a typed `yes`. It builds again only when the public root has changed, which is
+when you run `ws-host update` or `ws-host workspace ensure` and then `ws-host vscode ensure`.
 
 `ws-host vscode ensure` also writes `workspaces.code-workspace` in your workspaces folder. It lists the repositories you work in, and opening it
 (File, Open Workspace from File) shows each repository's own commands side by side. The IF Console finds a repository's command line by a file at
