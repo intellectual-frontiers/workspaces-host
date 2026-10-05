@@ -114,7 +114,7 @@ class Base(Kit):
     def apt(self, distro):
         pkgs = ["coreutils", "sed", "findutils", "diffutils", "patch", "tar", "gzip", "unzip", "zip", "bzip2", "xz-utils", "file", "less",
                 "debianutils", "procps", "hostname", "ncurses-bin", "rsync", "bc", "grep", "gawk",
-                "git", "gh", "jq", "ripgrep", "fd-find", "curl", "wget", "ca-certificates", "python3", "nodejs", "npm",
+                "git", "gh", "jq", "ripgrep", "fd-find", "curl", "wget", "bash-completion", "ca-certificates", "python3", "nodejs", "npm",
                 "imagemagick", "webp", "libmagickcore-7.q16-10-extra|libmagickcore-6.q16-7-extra|libmagickcore-6.q16-6-extra", "sqlite3", "shellcheck"]
         if distro["id"] == "debian":
             pkgs.append("chromium")

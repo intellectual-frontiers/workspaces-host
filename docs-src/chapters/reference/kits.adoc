@@ -9,13 +9,13 @@ Each kit as it installs on Debian 13 and on Ubuntu 24.04, taken from the kits' o
 
 The everyday tools every repository assumes: git, GitHub and GitLab sign-in, search, images, a browser.
 
-*Packages on Debian 13:* `coreutils`, `sed`, `findutils`, `diffutils`, `patch`, `tar`, `gzip`, `unzip`, `zip`, `bzip2`, `xz-utils`, `file`, `less`, `debianutils`, `procps`, `hostname`, `ncurses-bin`, `rsync`, `bc`, `grep`, `gawk`, `git`, `gh`, `jq`, `ripgrep`, `fd-find`, `curl`, `wget`, `ca-certificates`, `python3`, `nodejs`, `npm`, `imagemagick`, `webp`, `libmagickcore-7.q16-10-extra|libmagickcore-6.q16-7-extra|libmagickcore-6.q16-6-extra`, `sqlite3`, `shellcheck`, `chromium`, `glab`
+*Packages on Debian 13:* `coreutils`, `sed`, `findutils`, `diffutils`, `patch`, `tar`, `gzip`, `unzip`, `zip`, `bzip2`, `xz-utils`, `file`, `less`, `debianutils`, `procps`, `hostname`, `ncurses-bin`, `rsync`, `bc`, `grep`, `gawk`, `git`, `gh`, `jq`, `ripgrep`, `fd-find`, `curl`, `wget`, `bash-completion`, `ca-certificates`, `python3`, `nodejs`, `npm`, `imagemagick`, `webp`, `libmagickcore-7.q16-10-extra|libmagickcore-6.q16-7-extra|libmagickcore-6.q16-6-extra`, `sqlite3`, `shellcheck`, `chromium`, `glab`
 
 *Downloads on Debian 13:*
 
 * `duckdb` 1.5.6, for aarch64, x86_64
 
-*Packages on Ubuntu 24.04:* `coreutils`, `sed`, `findutils`, `diffutils`, `patch`, `tar`, `gzip`, `unzip`, `zip`, `bzip2`, `xz-utils`, `file`, `less`, `debianutils`, `procps`, `hostname`, `ncurses-bin`, `rsync`, `bc`, `grep`, `gawk`, `git`, `gh`, `jq`, `ripgrep`, `fd-find`, `curl`, `wget`, `ca-certificates`, `python3`, `nodejs`, `npm`, `imagemagick`, `webp`, `libmagickcore-7.q16-10-extra|libmagickcore-6.q16-7-extra|libmagickcore-6.q16-6-extra`, `sqlite3`, `shellcheck`, `libnss3`, `libatk1.0-0t64|libatk1.0-0`, `libatk-bridge2.0-0t64|libatk-bridge2.0-0`, `libcups2t64|libcups2`, `libdrm2`, `libxkbcommon0`, `libxcomposite1`, `libxdamage1`, `libxfixes3`, `libxrandr2`, `libgbm1`, `libasound2t64|libasound2`, `libpango-1.0-0`, `libcairo2`, `libx11-6`, `libxcb1`, `libxext6`, `fonts-liberation`
+*Packages on Ubuntu 24.04:* `coreutils`, `sed`, `findutils`, `diffutils`, `patch`, `tar`, `gzip`, `unzip`, `zip`, `bzip2`, `xz-utils`, `file`, `less`, `debianutils`, `procps`, `hostname`, `ncurses-bin`, `rsync`, `bc`, `grep`, `gawk`, `git`, `gh`, `jq`, `ripgrep`, `fd-find`, `curl`, `wget`, `bash-completion`, `ca-certificates`, `python3`, `nodejs`, `npm`, `imagemagick`, `webp`, `libmagickcore-7.q16-10-extra|libmagickcore-6.q16-7-extra|libmagickcore-6.q16-6-extra`, `sqlite3`, `shellcheck`, `libnss3`, `libatk1.0-0t64|libatk1.0-0`, `libatk-bridge2.0-0t64|libatk-bridge2.0-0`, `libcups2t64|libcups2`, `libdrm2`, `libxkbcommon0`, `libxcomposite1`, `libxdamage1`, `libxfixes3`, `libxrandr2`, `libgbm1`, `libasound2t64|libasound2`, `libpango-1.0-0`, `libcairo2`, `libx11-6`, `libxcb1`, `libxext6`, `fonts-liberation`
 
 *Downloads on Ubuntu 24.04:*
 

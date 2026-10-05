@@ -26,6 +26,8 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `check` | check | terminal, editor, mcp | Run the checks of this repository |
 | `command list` | read | terminal, editor, mcp | List every command |
 | `command show` | read | terminal, editor, mcp | Show one command in full |
+| `completion add` | setup | terminal, editor | Set up Tab completion for ws-host in bash or fish |
+| `completion list` | read | terminal, editor, mcp | List the values an argument can take, which is what Tab offers |
 | `context` | read | terminal, editor, mcp | Everything needed to get help with this machine, with secrets removed |
 | `docs build` | build | terminal, editor, mcp | Build the guide: HTML, PDF and, where the converter is here, EPUB |
 | `docs generate` | generate | terminal, editor, mcp | Rewrite the guide's generated reference chapters |

@@ -45,6 +45,11 @@ def shell():
                        "and setup gives fish the same prompt in ~/.config/fish/config.fish. Try it without changing anything by typing fish."),
             ("Making fish your login shell", "That is one separate step, and only you take it:\n\n    command -v fish | sudo tee -a /etc/shells\n    chsh -s $(command -v fish)\n\n"
                                               "ws-host never changes your login shell, and it edits a shell file only when you run shell add."),
+            ("Tab completion", "Press Tab and the shell finishes ws-host for you: its commands, their options, and the things they work on, such as your "
+                               "repositories and kits. Setup sets this up in bash, and in fish when it is installed, by putting one file where each shell "
+                               "looks for completions, so no startup file is touched and the file is renewed whenever setup runs. To redo it by hand:\n\n"
+                               "    ws-host completion add bash\n    ws-host completion add fish\n\n"
+                               "It starts in a new terminal window. In bash it needs the bash-completion package, which the base kit installs."),
             ("The themes", "Both are in the themes folder of your workspaces-host copy. ws-host-pretty is the default, with Nerd Font icons. "
                          "ws-host-plain uses only emoji and lines, so it needs no special font. To change one, copy it to your own folder, edit it "
                          "(the settings are explained at https://ohmyposh.dev/docs/configuration/overview), and put its path in the marked lines "
@@ -54,6 +59,8 @@ def shell():
             Step("Give bash the prompt again", ("shell", "add"), {"shell": "bash"}),
             Step("Use the plain prompt, with no Nerd Font", ("shell", "add"), {"shell": "bash", "plain": True}),
             Step("Give fish the prompt", ("shell", "add"), {"shell": "fish"}),
+            Step("Set up Tab completion in bash again", ("completion", "add"), {"shell": "bash"}),
+            Step("Set up Tab completion in fish again", ("completion", "add"), {"shell": "fish"}),
             Step("Install fish and oh-my-posh if setup could not", ("kit", "add"), {"kit": "shell"}, "Run this one in a terminal; it asks for your password."),
             Step("Check the shell kit", ("kit", "show"), {"kit": "shell"}),
         ),

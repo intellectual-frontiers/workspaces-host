@@ -188,6 +188,16 @@ chsh -s $(command -v fish)
 
 ws-host never changes your login shell, and it edits a shell file only when you run shell add.
 
+.Tab completion
+Press Tab and the shell finishes ws-host for you: its commands, their options, and the things they work on, such as your repositories and kits. Setup sets this up in bash, and in fish when it is installed, by putting one file where each shell looks for completions, so no startup file is touched and the file is renewed whenever setup runs. To redo it by hand:
+
+----
+ws-host completion add bash
+ws-host completion add fish
+----
+
+It starts in a new terminal window. In bash it needs the bash-completion package, which the base kit installs.
+
 .The themes
 Both are in the themes folder of your workspaces-host copy. ws-host-pretty is the default, with Nerd Font icons. ws-host-plain uses only emoji and lines, so it needs no special font. To change one, copy it to your own folder, edit it (the settings are explained at https://ohmyposh.dev/docs/configuration/overview), and put its path in the marked lines of ~/.bashrc, or of fish's config.fish, in place of the theme path.
 
@@ -196,6 +206,8 @@ Both are in the themes folder of your workspaces-host copy. ws-host-pretty is th
 * Give bash the prompt again: `ws-host shell add bash`
 * Use the plain prompt, with no Nerd Font: `ws-host shell add bash --plain`
 * Give fish the prompt: `ws-host shell add fish`
+* Set up Tab completion in bash again: `ws-host completion add bash`
+* Set up Tab completion in fish again: `ws-host completion add fish`
 * Install fish and oh-my-posh if setup could not: `ws-host kit add shell` (Run this one in a terminal; it asks for your password.)
 * Check the shell kit: `ws-host kit show shell`
 
@@ -285,6 +297,8 @@ fish
 ----
 
 To make fish what every new window opens, see: ws-host help shell.
+
+Try pressing Tab after typing ws-host and a space: the shell shows every command, and finishes the one you start.
 
 .🔤 One thing on Windows: a Nerd Font
 The prompt draws small icons from a Nerd Font. Install one on Windows and choose it in Windows Terminal, and the boxes turn into icons. The guide has the three steps, and ws-host help shell has the rest. To skip the font, use the plain prompt:

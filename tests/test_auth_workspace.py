@@ -154,10 +154,10 @@ class Advance(Workspace):
     def test_the_one_command_copies_updates_and_reports_each_step(self):
         code, docs = self.advance()
         self.assertEqual(code, 0, docs[-1])
-        self.assertEqual([d["kind"] for d in docs[:-1]], ["progress"] * 7)  # one streamed line per step
+        self.assertEqual([d["kind"] for d in docs[:-1]], ["progress"] * 8)  # one streamed line per step
         final = docs[-1]
         self.assertEqual(final["kind"], "workspace-advance")
-        self.assertEqual([s["name"] for s in final["data"]["steps"]], ["your-kits", "sign-in", "copy", "update", "kits", "editor", "doctor"])
+        self.assertEqual([s["name"] for s in final["data"]["steps"]], ["your-kits", "completions", "sign-in", "copy", "update", "kits", "editor", "doctor"])
         for n in ("site", "lib"):
             self.assertTrue((self.clone_path("acme", n) / ".git").is_dir())
 
