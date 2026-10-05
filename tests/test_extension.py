@@ -45,7 +45,7 @@ class Package(unittest.TestCase):
 
     def test_every_contributed_command_is_the_documented_set_and_none_takes_arguments(self):
         cmds = sorted(c["command"] for c in self.pkg["contributes"]["commands"])
-        self.assertEqual(cmds, ["wsHost.ensure", "wsHost.getHelp", "wsHost.learn", "wsHost.refresh", "wsHost.runChecks", "wsHost.signIn"])
+        self.assertEqual(cmds, ["wsHost.ensure", "wsHost.getHelp", "wsHost.learn", "wsHost.refresh", "wsHost.runChecks", "wsHost.showSuggestions", "wsHost.signIn"])
 
 
 @unittest.skipUnless(shutil.which("node"), "node is needed to test the extension's logic")

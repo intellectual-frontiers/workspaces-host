@@ -11,7 +11,7 @@ exports.run = async function () {
   await ext.activate();
   assert.strictEqual(ext.isActive, true);
   const cmds = await vscode.commands.getCommands(true);
-  for (const c of ["wsHost.refresh", "wsHost.ensure", "wsHost.signIn", "wsHost.runChecks", "wsHost.getHelp", "wsHost.learn"]) assert.ok(cmds.includes(c), c + " is not registered");
+  for (const c of ["wsHost.refresh", "wsHost.ensure", "wsHost.signIn", "wsHost.runChecks", "wsHost.getHelp", "wsHost.learn", "wsHost.showSuggestions"]) assert.ok(cmds.includes(c), c + " is not registered");
   assert.ok(!cmds.includes("wsHost.openNode"));
   await vscode.commands.executeCommand("wsHost.refresh");
   await new Promise(r => setTimeout(r, 3000));

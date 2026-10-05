@@ -38,6 +38,9 @@ language come from 0041-command-line and 0002-repositories-and-trust.
 - **FR-004**: The extension MUST show a status bar item whose text is plain
   language (the first line of a text rendering, 0041-command-line FR-054) and
   which is shown as well, as a warning, or as a failure, from `ws-host doctor`.
+  When there is something to do, its text MUST name how many things and what to
+  do ("2 suggestions \u2014 click to fix"), not repeat a sentence written for the
+  terminal (FR-019).
 - **FR-005**: The extension MUST show a sidebar tree grouped by orchestrator,
   each showing its audience, then its nouns, then its commands that the editor
   exposes (0041-command-line FR-022). Choosing a command that needs no value
@@ -95,6 +98,20 @@ language come from 0041-command-line and 0002-repositories-and-trust.
 - **FR-015**: The extension MUST offer a "Get help" command that gathers
   `ws-host context` and `ws-host doctor`, which hold no secret, into one text
   the person can paste to a person or an AI, copies it, and shows it.
+
+- **FR-019**: Every suggestion the extension shows, in the status bar, a
+  notification or a list, MUST be actionable, as 0043-if-console FR-048 states
+  for the IF Console: it MUST say what is wrong in plain words; give the exact
+  line that fixes it, with a button that copies it; and, where `doctor` gives
+  an action for it, a button named for it that runs it through the one path
+  every action takes (FR-007, FR-010); or, where no line does, say what the
+  person does themselves. It MUST NOT say or point at "below", "above" or
+  "a suggestion" that the person cannot see. Choosing the status bar item MUST
+  open the list of suggestions, each with its words, its line and its buttons,
+  and MUST NOT only refresh; when all is well it MUST check again and say so. A
+  notification shown for suggestions MUST be shown once for each set of them,
+  with a button that runs the fix, named for it, where there is one suggestion
+  with an action, and a "Show all" button that opens the list.
 
 ## Installing it
 

@@ -118,6 +118,15 @@ and 0026-workspaces, held in the public root, govern all of them.
 - Generated container files, MCP, repo-shipped kits' loading, running on
   macOS itself and other distributions: later specs.
 
+- **FR-017**: Every warning and every failure in `doctor`'s report MUST be
+  actionable (0041-command-line FR-017, FR-055): it MUST say in plain words what
+  is wrong; give the exact line that fixes it, one that can be pasted in a
+  terminal, and, where a `ws-host` command fixes it, the action that runs it,
+  which `doctor` returns; and, where no line fixes it, say what the person does
+  themselves. A finding MUST NOT be left with none of these, and `doctor`'s
+  plain sentence MUST NOT say "below", "above" or point at anything else a
+  reader of it may not see.
+
 ## Edge cases
 
 - `uv` is missing when the launcher runs: it exits 3 and says in plain words

@@ -50,6 +50,10 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "wsHost.showSuggestions",
+        "title": "Workspace: Show what to fix"
+      },
+      {
         "command": "wsHost.ensure",
         "title": "Workspace: Ensure everything is set up and up to date"
       },

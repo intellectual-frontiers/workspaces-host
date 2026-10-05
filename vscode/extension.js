@@ -78,14 +78,26 @@ function classifyAction(a) {
   };
 }
 
+/** Every warning or failure of the doctor as a suggestion a person can act on (0004 FR-019): the plain words, the line to type, the
+ *  action that runs it, or what the person does themselves. */
+function suggestionsFor(doc) {
+  const checks = (doc && doc.data && doc.data.checks) || [];
+  const actions = (doc && doc.actions) || [];
+  return checks.filter(c => c.status === "warn" || c.status === "fail").map(c => {
+    const a = Number.isInteger(c.action) ? actions[c.action] || null : null;
+    return { name: c.name, level: c.status === "fail" ? "error" : "warn", plain: String(c.detail || ""), cli: c.cli || (a && a.cli) || null, action: a, todo: c.todo || null };
+  });
+}
+
 function statusFor(doc) {
   const r = readability(doc);
-  if (!r.ok) return { text: "$(warning) Update needed", level: "warn", tooltip: UPDATE_NEEDED };
-  const checks = (doc.data && doc.data.checks) || [];
+  if (!r.ok) return { text: "$(warning) Update needed", level: "warn", tooltip: UPDATE_NEEDED, suggestions: [] };
   const plain = (doc.data && doc.data.plain) || "";
-  if (checks.some(c => c.status === "fail")) return { text: "$(error) " + short(plain), level: "error", tooltip: plain };
-  if (checks.some(c => c.status === "warn")) return { text: "$(warning) " + short(plain), level: "warn", tooltip: plain };
-  return { text: "$(pass) " + short(plain), level: "ok", tooltip: plain };
+  const suggestions = suggestionsFor(doc);
+  const bad = suggestions.filter(s => s.level === "error").length;
+  if (bad) return { text: `$(error) ${bad} thing${bad === 1 ? "" : "s"} to fix \u2014 click to fix`, level: "error", tooltip: plain + " Click to see what to do.", suggestions };
+  if (suggestions.length) return { text: `$(warning) ${suggestions.length} suggestion${suggestions.length === 1 ? "" : "s"} \u2014 click to fix`, level: "warn", tooltip: plain + " Click to see what to do.", suggestions };
+  return { text: "$(pass) " + short(plain), level: "ok", tooltip: plain + " Click to check again.", suggestions: [] };
 }
 
 function short(s) { return s.length > 60 ? s.slice(0, 57) + "..." : s; }
@@ -256,7 +268,7 @@ function activate(context) {
   const log = m => out.appendLine(m);
   const diagnostics = vscode.languages.createDiagnosticCollection("workspace");
   const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);
-  status.command = "wsHost.refresh";
+  status.command = "wsHost.showSuggestions";
   status.show();
   context.subscriptions.push(out, diagnostics, status);
 
@@ -400,9 +412,11 @@ function activate(context) {
     if (!own) { status.text = "$(warning) Workspace tools not installed"; status.tooltip = state.problem || ""; tree.fire(); return; }
     const d = (await runJson(own.launcher, ["doctor"], { timeout: 120000 })).doc;
     const s = statusFor(d);
+    lastStatus = s;
     status.text = s.text; status.tooltip = s.tooltip;
     status.backgroundColor = s.level === "error" ? new vscode.ThemeColor("statusBarItem.errorBackground") : s.level === "warn" ? new vscode.ThemeColor("statusBarItem.warningBackground") : undefined;
     tree.fire();
+    notifySuggestions(s);
     const auth = (await runJson(own.launcher, ["auth", "status"], { timeout: 60000 })).doc;
     const out_ = auth && auth.data && auth.data.forges && auth.data.forges.find(f => f.signed_in === false && f.name === "github.com");
     if (out_ && !signInOffered) {
@@ -412,6 +426,54 @@ function activate(context) {
     }
   }
   let signInOffered = false;
+  let lastStatus = { suggestions: [], level: "ok" };
+  let notifiedFor = "";
+
+  /** One suggestion: what is wrong, the line that fixes it, and buttons to run or copy it, or what the person does themselves (0004 FR-019). */
+  async function showSuggestion(s) {
+    const own = orchestrator(OWN);
+    const lines = [s.plain];
+    if (s.cli) lines.push(`Type: ${s.cli}`);
+    if (s.todo) lines.push(s.todo);
+    const run = s.action ? `Run: ${s.action.label}` : null;
+    const buttons = [run, s.cli ? "Copy command" : null].filter(Boolean);
+    const picked = await vscode.window.showInformationMessage(lines.join("  "), ...buttons);
+    if (picked && picked === run && own) await runAction(own, s.action);
+    else if (picked === "Copy command") await vscode.env.clipboard.writeText(s.cli);
+  }
+
+  /** A click on the status bar: the list of what to do, never a silent refresh. When all is well it checks again and says so. */
+  async function showSuggestions() {
+    if (refuseRestricted()) return;
+    if (!lastStatus.suggestions.length) {
+      await refresh();
+      if (lastStatus.suggestions.length) return showSuggestions();
+      vscode.window.showInformationMessage(lastStatus.level === "ok" && lastStatus.tooltip ? lastStatus.tooltip.replace(/ Click to check again\.$/, "") : "Your workspace is ready.");
+      return;
+    }
+    const items = lastStatus.suggestions.map(s => ({
+      label: `${s.level === "error" ? "$(error)" : "$(warning)"} ${s.name}`, description: s.plain,
+      detail: s.cli ? `Type: ${s.cli}` : s.todo ? `What you do yourself: ${s.todo}` : "", suggestion: s,
+    }));
+    const pick = await vscode.window.showQuickPick(items, { title: "What to fix", placeHolder: "Pick one to see how to fix it", matchOnDescription: true });
+    if (pick) await showSuggestion(pick.suggestion);
+  }
+
+  /** Once per set of suggestions: a message with the fix to run and a way to see them all (0004 FR-019). */
+  function notifySuggestions(s) {
+    const key = s.suggestions.map(x => x.name).join("|");
+    if (!key || key === notifiedFor) return;
+    notifiedFor = key;
+    const first = s.suggestions[0];
+    const run = s.suggestions.length === 1 && first.action ? `Run: ${first.action.label}` : null;
+    const all = "Show all";
+    const n = s.suggestions.length;
+    const text = n === 1 ? `One suggestion for your machine: ${first.plain}` : `${n} suggestions for your machine. The first: ${first.plain}`;
+    vscode.window.showInformationMessage(text, ...[run, all].filter(Boolean)).then(async a => {
+      if (a === run) { const own = orchestrator(OWN); if (own) await runAction(own, first.action); }
+      else if (a === all) await showSuggestions();
+    });
+  }
 
   async function signIn() {
     const own = orchestrator(OWN);
@@ -505,6 +567,7 @@ function activate(context) {
   // decision always goes through runAction's modal, whoever asks.
   context.subscriptions.push(
     vscode.commands.registerCommand("wsHost.refresh", () => refresh()),
+    vscode.commands.registerCommand("wsHost.showSuggestions", () => showSuggestions()),
     vscode.commands.registerCommand("wsHost.ensure", async () => { const o = orchestrator(OWN); if (o) await runAction(o, { label: "Ensure everything is set up and up to date", command: "workspace ensure", category: "setup", surfaces: ["terminal", "editor"], fields: {} }); }),
     vscode.commands.registerCommand("wsHost.signIn", () => signIn()),
     vscode.commands.registerCommand("wsHost.runChecks", () => runChecks()),
@@ -521,6 +584,6 @@ function deactivate() {}
 
 module.exports = {
   activate, deactivate,
-  _test: { parseSchema, readability, buildArgv, missingArgs, classifyAction, statusFor, parseFinding, wrapHtml, LineSplitter, helpReport,
+  _test: { parseSchema, readability, buildArgv, missingArgs, classifyAction, statusFor, suggestionsFor, parseFinding, wrapHtml, LineSplitter, helpReport,
            launcherCandidates, surfaceExposed, resourceOfPage, PageSplitter, unescapeHtml, flagName, run, runJson, runPages, discover, UPDATE_NEEDED, SUPPORTED_SCHEMA },
 };
