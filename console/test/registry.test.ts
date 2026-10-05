@@ -31,7 +31,7 @@ test('FR-005: a command\'s description is asked of the launcher once, and again 
 test('FR-017: a launcher\'s watcher goes when the repository does, and the declaration is watched across the window', async () => {
   const b = await boot();
   const patterns = b.stub.calls.watchers.map((w: Loose) => (typeof w.pattern === 'string' ? w.pattern : w.pattern.pattern));
-  assert.deepEqual(patterns.sort(), ['**/.if-console.env', 'other']);
+  assert.deepEqual(patterns.sort(), ['**/.workspaces-host/provider.toml', 'other']);
   b.cleanup();
   assert.ok(b.stub.calls.watchers.every((w: Loose) => w.disposed), 'every watcher was disposed with the extension');
 });

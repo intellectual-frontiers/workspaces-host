@@ -67,7 +67,7 @@ test('FR-001, FR-006, FR-030: the manifest names the extension, declares no supp
   assert.equal(manifest.capabilities.untrustedWorkspaces.supported, false);
   assert.equal(manifest.capabilities.virtualWorkspaces.supported, false);
   assert.match(manifest.engines.vscode, /^\^1\.\d+\.\d+$/);
-  assert.ok(manifest.activationEvents.includes('workspaceContains:.if-console.env'));
+  assert.ok(manifest.activationEvents.includes('workspaceContains:.workspaces-host/provider.toml'));
   const ids = [...manifest.contributes.commands.map((c: Loose) => c.command), ...manifest.contributes.views['workspaces-console'].map((v: Loose) => v.id), manifest.contributes.taskDefinitions[0].type,
     ...Object.keys(manifest.contributes.configuration.properties)];
   assert.ok(ids.every((i) => i === 'workspaces-console' || i.startsWith('workspaces-console.')), 'every contribution carries the prefix');

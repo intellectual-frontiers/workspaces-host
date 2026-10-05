@@ -44,7 +44,7 @@
   "l10n": "./l10n",
   "main": "./dist/extension.js",
   "activationEvents": [
-    "workspaceContains:.if-console.env",
+    "workspaceContains:.workspaces-host/provider.toml",
     "onStartupFinished"
   ],
   "capabilities": {

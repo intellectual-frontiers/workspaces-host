@@ -12,8 +12,8 @@ connection from the extension itself.
 fingerprint, it says so and installs nothing. Nothing is built on your computer, and no code from a repository you have not trusted runs.
 
 `ws-host vscode ensure` also writes `workspaces.code-workspace` in your workspaces folder. It lists the repositories you work in, and opening it
-(File, Open Workspace from File) shows each repository's own commands side by side. The Workspaces Console finds a repository's command line by a file at
-its root, `.if-console.env`; `ws-host` has one.
+(File, Open Workspace from File) shows each repository's own commands side by side. The Workspaces Console finds a repository's command line by the file
+`.workspaces-host/provider.toml`; `ws-host` has one.
 
 === What you see
 

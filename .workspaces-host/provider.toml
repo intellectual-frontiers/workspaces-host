@@ -1,0 +1,4 @@
+name = "ws-host"
+summary = "Workspaces, tools, toolchains and hosts, and the Workspaces Console"
+launcher = "./ws-host"
+protocol = 1

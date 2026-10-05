@@ -1,7 +1,7 @@
 # Workspaces Console
 
 Workspaces Console is VS Code's window onto a repository's own command line. It finds each trusted repository's launcher by a one-line declaration
-(`.if-console.env`), asks it what it can do, and offers that the way VS Code offers anything: a **Home** view that says what needs you, the
+(`.workspaces-host/provider.toml`), asks it what it can do, and offers that the way VS Code offers anything: a **Home** view that says what needs you, the
 views the command line itself declares, checks as tests, findings in Problems, a panel for each resource, forms built from each command's typed
 arguments, a diff of what a write would change before it is made, and a modal only you can answer for a decision. The command line is the core
 interface; the extension adds nothing a command does not do, runs nothing in a workspace you have not trusted, opens no network connection

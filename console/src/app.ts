@@ -452,7 +452,7 @@ export class App {
     // VS Code ignores a listener's result; the promise is returned so that a test can wait for the check to end.
     sub(vscode.workspace.onDidSaveTextDocument((d) => this.checkOnSave(d)));
     sub(vscode.window.onDidChangeActiveTextEditor(() => { const r = this.activeRepo(); this.status.render(r, r ? deriveHome(r).needs : []); }));
-    const declaration = vscode.workspace.createFileSystemWatcher('**/.if-console.env');
+    const declaration = vscode.workspace.createFileSystemWatcher('**/.workspaces-host/provider.toml');
     sub(declaration); sub(declaration.onDidChange(again)); sub(declaration.onDidCreate(again)); sub(declaration.onDidDelete(again));
     this.mcp.start();
     testMode.install(this.context, (o) => this.snapshot(o), (m) => this.panel.handle(m));

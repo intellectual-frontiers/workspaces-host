@@ -35,7 +35,7 @@ async function choose(pick, label) {
 // The real command line of the first workspace folder, run as the test's own reference (never through the extension).
 function reference(...argv) {
   const root = process.env.IF_CONSOLE_REAL_ROOT;
-  const declared = fs.readFileSync(path.join(root, '.if-console.env'), 'utf8').match(/^IF_CONSOLE_LAUNCHER=(.+)$/m)[1].trim();
+  const declared = fs.readFileSync(path.join(root, '.workspaces-host', 'provider.toml'), 'utf8').match(/^launcher\s*=\s*"(.+)"/m)[1].trim();
   const out = cp.execFileSync(path.resolve(root, declared), [...argv, '--json'], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   return JSON.parse(out);
 }

@@ -27,6 +27,8 @@ class Ctx:
     debug: bool = False
     offline: bool = False
     values: dict = field(default_factory=dict)
+    mode: str = "text"          # how the result is written: text, json or html
+    exit_code: int | None = None  # a command that returns nothing (it ran a program whose output is the output) sets the status here
     confirmed: bool = False     # the Workspaces Console passes --confirmed only after its modal (0041 FR-051)
 
     def confirm(self, question: str) -> None:
@@ -74,7 +76,10 @@ def build_parser(cmd: Command) -> argparse.ArgumentParser:
 
 def _split_global(argv: list[str]) -> tuple[list[str], str]:
     mode, rest = "text", []
-    for a in argv:
+    for i, a in enumerate(argv):
+        if a == "--":       # what follows belongs to a program `provider run` starts, flags and all
+            rest += argv[i:]
+            break
         if a in GLOBAL_FLAGS:
             mode = GLOBAL_FLAGS[a]
         else:
@@ -151,7 +156,7 @@ def run(argv: list[str], surface: str = "cli", out=None, err=None) -> int:
         out.write(render(err_r, mode) + "\n")
         return 1
     ctx = Ctx(registry, surface=os.environ.get("WS_HOST_SURFACE", surface),
-              offline=os.environ.get("WS_HOST_OFFLINE") == "1")
+              offline=os.environ.get("WS_HOST_OFFLINE") == "1", mode=mode)
     cmd, rest = None, []
     try:
         if not argv or argv[0] in ("-h", "--help"):
@@ -175,7 +180,10 @@ def run(argv: list[str], surface: str = "cli", out=None, err=None) -> int:
             _programs(cmd, registry)
         result = cmd.fn(ctx, **ctx.values)
         # A stream is emitted as it is produced, one document per line under --json (0041 FR-019).
-        code = _emit(result if isinstance(result, _types.GeneratorType) else [result], mode, registry, out)
+        if result is None:      # the command ran a program: its output is the output (0008-providers FR-013)
+            code = ctx.exit_code or 0
+        else:
+            code = _emit(result if isinstance(result, _types.GeneratorType) else [result], mode, registry, out)
     except WsError as e:
         r = e.resource()
         out.write(render(r, mode, registry, mode == "text" and use_color(out)) + "\n")

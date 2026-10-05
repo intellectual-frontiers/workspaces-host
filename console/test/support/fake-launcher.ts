@@ -39,7 +39,10 @@ else { process.stdout.write(typeof hit.doc === 'string' ? hit.doc : JSON.stringi
 `;
   const file = path.join(root, launcherName);
   fs.writeFileSync(file, script, { mode: 0o755 });
-  if (declare) fs.writeFileSync(path.join(root, '.if-console.env'), `# the declaration\nIF_CONSOLE_LAUNCHER=./${launcherName}\n`);
+  if (declare) {
+    fs.mkdirSync(path.join(root, '.workspaces-host'), { recursive: true });
+    fs.writeFileSync(path.join(root, '.workspaces-host', 'provider.toml'), `name = "${launcherName}"\nsummary = "a fake"\nlauncher = "./${launcherName}"\nprotocol = 1\n`);
+  }
   return { root, file, log,
     invocations: () => (fs.existsSync(log) ? fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l) as Invocation) : []),
     cleanup: () => { fs.rmSync(root, { recursive: true, force: true }); } };

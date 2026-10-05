@@ -41,7 +41,8 @@ class Entry:
     file: str
     platforms: dict[str, dict[str, str]] = field(default_factory=dict)
     strip: int = 1
-    bin: str = ""
+    bin: str | None = None
+    bins: dict[str, str] = field(default_factory=dict)
     provides: dict[str, str] = field(default_factory=dict)
     env: dict[str, str] = field(default_factory=dict)
     needs: list[str] = field(default_factory=list)
@@ -56,7 +57,11 @@ class Entry:
     def signature(self) -> str:
         """What makes two declarations of one name and version the same program (0008-providers FR-009)."""
         return json.dumps({"kind": self.kind, "platforms": self.platforms, "package": self.package, "tool": self.tool,
-                           "strip": self.strip, "bin": self.bin}, sort_keys=True)
+                           "strip": self.strip, "bin": self.bin, "bins": self.bins}, sort_keys=True)
+
+    def bin_dir(self, platform: str) -> str | None:
+        """The folder, relative to the unpacked root, whose programs go on PATH on this platform; None when none does."""
+        return self.bins.get(platform, self.bin)
 
 
 @dataclass
@@ -101,11 +106,16 @@ def _str(d: dict, key: str, where: str, problems: list[Problem], required: bool 
     return v
 
 
+def platform() -> str:
+    """This machine's platform name in declarations."""
+    import platform as _p
+    return "linux-arm64" if _p.machine().lower() in ("aarch64", "arm64") else "linux-x64"
+
+
 def _entry(path: Path, rel: str, problems: list[Problem]) -> Entry | None:
     raw = _read(path, problems, rel)
     if not raw:
         return None
-    before = len(problems)
     name = _str(raw, "name", rel, problems)
     if name and (not NAME_RE.fullmatch(name) or name != path.stem):
         problems.append(Problem(rel, f"'name' is {name!r} but the file is {path.stem}.toml; they must be the same and made of letters, digits and hyphens"))
@@ -136,33 +146,35 @@ def _entry(path: Path, rel: str, problems: list[Problem]) -> Entry | None:
             if sha and not SHA_RE.fullmatch(sha):
                 problems.append(Problem(at, "'sha256' is not 64 hexadecimal digits"))
             e.platforms[plat] = {"url": url, "sha256": sha}
+            if "bin" in p:
+                e.bins[plat] = str(p["bin"])
         strip = raw.get("strip", 1)
         if not isinstance(strip, int) or isinstance(strip, bool) or strip < 0:
             problems.append(Problem(rel, "'strip' must be a whole number of path parts, 0 or more"))
         else:
             e.strip = strip
-        e.bin = str(raw.get("bin", ""))
-        for key in ("provides", "env"):
-            val = raw.get(key, {})
-            if not isinstance(val, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in val.items()):
-                problems.append(Problem(rel, f"'{key}' must be a table of text"))
-            else:
-                setattr(e, key, dict(val))
-        system = raw.get("system", [])
-        if not isinstance(system, list) or not all(isinstance(s, str) for s in system):
-            problems.append(Problem(rel, "'system' must be a list of package names"))
-        else:
-            e.system = list(system)
     elif kind == "npm":
         e.package = _str(raw, "package", rel, problems)
     elif kind == "tool":
         e.tool = _str(raw, "tool", rel, problems)
+    e.bin = str(raw["bin"]) if "bin" in raw else None
+    for key in ("provides", "env"):
+        val = raw.get(key, {})
+        if not isinstance(val, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in val.items()):
+            problems.append(Problem(rel, f"'{key}' must be a table of text"))
+        else:
+            setattr(e, key, dict(val))
+    system = raw.get("system", [])
+    if not isinstance(system, list) or not all(isinstance(x, str) for x in system):
+        problems.append(Problem(rel, "'system' must be a list of package names"))
+    else:
+        e.system = list(system)
     needs = raw.get("needs", [])
     if not isinstance(needs, list) or not all(isinstance(n, str) for n in needs):
         problems.append(Problem(rel, "'needs' must be a list of entry names"))
     else:
         e.needs = list(needs)
-    return e if len(problems) == before else e
+    return e
 
 
 def load(root: Path) -> Provider | None:
@@ -234,8 +246,6 @@ def translate(p: Provider) -> dict[str, str]:
         head = GENERATED.format(source=f"{FOLDER}/toolchain.d/{name}.toml")
         if e.kind == "archive":
             lines = [head, f"[tools.{_q(e.tool_id())}]", f"version = {_q(e.version)}", f"strip_components = {e.strip}"]
-            if e.bin:
-                lines.append(f"bin_path = {_q(e.bin)}")
             lines.append(f"[tools.{_q(e.tool_id())}.platforms]")
             for plat in PLATFORMS:
                 if plat in e.platforms:

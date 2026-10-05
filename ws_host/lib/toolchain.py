@@ -1,7 +1,6 @@
 """Installing, finding and pruning a provider's programs (0008-providers FR-006 to FR-015), through `lib/mise.py`. Standard library only."""
 from __future__ import annotations
 
-import json
 import os
 import shutil
 from pathlib import Path
@@ -28,6 +27,13 @@ def lockfile(p: prov.Provider) -> Path:
     return p.mise_dir / ".config" / "mise" / "mise.lock"
 
 
+def _locks(p: prov.Provider) -> dict[str, bytes]:
+    """The lock and the dependency locks beside it, by path under the provider's folder."""
+    base = lockfile(p).parent
+    files = [lockfile(p), *sorted((base / "locks").rglob("*"))] if base.is_dir() else []
+    return {str(f.relative_to(p.root)): f.read_bytes() for f in files if f.is_file()}
+
+
 def lock(p: prov.Provider, offline: bool = False) -> list[str]:
     """Write the translation, then let mise resolve and lock it for both platforms (0008-providers FR-006). Returns the files changed."""
     if p.problems:
@@ -35,14 +41,12 @@ def lock(p: prov.Provider, offline: bool = False) -> list[str]:
     changed = prov.write(p)
     if not p.entries:
         return changed
-    before = lockfile(p).read_bytes() if lockfile(p).is_file() else b""
+    before = _locks(p)
     done = _mise(p, ["lock", "--platform", ",".join(prov.PLATFORMS)], offline)
     if done.returncode != 0:
         raise ToolchainError("lock", (done.stderr or done.stdout).strip()[-400:], "mise could not lock " + p.name + "'s entries: " + " ".join((done.stderr or done.stdout).strip().splitlines()[-3:]))
-    after = lockfile(p).read_bytes() if lockfile(p).is_file() else b""
-    if before != after:
-        changed.append(f"{prov.FOLDER}/mise/.config/mise/mise.lock")
-    return changed
+    after = _locks(p)
+    return changed + [k for k in sorted(after) if before.get(k) != after[k]] + [f"{k} (removed)" for k in sorted(before) if k not in after]
 
 
 def closure(p: prov.Provider, names: list[str]) -> list[str]:
@@ -106,27 +110,39 @@ def state(p: prov.Provider) -> dict[str, dict]:
 
 
 def environment(p: prov.Provider, base: dict[str, str] | None = None) -> dict[str, str]:
-    """A provider's environment (0008-providers FR-013): its entries' folders first on PATH and their `env` set, over `base` (default: this process's)."""
+    """A provider's environment (0008-providers FR-013): its entries' programs first on PATH and their `env` set, over `base` (default: this process's).
+    A variable several entries set holds each value, in entry-name order, joined by a colon."""
     env = dict(os.environ if base is None else base)
+    delta = delta_of(p)
+    for k, v in delta.items():
+        if k == "PATH":
+            continue
+        env[k] = v
+    env["PATH"] = os.pathsep.join(filter(None, [delta.get("PATH", ""), env.get("PATH", "")]))
+    return env
+
+
+def delta_of(p: prov.Provider) -> dict[str, str]:
+    """What a provider's installed entries add to an environment: PATH pieces and variables, nothing else."""
+    plat = prov.platform()
     pieces: list[str] = []
-    done = _mise(p, ["env", "--json"])
-    installs = str(mise.data_dir() / "installs")
-    if done.returncode == 0 and done.stdout.strip():
-        try:
-            for part in json.loads(done.stdout).get("PATH", "").split(os.pathsep):
-                if part.startswith(installs) and part not in pieces:
-                    pieces.append(part)
-        except ValueError:
-            pass
+    values: dict[str, list[str]] = {}
     for n in sorted(p.entries):
         e = p.entries[n]
         path = install_path(p, e)
         if path is None:
             continue
+        b = e.bin_dir(plat)
+        if b is not None:
+            d = str(path / b) if b not in ("", ".") else str(path)
+            if d not in pieces:
+                pieces.append(d)
         for k, v in e.env.items():
-            env[k] = v.replace("{dir}", str(path))
-    env["PATH"] = os.pathsep.join(pieces + [env.get("PATH", "")]) if pieces else env.get("PATH", "")
-    return env
+            values.setdefault(k, []).append(v.replace("{dir}", str(path)))
+    out = {k: ":".join(v) for k, v in values.items()}
+    if pieces:
+        out["PATH"] = os.pathsep.join(pieces)
+    return out
 
 
 def prune(providers: list[prov.Provider], dry_run: bool, offline: bool = False) -> list[dict]:

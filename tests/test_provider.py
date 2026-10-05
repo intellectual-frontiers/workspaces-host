@@ -2,11 +2,13 @@
 reached through one provider's environment. The install tests run the real `mise` (WS_HOST_MISE, or the one ws-host fetched) against a real archive."""
 import os
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from tests.helpers import Home
+from tests.helpers import Home, REPO
 from ws_host.lib import mise, provider as prov, toolchain as tc
 
 MISE_URL = "https://mise.jdx.dev/v2026.10.3/mise-v2026.10.3-linux-%s.tar.xz"
@@ -15,7 +17,7 @@ SHA = {"x64": "ff0870ddad7f8c5ba673ceb3e7659f0353da8263eabe8b82220f5816a772c786"
 
 def archive(name="minitool", version="2026.10.3", sha=None, extra=""):
     sha = sha or SHA["x64"]
-    return (f'name = "{name}"\nversion = "{version}"\nsummary = "a test archive"\nkind = "archive"\nstrip = 1\nbin = "bin"\n{extra}\n'
+    return (f'name = "{name}"\nversion = "{version}"\nsummary = "a test archive"\nkind = "archive"\nstrip = 1\n{extra if "bin =" in extra else extra + chr(10) + "bin = " + chr(34) + "bin" + chr(34)}\n'
             f'[platforms.linux-x64]\nurl = "{MISE_URL % "x64"}"\nsha256 = "{sha}"\n[platforms.linux-arm64]\nurl = "{MISE_URL % "arm64"}"\nsha256 = "{SHA["arm64"]}"\n')
 
 
@@ -123,6 +125,29 @@ class Translation(Home):
         self.assertEqual(prov.conflicts([a, different_version]), [])
 
 
+class Environment(Home):
+    """0008-providers FR-003, FR-013: the PATH pieces and variables a provider's installed entries add."""
+
+    def test_bin_per_platform_and_variables_joined_in_name_order(self):
+        plat = prov.platform()
+        other = "linux-arm64" if plat == "linux-x64" else "linux-x64"
+        a = archive("a", extra='bin = "bin"\nenv = { TEXMFHOME = "{dir}" }').replace(f"[platforms.{plat}]", f'[platforms.{plat}]\nbin = "bin/{plat}"')
+        b = archive("b", extra='env = { TEXMFHOME = "{dir}/x", JAVA_HOME = "{dir}" }')
+        c = archive("c", extra='bin = "."')
+        p = prov.load(make_provider(self.home, entries={"a": a, "b": b, "c": c}))
+        self.assertEqual(p.problems, [])
+        store = mise.data_dir() / "installs"
+        for n in "abc":
+            (store / f"http-{n}" / "2026.10.3").mkdir(parents=True)
+        d = tc.delta_of(p)
+        self.assertEqual(d["PATH"], os.pathsep.join([str(store / "http-a/2026.10.3" / "bin" / plat), str(store / "http-b/2026.10.3" / "bin"), str(store / "http-c/2026.10.3")]))
+        self.assertEqual(d["TEXMFHOME"], f"{store / 'http-a/2026.10.3'}:{store / 'http-b/2026.10.3'}/x")
+        self.assertEqual(d["JAVA_HOME"], str(store / "http-b/2026.10.3"))
+        env = tc.environment(p, {"PATH": "/usr/bin", "HOME": "/h"})
+        self.assertTrue(env["PATH"].endswith(os.pathsep + "/usr/bin"))
+        self.assertNotIn(other, d["PATH"])
+
+
 class Commands(Home):
     """0008-providers FR-010, FR-011, FR-016, FR-017 without installing anything."""
 
@@ -216,6 +241,16 @@ class Installing(Home):
         os.environ["WS_HOST_MISE"] = self.mise
         os.environ["WS_HOST_SURFACE"] = "editor"
 
+    def run_json_before_dashes(self, *argv):
+        """--json goes before `--`: after it, it is the program's."""
+        i = argv.index("--")
+        return self.run_json(*argv[:i]) if False else self._json(*argv[:i], "--json", *argv[i:])
+
+    def _json(self, *argv):
+        import json
+        code, out = self.run_cmd(*argv)
+        return code, json.loads(out.strip().splitlines()[-1])
+
     def enable(self, **kw):
         root = make_provider(self.home, **kw)
         self.assertEqual(self.run_json("toolchain", "generate", "--root", str(root))[0], 0)
@@ -231,10 +266,10 @@ class Installing(Home):
         self.assertTrue(installed.is_file())
         code, r = self.run_json("toolchain", "show", "minitool")
         self.assertEqual(r["data"]["state"], "ready")
-        code, r = self.run_json("provider", "run", "demo", "--", "mise", "--version")
+        code, r = self.run_json_before_dashes("provider", "run", "demo", "--", "mise", "--version")
         self.assertEqual(code, 0, r)
         self.assertEqual(r["data"]["exit"], 0)
-        code, r = self.run_json("provider", "run", "demo", "--", "sh", "-c", "exit 7")
+        code, r = self.run_json_before_dashes("provider", "run", "demo", "--", "sh", "-c", "exit 7")
         self.assertEqual(code, 1)
         self.assertEqual(r["data"]["exit"], 7)
         self.assertEqual(self.run_json("toolchain", "remove", "--unused")[1]["data"]["removed"], [])
@@ -244,6 +279,16 @@ class Installing(Home):
         self.assertTrue(installed.is_file())
         code, r = self.run_json("toolchain", "remove", "--unused")
         self.assertFalse(installed.exists())
+
+    def test_run_in_text_mode_prints_only_the_programs_output_and_passes_its_status_and_ensure_installs_first(self):
+        self.enable()
+        code, out = self.run_cmd("provider", "run", "demo", "--ensure", "minitool", "--", "sh", "-c", "echo hello; exit 7")
+        self.assertEqual((code, out), (7, ""), "the child writes to the real stdout, so this process's capture holds nothing")
+        self.assertTrue((Path(self.paths.data_dir()) / "mise" / "data" / "installs" / "http-minitool" / "2026.10.3").is_dir())
+        r = subprocess.run([sys.executable, "-m", "ws_host", "provider", "run", "demo", "--", "sh", "-c", "echo hello; exit 3"], capture_output=True, text=True, cwd=REPO)
+        self.assertEqual((r.returncode, r.stdout.strip()), (3, "hello"))
+        r = subprocess.run([sys.executable, "-m", "ws_host", "provider", "run", "demo", "--", "echo", "--json", "--offline"], capture_output=True, text=True, cwd=REPO)
+        self.assertEqual(r.stdout.strip(), "--json --offline", "a flag after -- is the program's, not ws-host's")
 
     def test_a_tampered_archive_installs_nothing(self):
         root = self.enable(entries={"minitool": archive(sha="0" * 64)})

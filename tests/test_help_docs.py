@@ -337,7 +337,7 @@ class Site(Home):
 
     def test_the_extension_chapter_says_it_is_local_and_not_from_the_marketplace(self):
         text = (REPO / "docs-src" / "chapters" / "start" / "extension.adoc").read_text()
-        for needle in ("not on the VS Code Marketplace", "ws-host vscode\nensure", "Workspaces Console", "trust", "decide", "Restricted Mode", ".if-console.env"):
+        for needle in ("not on the VS Code Marketplace", "ws-host vscode\nensure", "Workspaces Console", "trust", "decide", "Restricted Mode", ".workspaces-host/provider.toml"):
             self.assertIn(needle, text.replace("Reload", "reload").replace("Restricted Mode", "Restricted Mode"))
 
     def test_the_readme_is_the_five_step_flow_and_links_the_site(self):

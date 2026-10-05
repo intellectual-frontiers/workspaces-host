@@ -19,7 +19,7 @@ different versions of one program without conflict. Nothing here installs a prog
   and a `kind`: `archive` (a downloaded file), `npm` (a package of the npm registry) or `tool` (a tool of `mise`'s own registry).
 - **FR-003**: An `archive` entry MUST give, for the platform `linux-x64` and optionally `linux-arm64`, an `https` `url` and a 64-digit
   `sha256`. It MAY give `strip` (leading path parts removed on unpacking, default 1), `bin` (the folder, relative to the unpacked
-  root, whose programs are on the entry's PATH, default the root), `provides` (a program and its path under the root), `env`
+  root, whose programs are put first on PATH by `provider run`; none when absent; also allowed in a platform's table, which wins), `provides` (a program and its path under the root), `env`
   (variables whose values may use `{dir}` for the unpacked root), `needs` (names of other entries of the same provider, without a
   cycle) and `system` (shared libraries the program links, as package names for the distribution, `a|b` meaning the first the
   distribution has).
@@ -57,7 +57,7 @@ different versions of one program without conflict. Nothing here installs a prog
   `--all`; `toolchain show NAME` and `toolchain list` (read) MUST return, as a resource, each entry's version, state,
   installed path, the environment it sets and the programs it provides, so that a provider's own command line can find what it pinned.
 - **FR-013**: `provider run PROVIDER -- COMMAND...` MUST run the command with that provider's environment: its entries' folders first on
-  `PATH` and their `env` set.
+  `PATH` and their `env` set; a variable several entries set holds each value in entry-name order joined by a colon. `provider show` MUST return that environment, as the PATH pieces and variables it adds, so a provider's own command line can run its programs itself.
   No pinned program MUST be put on a person's PATH.
 - **FR-014**: Environment variables that change what a program's output is, such as those of TeX, Node and Playwright, MUST be left
   to the provider to remove from the programs it starts; `ws-host` MUST pass through only the variables `mise` needs and the person's own.
