@@ -99,7 +99,8 @@ class Colour(Home):
         for mark in ("✅", "⚠️", "❌", "👉"):
             self.assertIn(mark, text)
         self.assertIn("\x1b[1;36mws-host doctor\x1b[0m", text)
-        self.assertEqual(ANSI.sub("", text).splitlines()[0], "Everything looks fine.")
+        first = ANSI.sub("", text).splitlines()[0]
+        self.assertEqual(re.sub(r"^[^A-Za-z0-9]+", "", first), "Everything looks fine.")      # an emoji may lead it, and the sentence is whole
 
     def test_colour_follows_the_terminal_and_the_environment(self):
         class T:

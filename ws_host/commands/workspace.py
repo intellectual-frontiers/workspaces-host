@@ -6,7 +6,7 @@ import shutil
 from ..core import config, env, paths, registry as reg
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
-from ..lib import completion as completion_lib, git, kitrun, repos, trust as trust_mod
+from ..lib import completion as completion_lib, git, kitrun, repos, selfupdate, trust as trust_mod
 from . import auth as auth_cmd, doctor as doctor_cmd, shell as shell_cmd, vscode as vscode_cmd
 
 
@@ -93,6 +93,12 @@ def workspace_advance(ctx):
     yield _step("update", "Bringing repositories up to date...")
     updated = [repos.advance(r, cfg) for r in sorted(repos.known(cfg)[0], key=str) if (r.path(cfg) / ".git").exists()]
     steps.append({"name": "update", "status": "fail" if any(r["outcome"] == "failed" for r in updated) else "ok", "plain": repos.summarize(updated)})
+    try:     # ws-host's own copy may just have moved forward; the note a new window shows must follow it
+        mine = selfupdate.state(False)
+        if mine["git"] and mine["upstream"]:
+            selfupdate.write_notice(mine["behind"])
+    except OSError:
+        pass
     yield _step("kits", "Checking the kits your repositories ask for...")
     declared = {k: v for k, v in declared_kits(cfg).items() if k not in mine}
     kit_result = kitrun.ensure(ctx, declared)

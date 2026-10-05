@@ -132,6 +132,10 @@ def to_text(r: Resource, registry=None, color: bool = False) -> str:
         return _help_text(r, d, st)
     if r.kind == "progress":      # a step reporting as it goes: one friendly line, not a page (0041 FR-019)
         return (f"⏳ {r.plain}" if st.on else r.plain)
+    if st.on:
+        from . import pretty
+        from .. import VERSION
+        return pretty.render(r, d, st, VERSION, AUDIENCE)
     lines = [st.bold(r.plain or f"{r.kind}"), st.dim(f"audience: {AUDIENCE}")]
     lines += [_mark_line(x, st) for x in _lines(r.data)]
     printable = [a for a in d["actions"] if a["enabled"]]

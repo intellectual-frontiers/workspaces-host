@@ -307,6 +307,13 @@ The prompt draws small icons from a Nerd Font. Install one on Windows and choose
 ws-host shell add bash --plain
 ----
 
+.🔄 Stay up to date
+ws-host improves often. A new terminal window tells you in one line when a newer version is waiting. To get it, and see what is new:
+
+----
+ws-host update advance
+----
+
 .🆘 Stuck?
 Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help in VS Code for a report with no passwords in it, and paste it to someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/
 
@@ -316,6 +323,7 @@ Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help i
 * Copy your starter repositories: `ws-host workspace advance`
 * Set VS Code up: `ws-host vscode advance`
 * Give your terminal the prompt again: `ws-host shell add bash` (setup already did this once)
+* Update ws-host: `ws-host update advance`
 * See where things stand: `ws-host workspace status`
 * Check your machine: `ws-host doctor`
 
@@ -342,3 +350,36 @@ One link in ~/.local/share/workspaces-host/enabled/, and the commit at which you
 * See which repositories are trusted: `ws-host repo list`
 * Trust a repository: `ws-host repo set --trusted`
 * Stop trusting a repository: `ws-host repo set --untrusted`
+
+=== update
+
+_Keep ws-host itself up to date, and learn when a newer version is waiting._
+
+ws-host improves often. One command brings the newest version, and a new terminal window tells you when one is waiting.
+
+.Update ws-host
+This looks for news and moves ws-host forward. It only ever moves forward, and it leaves your copy exactly as it was, with a plain reason, when you have changes of your own in it:
+
+----
+ws-host update advance
+----
+
+.Is one waiting?
+Every new terminal window looks in the background, at most every six hours, and never makes you wait. When a newer version is ready, the window says so in one line. To look right now and see what is new:
+
+----
+ws-host update status
+----
+
+.Everything at once
+ws-host workspace advance updates ws-host along with your repositories, so running it is enough. ws-host update advance is the quick way when you only want ws-host.
+
+.Turning the reminder off
+The reminder is a few lines in the marked block of your ~/.bashrc, which is the same block that gives you your prompt. Delete the lines that mention update, or all of the block. ws-host doctor also tells you when an update is waiting.
+
+.Steps
+
+* See whether a newer ws-host is waiting: `ws-host update status`
+* Update ws-host: `ws-host update advance`
+* Update everything: `ws-host workspace advance`
+* Check your machine: `ws-host doctor`

@@ -13,6 +13,26 @@ In VS Code, use Learn. It lists the same topics and shows each as a page whose s
 Part II reproduces every topic from the same code (<<reference-help>>), which is the only reason that copy can be trusted:
 it is generated, and `ws-host fresh` fails if it is out of date.
 
+== Keeping `ws-host` current
+
+`ws-host` improves often. One command brings the newest version, and it only ever moves forward, so your own changes are safe:
+
+----
+ws-host update advance
+----
+
+Every new terminal window looks for news in the background, at most every six hours and without making you wait. When a newer version is
+ready, the window says so in one line, and `ws-host update status` shows what is new. `ws-host doctor` reports it too. `ws-host workspace advance`
+brings `ws-host` up to date along with your repositories, so running it is enough. The check lives in the marked lines of your `~/.bashrc` (or
+fish's `config.fish`) that `ws-host shell add` writes, so deleting the lines that mention `update` turns the reminder off.
+
+== How the terminal looks
+
+At a terminal, `ws-host` shows sections with a heading, rows with a mark you read at a glance (✅ fine, ⚠️ look at this, ❌ failed, ⏭️ skipped,
+⬜ not yet), and the next step in cyan on a line of its own, ready to copy. The first line is always one plain sentence. In a pipe, a file or
+with `NO_COLOR` set you get plain text without marks, and `--json` and `--html` are never decorated. `WS_HOST_COLOR=always` or `never` decides
+for you.
+
 The one thing I put outside `help` is the first line you paste on a new machine, because `ws-host` is not there yet:
 
 ----
