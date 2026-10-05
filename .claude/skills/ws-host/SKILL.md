@@ -71,6 +71,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - `start`: Your first steps: sign in, copy your starter repositories, and move into VS Code.
 - `trust`: Decide whose code may run on your machine.
 - `update`: Keep ws-host itself up to date, and learn when a newer version is waiting.
+- `workspace-file`: Open all your repositories in one VS Code window, from one file.
 
 ## Checks
 

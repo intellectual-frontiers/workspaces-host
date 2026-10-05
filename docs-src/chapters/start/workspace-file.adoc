@@ -1,0 +1,53 @@
+[#workspace-file]
+== One window for all your repositories
+
+You work in more than one repository, and VS Code can show them together in one window. It does this with a *workspace file*, a small file named
+`workspaces.code-workspace`. This page says how I want you to use it, and the rule is short.
+
+=== The rule
+
+Always start VS Code by opening `workspaces.code-workspace`, which is in your workspaces folder (`~/workspaces`). Do not open repositories one at
+a time, and do not use *Add Folder to Workspace*. `ws-host vscode ensure` keeps the file's list of repositories current, so you never edit it by hand.
+
+I chose one file for everything because the alternatives go wrong in ways that are hard to see. A window opened on one repository hides the others and
+the IF Console cannot show them. Several windows get lost behind each other. A file you add folders to by hand drifts away from what is on disk.
+
+=== Open it
+
+In the Debian window:
+
+----
+code ~/workspaces/workspaces.code-workspace
+----
+
+Or in VS Code: *File*, *Open Workspace from File*, and choose the file. VS Code remembers it. Next time, *File*, *Open Recent* lists it first, and
+VS Code reopens it when it starts. Its title bar begins with *Workspaces*, so you can tell it from a window that has only one repository.
+
+You know it worked when the *Explorer* on the left lists every repository by its short name, each one a folder you can open.
+Microsoft's page on this is https://code.visualstudio.com/docs/editing/workspaces/multi-root-workspaces[Multi-root workspaces].
+
+=== Add a repository
+
+----
+ws-host repo add github.com/acme/tools
+ws-host vscode ensure
+----
+
+The repository appears in the Explorer after `ws-host vscode ensure`. Reload the window if it does not: `Ctrl+Shift+P`, `Reload Window`.
+
+=== Where the files live
+
+Workspace files go in your workspaces folder, `~/workspaces`, and nothing else belongs next to them. Every repository in a file is listed relative to that
+folder, for example `github.com/acme/tools`, never by a full path. That is why the file keeps working if the folder is moved or renamed,
+and why you can read it: it lists the same folders you see in `~/workspaces`.
+
+=== What is in the file
+
+A list of your repositories with short names, a window title that starts with *Workspaces*, and a recommendation to use the IF Console. `ws-host
+vscode ensure` adds what is missing. It never changes a line you wrote yourself, and it leaves the file alone if it has comments it cannot safely rewrite.
+
+=== When it looks wrong
+
+* *The Explorer shows only one repository.* You opened a folder, not the file. Close the window and open the file as above.
+* *A repository is missing.* Run `ws-host vscode ensure`.
+* *VS Code asks whether you trust the authors.* Press *Yes, I trust the authors* for repositories you chose to copy; see <<vscode>>.

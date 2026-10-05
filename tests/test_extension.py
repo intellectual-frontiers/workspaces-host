@@ -329,12 +329,22 @@ class Console(Home):
         self.run_json("vscode", "ensure")
         data = json.loads(f.read_text())
         self.assertEqual(data["folders"], [{"path": "github.com/intellectual-frontiers/.github", "name": ".github"}])
+        for folder in data["folders"]:
+            self.assertFalse(os.path.isabs(folder["path"]))
+            self.assertNotIn("..", Path(folder["path"]).parts)
+            self.assertTrue((f.parent / folder["path"] / ".git").exists())
         data["folders"].append({"path": "../mine", "name": "mine"})
-        data["settings"] = {"editor.fontSize": 18}
+        self.assertEqual(data["settings"]["window.title"], vs.WORKSPACE_SETTINGS["window.title"])
+        self.assertEqual(data["extensions"]["recommendations"], [vs.CONSOLE_ID])
+        data["settings"] = {"editor.fontSize": 18, "window.title": "mine"}
         f.write_text(json.dumps(data))
         self.run_json("vscode", "ensure")
         again = json.loads(f.read_text())
-        self.assertEqual(again, data)
+        self.assertEqual(again["settings"]["window.title"], "mine")
+        self.assertEqual(again["settings"]["editor.fontSize"], 18)
+        self.assertIn({"path": "../mine", "name": "mine"}, again["folders"])
+        self.assertEqual(again["extensions"]["recommendations"], [vs.CONSOLE_ID])
+        data = again
         f.write_text("{ // comments\n}")
         self.run_json("vscode", "ensure")
         self.assertEqual(f.read_text(), "{ // comments\n}")
@@ -462,3 +472,19 @@ class ConsoleSection(Home):
         os.environ["FAKE"] = "ok"
         code, doc = self.run_json("check", "console")
         self.assertEqual(doc["data"]["sections"][0]["status"], "passed")
+
+
+class WorkspaceFileTeaching(unittest.TestCase):
+    """The one way to open several repositories is taught in the help and in the guide (0004-editor-extension FR-028)."""
+
+    def test_the_help_page_and_the_chapter_teach_the_rule(self):
+        r = reg.discover()
+        t = r.topics["workspace-file"]
+        text = json.dumps([t.plain, t.sections, [st.label if hasattr(st, "label") else str(st) for st in t.steps]])
+        for needle in ("workspaces.code-workspace", "Open Workspace from File", "code ~/workspaces/workspaces.code-workspace", "Add Folder to Workspace", "ws-host repo add", "ws-host vscode ensure"):
+            self.assertIn(needle, text)
+        chapter = (REPO / "docs-src/chapters/start/workspace-file.adoc").read_text()
+        for needle in ("Always start VS Code", "Open Recent", "Explorer", "ws-host vscode ensure", "https://code.visualstudio.com/"):
+            self.assertIn(needle, chapter)
+        self.assertIn("workspace-file.adoc", (REPO / "docs-src/manuscript.adoc").read_text())
+

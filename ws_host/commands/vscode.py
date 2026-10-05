@@ -209,6 +209,13 @@ def workspace_file(cfg) -> Path:
     return cfg.workspaces / "workspaces.code-workspace"
 
 
+# What every workspace file opens with, added only where the person has not chosen a value (0004-editor-extension FR-028).
+WORKSPACE_SETTINGS = {
+    "window.title": "Workspaces${separator}${rootName}${separator}${activeEditorShort}",
+    "explorer.compactFolders": False,
+}
+
+
 def workspace_step(cfg, dry: bool) -> dict:
     """A multi-root workspace of the repositories you work in, so the IF Console shows each repository's command line (0043 FR-007)."""
     f = workspace_file(cfg)
@@ -230,15 +237,24 @@ def workspace_step(cfg, dry: bool) -> dict:
     folders = list(current.get("folders", []))
     have = {os.path.normpath(os.path.join(f.parent, x.get("path", ""))) for x in folders if isinstance(x, dict)}
     add = [w for w in wanted if os.path.normpath(os.path.join(f.parent, w["path"])) not in have]
-    if not add:
+    settings = dict(current.get("settings", {})) if isinstance(current.get("settings", {}), dict) else {}
+    recs = list(current.get("extensions", {}).get("recommendations", [])) if isinstance(current.get("extensions", {}), dict) else []
+    fill = {k: v for k, v in WORKSPACE_SETTINGS.items() if k not in settings}
+    want_rec = CONSOLE_ID not in recs
+    if not f.exists() and not add:
+        fill, want_rec = {}, False
+    if not add and not fill and not want_rec:
         return {"name": name, "status": "already", "plain": f"{f.name} already lists your repositories." if f.exists() else "No repository is copied yet, so there is no workspace file to make."}
     if dry:
-        return {"name": name, "status": "would-install", "plain": f"I would add {len(add)} repositor{'ies' if len(add) != 1 else 'y'} to {f}."}
+        return {"name": name, "status": "would-install", "plain": f"I would add {len(add)} repositor{'ies' if len(add) != 1 else 'y'} and the standard settings to {f}."}
     f.parent.mkdir(parents=True, exist_ok=True)
     tmp = f.with_suffix(".code-workspace.new")
-    tmp.write_text(json.dumps({**current, "folders": folders + add}, indent=2) + "\n", encoding="utf-8")
+    out = {**current, "folders": folders + add, "settings": {**settings, **fill}}
+    if want_rec:
+        out["extensions"] = {**(current.get("extensions") if isinstance(current.get("extensions"), dict) else {}), "recommendations": recs + [CONSOLE_ID]}
+    tmp.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
     os.replace(tmp, f)
-    return {"name": name, "status": "installed", "plain": f"{f} lists your repositories. Open it in VS Code (File, Open Workspace from File) so the IF Console shows each one's commands."}
+    return {"name": name, "status": "installed", "plain": f"{f} lists your repositories. Open it in VS Code with `code {f}` (or File, Open Workspace from File) and always start from it, so every repository is in one window."}
 
 
 # What `vscode ensure` puts in place so a person does not have to think about it (0006-onboarding FR-007 to FR-009).
