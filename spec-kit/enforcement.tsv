@@ -122,14 +122,31 @@ requirement	mechanism	by	note
 0004-editor-extension FR-028	check	workspaces-host: ws-host test	tests check the workspace file's folders, names, settings and recommendation are added once, a person's own lines are kept, the help page and the guide chapter teach the rule
 0007-releases FR-001	check	workspaces-host: ws-host test	tests check the version is written once, pyproject reads it, the Console agrees and a different Console version stops the release
 0007-releases FR-002	check	workspaces-host: ws-host test	a test checks the four file names and the tag follow the version
-0007-releases FR-003	check	workspaces-host: ws-host test	tests check the tarball holds the wheel package, a launcher and nothing else, and runs through a symbolic link; release check runs the built one
-0007-releases FR-004	check	workspaces-host: ws-host release check --rebuild	tests check the tarball and a rewritten zip are the same bytes whatever the time; release check --rebuild builds again and compares every byte
+0007-releases FR-003	check	workspaces-host: ws-host test	tests check the tarball holds the wheel package, a launcher and nothing else, and runs through a symbolic link; check release runs the built one
+0007-releases FR-004	check	workspaces-host: ws-host check reproducible	tests check the tarball and a rewritten zip are the same bytes whatever the time; check reproducible builds again and compares every byte
 0007-releases FR-005	check	workspaces-host: ws-host test	tests check the backend is pinned exactly, python, uv and node are locked with checksums for both platforms, and every Console package has an integrity hash
 0007-releases FR-006	check	workspaces-host: ws-host test	a test checks the type-check, lint with no warning and unit tests come before the package; release build runs them and stops on a failure
 0007-releases FR-007	check	workspaces-host: ws-host test	a test checks the sums file is in sha256sum format and verifies with sha256sum
 0007-releases FR-008	check	workspaces-host: ws-host test	a test checks a dry run builds nothing and names the files; release build refuses differing versions
-0007-releases FR-009	check	workspaces-host: ws-host test	tests check each row of release check, that a tampered file ends it at the checksums and that a leaking package fails
+0007-releases FR-009	check	workspaces-host: ws-host test	tests check each finding of the release section, that a tampered file ends it at the checksums and that a leaking package fails
 0007-releases FR-010	check	workspaces-host: ws-host test	tests check publish is a decision never over MCP, refuses a dirty tree, an unpushed commit, an existing tag and a failing check, uses gh and takes no token
 0007-releases FR-011	check	workspaces-host: ws-host test	a test checks the notes carry each file and checksum and the exact mise entry
 0007-releases FR-012	check	workspaces-host: ws-host test	a test checks no workflow in the repository builds or publishes a release
 0007-releases FR-013	check	workspaces-host: ws-host test	tests check a release with a digest, name and https address is installed once after its digest is checked, others are ignored, a mismatch installs nothing, and offline asks for nothing
+0008-providers FR-001	check	workspaces-host: ws-host test	tests check a valid provider loads, a folder without provider.toml is not one, unknown keys are ignored and no provider code runs
+0008-providers FR-002	check	workspaces-host: ws-host test	tests check entries are read one per file with an exact version, a summary and a kind
+0008-providers FR-003	check	workspaces-host: ws-host test	tests check archive platforms, checksums, strip, bin, provides, env, needs and system are read
+0008-providers FR-004	check	workspaces-host: ws-host test	tests check npm and tool entries need their own key
+0008-providers FR-005	check	workspaces-host: ws-host test	tests check each rejection names the file and the key
+0008-providers FR-006	check	workspaces-host: ws-host test	tests check the translation is deterministic, generated files say so, stale files are named and fixed, and the providers section fails on them
+0008-providers FR-007	check	workspaces-host: ws-host test	tests check an install uses only the translation, in one store, and reads no configuration above the provider
+0008-providers FR-008	check	workspaces-host: ws-host test	tests check the pinned mise per architecture, and WS_HOST_MISE as the only override
+0008-providers FR-009	check	workspaces-host: ws-host test	tests check two providers declaring one name and version differently conflict, and provider add refuses
+0008-providers FR-010	check	workspaces-host: ws-host test	tests check nothing is enabled without a person's decision, add links and remove unlinks
+0008-providers FR-011	check	workspaces-host: ws-host test	tests check provider list and show say each provider, entry and state
+0008-providers FR-012	check	workspaces-host: ws-host test	tests check ensure installs from the lock, toolchain show reports state and path, and a stale translation stops it
+0008-providers FR-013	check	workspaces-host: ws-host test	tests check provider run puts the entries first on PATH, passes the exit status and puts nothing on a person's PATH
+0008-providers FR-014	review	0008-providers FR-013	ws-host passes through the person's variables and mise's own; the provider removes the rest (see 0008-providers FR-013)
+0008-providers FR-015	check	workspaces-host: ws-host test	tests check toolchain remove --unused removes only what no provider's lock names and --dry-run writes nothing
+0008-providers FR-016	check	workspaces-host: ws-host test	tests check system ensure with and without libraries, and its dry run
+0008-providers FR-017	check	workspaces-host: ws-host test	tests check doctor reports each provider and brew and direnv as suggestions

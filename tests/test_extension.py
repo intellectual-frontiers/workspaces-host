@@ -86,7 +86,7 @@ class Contract(Workspace):
         _, lst = self.run_json("command", "list")
         self.assertIn("help", [c["id"] for c in lst["data"]["commands"]])
         decisions = [c for c in lst["data"]["commands"] if c["category"] == "decision"]
-        self.assertEqual([c["id"] for c in decisions], ["release publish", "repo set"])
+        self.assertEqual([c["id"] for c in decisions], ["provider add", "provider remove", "release publish", "repo set"])
         for c in decisions:
             self.assertEqual(c["surfaces"], ["terminal", "editor"])
 

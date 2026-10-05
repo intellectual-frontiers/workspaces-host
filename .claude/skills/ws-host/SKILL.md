@@ -37,8 +37,12 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `kit add` | setup | terminal | Install a kit (uses sudo for packages, and says so first) |
 | `kit list` | read | terminal, editor, mcp | List the kits and which are installed |
 | `kit show` | read | terminal, editor, mcp | Show what a kit installs on this machine |
+| `provider add` | decision | terminal, editor | Enable a repository as a provider, so ws-host installs and runs what it declares |
+| `provider list` | read | terminal, editor, mcp | List the providers you have enabled |
+| `provider remove` | decision | terminal, editor | Stop using a provider (its programs stay until you prune them) |
+| `provider run` | build | terminal | Run a command with one provider's programs first on PATH |
+| `provider show` | read | terminal, editor, mcp | Show one provider, its launcher and the programs it pins |
 | `release build` | build | terminal, editor, mcp | Build a release: the wheel, the app tarball, the Workspaces Console and their checksums |
-| `release check` | check | terminal, editor, mcp | Check a built release: versions, checksums, contents, that it runs, and with --rebuild that it is reproducible |
 | `release publish` | decision | terminal, editor | Tag this commit and publish the release to GitHub Releases, with your own gh sign-in |
 | `repo add` | setup | terminal | Copy missing repositories to this machine |
 | `repo list` | read | terminal, editor, mcp | List the repositories I know |
@@ -47,7 +51,13 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `repo sync` | setup | terminal | Bring repositories up to date, never touching your work |
 | `shell add` | setup | terminal, editor | Give bash or fish the ws-host oh-my-posh prompt (again, or the plain one) |
 | `skill generate` | generate | terminal, editor, mcp | Rewrite the skill that tells an AI agent how to use ws-host |
+| `system ensure` | setup | terminal | Install the shared libraries enabled providers' programs need (uses sudo, and says so first) |
 | `test` | check | terminal, editor, mcp | Run this repository's tests |
+| `toolchain ensure` | setup | terminal | Install pinned programs from the lock, only from the lock |
+| `toolchain generate` | generate | terminal, editor, mcp | Write a provider's mise configuration and lock from its entries |
+| `toolchain list` | read | terminal, editor, mcp | List the programs enabled providers pin and whether each is installed |
+| `toolchain remove` | setup | terminal | Remove stored programs no enabled provider pins |
+| `toolchain show` | read | terminal, editor, mcp | Show one pinned program: version, where it is, what it provides and sets |
 | `update` | setup | terminal, editor | Move ws-host to its newest version, only when nothing of yours is in the way; --check only looks |
 | `vscode ensure` | setup | terminal, editor | Put VS Code in its recommended state: the Workspaces Console, helpful extensions and safe settings |
 | `workspace ensure` | setup | terminal, editor | Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health |

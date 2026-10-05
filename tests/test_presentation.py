@@ -66,6 +66,10 @@ class Declared(Home):
     def test_the_rows_of_each_list_have_the_fields_the_list_names_and_a_status_something_maps(self):
         self.paths.config_dir().mkdir(parents=True, exist_ok=True)
         self.paths.config_file().write_text('WS_HOST_REPOS="github.com/acme/site github.com/acme/lib"\n')
+        from tests.test_provider import make_provider
+        link = self.paths.config_dir() / "providers.d" / "demo"
+        link.parent.mkdir(parents=True)
+        link.symlink_to(make_provider(self.home) / ".workspaces-host")
         for noun in self.reg.nouns.values():
             if not noun.list:
                 continue

@@ -1,11 +1,12 @@
-"""`release build`, `release check` and `release publish`: a release made on a maintainer's machine, checked, and published to GitHub Releases
+"""`release build` and `release publish`, and the `release` and `reproducible` sections of `check`: a release made on a maintainer's machine, checked, and published to GitHub Releases
 (0007-releases). No continuous-integration service takes part."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from .. import VERSION
-from ..core.registry import Arg, command
+from ..core.registry import Arg, command, section
 from ..core.resource import Action, FAILED, OK, Resource, WsError
 from ..lib import release
 
@@ -36,24 +37,38 @@ def release_build(ctx, output, skip_tests=False):
     files = [{"name": v, "status": "ok", "plain": f"{(out / v).stat().st_size:,} bytes"} for v in names.values()]
     return Resource("release", VERSION, {"plain": f"Release {VERSION} is built in {out}. Check it before you publish it.", "output": str(out),
                                          "steps": steps, "files": files, "tests_run": not skip_tests},
-                    actions=[Action(("release", "check"), "Check the release", {"output": str(out)} if output else {})], status=OK)
+                    actions=[Action(("check",), "Check the release", {"sections": ["release"]})], status=OK)
 
 
-@command("release", "check", category="check", summary="Check a built release: versions, checksums, contents, that it runs, and with --rebuild that it is reproducible",
-         args=(OUTPUT, Arg("rebuild", flag=True, help="build it again and compare every byte")))
-def release_check(ctx, output, rebuild=False):
-    out = _out(output)
+def _finding(name: str, plain: str) -> dict:
+    return {"level": "error", "where": name, "message": plain, "next": "fix it, then run `ws-host release build` and `ws-host check release` again"}
+
+
+def _built() -> Path:
+    out = Path(os.environ.get("WS_HOST_RELEASE_DIR") or release.dist_dir())
+    if not (out / release.SUMS).is_file():
+        raise FileNotFoundError("a built release (run `ws-host release build`)")
+    return out
+
+
+@section("release", suites=("slow",), summary="a built release is complete, its checksums match, its files hold what they should and it runs (named: it needs a built release)")
+def release_section(ctx):
+    """0007-releases FR-009: versions, files, checksums, wheel metadata, package contents, the tarball run in place."""
     try:
-        findings = release.check(out, rebuild=rebuild)
+        return [_finding(f.name, f.plain) for f in release.check(_built()) if not f.ok]
     except release.ReleaseError as e:
-        raise _wrap(e)
-    bad = [f for f in findings if not f.ok]
-    rows = [{"name": f.name, "status": "ok" if f.ok else "fail", "plain": f.plain} for f in findings]
-    plain = (f"Release {VERSION} passes all {len(findings)} checks." if not bad else
-             f"Release {VERSION} fails {len(bad)} of {len(findings)} checks: " + "; ".join(f"{f.name} ({f.plain})" for f in bad) + ".")
-    return Resource("release", VERSION, {"plain": plain, "output": str(out), "checks": rows, "reproducible": bool(rebuild and not bad)},
-                    actions=[] if bad else [Action(("release", "publish"), "Publish the release")],
-                    status=FAILED if bad else OK)
+        return [_finding("release", e.plain)]
+
+
+@section("reproducible", suites=("slow",), summary="building the release again gives the same bytes (named: it builds everything a second time)")
+def reproducible_section(ctx):
+    """0007-releases FR-004, FR-009: a second build, with the Console's tests left out, compared with every byte of the built release."""
+    out = _built()
+    try:
+        rows = release.check(out, rebuild=True)
+    except release.ReleaseError as e:
+        return [_finding("release", e.plain)]
+    return [_finding(f.name, f.plain) for f in rows if not f.ok and f.name.startswith("A rebuild")]
 
 
 @command("release", "publish", category="decision", summary="Tag this commit and publish the release to GitHub Releases, with your own gh sign-in",

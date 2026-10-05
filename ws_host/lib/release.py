@@ -371,7 +371,7 @@ def notes(out: Path) -> str:
         f'[tools."http:ws-host"]', f'version = "{VERSION}"', "strip_components = 1", 'bin_path = "bin"',
         '[tools."http:ws-host".platforms]', f'linux-x64 = {{ url = "{base}/{n["app"]}", checksum = "sha256:{s[n["app"]]}" }}',
         f'linux-arm64 = {{ url = "{base}/{n["app"]}", checksum = "sha256:{s[n["app"]]}" }}', "```", "",
-        "A release is rebuilt with `ws-host release check --rebuild` and must give the same checksums.", ""])
+        "A release is rebuilt with `ws-host check reproducible` and must give the same checksums.", ""])
 
 
 def publish(out: Path) -> str:

@@ -238,7 +238,10 @@ class Publishing(Workspace):
         self.assertEqual(c.category, "decision")
         self.assertNotIn("mcp", c.surfaces)
         self.assertEqual(reg.discover().get(("release", "build")).category, "build")
-        self.assertEqual(reg.discover().get(("release", "check")).category, "check")
+        self.assertIsNone(reg.discover().get(("release", "check")), "a check runs only through `check` (0041-command-line FR-010)")
+        self.assertIn("release", reg.discover().sections)
+        self.assertIn("reproducible", reg.discover().sections)
+        self.assertIn("slow", reg.discover().sections["release"].suites)
 
     def test_nothing_in_the_repository_needs_a_continuous_integration_service_to_make_a_release(self):
         for f in (REPO / ".github" / "workflows").glob("*.yml"):
@@ -259,10 +262,15 @@ class Commands(Workspace):
 
     def test_checking_a_folder_with_no_release_fails_in_plain_words(self):
         (self.home / "empty").mkdir()
-        code, doc = self.run_json("release", "check", "--output", str(self.home / "empty"))
-        self.assertNotEqual(code, 0)
-        self.assertIn("fails", doc["data"]["plain"])
-        self.assertEqual([c["status"] for c in doc["data"]["checks"]][:2], ["ok", "fail"])
+        with mock.patch.dict(os.environ, {"WS_HOST_RELEASE_DIR": str(self.home / "empty")}):
+            code, doc = self.run_json("check", "release")
+        self.assertEqual(doc["data"]["sections"][0]["status"], "skipped")
+        self.assertIn("a built release", doc["data"]["sections"][0]["reason"])
+        (self.home / "empty" / "SHA256SUMS").write_text("")
+        with mock.patch.dict(os.environ, {"WS_HOST_RELEASE_DIR": str(self.home / "empty")}):
+            code, doc = self.run_json("check", "release")
+        self.assertEqual(doc["data"]["sections"][0]["status"], "failed")
+        self.assertEqual(doc["data"]["sections"][0]["findings"][0]["where"], "Every asset is there")
 
     def test_a_release_made_of_the_real_pieces_passes_every_check(self):
         with tempfile.TemporaryDirectory() as t:
