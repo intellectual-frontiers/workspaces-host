@@ -16,8 +16,8 @@ something stops you.
 2. **Install.** In the Debian window run `cd && sudo apt update && sudo apt install -y curl wget`, then
    `curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh`. The installer does the
    bootstrapping.
-3. **Sign in to GitHub.** Run `ws-host auth new github`, type the code into your browser, then run `ws-host workspace advance` again.
-4. **Open VS Code.** Install VS Code on Windows, run `code .` from a repository in the Debian window, then `ws-host vscode advance`.
+3. **Sign in to GitHub.** Run `ws-host auth new github`, type the code into your browser, then run `ws-host workspace ensure` again.
+4. **Open VS Code.** Install VS Code on Windows, run `code .` from a repository in the Debian window, then `ws-host vscode ensure`.
 5. **Learn.** In VS Code press `Ctrl+Shift+P` and run *Workspace: Learn*. Everything you do every day is taught there, one button at a
    time. In a terminal the same pages are `ws-host help`.
 

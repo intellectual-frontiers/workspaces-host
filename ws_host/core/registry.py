@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Callable
 
 CATEGORIES = ("read", "check", "record", "build", "generate", "decision", "setup")
-VERBS = ("list", "show", "status", "check", "build", "generate", "add", "set", "record", "new", "advance", "publish", "serve")
+VERBS = ("list", "show", "status", "check", "build", "generate", "add", "set", "record", "new", "advance", "ensure", "sync", "publish", "serve")
 SURFACES = ("cli", "editor", "mcp")
 # 0041 FR-022: the default exposure beyond the terminal, by category.
 DEFAULT_SURFACES = {
@@ -21,7 +21,7 @@ DEFAULT_SURFACES = {
     "build": ("cli", "editor", "mcp"), "generate": ("cli", "editor", "mcp"),
     "decision": ("cli", "editor"), "setup": ("cli",),
 }
-REPOWIDE = ("check", "fresh", "test", "doctor", "lock", "context", "help")
+REPOWIDE = ("check", "fresh", "test", "doctor", "lock", "context", "help", "update")
 
 
 @dataclass

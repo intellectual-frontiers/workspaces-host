@@ -20,7 +20,7 @@ def repos():
         "steps": (
             Step("See the repositories I know", ("repo", "list")),
             Step("Copy the missing ones", ("repo", "add"), {"all": True}),
-            Step("Bring them up to date", ("repo", "advance"), {"all": True}),
+            Step("Bring them up to date", ("repo", "sync"), {"all": True}),
             Step("See each one's state", ("repo", "status")),
             Step("Make git's Sync button safe", ("workspace", "set"), {"pull_ff_only": True}),
         ),

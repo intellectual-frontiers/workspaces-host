@@ -138,7 +138,7 @@ class Installing(Home):
         os.environ["PATH"] = f"{self.home.parent / 'fakebin'}:{os.environ['PATH']}"
         self.paths.config_dir().mkdir(parents=True, exist_ok=True)
         self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\nWS_HOST_PROMPT="no"\n')
-        code, out = self.run_cmd("workspace", "advance", "--json")
+        code, out = self.run_cmd("workspace", "ensure", "--json")
         docs = [json.loads(l) for l in out.strip().splitlines()]
         step = [s for s in docs[-1]["data"]["steps"] if s["name"] == "completions"][0]
         self.assertEqual(step["status"], "ok")

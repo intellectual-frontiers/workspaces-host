@@ -92,7 +92,7 @@ def reference_docs() -> dict:
     # VS Code setup (0006-onboarding FR-008)
     from . import vscode as vs
     lines = [h(), "[#reference-vscode]", "== VS Code setup", "",
-             f"What `{NAME} vscode advance` puts in place, taken from the code. It adds a setting only when you have not set it, and it never changes one you have.", "",
+             f"What `{NAME} vscode ensure` puts in place, taken from the code. It adds a setting only when you have not set it, and it never changes one you have.", "",
              "=== Recommended extensions", "", '[cols="2,5"]', "|===", "|Extension |What it is for", ""]
     lines += [f"|`{i}`|{_cell(w)}" for i, w in vs.RECOMMENDED]
     lines += ["|===", "", "The Workspace extension itself is installed from your copy of `ws-host`, not from the Marketplace.", "",
@@ -149,7 +149,7 @@ def agent_skill() -> dict:
              "- A command in the `decision` category is for a person. It is not offered to you; it needs a prompt in a terminal or the editor's dialog. Tell the person what you want decided.",
              "- A command that needs `sudo` (`kit add`) is not offered to you either.",
              "- Add `--dry-run` to anything that writes, and read what it would do first.",
-             "- A repository `repo advance` leaves alone is safe and is not an error; its resource says why.",
+             "- A repository `repo sync` leaves alone is safe and is not an error; its resource says why.",
              f"- `{NAME} help` is the daily-work documentation; `{NAME} help TOPIC` for one. `{NAME} context` and `{NAME} doctor` give a report with no secrets.", "",
              "## Commands", "", "| Command | Category | Where | What it does |", "| --- | --- | --- | --- |"]
     for c in sorted(r.commands.values(), key=lambda c: c.id):

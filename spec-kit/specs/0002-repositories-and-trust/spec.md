@@ -49,11 +49,11 @@ work, and a failed clone reported as done. Each is a test here.
 
 ## Updating without harm
 
-- **FR-007**: `repo advance [ID|--all]` MUST update a cloned repository only by
+- **FR-007**: `repo sync [ID|--all]` MUST update a cloned repository only by
   `git fetch` followed by `git merge --ff-only` of its upstream. It MUST NOT
   run `git pull`, a rebase, a merge that is not a fast-forward, a stash, a
   reset or a checkout.
-- **FR-008**: `repo advance` MUST leave a repository exactly as it was, and
+- **FR-008**: `repo sync` MUST leave a repository exactly as it was, and
   report it as skipped in plain words, when: it has changes not yet committed
   to files Git tracks; its commits and its upstream's have diverged; it has no
   upstream; it is on no branch; or a rebase, merge or other operation is in
@@ -67,7 +67,7 @@ work, and a failed clone reported as done. Each is a test here.
   because ...". A repository with commits not yet pushed and nothing new
   upstream MUST be reported as up to date, with a note that it holds work not
   yet pushed.
-- **FR-010**: `repo advance` MUST say what it did for each repository: updated
+- **FR-010**: `repo sync` MUST say what it did for each repository: updated
   (with how many commits), already up to date, skipped, or failed.
 
 ## Sign-in
@@ -109,7 +109,7 @@ work, and a failed clone reported as done. Each is a test here.
 
 ## The one command
 
-- **FR-016**: `workspace advance` MUST, in order: report whether the person is
+- **FR-016**: `workspace ensure` MUST, in order: report whether the person is
   signed in; clone the missing known repositories (FR-004); fast-forward the
   rest (FR-007); install the kits the repositories declare, as 0003-kits
   states; and run `doctor`. It MUST be safe to run as often as the person
@@ -132,7 +132,7 @@ work, and a failed clone reported as done. Each is a test here.
 
 ## Edge cases
 
-- Unpushed commits that conflict with new upstream commits: `repo advance`
+- Unpushed commits that conflict with new upstream commits: `repo sync`
   leaves the repository exactly as it was and says its work is safe, per
   FR-007 to FR-009.
 - A repository with a changed tracked file and new upstream commits: skipped,
@@ -158,7 +158,7 @@ work, and a failed clone reported as done. Each is a test here.
   FR-002.
 - Two known repositories named alike: a short name that matches both is
   refused and the full identifiers are offered, per FR-001.
-- `workspace advance` run twice: the second run changes nothing, per FR-016.
+- `workspace ensure` run twice: the second run changes nothing, per FR-016.
 - `pull.ff` unset: `doctor` recommends and offers the fix, per FR-017.
 
 ## Assumptions
@@ -184,7 +184,7 @@ work, and a failed clone reported as done. Each is a test here.
 ## Success criteria
 
 - **SC-001**: Unpushed work that conflicts with upstream survives `repo
-  advance`: its `HEAD` and `git status` are unchanged and no rebase, merge or
+  sync`: its `HEAD` and `git status` are unchanged and no rebase, merge or
   stash exists.
 - **SC-002**: A failed clone is never reported as done.
 - **SC-003**: Trust is never created by cloning, by listing, or by a

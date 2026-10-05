@@ -1,4 +1,4 @@
-"""`repo list|status|add|advance|set` (0002-repositories-and-trust)."""
+"""`repo list|status|add|sync|set` (0002-repositories-and-trust)."""
 from __future__ import annotations
 
 from ..core import config, paths, registry as reg, types
@@ -50,7 +50,7 @@ def repo_status(ctx, repo):
     plain = ("Everything is in order." if all(r["status"] == "ok" for r in rows) else
              f"{sum(r['status'] != 'ok' for r in rows)} of {len(rows)} repositories have something to look at.") if rows else "I do not know any repositories yet."
     return Resource("repo-status", repo or "all", {"plain": plain, "repositories": rows},
-                    actions=[Action(("repo", "advance"), "Bring them up to date", {"all": True})] if rows else [])
+                    actions=[Action(("repo", "sync"), "Bring them up to date", {"all": True})] if rows else [])
 
 
 def _actions_for(results, cfg) -> list[Action]:
@@ -116,17 +116,17 @@ def repo_add(ctx, repo, all, trust: bool):
 
 
 
-@command("repo", "advance", category="setup", summary="Bring repositories up to date, never touching your work",
+@command("repo", "sync", category="setup", summary="Bring repositories up to date, never touching your work",
          args=(REPO_ARG, Arg("all", flag=True, help="every cloned repository")))
-def repo_advance(ctx, repo, all):
+def repo_sync(ctx, repo, all):
     cfg = config.load()
     chosen = _selected(cfg, repo)
     if ctx.dry_run:
         rows = [repos.state(r, cfg) | {"outcome": "would-check", "status": "ok"} for r in chosen]
-        return Resource("repo-advance", "dry-run", {"plain": "Nothing was changed. This is where each repository stands now.", "repositories": rows})
-    results = [repos.advance(r, cfg) for r in chosen]
+        return Resource("repo-sync", "dry-run", {"plain": "Nothing was changed. This is where each repository stands now.", "repositories": rows})
+    results = [repos.sync(r, cfg) for r in chosen]
     bad = any(r["outcome"] == "failed" for r in results)
-    return Resource("repo-advance", repo or "all", {"plain": repos.summarize(results), "repositories": results},
+    return Resource("repo-sync", repo or "all", {"plain": repos.summarize(results), "repositories": results},
                     actions=_actions_for(results, cfg), status=FAILED if bad else OK)
 
 

@@ -111,11 +111,6 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |terminal
 |Copy missing repositories to this machine
 
-|`ws-host repo advance [REPO] [--all]`
-|setup
-|terminal
-|Bring repositories up to date, never touching your work
-
 |`ws-host repo list`
 |read
 |terminal, editor, mcp
@@ -130,6 +125,11 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |read
 |terminal, editor, mcp
 |Show the state of one or all repositories
+
+|`ws-host repo sync [REPO] [--all]`
+|setup
+|terminal
+|Bring repositories up to date, never touching your work
 
 |===
 
@@ -159,24 +159,6 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 
 |===
 
-=== update
-
-[cols="3,1,2,5"]
-|===
-|Usage |Category |Where it runs |What it does
-
-|`ws-host update advance`
-|setup
-|terminal, editor
-|Move ws-host to its newest version, only when nothing of yours is in the way
-
-|`ws-host update status [--cached] [--background]`
-|read
-|terminal, editor, mcp
-|Look for a newer ws-host and say what is new
-
-|===
-
 === vscode
 
 [cols="3,1,2,5"]
@@ -188,7 +170,7 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |terminal
 |Install the VS Code extension that is the interface for every orchestrator
 
-|`ws-host vscode advance`
+|`ws-host vscode ensure`
 |setup
 |terminal, editor
 |Put VS Code in its recommended state: the extension, helpful extensions and safe settings
@@ -201,7 +183,7 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |===
 |Usage |Category |Where it runs |What it does
 
-|`ws-host workspace advance`
+|`ws-host workspace ensure`
 |setup
 |terminal, editor
 |Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health
@@ -253,6 +235,11 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |check
 |terminal, editor, mcp
 |Run this repository's tests
+
+|`ws-host update [--check] [--cached] [--background]`
+|setup
+|terminal, editor
+|Move ws-host to its newest version, only when nothing of yours is in the way; --check only looks
 
 |===
 

@@ -63,7 +63,7 @@ and on a slow network that takes minutes.
 
 *Fix:* Wait. The line at the bottom shows a spinner and, as the helper arrives, how many megabytes have come, for example
 `⠴ Setting up VS Code inside Debian (the first time downloads its helper) 42 MB downloaded (95s)`. If it gives up after fifteen minutes it
-says so, nothing is lost, and running `ws-host workspace advance` again carries on from where it got to.
+says so, nothing is lost, and running `ws-host workspace ensure` again carries on from where it got to.
 
 === The installer seems stuck on a slow network
 
@@ -92,7 +92,7 @@ signed in to the right GitHub account in that browser.
 *Why:* You are not signed in to GitHub, or your account cannot see that repository.
 
 *Fix:* Run `ws-host auth status`. If it says you are not signed in, run `ws-host auth new github` (see <<sign-in>>) and then `ws-host workspace
-advance`. If you are signed in, ask the repository's owner to give your GitHub account access.
+ensure`. If you are signed in, ask the repository's owner to give your GitHub account access.
 
 === `code: command not found` in Debian
 
@@ -122,7 +122,7 @@ Reload Window*. Check *Extensions*, search `@installed`, and look for *Intellect
 
 *Fix:* Press *Manage* in the banner, then *Trust*. See https://code.visualstudio.com/docs/editor/workspace-trust[Workspace Trust].
 
-=== `ws-host vscode advance` says it left my settings alone
+=== `ws-host vscode ensure` says it left my settings alone
 
 *Why:* Your VS Code settings file has comments in it, and `ws-host` will not edit a file it cannot read safely.
 
@@ -134,7 +134,7 @@ by hand, or remove the comments and run it again.
 *Why:* You have changes you have not committed, or your commits and the shared ones have both moved on. This is not an error; it protects
 your work.
 
-*Fix:* Commit or push your changes, then run `ws-host workspace advance` again. `ws-host help recover` explains each case.
+*Fix:* Commit or push your changes, then run `ws-host workspace ensure` again. `ws-host help recover` explains each case.
 
 === The prompt shows strange boxes instead of icons
 

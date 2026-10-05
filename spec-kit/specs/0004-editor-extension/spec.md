@@ -151,7 +151,7 @@ language come from 0041-command-line and 0002-repositories-and-trust.
 
 ## Open questions
 
-- **OQ-1**: Whether the extension should offer to run `workspace advance` when
+- **OQ-1**: Whether the extension should offer to run `workspace ensure` when
   a window opens, and how often.
 
 ## Key entities

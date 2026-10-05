@@ -238,7 +238,7 @@ class Themes(ShellAdd):
 
 
 class SetupPrompt(Home):
-    """workspace advance gives the shells the prompt by default (0006-onboarding FR-022)."""
+    """workspace ensure gives the shells the prompt by default (0006-onboarding FR-022)."""
 
     def setUp(self):
         super().setUp()
@@ -256,47 +256,47 @@ class SetupPrompt(Home):
         (self.fakebin / "gh").chmod(0o755)
         os.environ["PATH"] = f"{self.fakebin}:{os.environ['PATH']}"
 
-    def advance(self, **conf):
+    def ensure(self, **conf):
         self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\n' + "".join(f'{k}="{v}"\n' for k, v in conf.items()))
-        code, doc = self.run_json("workspace", "advance")
+        code, doc = self.run_json("workspace", "ensure")
         return code, doc
 
     def step(self, doc):
         return [s for s in doc["data"]["steps"] if s["name"] == "prompt"]
 
     def test_it_is_given_by_default_with_nothing_to_add(self):
-        code, doc = self.advance()
+        code, doc = self.ensure()
         self.assertEqual(code, 0)
         self.assertIn("ws-host-pretty.omp.json", self.bashrc.read_text())
         self.assertEqual(self.step(doc)[0]["status"], "ok")
 
     def test_the_plain_setting_gives_the_plain_theme(self):
-        self.advance(WS_HOST_PROMPT="plain")
+        self.ensure(WS_HOST_PROMPT="plain")
         self.assertIn("ws-host-plain.omp.json", self.bashrc.read_text())
 
     def test_no_keeps_the_persons_own_prompt(self):
-        _, doc = self.advance(WS_HOST_PROMPT="no")
+        _, doc = self.ensure(WS_HOST_PROMPT="no")
         self.assertEqual(self.bashrc.read_text(), "alias a=b\n")
         self.assertEqual(self.step(doc), [])
 
     def test_a_dry_run_changes_nothing(self):
         self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\n')
-        code, doc = self.run_json("workspace", "advance", "--dry-run")
+        code, doc = self.run_json("workspace", "ensure", "--dry-run")
         self.assertEqual(self.bashrc.read_text(), "alias a=b\n")
         self.assertIn("would give your terminal the ws-host-pretty prompt", doc["data"]["would"])
 
     def test_a_block_the_person_edited_is_never_put_back(self):
-        self.advance()
+        self.ensure()
         edited = self.bashrc.read_text().replace("ws-host-pretty.omp.json", "my-own.omp.json")
         self.bashrc.write_text(edited)
-        _, doc = self.advance()
+        _, doc = self.ensure()
         self.assertEqual(self.bashrc.read_text(), edited)
         self.assertIn("already has its prompt", self.step(doc)[0]["plain"])
 
     def test_a_prompt_that_cannot_be_set_up_never_fails_the_setup(self):
         (self.bin / "oh-my-posh").unlink()
         os.environ["WS_HOST_OFFLINE"] = "1"
-        code, doc = self.advance()
+        code, doc = self.ensure()
         self.assertEqual(code, 0, doc)
         self.assertEqual(self.step(doc)[0]["status"], "warn")
         self.assertIn("ws-host shell add bash", self.step(doc)[0]["plain"])
@@ -359,7 +359,7 @@ class SlowEditor(Home):
         self.fake_code("exit 0\n")
         (self.fakebin / "gh").write_text("#!/bin/sh\nexit 0\n")
         (self.fakebin / "gh").chmod(0o755)
-        code, out = self.run_cmd("workspace", "advance", "--json")
+        code, out = self.run_cmd("workspace", "ensure", "--json")
         docs = [json.loads(l) for l in out.strip().splitlines()]
         editor = [d for d in docs if d["kind"] == "progress" and d["id"] == "editor"][0]
         self.assertIn("downloads a small helper", editor["data"]["plain"])
@@ -367,7 +367,7 @@ class SlowEditor(Home):
 
     def test_vscode_advance_explains_itself_first_and_ends_with_what_to_do_next(self):
         self.fake_code('case "$1" in --list-extensions) echo some.other;; esac\nexit 0\n')
-        code, out = self.run_cmd("vscode", "advance", "--json")
+        code, out = self.run_cmd("vscode", "ensure", "--json")
         docs = [json.loads(l) for l in out.strip().splitlines()]
         self.assertEqual(docs[0]["kind"], "progress")
         self.assertIn("nothing for you to do", docs[0]["data"]["plain"])
@@ -375,5 +375,5 @@ class SlowEditor(Home):
         self.assertEqual(docs[-1]["kind"], "vscode-setup")
         self.assertIn("Workspace: Learn", docs[-1]["data"]["next"])
         self.assertIn("Reload", docs[-1]["data"]["reload"])
-        code, out = self.run_cmd("vscode", "advance", "--dry-run", "--json")
+        code, out = self.run_cmd("vscode", "ensure", "--dry-run", "--json")
         self.assertEqual([json.loads(l)["kind"] for l in out.strip().splitlines()], ["vscode-setup"])

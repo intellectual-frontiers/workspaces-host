@@ -121,7 +121,7 @@ class Private(Workspace):
         path = self.clone_path("acme", "site")
         git(path, "remote", "set-url", "origin", f"http://127.0.0.1:{self.srv.server_port}/acme/site")
         before = wgit.snapshot(path)
-        code, doc = self.run_json("repo", "advance", "--all")
+        code, doc = self.run_json("repo", "sync", "--all")
         self.assertEqual(code, 1)
         self.assertEqual(doc["data"]["repositories"][0]["outcome"], "failed")
         self.assertIn("could not read Username", doc["data"]["repositories"][0]["git"])
@@ -137,8 +137,8 @@ class Advancing(Workspace):
         self.run_cmd("repo", "add", "--all")
         self.path = self.clone_path("acme", "site")
 
-    def advance(self):
-        code, doc = self.run_json("repo", "advance", "--all")
+    def sync(self):
+        code, doc = self.run_json("repo", "sync", "--all")
         return code, doc["data"]["repositories"][0], doc
 
     def assert_untouched(self, before):
@@ -155,7 +155,7 @@ class Advancing(Workspace):
     def test_it_fast_forwards(self):
         self.upstream_commit(self.up, "new.txt", "n\n")
         self.upstream_commit(self.up, "new2.txt", "n\n")
-        code, r, _ = self.advance()
+        code, r, _ = self.sync()
         self.assertEqual((code, r["outcome"], r["commits"]), (0, "updated", 2))
         self.assertTrue((self.path / "new2.txt").exists())
 
@@ -164,7 +164,7 @@ class Advancing(Workspace):
         git(self.path, "commit", "-am", "my unpushed work")
         self.upstream_commit(self.up, "README.md", "one\nTHEIRS\nthree\n")
         before = wgit.snapshot(self.path)
-        code, r, doc = self.advance()
+        code, r, doc = self.sync()
         self.assertEqual((code, r["outcome"]), (0, "skipped"))
         self.assertIn("safe", r["plain"])
         self.assertIn("both moved on", r["plain"])
@@ -177,7 +177,7 @@ class Advancing(Workspace):
         git(self.path, "add", "-A")
         git(self.path, "commit", "-m", "mine")
         before = wgit.snapshot(self.path)
-        code, r, _ = self.advance()
+        code, r, _ = self.sync()
         self.assertEqual((code, r["outcome"], r["ahead"]), (0, "current", 1))
         self.assertIn("not pushed", r["plain"])
         self.assert_untouched(before)
@@ -186,7 +186,7 @@ class Advancing(Workspace):
         (self.path / "other.txt").write_text("edited\n")
         self.upstream_commit(self.up, "new.txt", "n\n")
         before = wgit.snapshot(self.path)
-        code, r, _ = self.advance()
+        code, r, _ = self.sync()
         self.assertEqual((code, r["outcome"]), (0, "skipped"))
         self.assertIn("have not committed", r["plain"])
         self.assert_untouched(before)
@@ -195,7 +195,7 @@ class Advancing(Workspace):
     def test_no_upstream_is_skipped(self):
         git(self.path, "checkout", "-q", "-b", "local-only")
         before = wgit.snapshot(self.path)
-        code, r, _ = self.advance()
+        code, r, _ = self.sync()
         self.assertEqual((code, r["outcome"]), (0, "skipped"))
         self.assertIn("not connected", r["plain"])
         self.assert_untouched(before)
@@ -203,7 +203,7 @@ class Advancing(Workspace):
     def test_a_detached_head_is_skipped(self):
         git(self.path, "checkout", "-q", "--detach")
         before = wgit.snapshot(self.path)
-        code, r, _ = self.advance()
+        code, r, _ = self.sync()
         self.assertEqual((code, r["outcome"]), (0, "skipped"))
         after = wgit.snapshot(self.path)
         self.assertEqual((after["head"], after["status"], after["stash"]), (before["head"], before["status"], ""))
@@ -216,7 +216,7 @@ class Advancing(Workspace):
         git(self.path, "rebase", "@{u}", check=False)   # conflicts: a rebase is now in progress
         self.assertIsNotNone(wgit.operation_in_progress(self.path))
         before = wgit.snapshot(self.path)
-        code, r, _ = self.advance()
+        code, r, _ = self.sync()
         self.assertEqual((code, r["outcome"]), (0, "skipped"))
         self.assertIn("rebase", r["plain"])
         self.assertEqual(wgit.snapshot(self.path), before)
@@ -224,7 +224,7 @@ class Advancing(Workspace):
     def test_untracked_files_do_not_block_an_update(self):
         (self.path / "scratch.txt").write_text("s\n")
         self.upstream_commit(self.up, "new.txt", "n\n")
-        code, r, _ = self.advance()
+        code, r, _ = self.sync()
         self.assertEqual((code, r["outcome"]), (0, "updated"))
         self.assertEqual((self.path / "scratch.txt").read_text(), "s\n")
 
@@ -232,7 +232,7 @@ class Advancing(Workspace):
         (self.path / "new.txt").write_text("mine, untracked\n")
         self.upstream_commit(self.up, "new.txt", "theirs\n")
         before = wgit.snapshot(self.path)
-        code, r, _ = self.advance()
+        code, r, _ = self.sync()
         self.assertEqual((code, r["outcome"]), (0, "skipped"))
         self.assertIn("overwrite", r["plain"])
         self.assertIn("git", r)
@@ -248,7 +248,7 @@ class Advancing(Workspace):
             return real(cwd, *args, **kw)
         self.upstream_commit(self.up, "new.txt", "n\n")
         with mock.patch.object(wgit, "run", spy):
-            self.advance()
+            self.sync()
         self.assertFalse({"pull", "rebase", "stash", "reset", "checkout", "merge"} & (set(calls) - {"merge"}))
         self.assertLessEqual({c for c in calls if c == "merge"}, {"merge"})
 
@@ -262,12 +262,12 @@ class Advancing(Workspace):
             return real(cwd, *args, **kw)
         self.upstream_commit(self.up, "new.txt", "n\n")
         with mock.patch.object(wgit, "run", spy):
-            self.advance()
+            self.sync()
         self.assertTrue(seen and all("--ff-only" in a for a in seen))
 
     def test_a_skip_is_exit_0_and_listed_in_the_resource(self):
         (self.path / "other.txt").write_text("edited\n")
-        code, doc = self.run_json("repo", "advance", "--all")
+        code, doc = self.run_json("repo", "sync", "--all")
         self.assertEqual(code, 0)
         self.assertEqual(doc["data"]["repositories"][0]["status"], "skip")
         self.assertIn("left alone", doc["data"]["plain"])
@@ -275,7 +275,7 @@ class Advancing(Workspace):
     def test_dry_run_changes_nothing(self):
         self.upstream_commit(self.up, "new.txt", "n\n")
         before = wgit.snapshot(self.path)
-        code, doc = self.run_json("repo", "advance", "--all", "--dry-run")
+        code, doc = self.run_json("repo", "sync", "--all", "--dry-run")
         self.assertEqual(code, 0)
         self.assertEqual(wgit.snapshot(self.path), before)
         self.assertFalse((self.path / "new.txt").exists())

@@ -120,7 +120,7 @@ test("in Restricted Mode nothing runs and the status says why", async () => {
     const top = await children(vscode);
     assert.match(top[0].item.label, /trust/i);
     await vscode.calls.commands.get("wsHost.runChecks")();
-    await vscode.calls.commands.get("wsHost.advance")();
+    await vscode.calls.commands.get("wsHost.ensure")();
     assert.deepStrictEqual(f.calls(), []);
   } finally { restore(); f.done(); }
 });
@@ -129,7 +129,7 @@ test("it registers no command that takes an action, a command line or a resource
   const f = new Fake();
   const { vscode, restore } = await boot(f);
   try {
-    assert.deepStrictEqual([...vscode.calls.commands.keys()].sort(), ["wsHost.advance", "wsHost.getHelp", "wsHost.learn", "wsHost.refresh", "wsHost.runChecks", "wsHost.signIn"]);
+    assert.deepStrictEqual([...vscode.calls.commands.keys()].sort(), ["wsHost.ensure", "wsHost.getHelp", "wsHost.learn", "wsHost.refresh", "wsHost.runChecks", "wsHost.signIn"]);
     const before = f.calls().length;
     for (const [, fn] of vscode.calls.commands) { if (fn.length > 0) assert.fail("a command declares parameters"); }
     // fabricated arguments change nothing: none of them runs a decision

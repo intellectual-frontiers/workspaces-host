@@ -94,7 +94,7 @@ a kit installs what the distribution ships, so two machines may differ, and
   person's login shell or their shell startup files (0005-help-and-docs FR-011);
   FR-015 is the one command that edits a startup file, and only when asked.
 - **FR-015**: `shell add bash|fish` MUST give that shell the `oh-my-posh` prompt
-  with the `ws-host-pretty` theme, or `ws-host-plain` with `--plain`, and `workspace advance` MUST do the same by default
+  with the `ws-host-pretty` theme, or `ws-host-plain` with `--plain`, and `workspace ensure` MUST do the same by default
   (0006-onboarding FR-022); nothing else does. It MUST add one block between
   marker lines to `~/.bashrc` or to fish's `config.fish`, naming the marker so a
   person can delete it, MUST keep a copy of the file in the person's state
@@ -106,7 +106,7 @@ a kit installs what the distribution ships, so two machines may differ, and
 
 ## Declared kits
 
-- **FR-012**: `workspace advance` MUST install the kits the cloned repositories
+- **FR-012**: `workspace ensure` MUST install the kits the cloned repositories
   declare in `WS_HOST_KIT` of their `.workspaces-host/ws-host.env`, skipping
   those already installed, and MUST report a kit that is unknown or needs
   `sudo` that cannot be asked for, with the one command that fixes it, without

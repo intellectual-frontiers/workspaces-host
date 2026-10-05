@@ -50,8 +50,8 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "wsHost.advance",
-        "title": "Workspace: Bring everything up to date"
+        "command": "wsHost.ensure",
+        "title": "Workspace: Ensure everything is set up and up to date"
       },
       {
         "command": "wsHost.signIn",

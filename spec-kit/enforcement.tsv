@@ -32,9 +32,9 @@ requirement	mechanism	by	note
 0002-repositories-and-trust FR-013	check	workspaces-host: ws-host test	tests list a repository named by a trusted one as untrusted and ignore a repository's own WS_HOST_TRUSTED, with doctor saying so
 0002-repositories-and-trust FR-014	check	workspaces-host: ws-host test	tests confirm a decision only from a terminal answer or the editor's confirmation, refuse it otherwise, keep it off MCP, and list what --trust trusts
 0002-repositories-and-trust FR-015	check	workspaces-host: ws-host test	tests record the commit and make doctor warn, not fail, when a trusted repository's kits changed
-0002-repositories-and-trust FR-016	check	workspaces-host: ws-host test	tests run workspace advance end to end: steps, a repeat that changes nothing, past a failure, dry run, status
+0002-repositories-and-trust FR-016	check	workspaces-host: ws-host test	tests run workspace ensure end to end: steps, a repeat that changes nothing, past a failure, dry run, status
 0002-repositories-and-trust FR-017	check	workspaces-host: ws-host test	tests check doctor recommends pull.ff only, never applies it, and workspace set applies it on request
-0002-repositories-and-trust FR-018	check	workspaces-host: ws-host test	tests check a clone's ignored and untracked state and the person's git configuration after advance
+0002-repositories-and-trust FR-018	check	workspaces-host: ws-host test	tests check a clone's ignored and untracked state and the person's git configuration after repo sync
 0003-kits FR-001	check	workspaces-host: ws-host test	tests run kit list, show and an unknown kit, and that actions print as one line
 0003-kits FR-002	check	workspaces-host: ws-host test	tests check kit add is setup and cli only, says it will use sudo before running, uses sudo -n without a terminal and says what to run when refused
 0003-kits FR-003	check	workspaces-host: ws-host test	tests resolve a|b names and report a package the distribution lacks without stopping the install
@@ -46,7 +46,7 @@ requirement	mechanism	by	note
 0003-kits FR-009	check	workspaces-host: ws-host test	tests check press's packages; the container runs the lualatex check on Debian and Ubuntu
 0003-kits FR-010	check	workspaces-host: ws-host test	tests check rust's version and download; the container runs the rustc check and a cargo build of a reqwest and rustls crate
 0003-kits FR-011	check	workspaces-host: ws-host test	tests check every download's checksum form, address template and architecture
-0003-kits FR-012	check	workspaces-host: ws-host test	tests run workspace advance over declared kits (see 0002 FR-016); a declared kit that is unknown is reported
+0003-kits FR-012	check	workspaces-host: ws-host test	tests run workspace ensure over declared kits (see 0002 FR-016); a declared kit that is unknown is reported
 0003-kits FR-013	check	workspaces-host: ws-host test	tests check doctor says a trusted repository's kits are not loaded yet
 0004-editor-extension FR-001	check	workspaces-host: ws-host test	a test lists vscode/ (extension.js and package.json only), forbids dependencies and scripts, and checks no node_modules
 0004-editor-extension FR-002	check	workspaces-host: ws-host test	tests check the extension names no other orchestrator and discovers launchers only of trusted repositories
@@ -85,10 +85,10 @@ requirement	mechanism	by	note
 0006-onboarding FR-001	check	workspaces-host: ws-host test	tests run install.sh as an ordinary user with a stand-in package manager: it says what it will install and that it needs a password, installs through sudo, names the command when it cannot, and does nothing with WS_HOST_NO_APT
 0006-onboarding FR-002	check	workspaces-host: ws-host test	a test runs the installer to its end with the workspace setup and checks the plain sign-in message
 0006-onboarding FR-003	check	workspaces-host: ws-host test	the container verification runs install on Debian 13 and Ubuntu 24.04 from a minimal image; the instructions are checked by the guide's tests
-0006-onboarding FR-004	check	workspaces-host: ws-host test	tests check the WS_HOST_KIT default, an empty setting, and that advance installs those kits first
-0006-onboarding FR-005	check	workspaces-host: ws-host test	tests check advance stops before copying when GitHub says not signed in, with one action and exit 0, and the guide prescribes one sign-in
-0006-onboarding FR-006	check	workspaces-host: ws-host test	tests check advance installs the extension when code is present, offers vscode advance and applies no setting, and says what to do when code is missing
-0006-onboarding FR-007	check	workspaces-host: ws-host test	tests run vscode advance: extensions installed or skipped, settings added and never changed, repeatable, dry run
+0006-onboarding FR-004	check	workspaces-host: ws-host test	tests check the WS_HOST_KIT default, an empty setting, and that workspace ensure installs those kits first
+0006-onboarding FR-005	check	workspaces-host: ws-host test	tests check workspace ensure stops before copying when GitHub says not signed in, with one action and exit 0, and the guide prescribes one sign-in
+0006-onboarding FR-006	check	workspaces-host: ws-host test	tests check workspace ensure installs the extension when code is present, offers vscode ensure and applies no setting, and says what to do when code is missing
+0006-onboarding FR-007	check	workspaces-host: ws-host test	tests run vscode ensure: extensions installed or skipped, settings added and never changed, repeatable, dry run
 0006-onboarding FR-008	check	workspaces-host: ws-host test	tests check the recommended set and baseline and that the generated reference lists them
 0006-onboarding FR-009	check	workspaces-host: ws-host test	tests check the WSL machine settings path, a commented file left alone with the values listed, and the backup
 0006-onboarding FR-010	check	workspaces-host: ws-host test	a test reads pages.yml for the Pages actions, main, the tests and fresh before the build, and the maintainer note on the one setting; the deploy itself runs on GitHub
@@ -103,7 +103,7 @@ requirement	mechanism	by	note
 0006-onboarding FR-019	check	workspaces-host: ws-host test	tests check repo add puts a new address on the person's list, keeps their other lines and the starters, copies it, and changes nothing in a dry run
 0006-onboarding FR-020	check	workspaces-host: ws-host test	tests check the spinner on a terminal after the delay, nothing for a quick step, a line left by a slow one, the reason for a failure, nothing in a pipe, JSON or a dumb terminal, the download size, the installer's own spinner on a pseudo-terminal, the first VS Code call in WSL warned about, showing its download size, and timing out plainly
 0006-onboarding FR-021	check	workspaces-host: ws-host test	tests check install.sh ends with the one line to start a new login shell when ~/.local/bin was not on the PATH and says nothing when it was, and that uv's installer is told not to edit shell files
-0006-onboarding FR-022	check	workspaces-host: ws-host test	tests check the default kits are base and shell, the prompt given to bash by workspace advance and not in a dry run or with WS_HOST_PROMPT=no, never failing setup, that setup leaves an existing prompt block alone, and that ws-host-plain holds no private-use font glyph while both themes print a prompt
+0006-onboarding FR-022	check	workspaces-host: ws-host test	tests check the default kits are base and shell, the prompt given to bash by workspace ensure and not in a dry run or with WS_HOST_PROMPT=no, never failing setup, that setup leaves an existing prompt block alone, and that ws-host-plain holds no private-use font glyph while both themes print a prompt
 0006-onboarding FR-023	check	workspaces-host: ws-host test	tests run the generated bash script on every command, noun, verb, option and kit, the fish script where fish is installed, the dynamic repository values at Tab time, the written files, a person's own file left alone, a second run changing nothing, and that no startup file is edited
 0006-onboarding FR-024	check	workspaces-host: ws-host test	tests check the sections, marks, counts, wrapping within the terminal's width, long names, fixes and next steps in cyan for doctor, kits, repositories and commands, that the first line is the plain sentence, and that a pipe, JSON and HTML are not decorated
-0006-onboarding FR-025	check	workspaces-host: ws-host test	tests use a local remote to check update status and advance (news listed, forward only, changes of the person's, diverged and ahead copies and an unreachable remote left alone), the note, the doctor row, the six-hour rule, and the bash block run in a shell with a stand-in ws-host
+0006-onboarding FR-025	check	workspaces-host: ws-host test	tests use a local remote to check update --check and update (news listed, forward only, changes of the person's, diverged and ahead copies and an unreachable remote left alone), the note, the doctor row, the six-hour rule, and the bash block run in a shell with a stand-in ws-host

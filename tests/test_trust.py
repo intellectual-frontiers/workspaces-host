@@ -119,7 +119,7 @@ class Trust(Workspace):
         self.decide("site", "--trusted")
         up = self.site
         self.upstream_commit(up, ".workspaces-host/kits/k.py", "# changed\n")
-        self.run_cmd("repo", "advance", "--all")
+        self.run_cmd("repo", "sync", "--all")
         code, doc = self.run_json("doctor")
         self.assertEqual(code, 0)
         self.assertTrue(any(c["name"] == "trust" and c["status"] == "warn" and "changed" in c["detail"] for c in doc["data"]["checks"]))

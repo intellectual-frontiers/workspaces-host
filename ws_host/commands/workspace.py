@@ -1,4 +1,4 @@
-"""`workspace advance|status|set` (0002-repositories-and-trust FR-016, FR-017): the one command a person runs first."""
+"""`workspace ensure|status|set` (0002-repositories-and-trust FR-016, FR-017): the one command a person runs first."""
 from __future__ import annotations
 
 import shutil
@@ -34,18 +34,18 @@ def workspace_status(ctx):
     have = {k["name"]: k["installed"] for k in doctor_cmd.kits_state.kit_report()}
     kit_rows = [{"name": k, "status": "ok" if have.get(k) else "warn", "installed": bool(have.get(k)), "needed_by": v} for k, v in sorted(kits.items())]
     needs = sum(not r["cloned"] or r.get("behind") for r in rows) + sum(not k["installed"] for k in kit_rows)
-    plain = "Everything is in place." if rows and not needs else ("I do not know any repositories yet. Add one with: ws-host repo add github.com/ORG/REPO" if not rows else "Some things need doing; `workspace advance` does them.")
+    plain = "Everything is in place." if rows and not needs else ("I do not know any repositories yet. Add one with: ws-host repo add github.com/ORG/REPO" if not rows else "Some things need doing; `workspace ensure` does them.")
     return Resource("workspace-status", "workspace", {"plain": plain, "repositories": rows, "kits": kit_rows, "ignored": invalid},
-                    actions=[Action(("workspace", "advance"), "Bring everything up to date")] if rows else [])
+                    actions=[Action(("workspace", "ensure"), "Ensure everything is set up and up to date")] if rows else [])
 
 
 def _step(name, plain):
     return Resource("progress", name, {"plain": plain, "step": name})
 
 
-@command("workspace", "advance", category="setup", summary="Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health",
+@command("workspace", "ensure", category="setup", summary="Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health",
          surfaces=("cli", "editor"))
-def workspace_advance(ctx):
+def workspace_ensure(ctx):
     cfg = config.load()
     steps = []
     mine = {k: ["your configuration"] for k in cfg.kits()}
@@ -64,10 +64,10 @@ def workspace_advance(ctx):
     steps.append({"name": "sign-in", "status": "ok" if all(f["signed_in"] for f in a.data["forges"]) else "warn", "plain": a.data["plain"]})
     if github and github["signed_in"] is False and not ctx.dry_run:
         # 0006-onboarding FR-005: sign in first, once, in one prescribed way, before anything private is copied.
-        yield Resource("workspace-advance", "needs-sign-in",
+        yield Resource("workspace-ensure", "needs-sign-in",
                        {"plain": "Sign in to GitHub first. It takes a code and a web page, and then you run this again.", "steps": steps,
-                        "next": "Run `ws-host auth new github`, follow the code it shows, then run `ws-host workspace advance` again."},
-                       actions=[Action(("auth", "new"), "Sign in to GitHub", {"forge": "github"}), Action(("workspace", "advance"), "Run this again")] + kit_actions)
+                        "next": "Run `ws-host auth new github`, follow the code it shows, then run `ws-host workspace ensure` again."},
+                       actions=[Action(("auth", "new"), "Sign in to GitHub", {"forge": "github"}), Action(("workspace", "ensure"), "Run this again")] + kit_actions)
         return
     found, invalid = repos.known(cfg)
     if ctx.dry_run:
@@ -75,7 +75,7 @@ def workspace_advance(ctx):
         todo = [("would copy " if not r["cloned"] else "would check ") + r["id"] for r in rows]
         if cfg.prompt_theme():
             todo.append(f"would give your terminal the {cfg.prompt_theme()} prompt")
-        yield Resource("workspace-advance", "dry-run", {"plain": "Nothing was changed. This is what I would do.", "steps": steps,
+        yield Resource("workspace-ensure", "dry-run", {"plain": "Nothing was changed. This is what I would do.", "steps": steps,
                                                         "would": todo, "kits": declared_kits(cfg)})
         return
     yield _step("copy", "Copying repositories that are missing...")
@@ -91,7 +91,7 @@ def workspace_advance(ctx):
     steps.append({"name": "copy", "status": "fail" if any(r["outcome"] == "failed" for r in added) else "ok",
                   "plain": repos.summarize(added) if added else "Nothing was missing."})
     yield _step("update", "Bringing repositories up to date...")
-    updated = [repos.advance(r, cfg) for r in sorted(repos.known(cfg)[0], key=str) if (r.path(cfg) / ".git").exists()]
+    updated = [repos.sync(r, cfg) for r in sorted(repos.known(cfg)[0], key=str) if (r.path(cfg) / ".git").exists()]
     steps.append({"name": "update", "status": "fail" if any(r["outcome"] == "failed" for r in updated) else "ok", "plain": repos.summarize(updated)})
     try:     # ws-host's own copy may just have moved forward; the note a new window shows must follow it
         mine = selfupdate.state(False)
@@ -114,11 +114,11 @@ def workspace_advance(ctx):
                 steps.append({"name": "editor", "status": "ok", "plain": er["plain"]})
             else:
                 steps.append({"name": "editor", "status": "ok", "plain": "The VS Code extension is installed."})
-            editor_actions.append(Action(("vscode", "advance"), "Set up VS Code with the recommended extensions and settings"))
+            editor_actions.append(Action(("vscode", "ensure"), "Set up VS Code with the recommended extensions and settings"))
         except WsError as e:
             steps.append({"name": "editor", "status": "fail", "plain": e.plain})
     else:
-        steps.append({"name": "editor", "status": "warn", "plain": "VS Code is not reachable from this terminal yet. Install it on Windows, open it once from here with `code .`, then run `ws-host vscode advance`."})
+        steps.append({"name": "editor", "status": "warn", "plain": "VS Code is not reachable from this terminal yet. Install it on Windows, open it once from here with `code .`, then run `ws-host vscode ensure`."})
     yield _step("doctor", "Checking this machine's health...")
     d = doctor_cmd.report()
     bad = [c for c in d["checks"] if c["status"] == "fail"]
@@ -128,7 +128,7 @@ def workspace_advance(ctx):
     actions = _auth_actions(results, cfg) + kit_actions + kit_result.get("actions", []) + editor_actions
     plain = ("Everything is up to date." if not failed and not any(r["outcome"] in ("skipped",) for r in results) else
              "Done, with a few things to look at." if not failed else "Done, but some things did not work. The steps below say which.")
-    yield Resource("workspace-advance", "workspace", {"plain": plain, "steps": steps, "repositories": results, "ignored": invalid},
+    yield Resource("workspace-ensure", "workspace", {"plain": plain, "steps": steps, "repositories": results, "ignored": invalid},
                    actions=actions, status=FAILED if failed else OK)
 
 

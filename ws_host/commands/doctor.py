@@ -32,7 +32,7 @@ def report() -> dict:
         checks.append(_check("path", "warn", f"{paths.bin_dir()} is not on your PATH; add this line to your shell's startup file: export PATH=\"$HOME/.local/bin:$PATH\""))
     note = selfupdate.read_notice()
     checks.append(_check("ws-host version", "warn" if note else "ok", note.split("  ")[0] if note else "up to date, as far as the last look knew",
-                         **({"fix": "update advance"} if note else {})))
+                         **({"fix": "update"} if note else {})))
     cfg = config.load()
     for p in cfg.problems:
         checks.append(_check("configuration", "fail", p))

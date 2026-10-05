@@ -7,10 +7,10 @@ from __future__ import annotations
 import shutil
 import textwrap
 
-KIND_EMOJI = {"doctor": "🩺", "kit-list": "🧰", "kit": "🧰", "kit-add": "🧰", "workspace-advance": "🚀", "workspace-status": "🗺️", "workspace": "🗺️",
-              "repo-list": "📁", "repo-status": "📁", "repo-add": "📁", "repo-advance": "📁", "auth-status": "🔐", "auth-new": "🔐", "check": "🔍",
+KIND_EMOJI = {"doctor": "🩺", "kit-list": "🧰", "kit": "🧰", "kit-add": "🧰", "workspace-ensure": "🚀", "workspace-status": "🗺️", "workspace": "🗺️",
+              "repo-list": "📁", "repo-status": "📁", "repo-add": "📁", "repo-sync": "📁", "auth-status": "🔐", "auth-new": "🔐", "check": "🔍",
               "vscode-setup": "💻", "vscode-add": "💻", "shell-add": "🎨", "completion-add": "⌨️", "command-list": "📋", "command": "📋",
-              "update-status": "🔄", "update-advance": "🔄", "context": "🧾", "test": "🧪", "docs-build": "📚", "docs-generate": "📚", "fresh": "🧹"}
+              "update-check": "🔄", "update": "🔄", "context": "🧾", "test": "🧪", "docs-build": "📚", "docs-generate": "📚", "fresh": "🧹"}
 STATUS_EMOJI = {"ok": "✅", "passed": "✅", "current": "✅", "installed": "✅", "already": "✅", "done": "✅", "cloned": "✅", "updated": "✅",
                 "warn": "⚠️", "warning": "⚠️", "skipped": "⏭️", "skip": "⏭️", "left-alone": "⏭️", "missing": "⬜", "would-install": "🔮", "would-add": "🔮",
                 "would-write": "🔮", "info": "ℹ️", "fail": "❌", "failed": "❌", "stale": "❌"}

@@ -16,13 +16,13 @@ def start():
              "You never type a password into this window.\n\n    ws-host auth new github"),
             ("2️⃣  Copy your starter repositories",
              "Two repositories come with you: .github, the shared examples and rules, and workspaces-host, this tool. This copies them to your "
-             "workspaces folder and keeps them up to date without ever touching your own changes. Run it as often as you like.\n\n    ws-host workspace advance"),
+             "workspaces folder and keeps them up to date without ever touching your own changes. Run it as often as you like.\n\n    ws-host workspace ensure"),
             ("3️⃣  Open VS Code",
              "Install VS Code on Windows from https://code.visualstudio.com/ and add its WSL extension, then open your first repository from here:\n\n"
              "    cd ~/workspaces/github.com/intellectual-frontiers/.github\n    code ."),
             ("4️⃣  Let ws-host set VS Code up",
              "It installs the Workspace extension, a short list of helpful extensions and a few safe settings, and never changes a setting you made. "
-             "Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.\n\n    ws-host vscode advance"),
+             "Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.\n\n    ws-host vscode ensure"),
             ("5️⃣  Keep going in VS Code",
              "Press Ctrl+Shift+P and run Workspace: Learn. Every page there has a button for each step, and the status line at the bottom says in plain words whether "
              "your machine is well. You can do everything else from VS Code."),
@@ -42,17 +42,17 @@ def start():
              "The guide has the three steps, and ws-host help shell has the rest. To skip the font, use the plain prompt:\n\n    ws-host shell add bash --plain"),
             ("🔄 Stay up to date",
              "ws-host improves often. A new terminal window tells you in one line when a newer version is waiting. To get it, and see what is new:\n\n"
-             "    ws-host update advance"),
+             "    ws-host update"),
             ("🆘 Stuck?",
              "Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help in VS Code for a report with no passwords in it, and paste it to "
              "someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/"),
         ),
         "steps": (
             Step("Sign in to GitHub", ("auth", "new"), {"forge": "github"}),
-            Step("Copy your starter repositories", ("workspace", "advance")),
-            Step("Set VS Code up", ("vscode", "advance")),
+            Step("Copy your starter repositories", ("workspace", "ensure")),
+            Step("Set VS Code up", ("vscode", "ensure")),
             Step("Give your terminal the prompt again", ("shell", "add"), {"shell": "bash"}, "setup already did this once"),
-            Step("Update ws-host", ("update", "advance")),
+            Step("Update ws-host", ("update",)),
             Step("See where things stand", ("workspace", "status")),
             Step("Check your machine", ("doctor",)),
         ),

@@ -3,7 +3,7 @@
 
 The Workspace extension is not on the VS Code Marketplace, and that is on purpose. It lives in the `workspaces-host` copy on your computer,
 in a folder called `vscode`. `ws-host vscode add` links that folder into VS Code's extensions folder (`~/.vscode-server/extensions` when
-VS Code works inside Debian). Because it is the same folder, updating `ws-host` updates the extension: run `ws-host workspace advance`, then
+VS Code works inside Debian). Because it is the same folder, updating `ws-host` updates the extension: run `ws-host workspace ensure`, then
 reload the VS Code window. There is nothing to download, nothing to approve, and no account.
 
 If VS Code cannot see the extension folder yet, `ws-host vscode add` builds a `.vsix` file and installs it with VS Code's own `code`
