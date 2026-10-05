@@ -1,0 +1,26 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* The multi-root workspace file in the person's workspaces folder: add the repositories that are not listed, fill the settings and the
+       recommendation they have not set, and keep everything else (0004-editor-extension FR-023, FR-028). `.folders` holds
+       {path (relative to this folder), name} rows from ws-host, which knows which repositories are cloned. */ -}}
+{{- $raw := .chezmoi.stdin | trim -}}
+{{- $cur := dict -}}
+{{- if $raw -}}{{- $cur = fromJson $raw -}}{{- end -}}
+{{- $folders := default (list) (get $cur "folders") -}}
+{{- $have := dict -}}
+{{- range $folders -}}{{- $_ := set $have (trimPrefix "./" .path) true -}}{{- end -}}
+{{- $changed := false -}}
+{{- range .folders -}}
+{{-   if not (hasKey $have (trimPrefix "./" .path)) -}}{{- $folders = append $folders (dict "path" .path "name" .name) -}}{{- $changed = true -}}{{- end -}}
+{{- end -}}
+{{- $settings := default (dict) (get $cur "settings") -}}
+{{- $fill := dict "window.title" "Workspaces${separator}${rootName}${separator}${activeEditorShort}" "explorer.compactFolders" false -}}
+{{- range $k, $v := $fill -}}{{- if not (hasKey $settings $k) -}}{{- $_ := set $settings $k $v -}}{{- $changed = true -}}{{- end -}}{{- end -}}
+{{- $ext := default (dict) (get $cur "extensions") -}}
+{{- $recs := default (list) (get $ext "recommendations") -}}
+{{- if not (has "intellectual-frontiers.if-console" $recs) -}}{{- $recs = append $recs "intellectual-frontiers.if-console" -}}{{- $_ := set $ext "recommendations" $recs -}}{{- $changed = true -}}{{- end -}}
+{{- if $changed -}}
+{{-   $_ := set $cur "folders" $folders -}}{{- $_ := set $cur "settings" $settings -}}{{- $_ := set $cur "extensions" $ext -}}
+{{ toPrettyJson $cur }}
+{{ else -}}
+{{ .chezmoi.stdin -}}
+{{ end -}}

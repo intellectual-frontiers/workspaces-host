@@ -1,0 +1,16 @@
+{{- /* Add the settings the person has not set; never change one they have. A file with comments cannot be read, so fromJson fails and the file is left as it was. */ -}}
+{{- $want := dict
+      "files.autoSave" "afterDelay"
+      "git.autofetch" true
+      "git.enableSmartCommit" false
+      "workbench.startupEditor" "none"
+      "security.workspace.trust.enabled" true
+      "extensions.ignoreRecommendations" false
+      "terminal.integrated.defaultProfile.linux" (ternary "fish" "bash" (not (empty (lookPath "fish"))))
+      "terminal.integrated.fontFamily" "'MesloLGS NF', 'CaskaydiaCove Nerd Font', 'DejaVu Sans Mono', monospace" -}}
+{{- $raw := .chezmoi.stdin | trim -}}
+{{- $cur := dict -}}
+{{- if $raw -}}{{- $cur = fromJson $raw -}}{{- end -}}
+{{- $missing := false -}}
+{{- range $k, $v := $want -}}{{- if not (hasKey $cur $k) -}}{{- $missing = true -}}{{- end -}}{{- end -}}
+{{- if $missing -}}{{ merge $cur $want | toPrettyJson }}{{ "\n" }}{{- else -}}{{ .chezmoi.stdin }}{{- end -}}

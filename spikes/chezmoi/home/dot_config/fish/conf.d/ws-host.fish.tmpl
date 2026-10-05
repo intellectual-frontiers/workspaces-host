@@ -1,0 +1,14 @@
+# managed by ws-host (chezmoi source: ws_host/home). Do not edit: change it with `ws-host shell add fish` or delete this file to go back to your old prompt.
+{{- if eq .prompt "yes" }}
+if status is-interactive
+  fish_add_path -g $HOME/.local/bin
+  if command -q oh-my-posh
+    oh-my-posh init fish --config "$HOME/.local/share/workspaces-host/themes/{{ .theme }}.omp.json" | source
+  end
+  # ws-host looks for a newer version in the background, at most every six hours, and says here when one is waiting.
+  set -l _wsh_state (set -q XDG_STATE_HOME; and echo $XDG_STATE_HOME; or echo $HOME/.local/state)/workspaces-host
+  if test -s $_wsh_state/update-available
+    set_color brcyan; echo "🔄 "(cat $_wsh_state/update-available); set_color normal
+  end
+end
+{{- end }}

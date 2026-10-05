@@ -125,3 +125,43 @@ down; Chromium inside a sandbox-enabled desktop session; mise upgrades beyond th
 
 `run.sh` (main reproducible script; steps 1 to 7 and 6b), `agora_equiv.py` (agora's checks against mise installs),
 `vscode-terminal-env/` (real VS Code per-folder terminal environment), `detect_personal.py` (read-only brew and direnv detection).
+
+## Decisions after review (2026-10-05)
+
+Approved: mise as the single prerequisite, pinned per repository; `.workspaces-host/` with `*.d` TOML files; vendored shared entries
+with a drift check; chezmoi for ws-host's managed configuration (see `../chezmoi/NOTES.md`); forwarding aliases for one release; tagged
+releases and a stable channel; the release pipeline first. Not approved: `eidolon` in ws-host's release canary. No Debian 12 to 13
+one-liner. The default prompt theme is `ws-host-pretty`, assuming a Nerd Font.
+
+**ws-host is distributed as a wheel on PyPI** (a `pyproject.toml` project built to a wheel and sdist, published from GitHub Actions
+with PyPI trusted publishing), the route the Python Packaging Authority documents and uv and pipx consume. It is consumed through
+mise's `pypi:` backend: with uv 0.12.10 or later, `mise lock` records the full dependency graph with wheel hashes in a sidecar
+`uv.lock` referenced from `mise.lock` by SHA-256, and a locked install on a fresh machine works and refuses an edited sidecar (tested
+with `yamllint`). The names `ws-host`, `workspaces-host` and `intellectual-frontiers-ws-host` are all unclaimed on PyPI today.
+A single-file zipapp (PEP 441) is a standard-library option, but it is not how Python applications are normally distributed.
+
+**Hazards 1 to 3 above are not made platform requirements.** The rule was to adopt them only if Omarchy or other popular mise setups do,
+and checking Omarchy (`basecamp/omarchy`, 2026-10-05) they do not:
+
+- Omarchy uses mise for developer runtimes with `mise use --global <tool>@latest` and `mise up`; no `mise.lock`, no checksums, no
+  hash-suffixed names, no scrubbed environment.
+- It activates mise in interactive bash (`eval "$(mise activate bash)"`) and also uses shims (`mise activate bash --shims` for the
+  graphical session, the shims directory on PATH for SSH). It does not strip shims; its own tests treat a shim as a lazy launcher that
+  must not be executed to probe a tool.
+- It does confirm the layout: system defaults in `/etc/mise/conf.d/*.toml` that user and project config override, tests in `shell.d`
+  and `acceptance.d`, `http:` tools with `bin_path`, and lazy launchers in `~/.local/bin` that run `mise use -g` then `mise x` on
+  first use. It also sets `MISE_MINIMUM_RELEASE_AGE=0` to bypass mise's release-age cooldown when updating.
+
+So, conventionally:
+
+1. **Identity.** Keep mise's own name-plus-version identity. The shared entries are vendored byte-for-byte from the `.github` catalog,
+   so one name and version is always one artifact; a provider that needs a different artifact gives it a different name or version. A
+   check (`provider enable`, `doctor`) fails when two enabled providers declare one name and version with different URL or checksum.
+   The hash-suffixed name stays a tested fallback, not a requirement.
+2. **Scrubbing.** Providers keep scrubbing their own children as `agora` does today (`SCRUBBED` in its toolchain code); ws-host does
+   not impose `env -i`.
+3. **Shims.** ws-host activates mise the standard way (`mise activate`, and `--shims` for non-interactive sessions) and documents that a
+   pinned-only tool is run inside its provider's folder or from the Console, whose terminals get the folder's environment.
+
+Omarchy's lazy launchers (install on first use) and its `/etc/mise/conf.d` defaults overridden by user and project files are worth
+copying for ws-host's own first-run and overrides.

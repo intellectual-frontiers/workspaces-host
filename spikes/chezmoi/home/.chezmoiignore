@@ -1,0 +1,10 @@
+{{- /* VS Code keeps machine settings in ~/.vscode-server under WSL and in the user's own file elsewhere (0006-onboarding FR-009). ws-host says which, from its own detection, so the choice is its to make and a test can flip it. */ -}}
+{{ if .wsl }}
+.config/Code
+{{ else }}
+.vscode-server
+{{ end }}
+{{- /* Files that exist already and are not ws-host's own: ws-host lists them here, from its own check of each file's first line, so chezmoi never replaces a person's file the first time (0003-kits FR-003 style "left alone"). */ -}}
+{{ range .protect }}
+{{ . }}
+{{ end }}
