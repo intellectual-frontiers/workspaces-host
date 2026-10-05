@@ -31,6 +31,6 @@ topic. `ws-host test`, `check`, `doctor` and `fresh` say whether a change is sou
 
 A release is four files on GitHub Releases: the program as a tarball, the same code as a wheel, the Workspaces Console for VS Code, and their checksums. It is
 built on a maintainer's machine from pinned tools, so rebuilding it gives the same bytes, and published by a person with their own `gh` sign-in. No hosted service
-takes part. `mise install --locked`, then `ws-host release build`, `ws-host release check --rebuild` and `ws-host release publish`; `ws-host help release` has the steps.
+takes part. `mise install --locked`, then `ws-host release build`, `ws-host check release` and `ws-host check reproducible` and `ws-host release publish`; `ws-host help release` has the steps.
 
 MIT licence.

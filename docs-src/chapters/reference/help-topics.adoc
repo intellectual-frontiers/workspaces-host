@@ -158,10 +158,11 @@ ws-host release build
 ----
 
 .Check it
-This checks the versions, the checksums, what each file holds, and that the tarball runs where it is unpacked. With --rebuild it also builds everything again and compares every byte, which proves anyone could repeat your build:
+This checks the versions, the checksums, what each file holds, and that the tarball runs where it is unpacked. The second line builds everything again and compares every byte, which proves anyone could repeat your build:
 
 ----
-ws-host release check --rebuild
+ws-host check release
+ws-host check reproducible
 ----
 
 .Publish it
@@ -177,7 +178,8 @@ Nobody follows a tag. They pin a file by its address and its SHA-256; the releas
 .Steps
 
 * Build the release: `ws-host release build`
-* Check the release is the same when rebuilt: `ws-host release check --rebuild`
+* Check the release: `ws-host check release`
+* Check that building it again gives the same bytes: `ws-host check reproducible`
 * Publish the release: `ws-host release publish`
 * Check your machine: `ws-host doctor`
 

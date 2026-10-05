@@ -23,6 +23,11 @@ reg.noun("shell", "Prompt", "terminal", "setup")
 reg.noun("completion", "Tab completion", "keyboard", "setup")
 reg.noun("docs", "Guide", "book")
 reg.noun("release", "Release", "package")
+reg.noun("provider", "Provider", "plug", "kits", {
+    "command": "provider list", "rows": "providers", "id": "name", "label": "name", "description": "plain", "status": "status",
+    "status_map": {"ok": "ok", "warn": "warning", "error": "error"}, "tooltip": ["launcher", "root"]})
+reg.noun("toolchain", "Program", "tools")
+reg.noun("system", "System libraries", "server")
 reg.noun("skill", "Agent skill", "sparkle")
 reg.noun("command", "Command", "terminal-cmd")
 
@@ -34,7 +39,12 @@ for _id, _title, _icon in (
     ("context", "Show Context", None), ("docs build", "Build Guide", "book"), ("docs generate", "Generate Guide Reference", None),
     ("doctor", "Check Machine", "pulse"), ("fresh", "Check Generated Files", None), ("help", "Learn Daily Work", "book"),
     ("kit add", "Install Kit…", "cloud-download"), ("kit list", "List Kits", None), ("kit show", "Show Kit…", None),
-    ("release build", "Build Release", "package"), ("release check", "Check Release", "checklist"), ("release publish", "Publish Release", "cloud-upload"),
+    ("provider add", "Enable Provider…", "plug"), ("provider list", "List Providers", None), ("provider remove", "Disable Provider…", "trash"),
+    ("provider run", "Run With Provider…", "play"), ("provider show", "Show Provider…", None),
+    ("system ensure", "Install System Libraries", "server"),
+    ("toolchain ensure", "Install Programs", "cloud-download"), ("toolchain generate", "Generate Toolchain Lock", None), ("toolchain list", "List Programs", None),
+    ("toolchain remove", "Remove Unused Programs", "trash"), ("toolchain show", "Show Program…", None),
+    ("release build", "Build Release", "package"), ("release publish", "Publish Release", "cloud-upload"),
     ("repo add", "Add Repository", "add"), ("repo list", "List Repositories", None), ("repo set", "Set Repository Trust…", "shield"),
     ("repo status", "Show Repository Status", None), ("repo sync", "Sync Repositories", "sync"),
     ("shell add", "Set Up Prompt…", "terminal"), ("skill generate", "Generate Agent Skill", None), ("test", "Run Tests", "beaker"),

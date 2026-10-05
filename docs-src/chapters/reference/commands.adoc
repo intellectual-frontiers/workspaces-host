@@ -100,6 +100,39 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 
 |===
 
+=== provider
+
+[cols="3,1,2,5"]
+|===
+|Usage |Category |Where it runs |What it does
+
+|`ws-host provider add PATH`
+|decision
+|terminal, editor
+|Enable a repository as a provider, so ws-host installs and runs what it declares
+
+|`ws-host provider list`
+|read
+|terminal, editor, mcp
+|List the providers you have enabled
+
+|`ws-host provider remove PROVIDER`
+|decision
+|terminal, editor
+|Stop using a provider (its programs stay until you prune them)
+
+|`ws-host provider run [PROVIDER] [ARGV...]`
+|build
+|terminal
+|Run a command with one provider's programs first on PATH
+
+|`ws-host provider show [PROVIDER]`
+|read
+|terminal, editor, mcp
+|Show one provider, its launcher and the programs it pins
+
+|===
+
 === release
 
 [cols="3,1,2,5"]
@@ -110,11 +143,6 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |build
 |terminal, editor, mcp
 |Build a release: the wheel, the app tarball, the Workspaces Console and their checksums
-
-|`ws-host release check [--output PATH] [--rebuild]`
-|check
-|terminal, editor, mcp
-|Check a built release: versions, checksums, contents, that it runs, and with --rebuild that it is reproducible
 
 |`ws-host release publish [--output PATH]`
 |decision
@@ -179,6 +207,52 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |generate
 |terminal, editor, mcp
 |Rewrite the skill that tells an AI agent how to use ws-host
+
+|===
+
+=== system
+
+[cols="3,1,2,5"]
+|===
+|Usage |Category |Where it runs |What it does
+
+|`ws-host system ensure`
+|setup
+|terminal
+|Install the shared libraries enabled providers' programs need (uses sudo, and says so first)
+
+|===
+
+=== toolchain
+
+[cols="3,1,2,5"]
+|===
+|Usage |Category |Where it runs |What it does
+
+|`ws-host toolchain ensure [NAME] [--provider PROVIDER] [--all]`
+|setup
+|terminal
+|Install pinned programs from the lock, only from the lock
+
+|`ws-host toolchain generate [PROVIDER] [--root PATH]`
+|generate
+|terminal, editor, mcp
+|Write a provider's mise configuration and lock from its entries
+
+|`ws-host toolchain list`
+|read
+|terminal, editor, mcp
+|List the programs enabled providers pin and whether each is installed
+
+|`ws-host toolchain remove [--unused]`
+|setup
+|terminal
+|Remove stored programs no enabled provider pins
+
+|`ws-host toolchain show NAME [--provider PROVIDER]`
+|read
+|terminal, editor, mcp
+|Show one pinned program: version, where it is, what it provides and sets
 
 |===
 

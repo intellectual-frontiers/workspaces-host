@@ -84,6 +84,6 @@ test('ws-host runs with the editor as its surface, and nothing it was asked is a
   const snap = await hook().describe();
   assert.ok(snap.status.text.length > 0, 'the status bar says how things are');
   const decisions = ws('command', 'list').data.commands.filter((c) => c.category === 'decision');
-  assert.deepStrictEqual(decisions.map((c) => c.id), ['release publish', 'repo set']);
+  assert.deepStrictEqual(decisions.map((c) => c.id), ['provider add', 'provider remove', 'release publish', 'repo set']);
   assert.ok(decisions[0].surfaces.includes('editor') && !decisions[0].surfaces.includes('mcp'), 'a decision is never offered over MCP');
 });

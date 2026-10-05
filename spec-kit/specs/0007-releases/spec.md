@@ -34,14 +34,16 @@ FR-015 to FR-018, in the public root), never by a tag. No continuous-integration
 - **FR-008**: `release build` (a `build` command) MUST write the release into one directory, `dist/` unless `--output` names another,
   emptied first, and the Console's build outputs under `console/`; with `--dry-run` it MUST write nothing and name the files it would
   make. It MUST refuse to build when the versions of FR-001 differ.
-- **FR-009**: `release check` (a `check` command) MUST say, each as one row that is ok or fails in plain words: the one version; that
-  every file is there; that the checksums match; that the wheel names this version and no dependency; that the package holds what it
-  runs (`dist/extension.js`, `dist/webview.js`, its icon and translation bundle) and no source, test, source map, `node_modules` or lock;
-  that the tarball runs where it is unpacked and finds its commands; and, with `--rebuild`, that building again gives the same bytes.
-  A checksum that differs MUST end the checking there.
+- **FR-009**: Two sections of `check`, named and never part of a plain `check` (0041-command-line FR-010), MUST judge a built release:
+  `release` MUST say, as findings in plain words, that the one version is the same everywhere; that every file is there; that the
+  checksums match; that the wheel names this version and no dependency; that the package holds what it runs (`dist/extension.js`,
+  `dist/webview.js`, its icon and translation bundle) and no source, test, source map, `node_modules` or lock; and that the tarball runs
+  where it is unpacked and finds its commands. `reproducible` MUST build the release again and say which file's bytes differ. A
+  checksum that differs MUST end `release` there. Both read `dist/` unless `WS_HOST_RELEASE_DIR` names another folder, and are skipped,
+  naming the cause, where there is no built release.
 - **FR-010**: `release publish` MUST be a `decision`: never over MCP, and confirmed by a person at a terminal or in the editor's modal.
   It MUST refuse, saying why, unless the working tree is clean, the commit is on a remote branch, the tag does not exist, and the release
-  passes `release check`. It MUST create the tag and the GitHub release with the person's own `gh` sign-in, MUST take no token as an
+  passes `check release`. It MUST create the tag and the GitHub release with the person's own `gh` sign-in, MUST take no token as an
   argument and keep no credential, and with `--dry-run` MUST upload nothing and show the files and the notes.
 - **FR-011**: The release's notes MUST give each file's purpose and SHA-256, and the exact mise entry that pins the tarball: its
   `https` address and its checksum, for `linux-x64` and `linux-arm64`.
@@ -64,7 +66,7 @@ FR-015 to FR-018, in the public root), never by a tag. No continuous-integration
 ## Edge cases
 
 - The Console's version and `ws_host/__init__.py` differ: the build stops before anything is made, per FR-008.
-- A rebuild differs from the published files: `release check --rebuild` fails naming the file, per FR-009.
+- A rebuild differs from the published files: `check reproducible` fails naming the file, per FR-009.
 - `gh` is not signed in or not installed: `release publish` says so and does nothing, per FR-010.
 - A release exists on GitHub without a digest on the package: `vscode ensure` ignores it, per FR-013.
 
@@ -87,8 +89,8 @@ FR-015 to FR-018, in the public root), never by a tag. No continuous-integration
 
 ## Success criteria
 
-- **SC-001**: `release build`, then `release check --rebuild`, passes on a clean clone with only `mise install --locked` done.
-- **SC-002**: A tampered file fails `release check` at the checksums.
+- **SC-001**: `release build`, then `check release` and `check reproducible`, pass on a clean clone with only `mise install --locked` done.
+- **SC-002**: A tampered file fails `check release` at the checksums.
 
 ## Review & acceptance checklist
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 import shutil
 
 from ..core import config, kits_state, machine, paths, registry as reg
-from ..lib import git, repos, selfupdate, trust
+from ..lib import git, provider as prov, repos, selfupdate, toolchain, trust
 from ..core.resource import Action, FAILED, MISSING, OK, Resource, command_line
 
 
@@ -116,8 +116,29 @@ def _build() -> tuple[dict, list[Action]]:
             if f["status"] != "ok":
                 checks.append(_check(f"{k['name']} kit: {f['name']}", "fail" if f["status"] == "fail" else "warn", f["detail"],
                                      action=(("kit", "add"), f"Install {k['name']} again", {"kit": k["name"]})))
+    have = prov.enabled()
+    for p in have:
+        if p.problems:
+            checks.append(_check(f"provider {p.name}", "fail", "; ".join(map(str, p.problems)), todo=f"Fix the files named in {p.root}/{prov.FOLDER}."))
+            continue
+        st = toolchain.state(p)
+        gone = sorted(n for n, v in st.items() if v["state"] == "missing")
+        checks.append(_check(f"provider {p.name}", "warn" if gone else "ok",
+                             f"{len(st) - len(gone)} of {len(st)} programs installed" + (f"; missing: {', '.join(gone)}" if gone else ""),
+                             action=(("toolchain", "ensure"), f"Install what {p.name} pins", {"provider": p.name, "all": True}) if gone else None))
+    for c in prov.conflicts(have):
+        checks.append(_check("providers", "fail", c, todo="Rename or re-version one of the two entries."))
     actions = _actionable(checks)
-    return {"distro": d, "python": py, "uv": uv, "git": git_v, "checks": checks, "kits": kits}, actions
+    return {"distro": d, "python": py, "uv": uv, "git": git_v, "checks": checks, "kits": kits, "suggestions": _suggestions()}, actions
+
+
+SUGGEST = {"brew": "Homebrew is here. It is yours to use for programs you want on your own PATH; ws-host never installs, configures or updates it.",
+           "direnv": "direnv is here. It is yours to use for per-folder environments; ws-host never installs, configures or updates it."}
+
+
+def _suggestions() -> list[dict]:
+    """Programs a person chose for themselves, reported read-only and never as a problem (0008-providers FR-017)."""
+    return [{"name": n, "path": shutil.which(n), "plain": text} for n, text in SUGGEST.items() if shutil.which(n)]
 
 
 def _plain(checks) -> str:
