@@ -2,15 +2,26 @@
 == One window for all your repositories
 
 You work in more than one repository, and VS Code can show them together in one window. It does this with a *workspace file*, a small file named
-`workspaces.code-workspace`. This page says how I want you to use it, and the rule is short.
+`workspaces.code-workspace`. This page says what I suggest, and you stay free to do it your own way.
 
-=== The rule
+=== The default
 
-Always start VS Code by opening `workspaces.code-workspace`, which is in your workspaces folder (`~/workspaces`). Do not open repositories one at
-a time, and do not use *Add Folder to Workspace*. `ws-host vscode ensure` keeps the file's list of repositories current, so you never edit it by hand.
+Start from `~/workspaces/workspaces.code-workspace`. `ws-host vscode ensure` writes it and keeps its list of repositories current, so it
+holds every repository you have copied and you do not edit it by hand. Starting there puts all your repositories in one window, which is the easiest
+way to begin. A window opened on one repository hides the others and the IF Console cannot show them all.
 
-I chose one file for everything because the alternatives go wrong in ways that are hard to see. A window opened on one repository hides the others and
-the IF Console cannot show them. Several windows get lost behind each other. A file you add folders to by hand drifts away from what is on disk.
+=== Make your own
+
+The default is a starting point, not a limit. Make another file next to it when one list is too long or mixes things that do not belong together.
+Two common reasons:
+
+* *Several Git services.* Work from GitHub, GitLab and others? Make `github.code-workspace` and `gitlab.code-workspace`, each listing that service's repositories.
+* *Several organizations on one service.* On GitHub across more than one organization? Make one file per organization, such as
+  `intellectual-frontiers.code-workspace`, so each window holds one organization's repositories.
+
+To make one, copy `workspaces.code-workspace` to a new name in `~/workspaces`, then delete the folders you do not want in that file. Paths are
+relative to `~/workspaces`, so a copied file works as it is. Open it with `code ~/workspaces/<name>.code-workspace`. `ws-host vscode ensure` only
+manages the default file and never touches yours.
 
 === Open it
 
