@@ -50,6 +50,26 @@ detects it and never manages it.
 8. **ARM.** Registry tools lock `linux-arm64` too. `agora`'s TinyTeX entry has no `linux-aarch64` archive at all, so TeX is
    x86_64-only today whichever engine is used.
 
+## Follow-up: turning the remaining entries into mise configuration
+
+Done on the same day. Of the nine entries `agora` pins, only one kind did not fit as plain data in the first pass; the follow-up
+tried the rest.
+
+| `agora` entry | As mise configuration | Result |
+|---|---|---|
+| `jre`, `chromium`, `asciidoctorj`, `tinytex` | `http:` backend, one file each, SHA-256 per platform | Pass (first pass) |
+| `tex-packages` (8 containers) | Eight small `http:` entries, each unpacking to a texmf tree (`tex/`, `tlpkg/`); the provider sets `TEXMFHOME={dir1,dir2,...}` | Pass. `xelatex` loads `microtype` and `xurl`, `lualatex` loads `luacode`, and `kpsewhich` finds `microtype.sty` in the pinned tree first. Needs no overlay and no recipe. |
+| `extension-build` (TypeScript, esbuild, ESLint, vsce) | `npm:` backend, exact versions | Pass for TypeScript 6.0.3 and esbuild 0.28.2 under `MISE_SAFE=1`: installed in 12 seconds, with each tool's dependency graph locked in a sidecar (`.config/mise/locks/npm-<name>/<version>/aube-lock.yaml`, referenced from `mise.lock` by path and SHA-256). ESLint and vsce not run. |
+| `npm-packages` (Playwright for Node, Paragon) | `npm:playwright` | Partly. Playwright 1.50.0 installs with its own `node_modules` and the module loads from there (`require('<dir>/node_modules/playwright')`), so `PLAYWRIGHT_MODULE` can point at that directory. Paragon (a library tree for the Open edX build) not run. |
+| `vscode` (test build) | `http:` tarball | Not run (349 MB); same shape as `chromium`. |
+
+So eight of the nine now work as configuration; the npm library tree is the one left to confirm. What stays code is only what
+was never an install step: functional checks, environment scrubbing, and composing the per-provider environment (for example
+the `TEXMFHOME` list).
+
+Not tried: a Lua backend plugin (the mise-native place for custom install logic). It would put our install logic in a second
+language and plugin installs are refused under safe mode, so it is a last resort.
+
 ## What did not fit in mise (stays ws-host's)
 
 - **The npm tree** (`npm ci` from a committed `package-lock.json`, Playwright and Paragon): needs a command run after unpacking,
