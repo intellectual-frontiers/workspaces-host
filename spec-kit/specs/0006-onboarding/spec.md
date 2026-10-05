@@ -72,7 +72,12 @@ detail, troubleshooting, and how to take over in VS Code.
   second and carrying the elapsed time and, for a download, how much has come.
   A step that ends quickly MUST show nothing, one that took a while MUST leave
   one line, and one that fails MUST show why. The installer, package
-  installation, downloads, copying and updating repositories MUST use it. It
+  installation, downloads, copying and updating repositories, and every call
+  of VS Code's `code` command MUST use it. The first `code` call in WSL
+  downloads VS Code's Linux helper into Debian without saying anything, so
+  setup MUST warn before it that this can take a few minutes, MUST show how much
+  has arrived, and MUST turn a call that takes longer than fifteen minutes into
+  a plain error that says a second run carries on. It
   MUST NOT appear in a pipe, a file, JSON, HTML or on a `dumb` terminal, and
   what a quiet step printed MUST be shown only when the step fails.
 - **FR-021**: When the installer finishes it MUST tell the person, in one

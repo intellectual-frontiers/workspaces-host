@@ -56,6 +56,15 @@ YOURNAME`, `exit`, and open Debian again.
 Debian window and open it again. If it still fails, run `ws-host shell add bash`, which also puts `~/.local/bin` on your `PATH`, or run
 `echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc` and open a new window.
 
+=== "Setting up VS Code" takes a long time
+
+*Why:* The first time, VS Code downloads a small helper into Debian (about 100 MB) before it can install anything. It says nothing while it does,
+and on a slow network that takes minutes.
+
+*Fix:* Wait. The line at the bottom shows a spinner and, as the helper arrives, how many megabytes have come, for example
+`⠴ Setting up VS Code inside Debian (the first time downloads its helper) 42 MB downloaded (95s)`. If it gives up after fifteen minutes it
+says so, nothing is lost, and running `ws-host workspace advance` again carries on from where it got to.
+
 === The installer seems stuck on a slow network
 
 *Why:* Downloads over a slow connection take minutes, and the installer keeps its output quiet so the screen stays calm.

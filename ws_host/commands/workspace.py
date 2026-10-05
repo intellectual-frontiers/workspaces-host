@@ -95,7 +95,9 @@ def workspace_advance(ctx):
     declared = {k: v for k, v in declared_kits(cfg).items() if k not in mine}
     kit_result = kitrun.ensure(ctx, declared)
     steps.append({"name": "kits", "status": kit_result["status"], "plain": kit_result["plain"]})
-    yield _step("editor", "Checking VS Code...")
+    slow_first = bool(shutil.which("code")) and vscode_cmd.first_time_in_wsl() and not vscode_cmd.extension_installed()
+    yield _step("editor", "Setting up VS Code..." + (" The first time, VS Code downloads a small helper into Debian, which can take a few minutes on a slow network;"
+                                                      " the line below shows how much has arrived." if slow_first else ""))
     editor_actions = []
     if shutil.which("code"):
         try:
