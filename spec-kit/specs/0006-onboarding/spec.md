@@ -16,7 +16,7 @@ detail, troubleshooting, and how to take over in VS Code.
 ## The bootstrap
 
 - **FR-001**: `install.sh` MUST install what it needs and the machine lacks
-  (`python3`, `git`, certificates and `curl`, by the distribution's package
+  (`python3`, `git`, certificates, `curl` and `wget`, by the distribution's package
   manager), MUST say what it will install and that it needs administrator
   rights before it asks, MUST name the command to run when it cannot (no `sudo`,
   no network), and MUST do none of this when `WS_HOST_NO_APT=1`. It MUST work
@@ -28,8 +28,8 @@ detail, troubleshooting, and how to take over in VS Code.
   Microsoft Store under WSL on Windows 11, as a person finds it: a minimal system
   with `sudo` and an account they created at first launch.
 - **FR-004**: A person MAY name the kits they always want in `WS_HOST_KIT` of
-  their own configuration; it is `base` when they say nothing and none when it is
-  empty. `workspace advance` MUST install them before anything else, because the
+  their own configuration; it is `base` and `shell` when they say nothing and
+  none when it is empty. `workspace advance` MUST install them before anything else, because the
   sign-in tool is in `base`.
 - **FR-005**: Signing in to GitHub MUST be prescribed one way: `ws-host auth new
   github`, the one-time code and the browser, never a password, a token or an
@@ -55,8 +55,8 @@ detail, troubleshooting, and how to take over in VS Code.
   give, in order and each with the one line to type: signing in to GitHub, copying
   the starter repositories, opening VS Code from the terminal, `ws-host vscode
   advance`, continuing in VS Code with Learn, choosing which repositories to work
-  in, giving `bash` the coach prompt with `shell add bash`, trying `fish`, and
-  what to do when stuck.
+  in, the prompt that is already on, the Nerd Font it needs, and how to switch to `fish`, and what
+  to do when stuck.
 - **FR-018**: Until a person's own configuration says otherwise, their
   repositories MUST be the two starter repositories, the public root
   (`.github`) for examples and this repository (`workspaces-host`);
@@ -80,6 +80,18 @@ detail, troubleshooting, and how to take over in VS Code.
   new login shell, `exec bash -l`) or to open a new one, when `~/.local/bin` was
   not on their `PATH`, and MUST say nothing about it when it was. The installer
   MUST NOT let any program it runs edit the person's shell startup files.
+
+- **FR-022**: Setup MUST make the terminal beautiful from the first run: unless
+  the person's own configuration says `WS_HOST_PROMPT=no`, `workspace advance`
+  MUST give `bash`, and `fish` when it is installed, the `oh-my-posh` prompt
+  with the `ws-host-pretty` theme (0003-kits FR-015), without the person adding
+  anything, and MUST never fail the setup because of it. `ws-host-pretty` assumes
+  a Nerd Font. `ws-host-plain` MUST stay available for a terminal without one,
+  drawing only box-drawing characters, emoji and plain text, and a person
+  MUST be able to choose it with `shell add --plain` or `WS_HOST_PROMPT=plain`.
+  The guide MUST tell a person, in prescribed steps, how to install a Nerd Font
+  on Windows and choose it in Windows Terminal, how to choose the plain theme,
+  and how to edit a theme or keep their own prompt.
 
 ## Setting VS Code up
 
@@ -121,7 +133,7 @@ detail, troubleshooting, and how to take over in VS Code.
 - **FR-013**: The FAQ MUST cover every failure that stops the bootstrap or VS
   Code from opening, each as a symptom, a cause and the fix, in plain words:
   WSL not installed or virtualization off; Debian not starting; no `sudo`
-  password remembered; `curl` or `git` missing; no network, a proxy or a
+  password remembered; `curl`, `wget` or `git` missing; no network, a proxy or a
   certificate error; `~/.local/bin` not on `PATH`; `ws-host: command not
   found`; the sign-in code or browser not opening; a wrong or stale clock;
   "could not read Username"; `code` not found in Debian; VS Code opening in
@@ -142,7 +154,7 @@ detail, troubleshooting, and how to take over in VS Code.
 
 ## Edge cases
 
-- `install.sh` run as an ordinary user with no `curl`: it installs `curl` and
+- `install.sh` run as an ordinary user with no `curl` or `wget`: it installs both and
   the rest after saying so, per FR-001.
 - No network: it says so and names what to check, per FR-001.
 - A person who is not signed in runs the installer: it stops before copying

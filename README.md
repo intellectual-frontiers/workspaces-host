@@ -13,7 +13,7 @@ For Windows 11 with Debian from the Microsoft Store (WSL). The guide has every s
 something stops you.
 
 1. **Get Debian.** Install *Debian* from the Microsoft Store and open it.
-2. **Install.** In the Debian window run `sudo apt update && sudo apt install -y curl`, then
+2. **Install.** In the Debian window run `cd && sudo apt update && sudo apt install -y curl wget`, then
    `curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh`. The installer does the
    bootstrapping.
 3. **Sign in to GitHub.** Run `ws-host auth new github`, type the code into your browser, then run `ws-host workspace advance` again.

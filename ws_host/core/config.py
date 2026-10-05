@@ -16,7 +16,8 @@ KEYS = {
     "WS_HOST_WORKSPACES": "the folder repositories are copied under (default ~/workspaces)",
     "WS_HOST_GITLAB_HOSTS": "GitLab hosts you sign in to, space-separated",
     "WS_HOST_REPOS": "the repositories you work in, as host/org/repo, space-separated (the two starter repositories when you say nothing)",
-    "WS_HOST_KIT": "kits to install for you whatever your repositories ask, space-separated (base when you say nothing; empty for none)",
+    "WS_HOST_KIT": "kits to install for you whatever your repositories ask, space-separated (base and shell when you say nothing; empty for none)",
+    "WS_HOST_PROMPT": "the prompt setup gives bash and fish: pretty when you say nothing (needs a Nerd Font), plain (emoji and box lines only), or no to keep your own",
     "WS_HOST_TRUSTED": "organizations whose repositories you trust, space-separated; only your own file can set this",
 }
 # The keys a repository's own `.workspaces-host/ws-host.env` may hold (0001-ws-host, 0002-repositories-and-trust FR-002).
@@ -28,6 +29,7 @@ REPO_KEYS = {
 
 
 # The repositories a person gets until they choose their own: the shared public examples and this tool (0006-onboarding FR-010).
+DEFAULT_KITS = ("base", "shell")       # the everyday tools, and a terminal that is a pleasure to look at (0006-onboarding FR-004, FR-022)
 STARTER_REPOS = ("github.com/intellectual-frontiers/.github", "github.com/intellectual-frontiers/workspaces-host")
 
 
@@ -47,8 +49,15 @@ class Config:
         return self.words("WS_HOST_REPOS") if "WS_HOST_REPOS" in self.values else list(STARTER_REPOS)
 
     def kits(self) -> list[str]:
-        """The kits the person always wants: base unless their own file says otherwise (0006-onboarding FR-004)."""
-        return self.words("WS_HOST_KIT") if "WS_HOST_KIT" in self.values else ["base"]
+        """The kits the person always wants: base and shell unless their own file says otherwise (0006-onboarding FR-004)."""
+        return self.words("WS_HOST_KIT") if "WS_HOST_KIT" in self.values else list(DEFAULT_KITS)
+
+    def prompt_theme(self) -> str | None:
+        """The theme setup gives the shells: ws-host-pretty, ws-host-plain, or None when the person keeps their own prompt (FR-022)."""
+        v = self.get("WS_HOST_PROMPT", "pretty").strip().lower()
+        if v in ("no", "false", "0", "off", "none"):
+            return None
+        return "ws-host-plain" if v == "plain" else "ws-host-pretty"
 
     @property
     def workspaces(self) -> Path:

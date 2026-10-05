@@ -121,10 +121,10 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |===
 |Usage |Category |Where it runs |What it does
 
-|`ws-host shell add SHELL`
+|`ws-host shell add SHELL [--plain]`
 |setup
 |terminal, editor
-|Give bash or fish the oh-my-posh prompt with the coach theme
+|Give bash or fish the ws-host oh-my-posh prompt (again, or the plain one)
 
 |===
 

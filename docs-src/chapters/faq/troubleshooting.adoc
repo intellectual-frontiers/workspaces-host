@@ -27,11 +27,11 @@ install Debian again from the Store; this erases only the Debian you just made.
 
 *Fix:* In PowerShell run `wsl -d Debian -u root`, then `passwd YOURNAME` (your Debian username), type the new password twice, and type `exit`.
 
-=== `curl: command not found`, or `git: command not found`
+=== `curl: command not found`, `wget: command not found`, or `git: command not found`
 
-*Why:* A fresh Debian is small. It has neither.
+*Why:* A fresh Debian is small. It has none of them, and VS Code needs `wget` to set itself up inside Debian.
 
-*Fix:* `sudo apt update && sudo apt install -y curl git`. The installer also installs what it needs by itself, after telling you.
+*Fix:* `cd && sudo apt update && sudo apt install -y curl wget git`. The `cd` first takes you to your Linux home. The installer also installs what it needs by itself, after telling you.
 
 === The installer says it cannot reach the network, or shows a certificate error
 
@@ -129,8 +129,13 @@ your work.
 
 === The prompt shows strange boxes instead of icons
 
-*Why:* The oh-my-posh prompt draws icons from a font Windows Terminal does not have.
+*Why:* The default prompt, `ws-host-pretty`, draws icons from a Nerd Font, and Windows Terminal is using a font that does not have them.
 
-*Fix:* Install a Nerd Font such as https://www.nerdfonts.com/[Nerd Fonts' Meslo] on Windows, then choose it in Windows Terminal under
-*Settings*, *Profiles*, *Debian*, *Appearance*, *Font face*. Microsoft explains where:
-https://learn.microsoft.com/en-us/windows/terminal/customize-settings/profile-appearance#font-face[font face].
+*Fix:* Either install a Nerd Font and choose it, or use the plain prompt.
+
+* *Install a font (once, on Windows):* download https://www.nerdfonts.com/font-downloads[CaskaydiaCove Nerd Font], unzip it, select the font files,
+  right-click and choose *Install for all users*. Then in Windows Terminal open *Settings*, *Profiles*, *Debian*, *Appearance* and set *Font face* to
+  `CaskaydiaCove Nerd Font`. Close the window and open Debian again. Microsoft explains where:
+  https://learn.microsoft.com/en-us/windows/terminal/customize-settings/profile-appearance#font-face[font face].
+* *Or use the plain prompt:* run `ws-host shell add bash --plain`, and put `WS_HOST_PROMPT=plain` in `~/.config/workspaces-host/ws-host.env`
+  so setup keeps it that way.

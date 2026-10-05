@@ -4,7 +4,7 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh
 #
-# It installs what is missing (python3, git, certificates; it says so and asks for your password first), installs uv, copies
+# It installs what is missing (python3, git, certificates, curl and wget; it says so and asks for your password first), installs uv, copies
 # workspaces-host beside your other repositories (or advances an existing copy by fast-forward only), links ~/.local/bin/ws-host,
 # checks your machine, and runs `ws-host workspace advance`. Safe to run again.
 #
@@ -81,9 +81,9 @@ missing=""
 command -v python3 >/dev/null 2>&1 || missing="$missing python3"
 command -v git >/dev/null 2>&1 || missing="$missing git"
 [ -e /etc/ssl/certs/ca-certificates.crt ] || missing="$missing ca-certificates"
-if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1 && ! command -v uv >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/uv" ]; then
-  missing="$missing curl"
-fi
+# curl and wget both: VS Code's server in WSL is fetched with one or the other, and a person's own tools use either.
+command -v curl >/dev/null 2>&1 || missing="$missing curl"
+command -v wget >/dev/null 2>&1 || missing="$missing wget"
 if [ -n "$missing" ]; then
   if [ "${WS_HOST_NO_APT:-}" = 1 ] || ! command -v apt-get >/dev/null 2>&1; then
     need "this machine lacks:$missing." "sudo apt install$missing"
@@ -158,7 +158,7 @@ case ":$orig_path:" in
   *)
     sh_name=${SHELL:-bash}; sh_name=${sh_name##*/}
     say ""
-    say "${b}🔄 One last thing:${z} this window does not know the ws-host command yet. Type the line below, or close this window and open a new one."
+    say "${b}🔄 One last thing:${z} this window does not know the ws-host command, or your new prompt, yet. Type the line below, or close this window and open a new one."
     say ""
     say "    ${c}exec $sh_name -l${z}"
     say ""

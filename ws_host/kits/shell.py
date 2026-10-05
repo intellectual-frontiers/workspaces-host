@@ -22,8 +22,11 @@ FISH_NOBLE = Download("fish", FISH_VERSION, "https://ppa.launchpadcontent.net/fi
                       binaries={"fish": "usr/bin/fish"}, kind="deb", steps=(("dpkg-deb", "-x", "{src}/fish.deb", "{dest}"),))
 
 
-def theme_path() -> Path:
-    return paths.repo_root() / "themes" / "coach.omp.json"
+PRETTY, PLAIN = "ws-host-pretty", "ws-host-plain"      # with Nerd Font icons (the default), and with only emoji and box lines
+
+
+def theme_path(name: str = PRETTY) -> Path:
+    return paths.repo_root() / "themes" / f"{name}.omp.json"
 
 
 def fish_is_four(work: Path) -> str:
@@ -40,19 +43,20 @@ def fish_runs(work: Path) -> str:
 
 
 def prompt(work: Path) -> str:
-    """oh-my-posh prints a prompt with the coach theme, in both shells' initialisation."""
-    theme = theme_path()
-    p = subprocess.run(["oh-my-posh", "print", "primary", "--config", str(theme), "--shell", "bash"], capture_output=True, text=True, timeout=60, cwd=work)
-    assert p.returncode == 0 and p.stdout.strip(), f"oh-my-posh printed no prompt: {(p.stderr or '').strip()[-200:]}"
-    for shell, init in (("bash", "bash"), ("fish", "fish")):
-        q = subprocess.run(["oh-my-posh", "init", init, "--config", str(theme)], capture_output=True, text=True, timeout=60)
-        assert q.returncode == 0 and q.stdout.strip(), f"oh-my-posh could not set up {shell}: {(q.stderr or '').strip()[-200:]}"
-    return "oh-my-posh prints the coach prompt and sets up bash and fish"
+    """oh-my-posh prints a prompt with each ws-host theme, in both shells' initialisation."""
+    for name in (PRETTY, PLAIN):
+        theme = theme_path(name)
+        p = subprocess.run(["oh-my-posh", "print", "primary", "--config", str(theme), "--shell", "bash"], capture_output=True, text=True, timeout=60, cwd=work)
+        assert p.returncode == 0 and p.stdout.strip(), f"oh-my-posh printed no prompt with {name}: {(p.stderr or '').strip()[-200:]}"
+        for shell, init in (("bash", "bash"), ("fish", "fish")):
+            q = subprocess.run(["oh-my-posh", "init", init, "--config", str(theme)], capture_output=True, text=True, timeout=60)
+            assert q.returncode == 0 and q.stdout.strip(), f"oh-my-posh could not set up {shell} with {name}: {(q.stderr or '').strip()[-200:]}"
+    return "oh-my-posh prints the ws-host-pretty and ws-host-plain prompts and sets up bash and fish"
 
 
 class Shell(Kit):
     name = "shell"
-    summary = "fish 4 and oh-my-posh, with the coach prompt theme; bash works as well"
+    summary = "fish 4 and oh-my-posh, with the ws-host-pretty and ws-host-plain prompt themes; bash works as well"
     plain = "a friendlier terminal: fish, which suggests and colors as you type, and oh-my-posh for the prompt."
 
     def apt(self, distro):
@@ -67,4 +71,4 @@ class Shell(Kit):
         return [Check("fish", "fish"), Check("oh-my-posh", "oh-my-posh", ("--version",)),
                 Check("fish is version 4 or later", run=fish_is_four, needs=("fish",)),
                 Check("fish runs commands", run=fish_runs, needs=("fish",)),
-                Check("oh-my-posh prints the coach prompt", run=prompt, needs=("oh-my-posh",))]
+                Check("oh-my-posh prints the ws-host prompts", run=prompt, needs=("oh-my-posh",))]

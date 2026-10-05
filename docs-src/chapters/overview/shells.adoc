@@ -5,8 +5,8 @@
 nothing in `ws-host` depends on which shell you use.
 
 `fish` 4 is the best experience, and I recommend it. It suggests and colors as you type without any plugin, and
-`oh-my-posh` looks and behaves best in it. The `shell` kit installs `fish` 4 and `oh-my-posh` together with the coach
-prompt theme, `themes/coach.omp.json`:
+`oh-my-posh` looks and behaves best in it. The `shell` kit, installed by default, installs `fish` 4 and `oh-my-posh` together with the
+prompt themes, `themes/ws-host-pretty.omp.json` and `themes/ws-host-plain.omp.json`:
 
 ----
 ws-host kit add shell
@@ -24,21 +24,48 @@ command -v fish | sudo tee -a /etc/shells
 chsh -s $(command -v fish)
 ----
 
-`oh-my-posh` draws icons, so set a Nerd Font in your terminal.
+== The prompt, in either shell
 
-== The coach prompt, in either shell
+The prompt is part of the first impression, so you do not have to ask for it. Setup installs `oh-my-posh` and a theme (the `shell` kit is
+installed by default, with `base`) and gives `bash`, and `fish` when it is there, the same prompt: your folder, what git is doing, how
+long the last command took and whether it worked.
 
-bash gets the same `oh-my-posh` treatment and the same coach theme as fish. You ask for it with one command for each shell,
-and `ws-host help shell` keeps the current steps:
+It adds a few lines between marker comments to `~/.bashrc` or to fish's `config.fish`, after keeping a copy of the file in
+`~/.local/state/workspaces-host/backups`. A second run changes nothing. To see it in the window you are in, type `exec bash -l`.
 
-----
-ws-host shell add bash
-ws-host shell add fish
-----
+=== Two themes: pretty and plain
 
-Each one adds a few lines between marker comments to `~/.bashrc` or to fish's `config.fish`, after keeping a copy of the
-file in `~/.local/state/workspaces-host/backups`. A second run changes nothing. To go back, delete the lines between the
-markers.
+[cols="1,3"]
+|===
+| `ws-host-pretty` | The default. It draws icons from a Nerd Font, so it needs one installed on Windows and chosen in your terminal (below).
+| `ws-host-plain` | The same layout made only of emoji and box lines. It looks right in Windows Terminal's own font, with nothing to install.
+|===
 
-The one rule I keep for shells is that `ws-host` never edits your login shell, your git configuration or your VS Code
-settings unasked, and edits a shell startup file only when you run `shell add`. It tells you what it recommends and offers a button; you press it or you do not.
+Both live in the `themes` folder of your `workspaces-host` copy.
+
+=== Install a Nerd Font on Windows (for the pretty theme)
+
+You do this once, in Windows and not in Debian:
+
+. Download a font from https://www.nerdfonts.com/font-downloads[nerdfonts.com], for example *CaskaydiaCove Nerd Font*, which looks like
+  Windows Terminal's own, or *Meslo*. Unzip the file.
+. Select the font files in the folder, right-click, and choose *Install for all users*.
+. In Windows Terminal open *Settings*, *Profiles*, *Debian*, *Appearance*, and set *Font face* to `CaskaydiaCove Nerd Font` (or the
+  one you installed). Microsoft explains where:
+  https://learn.microsoft.com/en-us/windows/terminal/customize-settings/profile-appearance#font-face[font face].
+
+`ws-host vscode advance` already sets VS Code's terminal to look for a Nerd Font, so the prompt looks the same there.
+
+=== Change the theme
+
+* *Use the plain theme now:* `ws-host shell add bash --plain` (and `fish`). `ws-host shell add bash` goes back to the pretty one.
+* *Keep it plain whenever setup runs:* put `WS_HOST_PROMPT=plain` in `~/.config/workspaces-host/ws-host.env`.
+* *Keep your own prompt:* put `WS_HOST_PROMPT=no` in the same file, and delete the lines between the markers in `~/.bashrc`.
+* *Edit a theme:* copy `themes/ws-host-pretty.omp.json` to a file of your own, change it (the settings are explained at
+  https://ohmyposh.dev/docs/configuration/overview[ohmyposh.dev]), and put the path of your file in the marked lines in place of the theme path. Asking an AI to
+  change it for you works well, and setup never puts the standard lines back over lines you edited; only `ws-host shell add` does.
+* *Take the lines out:* delete the lines between the markers, which say `>>> workspaces-host` and `<<< workspaces-host`.
+
+The one rule I keep for shells is that `ws-host` never edits your login shell, your git configuration or your VS Code settings
+unasked. The prompt lines are the one thing setup adds to a shell file, they are marked, they are backed up, and one setting turns
+them off. It tells you what it recommends and offers a button; you press it or you do not.
