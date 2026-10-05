@@ -55,7 +55,8 @@ detail, troubleshooting, and how to take over in VS Code.
   give, in order and each with the one line to type: signing in to GitHub, copying
   the starter repositories, opening VS Code from the terminal, `ws-host vscode
   advance`, continuing in VS Code with Learn, choosing which repositories to work
-  in, trying `fish`, and what to do when stuck.
+  in, giving `bash` the coach prompt with `shell add bash`, trying `fish`, and
+  what to do when stuck.
 - **FR-018**: Until a person's own configuration says otherwise, their
   repositories MUST be the two starter repositories, the public root
   (`.github`) for examples and this repository (`workspaces-host`);
@@ -65,6 +66,20 @@ detail, troubleshooting, and how to take over in VS Code.
   file and the starters while they have not chosen a list of their own, and then
   copy it; `--dry-run` MUST change neither the list nor the disk, and the
   page MUST also say how to edit the file by hand in VS Code.
+
+- **FR-020**: A step that takes a while MUST show it is working: at a person's
+  terminal, one line with a spinner, replaced in place, shown only after half a
+  second and carrying the elapsed time and, for a download, how much has come.
+  A step that ends quickly MUST show nothing, one that took a while MUST leave
+  one line, and one that fails MUST show why. The installer, package
+  installation, downloads, copying and updating repositories MUST use it. It
+  MUST NOT appear in a pipe, a file, JSON, HTML or on a `dumb` terminal, and
+  what a quiet step printed MUST be shown only when the step fails.
+- **FR-021**: When the installer finishes it MUST tell the person, in one
+  pasteable line, how to make the window they are in find `ws-host` (starting a
+  new login shell, `exec bash -l`) or to open a new one, when `~/.local/bin` was
+  not on their `PATH`, and MUST say nothing about it when it was. The installer
+  MUST NOT let any program it runs edit the person's shell startup files.
 
 ## Setting VS Code up
 

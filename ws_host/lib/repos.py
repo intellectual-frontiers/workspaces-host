@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..core import config, env
+from ..core import config, env, progress
 from ..core.resource import Action, WsError
 from . import git
 
@@ -96,7 +96,8 @@ def clone(rid: RepoId, cfg: config.Config) -> dict:
     if (dest / ".git").exists():
         return {"id": str(rid), "path": str(dest), "outcome": "current", "status": "ok", "plain": f"{rid.name} is already here."}
     dest.parent.mkdir(parents=True, exist_ok=True)
-    p = git.run(None, "clone", "--quiet", rid.url, str(dest))
+    with progress.working(f"Copying {rid.name}"):
+        p = git.run(None, "clone", "--quiet", rid.url, str(dest))
     if p.returncode == 0:
         return {"id": str(rid), "path": str(dest), "outcome": "cloned", "status": "ok", "plain": f"Copied {rid.name} to {dest}."}
     why = git.reason(p)
@@ -146,7 +147,8 @@ def advance(rid: RepoId, cfg: config.Config) -> dict:
     path = rid.path(cfg)
     if not (path / ".git").exists():
         return {"id": str(rid), "outcome": "missing", "status": "skip", "plain": f"{rid.name} is not copied yet, so there is nothing to update."}
-    f = git.run(path, "fetch", "--quiet")
+    with progress.working(f"Checking {rid.name} for news"):
+        f = git.run(path, "fetch", "--quiet")
     if f.returncode != 0:
         auth = git.is_auth_failure(f.stderr)
         return {"id": str(rid), "path": str(path), "outcome": "failed", "status": "fail", "auth": auth,

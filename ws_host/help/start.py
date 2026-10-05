@@ -30,9 +30,12 @@ def start():
              "To add one, type its address. It is copied now and every time you update:\n\n    ws-host repo add github.com/ORG/REPO\n\n"
              "To remove one or change the list, open your settings file in VS Code and edit the line that starts with WS_HOST_REPOS:\n\n"
              "    code ~/.config/workspaces-host/ws-host.env"),
-            ("🐟 Try fish, a friendlier terminal",
-             "fish suggests and colors what you type. Install it, then type fish to try it. Nothing else changes, and bash keeps working.\n\n"
-             "    ws-host kit add shell\n    fish\n\nTo make fish what every new window opens, ask ws-host: ws-host help shell."),
+            ("🎨 A friendlier terminal",
+             "bash gets a clear, colorful prompt with the coach theme when you ask for it. It adds a few marked lines to your ~/.bashrc, keeps a copy "
+             "of the file first, and you can delete the lines any time:\n\n    ws-host shell add bash\n\n"
+             "fish is nicer still: it suggests and colors what you type. Install it, give it the same prompt, and type fish to try it. "
+             "bash keeps working either way.\n\n    ws-host kit add shell\n    ws-host shell add fish\n    fish\n\n"
+             "To make fish what every new window opens, see: ws-host help shell."),
             ("🆘 Stuck?",
              "Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help in VS Code for a report with no passwords in it, and paste it to "
              "someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/"),
@@ -41,6 +44,7 @@ def start():
             Step("Sign in to GitHub", ("auth", "new"), {"forge": "github"}),
             Step("Copy your starter repositories", ("workspace", "advance")),
             Step("Set VS Code up", ("vscode", "advance")),
+            Step("Give bash the coach prompt", ("shell", "add"), {"shell": "bash"}, "adds a few marked lines to ~/.bashrc"),
             Step("Try fish", ("kit", "add"), {"kit": "shell"}, "asks for your password"),
             Step("See where things stand", ("workspace", "status")),
             Step("Check your machine", ("doctor",)),

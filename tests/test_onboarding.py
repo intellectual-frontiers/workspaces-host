@@ -132,12 +132,12 @@ class FirstSteps(Home):
     def test_the_start_page_walks_through_every_first_step_in_order(self):
         _, doc = self.run_json("help", "start")
         headings = [s["heading"] for s in doc["data"]["sections"]]
-        order = ["Sign in to GitHub", "starter repositories", "Open VS Code", "set VS Code up", "Keep going in VS Code", "which repositories", "fish", "Stuck"]
+        order = ["Sign in to GitHub", "starter repositories", "Open VS Code", "set VS Code up", "Keep going in VS Code", "which repositories", "friendlier terminal", "Stuck"]
         positions = [next(i for i, h in enumerate(headings) if o.lower() in h.lower()) for o in order]
         self.assertEqual(positions, sorted(positions))
         text = " ".join(s["text"] for s in doc["data"]["sections"])
         for needle in ("ws-host auth new github", "ws-host workspace advance", "code .", "ws-host vscode advance", "Workspace: Learn", "ws-host repo add github.com/ORG/REPO",
-                       "WS_HOST_REPOS", "code ~/.config/workspaces-host/ws-host.env", "ws-host kit add shell", "fish", "ws-host doctor", "intellectual-frontiers.github.io/workspaces-host"):
+                       "WS_HOST_REPOS", "code ~/.config/workspaces-host/ws-host.env", "ws-host shell add bash", "ws-host shell add fish", "ws-host kit add shell", "fish", "ws-host doctor", "intellectual-frontiers.github.io/workspaces-host"):
             self.assertIn(needle, text, needle)
         self.assertIn(".github", text)
         self.assertIn("workspaces-host", text)
@@ -156,7 +156,7 @@ class FirstSteps(Home):
 
     def test_the_installer_ends_by_showing_the_start_page(self):
         text = open(os.path.join(os.path.dirname(__file__), "..", "install.sh")).read()
-        self.assertIn('ws-host" help start', text)
+        self.assertIn('"$ws" help start', text)
         self.assertGreaterEqual(text.count("help start"), 2)
 
 

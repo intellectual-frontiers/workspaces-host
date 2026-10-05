@@ -52,8 +52,17 @@ YOURNAME`, `exit`, and open Debian again.
 
 *Why:* The terminal you are in started before the installer finished, so it does not know the new folder `~/.local/bin`.
 
-*Fix:* Close the Debian window and open it again. If it still fails, run `echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc` and
-open a new window.
+*Fix:* The installer ends by showing the line to type, `exec bash -l`, which starts a fresh login shell that finds it. You can also close the
+Debian window and open it again. If it still fails, run `ws-host shell add bash`, which also puts `~/.local/bin` on your `PATH`, or run
+`echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc` and open a new window.
+
+=== The installer seems stuck on a slow network
+
+*Why:* Downloads over a slow connection take minutes, and the installer keeps its output quiet so the screen stays calm.
+
+*Fix:* Look at the line at the bottom of the window. A spinner with a number of seconds, such as `⠴ Installing uv (42s)`, means it is working,
+and a download shows how much has come. Wait for the tick. If it stops with a cross, the lines under it say why, and running the same
+installer again is safe and carries on where it left off.
 
 === The sign-in code does not work, or the browser does not open
 

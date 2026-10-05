@@ -32,17 +32,20 @@ def shell():
     return {
         "plain": "bash with oh-my-posh is fully supported, and fish 4 with oh-my-posh is the best way to work.",
         "sections": (
-            ("bash", "Your login shell is bash, and it stays bash. oh-my-posh works in it. Add this line to ~/.bashrc:\n\n"
-                     "    eval \"$(oh-my-posh init bash --config ~/workspaces/github.com/intellectual-frontiers/workspaces-host/themes/coach.omp.json)\""),
-            ("fish 4", "fish suggests and colors as you type, and oh-my-posh looks best in it. The shell kit installs fish 4 and oh-my-posh. "
-                       "Try it without changing anything by typing fish. Add this line to ~/.config/fish/config.fish:\n\n"
-                       "    oh-my-posh init fish --config ~/workspaces/github.com/intellectual-frontiers/workspaces-host/themes/coach.omp.json | source"),
+            ("bash", "Your login shell is bash, and it stays bash. oh-my-posh works in it with the coach theme. One command adds a few marked lines "
+                     "to ~/.bashrc, after keeping a copy of the file, and a second run changes nothing:\n\n    ws-host shell add bash\n\n"
+                     "To go back, delete the lines between '>>> workspaces-host' and '<<< workspaces-host'."),
+            ("fish 4", "fish suggests and colors as you type, and oh-my-posh looks best in it. The shell kit installs fish 4 and oh-my-posh, "
+                       "and the same command gives fish the coach prompt in ~/.config/fish/config.fish. Try it without changing anything by typing fish:\n\n"
+                       "    ws-host kit add shell\n    ws-host shell add fish\n    fish"),
             ("Making fish your login shell", "That is one separate step, and only you take it:\n\n    command -v fish | sudo tee -a /etc/shells\n    chsh -s $(command -v fish)\n\n"
-                                              "ws-host never changes your login shell or your shell files."),
+                                              "ws-host never changes your login shell, and it edits a shell file only when you run shell add."),
             ("The theme", "The coach theme is themes/coach.omp.json in your workspaces-host copy. oh-my-posh draws icons, so use a Nerd Font in your terminal."),
         ),
         "steps": (
+            Step("Give bash the coach prompt", ("shell", "add"), {"shell": "bash"}),
             Step("Install fish and oh-my-posh", ("kit", "add"), {"kit": "shell"}, "Run this one in a terminal; it asks for your password."),
+            Step("Give fish the coach prompt", ("shell", "add"), {"shell": "fish"}),
             Step("Check the shell kit", ("kit", "show"), {"kit": "shell"}),
         ),
     }

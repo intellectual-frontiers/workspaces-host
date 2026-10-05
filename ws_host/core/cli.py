@@ -10,7 +10,7 @@ import types as _types
 from dataclasses import dataclass, field
 
 from .. import NAME, VERSION
-from . import logs, registry as reg
+from . import logs, progress, registry as reg
 from .registry import Command, Registry
 from .render import render, use_color
 from .resource import Action, Resource, WsError, usage_error
@@ -142,6 +142,7 @@ def _emit(results, mode: str, registry: Registry, out) -> int:
 def run(argv: list[str], surface: str = "cli", out=None, err=None) -> int:
     out, err = out or sys.stdout, err or sys.stderr
     argv, mode = _split_global(list(argv))
+    progress.ENABLED = mode == "text"      # a spinner is for a person reading text, never for JSON or HTML
     try:
         registry = reg.discover()
     except Exception as e:  # a broken module must not print a trace (0041 FR-020)

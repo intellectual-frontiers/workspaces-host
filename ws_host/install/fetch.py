@@ -13,7 +13,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-from ..core import paths
+from ..core import paths, progress
 from ..core.kit import ARCHS, Download
 
 
@@ -55,9 +55,13 @@ def download(url: str, expected: str, offline: bool = False) -> Path:
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "ws-host"})
         with urllib.request.urlopen(req, timeout=120) as r, open(tmp, "wb") as f:
-            while chunk := r.read(1 << 20):
+            total = int(r.headers.get("Content-Length") or 0) or None
+            done = 0
+            while chunk := r.read(1 << 16):
                 h.update(chunk)
                 f.write(chunk)
+                done += len(chunk)
+                progress.detail(progress.megabytes(done, total))
     except OSError as e:
         tmp.unlink(missing_ok=True)
         raise FetchError("unreachable", f"could not fetch {url}: {e}") from e

@@ -65,7 +65,8 @@ requirement	mechanism	by	note
 0004-editor-extension FR-015	check	workspaces-host: ws-host test	Node tests check Get help gathers context and doctor, copies and shows the report
 0004-editor-extension FR-016	check	workspaces-host: ws-host test	tests run vscode add: link, index entry kept beside others, repeat, WSL directory, vsix with code, link without code, dry run; also run against VS Code 1.140
 0004-editor-extension FR-017	check	workspaces-host: ws-host test	Python tests check the wire shapes of every resource, command list and show, the HTML and the schema; Node tests use a stand-in VS Code; tests/vscode-host runs a real VS Code
-0003-kits FR-014	check	workspaces-host: ws-host test	tests check the shell kit's packages, fetched fish 4 package and oh-my-posh by distribution, its checks, a deb download unpacked by its step, and that no code touches a login shell or startup files; the containers run the checks on Debian 13 and Ubuntu 24.04
+0003-kits FR-014	check	workspaces-host: ws-host test	tests check the shell kit's packages, fetched fish 4 package and oh-my-posh by distribution, its checks, a deb download unpacked by its step, and that nothing but the shell add command edits a startup file; the containers run the checks on Debian 13 and Ubuntu 24.04
+0003-kits FR-015	check	workspaces-host: ws-host test	tests check shell add for bash and fish: the marked block, the kept copy, no change outside the markers, a second run and a dry run changing nothing, a block missing its end refused, fish asked for first, and the login shell untouched
 0004-editor-extension FR-018	check	workspaces-host: ws-host test	a Node test checks Learn lists the topics help offers and shows the chosen one as a page
 0005-help-and-docs FR-001	check	workspaces-host: ws-host test	tests list the topics, show each, and check unknown topics and offline use
 0005-help-and-docs FR-002	check	workspaces-host: ws-host test	tests check every topic's steps are actions that print as one line or none
@@ -77,7 +78,7 @@ requirement	mechanism	by	note
 0005-help-and-docs FR-008	check	workspaces-host: ws-host test	tests check the graphics' sizes and identity with the extension's logo, the licence and the colophon, and the themes
 0005-help-and-docs FR-009	check	workspaces-host: ws-host test	a test scans the guide for the banned throat-clearing phrases
 0005-help-and-docs FR-010	check	workspaces-host: ws-host test	tests check the home page names the mascot and the manuscript includes every chapter
-0005-help-and-docs FR-011	check	workspaces-host: ws-host test	tests check the shell topic and chapter say bash and oh-my-posh are supported and fish 4 is best, and that no code changes a login shell or startup files
+0005-help-and-docs FR-011	check	workspaces-host: ws-host test	tests check the shell topic and chapter say bash and oh-my-posh are supported and fish 4 is best, and that no code changes a login shell and only shell add edits a startup file
 0005-help-and-docs FR-012	check	workspaces-host: ws-host test	tests check the extend topic and chapter describe the Python registry way and nothing else
 0005-help-and-docs FR-013	check	workspaces-host: ws-host test	tests check the skill lists every command and says decisions are for a person; fresh proves it current
 0005-help-and-docs FR-014	check	workspaces-host: ws-host test	tests hand-edit and delete generated files and check fresh and check fresh fail naming the command
@@ -100,3 +101,5 @@ requirement	mechanism	by	note
 0006-onboarding FR-017	check	workspaces-host: ws-host test	tests check the start page's sections, their order, and the lines to type, with and without colour, and that install.sh ends by showing it
 0006-onboarding FR-018	check	workspaces-host: ws-host test	tests check the starter repositories, an explicit list and an empty one, and cloning them into the layout
 0006-onboarding FR-019	check	workspaces-host: ws-host test	tests check repo add puts a new address on the person's list, keeps their other lines and the starters, copies it, and changes nothing in a dry run
+0006-onboarding FR-020	check	workspaces-host: ws-host test	tests check the spinner on a terminal after the delay, nothing for a quick step, a line left by a slow one, the reason for a failure, nothing in a pipe, JSON or a dumb terminal, the download size, and the installer's own spinner on a pseudo-terminal
+0006-onboarding FR-021	check	workspaces-host: ws-host test	tests check install.sh ends with the one line to start a new login shell when ~/.local/bin was not on the PATH and says nothing when it was, and that uv's installer is told not to edit shell files

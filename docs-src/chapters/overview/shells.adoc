@@ -24,8 +24,21 @@ command -v fish | sudo tee -a /etc/shells
 chsh -s $(command -v fish)
 ----
 
-`oh-my-posh` draws icons, so set a Nerd Font in your terminal. The prompt lines for both shells are in `ws-host help
-shell`, where they stay current.
+`oh-my-posh` draws icons, so set a Nerd Font in your terminal.
 
-The one rule I keep for shells is that `ws-host` never edits your login shell, your startup files, your git configuration
-or your VS Code settings unasked. It tells you what it recommends and offers a button; you press it or you do not.
+== The coach prompt, in either shell
+
+bash gets the same `oh-my-posh` treatment and the same coach theme as fish. You ask for it with one command for each shell,
+and `ws-host help shell` keeps the current steps:
+
+----
+ws-host shell add bash
+ws-host shell add fish
+----
+
+Each one adds a few lines between marker comments to `~/.bashrc` or to fish's `config.fish`, after keeping a copy of the
+file in `~/.local/state/workspaces-host/backups`. A second run changes nothing. To go back, delete the lines between the
+markers.
+
+The one rule I keep for shells is that `ws-host` never edits your login shell, your git configuration or your VS Code
+settings unasked, and edits a shell startup file only when you run `shell add`. It tells you what it recommends and offers a button; you press it or you do not.

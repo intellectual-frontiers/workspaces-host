@@ -292,6 +292,6 @@ class ShellKit(Home):
         text = "".join(p.read_text() for p in (REPO / "ws_host").rglob("*.py"))
         for needle in ("chsh", ".bashrc", "config.fish", "/etc/shells"):
             for p in (REPO / "ws_host").rglob("*.py"):
-                if "help" in p.parts:
+                if "help" in p.parts or p.name == "shell.py" and p.parent.name == "commands":   # `shell add` is the one command that edits one (0003 FR-015)
                     continue
                 self.assertNotIn(needle, p.read_text(), f"{needle} in {p}")

@@ -8,6 +8,9 @@
 # workspaces-host beside your other repositories (or advances an existing copy by fast-forward only), links ~/.local/bin/ws-host,
 # checks your machine, and runs `ws-host workspace advance`. Safe to run again.
 #
+# Long steps show one line with a spinner (after half a second, at a terminal only) instead of a wall of output; what a step printed is
+# kept in a log and shown only if the step fails. A slow network therefore looks busy, not stuck.
+#
 # Environment, so it can be tested: WS_HOST_URL (where to clone from), WS_HOST_HOME (the workspaces folder), WS_HOST_NO_APT=1
 # (never install packages), WS_HOST_NO_ADVANCE=1 (stop after the check).
 set -eu
@@ -16,7 +19,57 @@ url=${WS_HOST_URL:-https://github.com/intellectual-frontiers/workspaces-host}
 root=${WS_HOST_HOME:-$HOME/workspaces}
 target=$root/github.com/intellectual-frontiers/workspaces-host
 
+orig_path=$PATH
+
+# Colour and emoji only at a terminal (and never with NO_COLOR), so a log or a pipe stays plain.
+if [ -t 2 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-dumb}" != dumb ]; then
+  b=$(printf '\033[1m'); c=$(printf '\033[1;36m'); g=$(printf '\033[32m'); r=$(printf '\033[31m'); d=$(printf '\033[2m'); z=$(printf '\033[0m')
+else
+  b=""; c=""; g=""; r=""; d=""; z=""
+fi
+case "${LC_ALL:-${LC_CTYPE:-${LANG:-}}}" in
+  *[Uu][Tt][Ff]*) frames='⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏'; tick='✔'; cross='✖' ;;
+  *) frames='| / - \'; tick='ok'; cross='x' ;;
+esac
+
 say() { printf '%s\n' "$*"; }
+
+# step LABEL COMMAND...: run COMMAND quietly with a one-line spinner. Shows its output only if it fails; returns its status.
+step() {
+  label=$1; shift
+  log=$(mktemp "${TMPDIR:-/tmp}/ws-host-install.XXXXXX")
+  "$@" >"$log" 2>&1 &
+  pid=$!
+  trap 'kill "$pid" 2>/dev/null; rm -f "$log"; exit 130' INT TERM
+  shown=0; ticks=0; start=$(date +%s)
+  # shellcheck disable=SC2086
+  set -- $frames; nframes=$#
+  if [ -t 2 ] && [ "${TERM:-dumb}" != dumb ]; then
+    while kill -0 "$pid" 2>/dev/null; do
+      ticks=$((ticks + 1))
+      if [ "$ticks" -ge 5 ]; then   # about half a second in: a quick step shows nothing at all
+        shown=1
+        n=$(( ticks % nframes )); f=""; i=0
+        for f in $frames; do [ "$i" = "$n" ] && break; i=$((i + 1)); done
+        printf '\r\033[K%s%s%s %s %s(%ss)%s' "$c" "$f" "$z" "$label" "$d" "$(( $(date +%s) - start ))" "$z" >&2
+      fi
+      sleep 0.1
+    done
+  fi
+  rc=0
+  wait "$pid" || rc=$?
+  trap - INT TERM
+  [ "$shown" = 1 ] && printf '\r\033[K' >&2
+  if [ "$rc" != 0 ]; then
+    printf '%s%s%s %s\n' "$r" "$cross" "$z" "$label" >&2
+    tail -n 8 "$log" >&2
+  elif [ "$shown" = 1 ] && [ $(( $(date +%s) - start )) -ge 2 ]; then
+    printf '%s%s%s %s\n' "$g" "$tick" "$z" "$label" >&2
+  fi
+  rm -f "$log"
+  return "$rc"
+}
+
 need() {
   say "ws-host cannot be installed yet: $1" >&2
   say "Fix: $2" >&2
@@ -39,14 +92,15 @@ if [ -n "$missing" ]; then
   if [ "$(id -u)" != 0 ]; then
     command -v sudo >/dev/null 2>&1 || need "this machine lacks:$missing, and sudo is not here to install them." "ask an administrator to run: apt install$missing"
     sudo_cmd=sudo
-    say "I need to install:$missing. That needs administrator rights, so your password may be asked."
+    say "${b}I need to install:${z}$missing. That needs administrator rights, so your password may be asked."
+    sudo -v || need "the password was not accepted." "run this again and type your Linux password (nothing shows while you type)"
   else
     say "Installing:$missing."
   fi
-  $sudo_cmd env DEBIAN_FRONTEND=noninteractive apt-get update -qq ||
+  step "Refreshing the package list" $sudo_cmd env DEBIAN_FRONTEND=noninteractive apt-get update -qq ||
     need "the package list could not be refreshed." "check your network, then run this again"
   # shellcheck disable=SC2086
-  $sudo_cmd env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $missing ||
+  step "Installing$missing" $sudo_cmd env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $missing ||
     need "the packages could not be installed." "run: sudo apt install$missing"
 fi
 
@@ -58,19 +112,19 @@ command -v git >/dev/null 2>&1 || need "git is not installed." "sudo apt install
 PATH=$HOME/.local/bin:$PATH
 export PATH
 if ! command -v uv >/dev/null 2>&1; then
-  say "Installing uv, the tool ws-host runs on..."
+  # uv's own installer edits shell startup files unless told not to; ws-host never does that unasked.
+  export UV_NO_MODIFY_PATH=1 INSTALLER_NO_MODIFY_PATH=1
   if command -v curl >/dev/null 2>&1; then
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+    step "Installing uv, the tool ws-host runs on" sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh' || need "uv could not be installed." "check your network, then run this again"
   elif command -v wget >/dev/null 2>&1; then
-    wget -qO- https://astral.sh/uv/install.sh | sh
+    step "Installing uv, the tool ws-host runs on" sh -c 'wget -qO- https://astral.sh/uv/install.sh | sh' || need "uv could not be installed." "check your network, then run this again"
   else
     need "uv is not installed, and neither curl nor wget is here to fetch it." "sudo apt install curl, then run this again"
   fi
 fi
 
 if [ -d "$target/.git" ]; then
-  say "Updating $target (only if nothing of yours is in the way)..."
-  if git -C "$target" fetch --quiet origin; then
+  if step "Checking workspaces-host for news" git -C "$target" fetch --quiet origin; then
     git -C "$target" merge --ff-only --quiet '@{upstream}' 2>/dev/null ||
       say "Your copy was left exactly as it was; your work is safe."
   else
@@ -78,24 +132,36 @@ if [ -d "$target/.git" ]; then
   fi
 else
   mkdir -p "$(dirname "$target")"
-  GIT_TERMINAL_PROMPT=0 git clone --quiet "$url" "$target" || need "could not copy $url." "check your network, then run this again"
+  GIT_TERMINAL_PROMPT=0 step "Copying workspaces-host" git clone --quiet "$url" "$target" || need "could not copy $url." "check your network, then run this again"
 fi
 
 mkdir -p "$HOME/.local/bin"
 ln -sf "$target/ws-host" "$HOME/.local/bin/ws-host"
-say "Linked $HOME/.local/bin/ws-host"
 
-# A new terminal finds ~/.local/bin by itself on Debian and Ubuntu once it exists; this one needs to be told.
-"$HOME/.local/bin/ws-host" doctor || true
-say ""
+ws="$HOME/.local/bin/ws-host"
 if [ "${WS_HOST_NO_ADVANCE:-}" = 1 ]; then
-  "$HOME/.local/bin/ws-host" help start || say "Next: run  ws-host help start"
-  exit 0
+  "$ws" doctor || true
+  say ""
+  "$ws" help start || say "Next: run  ws-host help start"
+else
+  say ""
+  say "${b}Setting up your workspace...${z}"
+  "$ws" workspace advance || true
+  say ""
+  # The first steps are the program's own help page, so what this prints can never differ from what it teaches.
+  "$ws" help start || say "Run  ws-host help start  for what to do next."
 fi
-say "Now setting up your workspace..."
-"$HOME/.local/bin/ws-host" workspace advance || true
-say ""
-# The first steps are the program's own help page, so what this prints can never differ from what it teaches.
-"$HOME/.local/bin/ws-host" help start || say "Run  ws-host help start  for what to do next."
-say ""
-say "If a new terminal does not know ws-host, close it and open another."
+
+# A new terminal finds ~/.local/bin by itself on Debian and Ubuntu once it exists. This window cannot be changed from here, so say how.
+case ":$orig_path:" in
+  *":$HOME/.local/bin:"*) ;;
+  *)
+    sh_name=${SHELL:-bash}; sh_name=${sh_name##*/}
+    say ""
+    say "${b}🔄 One last thing:${z} this window does not know the ws-host command yet. Type the line below, or close this window and open a new one."
+    say ""
+    say "    ${c}exec $sh_name -l${z}"
+    say ""
+    say "Then try:  ${c}ws-host help start${z}"
+    ;;
+esac

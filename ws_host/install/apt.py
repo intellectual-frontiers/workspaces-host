@@ -74,6 +74,8 @@ def install(packages: list[str]) -> subprocess.CompletedProcess:
     if prefix is None:
         raise AptError("no-sudo", "sudo is not available")
     env = ["env", "DEBIAN_FRONTEND=noninteractive"]
+    if prefix == ["sudo"]:
+        subprocess.run(["sudo", "-v"])      # ask for the password first, in plain view, so the spinner never covers the question
     if prefix:
         u = _run([*prefix, *env, "apt-get", "update", "-qq"])
         if u.returncode != 0 and prefix == ["sudo", "-n"] and "password" in (u.stderr or "").lower():
