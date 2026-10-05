@@ -158,17 +158,21 @@ _bash and oh-my-posh work fine; fish 4 is the best experience._
 bash with oh-my-posh is fully supported, and fish 4 with oh-my-posh is the best way to work.
 
 .bash
-Your login shell is bash, and it stays bash. oh-my-posh works in it. Add this line to ~/.bashrc:
+Your login shell is bash, and it stays bash. oh-my-posh works in it with the coach theme. One command adds a few marked lines to ~/.bashrc, after keeping a copy of the file, and a second run changes nothing:
 
 ----
-eval "$(oh-my-posh init bash --config ~/workspaces/github.com/intellectual-frontiers/workspaces-host/themes/coach.omp.json)"
+ws-host shell add bash
 ----
+
+To go back, delete the lines between '>>> workspaces-host' and '<<< workspaces-host'.
 
 .fish 4
-fish suggests and colors as you type, and oh-my-posh looks best in it. The shell kit installs fish 4 and oh-my-posh. Try it without changing anything by typing fish. Add this line to ~/.config/fish/config.fish:
+fish suggests and colors as you type, and oh-my-posh looks best in it. The shell kit installs fish 4 and oh-my-posh, and the same command gives fish the coach prompt in ~/.config/fish/config.fish. Try it without changing anything by typing fish:
 
 ----
-oh-my-posh init fish --config ~/workspaces/github.com/intellectual-frontiers/workspaces-host/themes/coach.omp.json | source
+ws-host kit add shell
+ws-host shell add fish
+fish
 ----
 
 .Making fish your login shell
@@ -179,14 +183,16 @@ command -v fish | sudo tee -a /etc/shells
 chsh -s $(command -v fish)
 ----
 
-ws-host never changes your login shell or your shell files.
+ws-host never changes your login shell, and it edits a shell file only when you run shell add.
 
 .The theme
 The coach theme is themes/coach.omp.json in your workspaces-host copy. oh-my-posh draws icons, so use a Nerd Font in your terminal.
 
 .Steps
 
+* Give bash the coach prompt: `ws-host shell add bash`
 * Install fish and oh-my-posh: `ws-host kit add shell` (Run this one in a terminal; it asks for your password.)
+* Give fish the coach prompt: `ws-host shell add fish`
 * Check the shell kit: `ws-host kit show shell`
 
 === signin
@@ -261,15 +267,22 @@ To remove one or change the list, open your settings file in VS Code and edit th
 code ~/.config/workspaces-host/ws-host.env
 ----
 
-.🐟 Try fish, a friendlier terminal
-fish suggests and colors what you type. Install it, then type fish to try it. Nothing else changes, and bash keeps working.
+.🎨 A friendlier terminal
+bash gets a clear, colorful prompt with the coach theme when you ask for it. It adds a few marked lines to your ~/.bashrc, keeps a copy of the file first, and you can delete the lines any time:
+
+----
+ws-host shell add bash
+----
+
+fish is nicer still: it suggests and colors what you type. Install it, give it the same prompt, and type fish to try it. bash keeps working either way.
 
 ----
 ws-host kit add shell
+ws-host shell add fish
 fish
 ----
 
-To make fish what every new window opens, ask ws-host: ws-host help shell.
+To make fish what every new window opens, see: ws-host help shell.
 
 .🆘 Stuck?
 Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help in VS Code for a report with no passwords in it, and paste it to someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/
@@ -279,6 +292,7 @@ Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help i
 * Sign in to GitHub: `ws-host auth new github`
 * Copy your starter repositories: `ws-host workspace advance`
 * Set VS Code up: `ws-host vscode advance`
+* Give bash the coach prompt: `ws-host shell add bash` (adds a few marked lines to ~/.bashrc)
 * Try fish: `ws-host kit add shell` (asks for your password)
 * See where things stand: `ws-host workspace status`
 * Check your machine: `ws-host doctor`

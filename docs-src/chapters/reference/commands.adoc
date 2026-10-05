@@ -115,6 +115,19 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 
 |===
 
+=== shell
+
+[cols="3,1,2,5"]
+|===
+|Usage |Category |Where it runs |What it does
+
+|`ws-host shell add SHELL`
+|setup
+|terminal, editor
+|Give bash or fish the oh-my-posh prompt with the coach theme
+
+|===
+
 === skill
 
 [cols="3,1,2,5"]

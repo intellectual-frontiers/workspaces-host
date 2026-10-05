@@ -89,8 +89,18 @@ a kit installs what the distribution ships, so two machines may differ, and
   theme (`themes/coach.omp.json`) and sets up both `bash` and `fish`. Where the
   distribution ships `fish` older than 4, the kit MUST fetch the fish project's
   own release package for that distribution, verify it (FR-006) and unpack it
-  into the person's tools directory. The kit MUST NOT change the person's login
-  shell or their shell startup files (0005-help-and-docs FR-011).
+  into the person's tools directory. Installing the kit MUST NOT change the
+  person's login shell or their shell startup files (0005-help-and-docs FR-011);
+  FR-015 is the one command that edits a startup file, and only when asked.
+- **FR-015**: `shell add bash|fish` MUST give that shell the `oh-my-posh` prompt
+  with the coach theme, and nothing else does. It MUST add one block between
+  marker lines to `~/.bashrc` or to fish's `config.fish`, naming the marker so a
+  person can delete it, MUST keep a copy of the file in the person's state
+  directory first, MUST change nothing outside the markers, MUST change nothing
+  on a second run, MUST change nothing under `--dry-run`, and MUST refuse to
+  edit a file whose start marker has no end marker. It MUST download
+  `oh-my-posh` (FR-006) when it is missing, MUST ask for `fish` to be installed
+  first when it is missing, and MUST NOT change the login shell.
 
 ## Declared kits
 

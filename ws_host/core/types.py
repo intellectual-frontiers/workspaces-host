@@ -33,6 +33,8 @@ COMMAND = _pattern("COMMAND", r"^[a-z][a-z0-9-]*(?: [a-z][a-z0-9-]*)?$", ("docto
 SECTION = _pattern("SECTION", r"^[a-z][a-z0-9-]*$", ("registry", "launcher"))
 FORGE = register(Type("FORGE", ("github", "gitlab"), lambda v, ctx: None if v in ("github", "gitlab") else f"{v!r} is not github or gitlab",
                       lambda ctx: ["github", "gitlab"]))
+SHELL = register(Type("SHELL", ("bash", "fish"), lambda v, ctx: None if v in ("bash", "fish") else f"{v!r} is not bash or fish",
+                      lambda ctx: ["bash", "fish"]))
 # REPO and KIT resolve against the repositories and kits the machine knows; their validators are installed by the
 # modules that own them (commands/repo.py, commands/kit.py) so the core stays free of those rules.
 REPO = register(Type("REPO", ("github.com/org/repo", "repo"), lambda v, ctx: None))

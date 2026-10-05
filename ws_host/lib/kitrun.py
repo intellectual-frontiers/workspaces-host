@@ -1,7 +1,7 @@
 """Planning and installing kits (0003-kits). The commands and `workspace advance` both come here."""
 from __future__ import annotations
 
-from ..core import kits_state, machine, registry as reg
+from ..core import kits_state, machine, progress, registry as reg
 from ..core.resource import Action, WsError
 from ..install import apt, fetch
 
@@ -41,7 +41,8 @@ def install(ctx, kit, name: str):
             if prefix:
                 yield ("packages", "info", "This needs administrator rights, so I will use sudo to install: " + ", ".join(p["to_install"]) + ".")
             try:
-                apt.install(p["to_install"])
+                with progress.working("Installing " + (f"{len(p['to_install'])} packages" if len(p["to_install"]) > 1 else p["to_install"][0])):
+                    apt.install(p["to_install"])
                 yield ("packages", "ok", f"Installed {len(p['to_install'])} packages.")
             except apt.AptError as e:
                 if e.code == "needs-password":
@@ -52,7 +53,8 @@ def install(ctx, kit, name: str):
         yield ("packages", "ok", "All the packages are already installed." if p["packages"] else "This kit needs no packages.")
     for dl in kit.downloads(d):
         try:
-            r = fetch.install(dl, offline=ctx.offline)
+            with progress.working(f"Downloading {dl.name}"):
+                r = fetch.install(dl, offline=ctx.offline)
             yield (f"download {dl.name}", "ok", f"{dl.name} {dl.version} was already installed." if r["outcome"] == "present" else f"Installed {dl.name} {dl.version}.")
         except fetch.FetchError as e:
             yield (f"download {dl.name}", "missing" if e.code in ("offline",) else "fail", e.message)

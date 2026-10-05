@@ -76,7 +76,7 @@ class Bootstrap(Home):
         # a stand-in apt-get that "installs" by linking the real program into the tools directory
         (self.tools / "apt-get").write_text(f'#!/bin/sh\necho "apt-get $*" >> "{self.log}"\nfor a in "$@"; do case $a in git) ln -sf {self.real["git"]} "{self.tools}/git";; python3) ln -sf {self.real["python3"]} "{self.tools}/python3";; esac; done\nexit 0\n')
         (self.tools / "apt-get").chmod(0o755)
-        (self.tools / "sudo").write_text(f'#!/bin/sh\necho "sudo $*" >> "{self.log}"\nexec "$@"\n')
+        (self.tools / "sudo").write_text(f'#!/bin/sh\necho "sudo $*" >> "{self.log}"\n[ "$1" = -v ] && exit 0\nexec "$@"\n')
         (self.tools / "sudo").chmod(0o755)
         self.env = {**os.environ, "PATH": str(self.tools), "WS_HOST_URL": str(self.bare), "WS_HOST_HOME": str(self.home / "workspaces"), "WS_HOST_NO_ADVANCE": "1"}
 
@@ -93,7 +93,45 @@ class Bootstrap(Home):
         self.assertIn("sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq", log)
         self.assertIn("python3", log)
         self.assertIn("git", log)
+        self.assertEqual(log.splitlines()[0], "sudo -v", "the password is asked first, in plain view, before any spinner")
         self.assertTrue((self.home / ".local/bin/ws-host").is_symlink(), p.stdout + p.stderr)
+
+    def test_it_ends_with_the_one_line_that_makes_this_window_find_ws_host(self):
+        p = self.run_install(SHELL="/bin/bash")
+        self.assertIn("exec bash -l", p.stdout)
+        self.assertIn("this window does not know the ws-host command yet", p.stdout)
+
+    def test_it_says_nothing_about_the_window_when_ws_host_is_already_on_the_path(self):
+        p = self.run_install(PATH=f"{self.tools}:{self.home}/.local/bin")
+        self.assertNotIn("exec bash -l", p.stdout)
+        self.assertNotIn("One last thing", p.stdout)
+
+    def test_uvs_own_installer_is_told_not_to_edit_shell_files(self):
+        (self.tools / "uv").unlink()
+        (self.tools / "curl").write_text(f'#!/bin/sh\necho "UV_NO_MODIFY_PATH=$UV_NO_MODIFY_PATH INSTALLER_NO_MODIFY_PATH=$INSTALLER_NO_MODIFY_PATH" >> "{self.log}"\necho exit 0\n')
+        (self.tools / "curl").chmod(0o755)
+        self.run_install()
+        self.assertIn("UV_NO_MODIFY_PATH=1 INSTALLER_NO_MODIFY_PATH=1", self.log.read_text())
+
+    def test_on_a_terminal_a_slow_step_shows_a_spinner_and_a_quick_one_nothing(self):
+        import pty
+        (self.tools / "apt-get").write_text((self.tools / "apt-get").read_text().replace("exit 0", "case \"$*\" in *install*) sleep 2.3;; esac\nexit 0"))
+        chunks = []
+        env = {**self.env, "TERM": "xterm", "LANG": "C.UTF-8"}
+        saved = os.environ.copy()
+        try:
+            os.environ.clear()
+            os.environ.update(env)
+            pty.spawn(["sh", str(REPO / "install.sh")], lambda fd: chunks.append(os.read(fd, 4096)) or chunks[-1])
+        finally:
+            os.environ.clear()
+            os.environ.update(saved)
+        text = b"".join(chunks).decode(errors="replace")
+        self.assertIn("Installing python3 git", text)
+        self.assertIn("\r\x1b[K", text)
+        self.assertIn("✔", text)
+        self.assertNotIn("Refreshing the package list", text, "the quick step before it shows nothing at all")
+        self.assertNotIn("Copying workspaces-host", text, "a quick step shows nothing at all")
 
     def test_with_no_apt_allowed_it_names_the_command_to_run(self):
         p = self.run_install(WS_HOST_NO_APT="1")
@@ -122,6 +160,6 @@ class Bootstrap(Home):
         (self.home / ".config" / "workspaces-host" / "ws-host.env").write_text('WS_HOST_KIT=""\n')
         env = {k: v for k, v in self.env.items() if k != "WS_HOST_NO_ADVANCE"}
         p = subprocess.run(["sh", str(REPO / "install.sh")], capture_output=True, text=True, env=env)
-        self.assertIn("Now setting up your workspace", p.stdout)
+        self.assertIn("Setting up your workspace", p.stdout)
         self.assertIn("Sign in to GitHub first", p.stdout)
         self.assertIn("ws-host auth new github", p.stdout)

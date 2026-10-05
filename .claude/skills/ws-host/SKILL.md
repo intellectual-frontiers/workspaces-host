@@ -40,6 +40,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `repo list` | read | terminal, editor, mcp | List the repositories I know |
 | `repo set` | decision | terminal, editor | Trust or stop trusting a repository's code |
 | `repo status` | read | terminal, editor, mcp | Show the state of one or all repositories |
+| `shell add` | setup | terminal, editor | Give bash or fish the oh-my-posh prompt with the coach theme |
 | `skill generate` | generate | terminal, editor, mcp | Rewrite the skill that tells an AI agent how to use ws-host |
 | `test` | check | terminal, editor, mcp | Run this repository's tests |
 | `vscode add` | setup | terminal | Install the VS Code extension that is the interface for every orchestrator |

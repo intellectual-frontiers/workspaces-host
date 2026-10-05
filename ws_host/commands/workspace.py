@@ -7,7 +7,7 @@ from ..core import config, env, registry as reg
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
 from ..lib import git, kitrun, repos, trust as trust_mod
-from . import auth as auth_cmd, doctor as doctor_cmd, vscode as vscode_cmd
+from . import auth as auth_cmd, doctor as doctor_cmd, shell as shell_cmd, vscode as vscode_cmd
 
 
 def declared_kits(cfg) -> dict[str, list[str]]:
@@ -110,7 +110,8 @@ def workspace_advance(ctx):
     steps.append({"name": "doctor", "status": "fail" if bad else "ok", "plain": doctor_cmd._plain(d["checks"])})
     results = added + updated
     failed = any(s["status"] == "fail" for s in steps)
-    actions = _auth_actions(results, cfg) + kit_actions + kit_result.get("actions", []) + editor_actions
+    prompt_actions = [] if shell_cmd.configured("bash") else [Action(("shell", "add"), "Give bash the coach prompt", {"shell": "bash"})]
+    actions = _auth_actions(results, cfg) + kit_actions + kit_result.get("actions", []) + editor_actions + prompt_actions
     plain = ("Everything is up to date." if not failed and not any(r["outcome"] in ("skipped",) for r in results) else
              "Done, with a few things to look at." if not failed else "Done, but some things did not work. The steps below say which.")
     yield Resource("workspace-advance", "workspace", {"plain": plain, "steps": steps, "repositories": results, "ignored": invalid},

@@ -71,7 +71,8 @@ everything is extended with AI, in Python, through the registry.
   `oh-my-posh`, that `fish` 4 comes in the `shell` kit with `oh-my-posh` and the
   coach prompt theme (0003-kits FR-014), and how to try it and how to make it
   the login shell, as a separate step that only the person takes. `ws-host` MUST
-  NOT change a person's login shell or shell startup files.
+  NOT change a person's login shell, and MUST edit a shell startup file only
+  when the person runs `shell add` (0003-kits FR-015).
 - **FR-012**: The guide and the `extend` topic MUST say that everything is
   extended with AI, in Python: a new command or kit is a Python module added by
   presence to `ws_host/commands/` or `ws_host/kits/`, importing only the
