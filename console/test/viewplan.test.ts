@@ -1,4 +1,4 @@
-// The views each command line declares, merged across repositories by id (0043-if-console FR-036).
+// The views each command line declares, merged across repositories by id (0009-workspaces-console FR-036).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Loose } from './support/fake-launcher';

@@ -1,4 +1,4 @@
-// The rows of a noun's `list` (0041-command-line FR-064, 0043-if-console FR-036, FR-038): which fields of each row are its label, its
+// The rows of a noun's `list` (0041-command-line FR-064, 0009-workspaces-console FR-036, FR-038): which fields of each row are its label, its
 // description, its status and its badge is the command line's own declaration; this reads a `list` document by it and holds no field name.
 import { asArray, asString, isObject, type JsonObject } from './json';
 import { rowStatus, type ListDecl, type Status } from './presentation';

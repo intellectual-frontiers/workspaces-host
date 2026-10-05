@@ -1,4 +1,4 @@
-// What the resource panel draws (0043-if-console FR-042): a resource's JSON turned into a model of header, actions and sections, by the
+// What the resource panel draws (0009-workspaces-console FR-042): a resource's JSON turned into a model of header, actions and sections, by the
 // shape of its data. The model is plain data (no VS Code, no DOM): the host builds it here and posts it, the panel's page draws it, and a
 // test reads it. Nothing here knows any one orchestrator's resource: a key, an array of objects or a list of stages is read as what it is.
 import { asObject, asString, isObject, type JsonObject } from './json';

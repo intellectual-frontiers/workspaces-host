@@ -1,4 +1,4 @@
-// The task type `workspaces-console` (0043-if-console FR-010): a repository's repository-wide commands (`check`, `test`, `fresh`, `doctor`) and,
+// The task type `workspaces-console` (0009-workspaces-console FR-010): a repository's repository-wide commands (`check`, `test`, `fresh`, `doctor`) and,
 // for `check`, a section or a suite, under Run Task, bindable to a keybinding. A task runs the launcher with `--json` and writes a summary
 // to its terminal; the findings of a check go straight to the Problems panel (direct diagnostics), so no problem matcher is needed.
 import * as vscode from 'vscode';

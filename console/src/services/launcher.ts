@@ -1,4 +1,4 @@
-// Running a repository's launcher (0043-if-console FR-003, FR-017, FR-020): every call is `<launcher> ... --json`, with
+// Running a repository's launcher (0009-workspaces-console FR-003, FR-017, FR-020): every call is `<launcher> ... --json`, with
 // the repository's root as the working directory and IF_CONSOLE=1 in the environment, so that the launcher logs the surface `editor`
 // (0041-command-line FR-042). Nothing else is ever run.
 import * as childProcess from 'child_process';

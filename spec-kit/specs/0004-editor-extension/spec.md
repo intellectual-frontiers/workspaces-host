@@ -12,23 +12,23 @@ shipped on its own are retired and say what governs now.
 
 ## What it was
 
-- **FR-001**: Retired. Ws-host ships no extension; the Workspaces Console is the one extension (0043-if-console FR-001, FR-002).
-- **FR-002**: Retired. The Workspaces Console discovers launchers by their own declaration and holds no rule of any orchestrator (0043-if-console FR-003 to FR-005).
-- **FR-003**: Retired. The Workspaces Console runs only in a trusted workspace for a trusted repository (0043-if-console FR-006).
-- **FR-004**: Retired. The Workspaces Console's status bar item names how many things need a person and what to do (0043-if-console FR-016, FR-048).
-- **FR-005**: Retired. The Workspaces Console's views and tree come from the command line's own presentation (0043-if-console FR-008, FR-036; 0001-ws-host FR-018).
-- **FR-006**: Retired. The Workspaces Console draws a resource in one panel from its JSON (0043-if-console FR-003, FR-042).
-- **FR-007**: Retired. The Workspaces Console builds the input of a command from its typed arguments (0043-if-console FR-013).
-- **FR-008**: Retired. The Workspaces Console follows a stream as progress (0043-if-console FR-020).
-- **FR-009**: Retired. The Workspaces Console shows the findings of a check in the Problems panel (0043-if-console FR-009).
-- **FR-010**: Retired. The Workspaces Console checks each document's schema (0043-if-console FR-021).
-- **FR-011**: Retired. A decision needs a modal and no command takes an action (0043-if-console FR-015).
-- **FR-012**: Retired. The Workspaces Console writes nothing itself (0043-if-console FR-026).
+- **FR-001**: Retired. Ws-host ships no extension; the Workspaces Console is the one extension (0009-workspaces-console FR-001, FR-002).
+- **FR-002**: Retired. The Workspaces Console discovers launchers by their own declaration and holds no rule of any orchestrator (0009-workspaces-console FR-003 to FR-005).
+- **FR-003**: Retired. The Workspaces Console runs only in a trusted workspace for a trusted repository (0009-workspaces-console FR-006).
+- **FR-004**: Retired. The Workspaces Console's status bar item names how many things need a person and what to do (0009-workspaces-console FR-016, FR-048).
+- **FR-005**: Retired. The Workspaces Console's views and tree come from the command line's own presentation (0009-workspaces-console FR-008, FR-036; 0001-ws-host FR-018).
+- **FR-006**: Retired. The Workspaces Console draws a resource in one panel from its JSON (0009-workspaces-console FR-003, FR-042).
+- **FR-007**: Retired. The Workspaces Console builds the input of a command from its typed arguments (0009-workspaces-console FR-013).
+- **FR-008**: Retired. The Workspaces Console follows a stream as progress (0009-workspaces-console FR-020).
+- **FR-009**: Retired. The Workspaces Console shows the findings of a check in the Problems panel (0009-workspaces-console FR-009).
+- **FR-010**: Retired. The Workspaces Console checks each document's schema (0009-workspaces-console FR-021).
+- **FR-011**: Retired. A decision needs a modal and no command takes an action (0009-workspaces-console FR-015).
+- **FR-012**: Retired. The Workspaces Console writes nothing itself (0009-workspaces-console FR-026).
 - **FR-013**: Retired. What a command logs names its surface (0041-command-line FR-042).
-- **FR-014**: Retired. Signing in is an action like any other (0043-if-console FR-013 to FR-015); the sign-in code is shown by the resource `auth new` returns.
-- **FR-015**: Retired. The Workspaces Console offers Get Help and Copy Context (0043-if-console FR-012, FR-018).
-- **FR-018**: Retired. The Workspaces Console offers Learn on the same panel (0043-if-console FR-031, FR-043).
-- **FR-019**: Retired. Every suggestion is actionable in the Workspaces Console (0043-if-console FR-048); `doctor` supplies the actions (0001-ws-host FR-017).
+- **FR-014**: Retired. Signing in is an action like any other (0009-workspaces-console FR-013 to FR-015); the sign-in code is shown by the resource `auth new` returns.
+- **FR-015**: Retired. The Workspaces Console offers Get Help and Copy Context (0009-workspaces-console FR-012, FR-018).
+- **FR-018**: Retired. The Workspaces Console offers Learn on the same panel (0009-workspaces-console FR-031, FR-043).
+- **FR-019**: Retired. Every suggestion is actionable in the Workspaces Console (0009-workspaces-console FR-048); `doctor` supplies the actions (0001-ws-host FR-017).
 
 ## Installing the Workspaces Console
 
@@ -43,7 +43,7 @@ shipped on its own are retired and say what governs now.
 - **FR-023**: `vscode ensure` MUST write `workspaces.code-workspace` in the
   person's workspaces folder (never in a clone), listing the cloned repositories
   they work in as relative folders, so that the Workspaces Console finds each one's
-  command line (0043-if-console FR-007). It MUST add only folders that are not
+  command line (0009-workspaces-console FR-007). It MUST add only folders that are not
   there, keep every folder and setting the person has, and leave a file it
   cannot read safely exactly as it was, saying so.
 - **FR-024**: `workspace ensure` MUST say, from a record `vscode ensure` keeps
@@ -82,24 +82,20 @@ shipped on its own are retired and say what governs now.
   to open a file from a terminal and from VS Code, how to add a repository and
   what to do when only one repository shows.
 
-## Out of scope- The Workspaces Console's own behavior: 0043-if-console in the public root.
-- Repo-shipped kits and MCP.
+## Out of scope
+
+- The Workspaces Console's own behavior: 0009-workspaces-console.
 - Editors other than VS Code.
 
 ## Edge cases
 
-- The public root is not trusted: nothing of it runs, and the trust is offered as
-  a decision, per FR-021.
-- The public root is not cloned: the step says to copy it first, per FR-021.
-- The public root has published a release with the package and its digest: it is
-  installed without a build or trust, per FR-026.
-- The release's download does not match its digest: plain words, and the build
-  is tried after trust, per FR-026.
-- The build fails: plain words, the end of its output, nothing installed, per
-  FR-021.
-- The public root has not moved since the last build: it is not built again, per
-  FR-021.
-- The older extension is installed: it is removed, per FR-022.
+- The latest release carries the Console with its digest: it is installed once
+  after the digest is checked, per FR-021 and 0007-releases FR-013.
+- The release's download does not match its digest: plain words and nothing
+  installed, per 0007-releases FR-013.
+- The Console is already installed at that version: nothing is done, per FR-021.
+- An older extension of the same family is installed: it is left alone; only the
+  Console is installed, per FR-020.
 - The workspace file has the person's own folders and settings: they are kept,
   per FR-023.
 - The workspace file has comments: it is left alone, per FR-023.
@@ -110,26 +106,25 @@ shipped on its own are retired and say what governs now.
 
 - VS Code 1.85 or later, with the extension host in the same machine or WSL
   distribution as the repositories.
-- The public root builds its extension with `python3` and `uv` alone
-  (0043-if-console FR-027).
+- The Console is built and released from this repository (0009-workspaces-console
+  FR-027, 0007-releases).
 
 ## Open questions
 
-- **OQ-1**: Answered by FR-026.
+- **OQ-1**: Answered by 0007-releases FR-013.
 
 ## Key entities
 
-- **The Workspaces Console** — the public root's one extension, built and installed by
-  `vscode ensure`.
+- **The Workspaces Console** — this repository's one extension, released as
+  0007-releases states and installed by `vscode ensure`.
 - **The workspace file** — `workspaces.code-workspace`, the repositories a person
   works in, as one VS Code window.
 
 ## Success criteria
 
-- **SC-001**: A person runs `ws-host vscode ensure`, trusts the public root once,
-  opens the workspace file, and sees what needs them and the commands of every
-  repository in VS Code.
-- **SC-002**: No code of the public root runs before the person trusts it.
+- **SC-001**: A person runs `ws-host vscode ensure`, opens the workspace file,
+  and sees what needs them and the commands of every trusted repository in VS Code.
+- **SC-002**: No code of a repository runs in the editor before the person trusts it.
 
 ## Review & acceptance checklist
 

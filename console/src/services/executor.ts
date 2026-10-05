@@ -1,4 +1,4 @@
-// Running a command for a person (0043-if-console FR-013, FR-014, FR-015, FR-017, FR-020). The one path every command takes:
+// Running a command for a person (0009-workspaces-console FR-013, FR-014, FR-015, FR-017, FR-020). The one path every command takes:
 //   form (typed arguments) -> the whole command line -> for a write, a dry run, its diff, and the person's acceptance ->
 //   for a decision, a modal confirmation that only a person can give -> the real run.
 // There is no other path that runs a write, and none that runs a decision without the modal: this module exports no function that skips

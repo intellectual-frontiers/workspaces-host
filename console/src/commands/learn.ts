@@ -1,4 +1,4 @@
-// Learn (0043-if-console FR-031, FR-043): the help topics the repository's `help` command lists, as a quick pick; a topic is shown in the
+// Learn (0009-workspaces-console FR-031, FR-043): the help topics the repository's `help` command lists, as a quick pick; a topic is shown in the
 // resource panel with its steps, each with its command line to copy and a Run that goes through the one path every command takes.
 import * as vscode from 'vscode';
 import type { App } from '../app';

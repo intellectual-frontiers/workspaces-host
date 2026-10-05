@@ -1,4 +1,4 @@
-// What the extension says when a result has something that needs a person (0043-if-console FR-048): the plain words, the exact command line, a
+// What the extension says when a result has something that needs a person (0009-workspaces-console FR-048): the plain words, the exact command line, a
 // button that runs the fix and a button that shows all of it; never "see below" and never a pointer to somewhere the person cannot see.
 import test from 'node:test';
 import assert from 'node:assert/strict';

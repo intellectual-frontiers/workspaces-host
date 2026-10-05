@@ -1,4 +1,4 @@
-// The patterns in files that name a resource (0041-command-line FR-064 `references`, 0043-if-console FR-041): found by the command line's own
+// The patterns in files that name a resource (0041-command-line FR-064 `references`, 0009-workspaces-console FR-041): found by the command line's own
 // declaration, in the files its globs name.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,7 +10,7 @@ const decl: ReferenceDecl = { id: 'requirement', noun: 'requirement', pattern: '
 
 test('a glob has `**` crossing directories, `*` and `?` staying in one, and braces as a choice', () => {
   const g = (p: string, path: string) => globRegex(p).test(path);
-  assert.ok(g('spec-kit/specs/**/*.md', 'spec-kit/specs/0043-if-console/spec.md'));
+  assert.ok(g('spec-kit/specs/**/*.md', 'spec-kit/specs/0009-workspaces-console/spec.md'));
   assert.ok(g('spec-kit/specs/**/*.md', 'spec-kit/specs/spec.md'));
   assert.ok(!g('docs/*.md', 'docs/a/b.md'));
   assert.ok(g('docs/*.md', 'docs/b.md'));
@@ -28,10 +28,10 @@ test('the template is filled from the pattern\'s groups; $$ is a dollar', () => 
 });
 
 test('references are found with their line and columns, by the declared pattern, in the order of the text', () => {
-  const text = 'See 0043-if-console FR-036 and 0041 FR-064.\nnothing here\nAlso 0043/FR-041, twice 0043 FR-041.\n';
+  const text = 'See 0009-workspaces-console FR-036 and 0041 FR-064.\nnothing here\nAlso 0043/FR-041, twice 0043 FR-041.\n';
   const found = findReferences([decl], text);
   assert.deepEqual(found.map((m) => [m.line, m.start, m.end, m.value, m.text]), [
-    [0, 4, 26, '0043/FR-036', '0043-if-console FR-036'], [0, 31, 42, '0041/FR-064', '0041 FR-064'], [2, 5, 16, '0043/FR-041', '0043/FR-041'], [2, 24, 35, '0043/FR-041', '0043 FR-041']]);
+    [0, 4, 26, '0043/FR-036', '0009-workspaces-console FR-036'], [0, 31, 42, '0041/FR-064', '0041 FR-064'], [2, 5, 16, '0043/FR-041', '0043/FR-041'], [2, 24, 35, '0043/FR-041', '0043 FR-041']]);
   assert.deepEqual(findReferences([{ ...decl, pattern: '(' }], text), [], 'a pattern that is not a regular expression finds nothing');
   assert.deepEqual(findReferences([{ ...decl, pattern: 'x*' }], 'abc'), [], 'an empty match is not a reference');
 });

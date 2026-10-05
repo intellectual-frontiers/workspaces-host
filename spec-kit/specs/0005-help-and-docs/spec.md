@@ -33,7 +33,7 @@ everything is extended with AI, in Python, through the registry.
   (adding a command or a kit with an AI).
 - **FR-004**: The editor MUST offer the topics as "Learn", a quick-pick of the
   topics `help` lists, and MUST show a topic as any other resource, its steps
-  as buttons (0043-if-console FR-031, FR-043, in the public root).
+  as buttons (0009-workspaces-console FR-031, FR-043,).
 - **FR-005**: Topics MUST NOT name a command, a kit or a path that does not
   exist, and every action in a topic MUST name a command the registry has.
   `check` MUST fail when one does.

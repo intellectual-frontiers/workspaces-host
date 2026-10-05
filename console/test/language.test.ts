@@ -1,4 +1,4 @@
-// Language features in the files a command line's references name (0043-if-console FR-041): hover, Go to Definition, CodeLens and document links,
+// Language features in the files a command line's references name (0009-workspaces-console FR-041): hover, Go to Definition, CodeLens and document links,
 // each from the launcher's `show` command and only in a trusted workspace.
 import test from 'node:test';
 import assert from 'node:assert/strict';

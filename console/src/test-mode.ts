@@ -1,4 +1,4 @@
-// The one test hook (0043-if-console FR-033). A test running inside a real VS Code cannot press the button of a modal dialog or read a
+// The one test hook (0009-workspaces-console FR-033). A test running inside a real VS Code cannot press the button of a modal dialog or read a
 // quick pick, so when VS Code runs this extension in its test mode (ExtensionMode.Test, which VS Code sets only for a host started with an
 // extension test path, never for an installed extension) the extension publishes one object, under Symbol.for('workspaces-console.test') on
 // globalThis, through which a test

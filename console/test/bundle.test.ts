@@ -1,4 +1,4 @@
-// The bundle the package ships (dist/extension.js, 0043-if-console FR-035) is the extension: loaded under the stand-in API, it activates, registers every
+// The bundle the package ships (dist/extension.js, 0009-workspaces-console FR-035) is the extension: loaded under the stand-in API, it activates, registers every
 // command the manifest contributes and exports nothing. It is skipped where no bundle has been built beside the tests.
 import test from 'node:test';
 import assert from 'node:assert/strict';

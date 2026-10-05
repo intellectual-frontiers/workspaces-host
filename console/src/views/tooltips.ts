@@ -1,4 +1,4 @@
-// The rich tooltips (0043-if-console FR-038): Markdown with codicons, the key facts of a row as a list and command links for its actions.
+// The rich tooltips (0009-workspaces-console FR-038): Markdown with codicons, the key facts of a row as a list and command links for its actions.
 // What a launcher returned is only ever inserted escaped (model/markdown.ts), and each link runs the one command `workspaces-console.followLink` with a
 // handle the extension issued, so that a tooltip can lead to nothing the extension did not offer.
 import * as vscode from 'vscode';

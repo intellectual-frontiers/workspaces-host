@@ -1,4 +1,4 @@
-// One workspace folder's repository (0043-if-console FR-005, FR-006, FR-007): its launcher, the command list the launcher returned, each
+// One workspace folder's repository (0009-workspaces-console FR-005, FR-006, FR-007): its launcher, the command list the launcher returned, each
 // command's description, its health from `doctor`, and the last check's results. Nothing is run until the workspace is trusted; a launcher
 // that does not answer `command list` with a document this extension understands is not shown as an orchestrator, and the log says why.
 import type * as vscode from 'vscode';

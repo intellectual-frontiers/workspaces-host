@@ -1,6 +1,6 @@
 'use strict';
 // The entry VS Code calls inside the extension host when the public root's `agora extension test --suite` runs this directory
-// (0043-if-console FR-034): it loads the Workspaces Console's own test runner and runs this suite once.
+// (0009-workspaces-console FR-034): it loads the Workspaces Console's own test runner and runs this suite once.
 const path = require('path');
 
 async function run() {

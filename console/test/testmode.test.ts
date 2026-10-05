@@ -1,4 +1,4 @@
-// The one test hook (0043-if-console FR-033): present only in VS Code's test mode, it answers a decision's modal and reads what was shown.
+// The one test hook (0009-workspaces-console FR-033): present only in VS Code's test mode, it answers a decision's modal and reads what was shown.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Loose } from './support/fake-launcher';

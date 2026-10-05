@@ -1,4 +1,4 @@
-// Home (0043-if-console FR-037, FR-048): what needs a person, derived from the launcher's own resources, and the owner's rule that every item is
+// Home (0009-workspaces-console FR-037, FR-048): what needs a person, derived from the launcher's own resources, and the owner's rule that every item is
 // actionable: plain words, the exact command line and a way to run it, or what the person must do themselves.
 import test from 'node:test';
 import assert from 'node:assert/strict';

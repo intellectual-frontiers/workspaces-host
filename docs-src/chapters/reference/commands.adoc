@@ -121,12 +121,12 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |terminal, editor
 |Stop using a provider (its programs stay until you prune them)
 
-|`ws-host provider run [PROVIDER] [ARGV...]`
+|`ws-host provider run PROVIDER [ARGV...] [--ensure STRING]`
 |build
 |terminal
 |Run a command with one provider's programs first on PATH
 
-|`ws-host provider show [PROVIDER]`
+|`ws-host provider show PROVIDER`
 |read
 |terminal, editor, mcp
 |Show one provider, its launcher and the programs it pins
@@ -261,6 +261,11 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 [cols="3,1,2,5"]
 |===
 |Usage |Category |Where it runs |What it does
+
+|`ws-host vscode check [--suite PATH] [--workspace STRING] [--report PATH] [--first PATH]`
+|check
+|terminal
+|Run a provider's tests of the Workspaces Console in a real VS Code under a display server
 
 |`ws-host vscode ensure`
 |setup

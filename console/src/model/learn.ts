@@ -1,4 +1,4 @@
-// Learn (0043-if-console FR-031, FR-043): a repository's help topics, each shown in the resource panel as its plain words, its sections and its
+// Learn (0009-workspaces-console FR-031, FR-043): a repository's help topics, each shown in the resource panel as its plain words, its sections and its
 // steps, each step with the exact command line to copy and a Run button. The topics, their words and their steps are the launcher's; this builds
 // the panel's model from the resource it returned and holds none of its own.
 import { asArray, asObject, asString } from './json';

@@ -1,4 +1,4 @@
-// The Testing API (0043-if-console FR-010, FR-040): each repository's `check` sections as tests in the Test Explorer, run by `check SECTION
+// The Testing API (0009-workspaces-console FR-010, FR-040): each repository's `check` sections as tests in the Test Explorer, run by `check SECTION
 // --json`, with two run profiles (Run, and Run with --changed); the findings of a failed section as child tests with a range at the line each
 // names; and, for each reference that a spec or a register names whose enforcing action is a check, a test with a range at its line, run by that
 // action. A section the launcher reports as skipped is shown as skipped, never as passed (0041-command-line FR-033).

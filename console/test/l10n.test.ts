@@ -1,4 +1,4 @@
-// Every user-facing string goes through vscode.l10n (0043-if-console FR-044): the code gives `t(...)` a literal message, the build reads them
+// Every user-facing string goes through vscode.l10n (0009-workspaces-console FR-044): the code gives `t(...)` a literal message, the build reads them
 // all from the source into l10n/bundle.l10n.json, and no message, placeholder, prompt or button is a bare literal.
 import test from 'node:test';
 import assert from 'node:assert/strict';

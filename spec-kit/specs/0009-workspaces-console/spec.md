@@ -42,7 +42,7 @@ the extension is `ws-host`'s, and the providers that plug into it hold no code o
   a rule: what a resource says, a type accepts and an action does is whatever
   the launcher returns (0041-command-line FR-013, FR-024). A chore that a
   command does not yet do MUST be added to the orchestrator first, by its own
-  spec, and only then offered here (0001-eidolon-architecture FR-037).
+  spec, and only then offered here.
 
 ## Discovery
 
@@ -297,7 +297,8 @@ the extension is `ws-host`'s, and the providers that plug into it hold no code o
 
 - **FR-034**: A provider that has tests of its own against the extension MUST
   be able to run them in a real VS Code without this repository naming it:
-  the extension's runner (`console/test/vscode/run.js`) runs a suite given as
+  `ws-host vscode check --suite DIR [--workspace [NAME=]PATH]... [--report FILE]`
+  (the extension's runner, `console/test/vscode/run.js`) runs a suite given as
   a directory (an `index.js` that exports `run()`) once, in a trusted workspace
   whose folders are the ones named in `IF_CONSOLE_VSCODE_FOLDERS` (a JSON array
   of `name` and `path`), with the same VS Code, display server and
@@ -659,7 +660,7 @@ knowledge (FR-003).
   statement's object and a table's other terms open the resource they name.
   Where a command line's `list` declares `search`, a request that finds nothing
   MUST say so in words and offer the unfiltered list.
-- **FR-050**: Retired. The extensions a repository recommends in `.vscode/extensions.json` are that repository's own choice (0042-agora FR-040 in the public root, which vets the ones it recommends).
+- **FR-050**: Retired. The extensions a repository recommends in `.vscode/extensions.json` are that repository's own choice (0042-agora FR-038 in the public root, which vets the ones it recommends).
 
 ## Review & acceptance checklist
 

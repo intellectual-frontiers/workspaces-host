@@ -1,4 +1,4 @@
-// Forms built from a command's typed arguments (0043-if-console FR-013): one step for each argument, a quick pick where the type
+// Forms built from a command's typed arguments (0009-workspaces-console FR-013): one step for each argument, a quick pick where the type
 // lists its values or the noun has a `list` command that returns them, a text input where it does not, and a last step that shows the
 // whole command line before anything runs. Pure logic: the interface (`FormUi`) is passed in.
 import { asString } from './json';

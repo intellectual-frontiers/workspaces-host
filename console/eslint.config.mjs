@@ -1,4 +1,4 @@
-// ESLint for the extension (0043-if-console FR-035): the recommended rules and the type-checked recommended rules of typescript-eslint, on
+// ESLint for the extension (0009-workspaces-console FR-035): the recommended rules and the type-checked recommended rules of typescript-eslint, on
 // the TypeScript of src/ and test/; the plain JavaScript that VS Code loads (test/vscode) and the build script get the plain rules.
 import js from '@eslint/js';
 import { defineConfig } from 'eslint/config';

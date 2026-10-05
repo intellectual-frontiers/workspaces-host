@@ -89,11 +89,9 @@ def _vscode_dir() -> Path | None:
     return None
 
 
-@section("console", suites=("slow",), programs=("node", "xvfb-run"),
-         summary="the Workspaces Console serves ws-host in a real VS Code (named, not part of a plain check: it needs VS Code and a display server)")
-def console_section(ctx):
-    """0004-editor-extension FR-027: the Console's own runner starts a real VS Code under a display server and runs this repository's suite
-    (tests/if_console/vscode) with ws-host as a workspace folder. It is skipped, naming the cause, where VS Code or the Console's build is not here."""
+def run_console_suite(suite: Path, folders: list[dict], report: Path | None = None, first: Path | None = None) -> tuple[list[dict], subprocess.CompletedProcess]:
+    """Run a suite (a folder whose index.js exports run()) in a real VS Code under a display server, in a trusted workspace whose folders are `folders`
+    ({name, path}); the Console's own runner starts it (0009-workspaces-console FR-034). Raises FileNotFoundError, naming what is missing."""
     import json
     import tempfile
     root = paths.repo_root()
@@ -103,18 +101,30 @@ def console_section(ctx):
         raise FileNotFoundError("VS Code (run `mise install --locked`, or name an unpacked VS Code in WS_HOST_VSCODE_DIR)")
     if not (ext / "node_modules" / "@vscode" / "test-electron").is_dir() or not (ext / "dist" / "extension.js").is_file():
         raise FileNotFoundError("the Console's build (run `ws-host release build`)")
+    if not shutil.which("xvfb-run") or not shutil.which("node"):
+        raise FileNotFoundError("xvfb-run and node (a display server and Node)")
     with tempfile.TemporaryDirectory(prefix="ws-host-console-") as tmp:
         tmp = Path(tmp)
         (tmp / "reports").mkdir()
         env = {**os.environ, "IF_CONSOLE_VSCODE": str(vscode / "code"), "IF_CONSOLE_VSCODE_CLI": str(vscode / "bin" / "code"),
-               "IF_CONSOLE_TEST_ELECTRON": str(ext / "node_modules" / "@vscode" / "test-electron"), "IF_CONSOLE_REAL_ROOT": str(root),
+               "IF_CONSOLE_TEST_ELECTRON": str(ext / "node_modules" / "@vscode" / "test-electron"), "IF_CONSOLE_REAL_ROOT": str(first or root),
                "IF_CONSOLE_VSCODE_REPORT": str(tmp / "report.json"), "IF_CONSOLE_VSCODE_REPORT_DIR": str(tmp / "reports"),
-               "IF_CONSOLE_VSCODE_SUITE": str(root / "tests" / "if_console" / "vscode"),
-               "IF_CONSOLE_VSCODE_FOLDERS": "[]"}
+               "IF_CONSOLE_VSCODE_SUITE": str(suite), "IF_CONSOLE_VSCODE_FOLDERS": json.dumps(folders)}
         p = subprocess.run([shutil.which("xvfb-run"), "-a", "-s", "-screen 0 1280x800x24", shutil.which("node"), str(ext / "test" / "vscode" / "run.js")],
                            env=env, capture_output=True, text=True, timeout=1800)
-        report = tmp / "report.json"
-        rows = json.loads(report.read_text(encoding="utf-8")).get("tests", []) if report.is_file() else []
+        written = tmp / "report.json"
+        rows = json.loads(written.read_text(encoding="utf-8")).get("tests", []) if written.is_file() else []
+        if report is not None and written.is_file():
+            shutil.copyfile(written, report)
+    return rows, p
+
+
+@section("console", suites=("slow",), programs=("node", "xvfb-run"),
+         summary="the Workspaces Console serves ws-host in a real VS Code (named, not part of a plain check: it needs VS Code and a display server)")
+def console_section(ctx):
+    """0004-editor-extension FR-027: the Console's own runner starts a real VS Code under a display server and runs this repository's suite
+    (tests/if_console/vscode) with ws-host as a workspace folder. It is skipped, naming the cause, where VS Code or the Console's build is not here."""
+    rows, p = run_console_suite(paths.repo_root() / "tests" / "if_console" / "vscode", [])
     out = [_f(r["name"], f"failed in a real VS Code ({r.get('seconds', 0)}s): {str(r.get('reason', ''))[:160]}") for r in rows if r.get("status") != "passed"]
     if p.returncode != 0 and not out:
         out.append(_f("the Console's runner", f"it did not give an answer I could read (exit {p.returncode}): {(p.stderr or p.stdout).strip()[-200:]}"))

@@ -1,4 +1,4 @@
-// The resource panel (0043-if-console FR-042, FR-011, FR-014): one webview, drawn from the resource's JSON, with a strict policy, history, and
+// The resource panel (0009-workspaces-console FR-042, FR-011, FR-014): one webview, drawn from the resource's JSON, with a strict policy, history, and
 // messages from its page that name only what the extension itself put in the model.
 import test from 'node:test';
 import assert from 'node:assert/strict';

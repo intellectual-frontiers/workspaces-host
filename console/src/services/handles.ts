@@ -1,5 +1,5 @@
 // A command link in a tooltip, a hover or a CodeLens carries a handle, never a command: the handle names something the extension itself made,
-// and one that it did not make runs nothing (0043-if-console FR-015). Anything else that can write a Markdown link (a launcher's text, another
+// and one that it did not make runs nothing (0009-workspaces-console FR-015). Anything else that can write a Markdown link (a launcher's text, another
 // extension, a file) can name no handle that was not issued here, and a handle only ever leads to the one path every command takes.
 import type { Run } from '../model/home';
 import type { Action } from '../model/wire';

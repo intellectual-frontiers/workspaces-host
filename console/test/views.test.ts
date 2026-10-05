@@ -1,4 +1,4 @@
-// The views (0043-if-console FR-036, FR-037, FR-038), each provider driven under the stand-in: Home, the views a command line declares, Checks and
+// The views (0009-workspaces-console FR-036, FR-037, FR-038), each provider driven under the stand-in: Home, the views a command line declares, Checks and
 // All commands.
 import test from 'node:test';
 import { readManifest } from './support/paths';

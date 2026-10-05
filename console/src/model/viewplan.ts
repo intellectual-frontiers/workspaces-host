@@ -1,4 +1,4 @@
-// The views each command line declares, merged across repositories by view id (0043-if-console FR-036). The manifest holds a fixed pool of
+// The views each command line declares, merged across repositories by view id (0009-workspaces-console FR-036). The manifest holds a fixed pool of
 // view slots (a view cannot be added at run time), and each slot takes the title of one planned view, in the order the command lines
 // ask for. Where more than one command line declares the same view, its entries are grouped by repository.
 import type { NounDecl, ViewDecl } from './presentation';

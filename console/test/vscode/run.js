@@ -1,5 +1,5 @@
 'use strict';
-// Runs the extension's tests inside a real VS Code (0043-if-console FR-032). It is run by Node, under a display server the caller has
+// Runs the extension's tests inside a real VS Code (0009-workspaces-console FR-032). It is run by Node, under a display server the caller has
 // started (DISPLAY), with the VS Code program and @vscode/test-electron the caller names. It builds a workspace of two command lines (the
 // clone at IF_CONSOLE_REAL_ROOT and a fixture), starts VS Code twice, once with the workspace trusted and once not, and writes a report
 // of every test to IF_CONSOLE_VSCODE_REPORT as JSON. It exits 0 only when every test passed.
@@ -78,7 +78,7 @@ function untrusted(base, workspace, env) {
   });
 }
 
-// The screenshots scenario (0043-if-console FR-045): the same fixture workspace as the trusted scenario, once for each of VS Code's own three
+// The screenshots scenario (0009-workspaces-console FR-045): the same fixture workspace as the trusted scenario, once for each of VS Code's own three
 // kinds of theme, the display server's screen read to a PNG after each view is open. IF_CONSOLE_SCREENSHOTS names the folder it writes.
 const THEMES = [['dark', 'Default Dark+'], ['light', 'Default Light+'], ['high-contrast', 'Default High Contrast']];
 

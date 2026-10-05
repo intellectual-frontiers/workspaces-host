@@ -1,4 +1,4 @@
-// Every user-facing string of the extension goes through `t` (0043-if-console FR-044): VS Code's own `l10n.t`, which finds the string in the
+// Every user-facing string of the extension goes through `t` (0009-workspaces-console FR-044): VS Code's own `l10n.t`, which finds the string in the
 // language bundle (l10n/, written at build time from these very calls) and gives the English string itself where there is none. The model
 // code, which the tests load without VS Code, gets the same words with the placeholders filled in.
 /** `require` is Node's (the extension host's); the page's bundle has none, and this module is loaded there too, through the model code. */

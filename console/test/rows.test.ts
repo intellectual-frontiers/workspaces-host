@@ -1,4 +1,4 @@
-// A noun's `list` rows, read by the command line's own declaration (0041-command-line FR-064, 0043-if-console FR-036, FR-038).
+// A noun's `list` rows, read by the command line's own declaration (0041-command-line FR-064, 0009-workspaces-console FR-036, FR-038).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Loose } from './support/fake-launcher';

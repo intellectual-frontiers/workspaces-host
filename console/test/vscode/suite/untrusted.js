@@ -1,6 +1,6 @@
 'use strict';
 // The extension, installed from the package `extension build` makes, in a workspace VS Code does not trust: VS Code does not load it, and
-// no launcher runs (0043-if-console FR-006, FR-032).
+// no launcher runs (0009-workspaces-console FR-006, FR-032).
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');

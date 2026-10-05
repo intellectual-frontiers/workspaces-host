@@ -1,4 +1,4 @@
-// MCP registration (0043-if-console FR-022): where VS Code lets an extension register an MCP server, register for each trusted repository
+// MCP registration (0009-workspaces-console FR-022): where VS Code lets an extension register an MCP server, register for each trusted repository
 // whose command list includes `mcp serve` one standard-input-and-output server: the repository's launcher with the arguments `mcp serve`,
 // the repository's root as its working directory, labelled with the orchestrator's name. The server's tools, resources and refusals are the
 // launcher's; this changes nothing about them. Where VS Code cannot, say so and do nothing.

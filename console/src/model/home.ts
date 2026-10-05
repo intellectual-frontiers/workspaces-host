@@ -1,4 +1,4 @@
-// What needs a person (0043-if-console FR-037), derived from the launcher's own resources and nothing else: the check sections whose last run
+// What needs a person (0009-workspaces-console FR-037), derived from the launcher's own resources and nothing else: the check sections whose last run
 // failed, the open proposals, the generated files `fresh` reports stale, the toolchain entries and libraries `doctor` reports absent, the
 // state `doctor` gives, and a workspace that is not trusted. Every item is actionable (the owner's rule): it says in plain words what is
 // wrong, gives the exact command line that fixes it and a way to run it, or, where no command does, says what the person must do themselves.

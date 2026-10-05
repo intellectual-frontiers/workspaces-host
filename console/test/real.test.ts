@@ -57,7 +57,7 @@ test('real: `command show` carries typed arguments with choices; the noun\'s lis
   assert.equal(check.arguments[0].required, false, 'zero or more sections: not required');
   const show = await s.repo.detail('spec show');
   const values = await s.repo.choicesFor({ type: show.arguments[0].type, key: show.arguments[0].name }, show);
-  assert.ok(values.includes('0043-if-console'), 'the quick pick values come from `spec list`');
+  assert.ok(values.includes('0009-workspaces-console'), 'the quick pick values come from `spec list`');
   const links = await s.repo.resources('spec');
   assert.ok(links.length > 10 && links[0].command === 'spec show');
   s.done();
@@ -65,13 +65,13 @@ test('real: `command show` carries typed arguments with choices; the noun\'s lis
 
 test('real: a resource shows its links and actions; an action without a value has no pasteable line and says what it needs', { skip, timeout: 120000 }, async () => {
   const s = await start();
-  const r = await s.repo.launcher.run(['spec', 'show', '0043-if-console']);
+  const r = await s.repo.launcher.run(['spec', 'show', '0009-workspaces-console']);
   const wire = require('../src/model/wire') as Loose;
   const actions = wire.actionsOf(r.doc);
   assert.ok(actions.length >= 1 && actions.every((a: Loose) => a.category && typeof a.enabled === 'boolean'));
   assert.ok(actions.some((a: Loose) => a.category === 'decision'), 'the spec offers its decision as an action');
   assert.ok(wire.linksOf(r.doc).every((l: Loose) => l.rel && l.command && l.cli));
-  const needing = await s.repo.launcher.run(['spec', 'show', '0043-if-console']);
+  const needing = await s.repo.launcher.run(['spec', 'show', '0009-workspaces-console']);
   assert.ok(needing.doc);
   s.done();
 });
@@ -133,20 +133,20 @@ test('real: a write is run with --dry-run, its diff opens in the diff editor, an
 
 test('real: a decision is refused without the modal: after the dry run and the diff, a dismissed dialog leaves the spec untouched', { skip, timeout: 120000 }, async () => {
   const s = await start();
-  const spec = path.join(ROOT, 'spec-kit', 'specs', '0043-if-console', 'spec.md');
+  const spec = path.join(ROOT, 'spec-kit', 'specs', '0009-workspaces-console', 'spec.md');
   const before = sha(spec);
   const detail = await s.repo.detail('spec set');
   s.stub.script.reviews.push('apply');
   s.stub.script.warnings.push(undefined);                      // the modal is dismissed
   const executor = require('../src/services/executor') as Loose;
-  const result = await executor.runArgv(s.app.ui, s.repo, detail, ['spec', 'set', '0043-if-console', '--status', 'Adopted']);
+  const result = await executor.runArgv(s.app.ui, s.repo, detail, ['spec', 'set', '0009-workspaces-console', '--status', 'Adopted']);
   assert.equal(result.ran, false);
   assert.equal(sha(spec), before, 'the spec file is unchanged');
   const calls = s.spawns.filter(([, a]) => a[0] === 'spec' && a[1] === 'set').map(([, a]) => a.includes('--dry-run'));
   assert.deepEqual(calls, [true]);
   const modal = s.stub.calls.messages.find((m: Loose) => m.kind === 'warning');
   assert.equal(modal.rest[0].modal, true);
-  assert.match(modal.rest[0].detail, /spec set 0043-if-console --status Adopted/);
+  assert.match(modal.rest[0].detail, /spec set 0009-workspaces-console --status Adopted/);
   s.done();
 });
 

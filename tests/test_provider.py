@@ -314,3 +314,18 @@ class Installing(Home):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class VscodeTest(Home):
+    """0009-workspaces-console FR-034: another provider's suite, run by ws-host."""
+
+    def test_a_folder_without_index_js_is_a_usage_error_and_a_machine_without_vscode_is_exit_3(self):
+        os.environ["WS_HOST_SURFACE"] = "cli"
+        empty = self.home / "suite"
+        empty.mkdir()
+        code, r = self.run_json("vscode", "check", "--suite", str(empty))
+        self.assertEqual((code, r["data"]["code"]), (2, "no-suite"))
+        (empty / "index.js").write_text("exports.run = async () => {};\n")
+        os.environ["WS_HOST_VSCODE_DIR"] = str(self.home / "no-vscode")
+        code, r = self.run_json("vscode", "check", "--suite", str(empty))
+        self.assertEqual((code, r["data"]["code"]), (3, "missing-program"))

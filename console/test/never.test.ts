@@ -1,4 +1,4 @@
-// What the extension never does (0043-if-console FR-023, FR-024, FR-026, FR-003): no telemetry, no network, no setting beyond two,
+// What the extension never does (0009-workspaces-console FR-023, FR-024, FR-026, FR-003): no telemetry, no network, no setting beyond two,
 // no file written, and no program run but a repository's launcher.
 import test from 'node:test';
 import assert from 'node:assert/strict';

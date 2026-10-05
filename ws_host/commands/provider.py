@@ -13,7 +13,7 @@ from ..lib import provider as prov, toolchain as tc
 
 PROVIDER_ARG = Arg("provider", "PROVIDER", positional=True, help="an enabled provider's name")
 PROVIDER_REQ = Arg("provider", "PROVIDER", positional=True, required=True, help="an enabled provider's name")
-types.PROVIDER = types.register(types.Type("PROVIDER", ("agora", "eid"), lambda v, ctx: None if prov.NAME_RE.fullmatch(v) else f"{v!r} is not a provider name",
+types.PROVIDER = types.register(types.Type("PROVIDER", ("agora", "example"), lambda v, ctx: None if prov.NAME_RE.fullmatch(v) else f"{v!r} is not a provider name",
                                            lambda ctx: [p.name for p in prov.enabled()]))
 
 
@@ -58,7 +58,7 @@ def provider_show(ctx, provider):
     row = _row(p)
     acts = [Action(("toolchain", "ensure"), f"Install what {p.name} pins", {"provider": p.name, "all": True})] if any(v["state"] == "missing" for v in st.values()) else []
     return Resource("provider", p.name, {**row, "plain": f"{p.name}: {row['plain']}", "entries": list(st.values()), "protocol": p.protocol,
-                                         "environment": tc.delta_of(p) if not p.problems else {}}, actions=acts)
+                                         "environment": tc.delta_of(p) if not p.problems else {}, "store": str(tc.mise.data_dir() / "installs")}, actions=acts)
 
 
 @command("provider", "add", category="decision", summary="Enable a repository as a provider, so ws-host installs and runs what it declares",

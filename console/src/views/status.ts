@@ -1,4 +1,4 @@
-// The status bar item for the active folder's repository (0043-if-console FR-016, FR-039): an icon, the orchestrator and, when something needs a
+// The status bar item for the active folder's repository (0009-workspaces-console FR-016, FR-039): an icon, the orchestrator and, when something needs a
 // person, how many things; a rich tooltip with the audience as the launcher states it, the health from `doctor` and what needs a person, each with
 // its command line; and a click that opens Home with the suggestions in view, never a silent refresh.
 import * as vscode from 'vscode';
