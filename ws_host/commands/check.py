@@ -5,6 +5,7 @@ import os
 import shutil
 import stat
 import subprocess
+import sys
 from pathlib import Path
 
 from ..core import machine, paths, presentation, registry as reg, types
@@ -60,13 +61,15 @@ def _public_root() -> Path | None:
     return None
 
 
-@section("specs", programs=("agora",), summary="the specs and register pass the public root's checker")
+@section("specs", summary="the specs and register pass the public root's checker")
 def specs_section(ctx):
     root = _public_root()
     if root is None:
         raise FileNotFoundError("agora")
-    p = subprocess.run([str(root / "agora"), "check", "specs", "register", "--root", str(paths.repo_root())],
-                       capture_output=True, text=True, timeout=300)
+    # The checker is standard-library Python: it runs on this interpreter, from the public root's own files, with no provider enabled.
+    p = subprocess.run([sys.executable, "-m", "agora", "check", "specs", "register", "--root", str(paths.repo_root())],
+                       capture_output=True, text=True, timeout=300, cwd=root,
+                       env={**os.environ, "PYTHONPATH": str(root / "tools"), "PYTHONDONTWRITEBYTECODE": "1"})
     if p.returncode == 0:
         return []
     found = [line.strip().lstrip("❎🔴 ") for line in (p.stdout + p.stderr).splitlines() if line.strip().startswith(("❎", "🔴", "error", "spec-kit/"))]

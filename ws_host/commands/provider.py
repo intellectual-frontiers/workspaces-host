@@ -24,8 +24,9 @@ def _get(name: str | None) -> prov.Provider:
     p = prov.get(name)
     if p is None:
         have = [x.name for x in prov.enabled()]
-        raise WsError("unknown-provider", name, f"No enabled provider is called '{name}'. " + ("Enabled: " + ", ".join(have) + "." if have else "None is enabled yet."),
-                      [Action(("provider", "list"), "List providers")], exit_code=1)
+        raise WsError("unknown-provider", name, f"No enabled provider is called '{name}'. " + ("Enabled: " + ", ".join(have) + "." if have else "None is enabled yet.")
+                      + " Enable the repository that holds it with: ws-host provider add PATH", [Action(("provider", "list"), "List providers")],
+                      status="missing", exit_code=3)
     return p
 
 
@@ -56,7 +57,8 @@ def provider_show(ctx, provider):
     st = tc.state(p) if not p.problems else {}
     row = _row(p)
     acts = [Action(("toolchain", "ensure"), f"Install what {p.name} pins", {"provider": p.name, "all": True})] if any(v["state"] == "missing" for v in st.values()) else []
-    return Resource("provider", p.name, {**row, "plain": f"{p.name}: {row['plain']}", "entries": list(st.values()), "protocol": p.protocol}, actions=acts)
+    return Resource("provider", p.name, {**row, "plain": f"{p.name}: {row['plain']}", "entries": list(st.values()), "protocol": p.protocol,
+                                         "environment": tc.delta_of(p) if not p.problems else {}}, actions=acts)
 
 
 @command("provider", "add", category="decision", summary="Enable a repository as a provider, so ws-host installs and runs what it declares",
@@ -95,14 +97,18 @@ def provider_remove(ctx, provider):
 
 
 @command("provider", "run", category="build", summary="Run a command with one provider's programs first on PATH",
-         args=(PROVIDER_REQ, Arg("argv", positional=True, multiple=True, help="the command, after --")), surfaces=("cli",))
-def provider_run(ctx, provider, argv):
+         args=(PROVIDER_REQ, Arg("argv", positional=True, multiple=True, help="the command, after --"),
+               Arg("ensure", "STRING", multiple=True, help="install this program (and what it needs) from the lock first, if it is missing")), surfaces=("cli",))
+def provider_run(ctx, provider, argv, ensure):
     p = _get(provider)
     if not argv:
         raise WsError("usage", "a command is required", "Say what to run after --, for example: ws-host provider run " + p.name + " -- chromium --version", exit_code=2)
     if ctx.dry_run:
         return Resource("provider-run", p.name, {"plain": "Nothing was run. I would run: " + " ".join(argv), "argv": list(argv)})
     try:
+        missing = [n for n in tc.closure(p, ensure or []) if tc.install_path(p, p.entries[n]) is None]
+        if missing:
+            tc.ensure(p, missing, offline=ctx.offline)
         env = tc.environment(p)
     except tc.ToolchainError as e:
         raise _wrap(e)
@@ -110,6 +116,9 @@ def provider_run(ctx, provider, argv):
         done = subprocess.run(list(argv), env=env)
     except OSError as e:
         raise WsError("run-failed", f"{argv[0]}: {e.strerror}", f"I could not start {argv[0]} for {p.name}: {e.strerror}. Is it installed? Try: ws-host toolchain list", exit_code=127 if isinstance(e, FileNotFoundError) else 126)
+    if ctx.mode == "text":      # the program's own output is the output; only its status is ours
+        ctx.exit_code = done.returncode
+        return None
     return Resource("provider-run", p.name, {"plain": f"{argv[0]} finished with status {done.returncode}.", "argv": list(argv), "exit": done.returncode},
                     status=OK if done.returncode == 0 else FAILED)
 
@@ -158,6 +167,8 @@ def toolchain_generate(ctx, provider, root):
     p = prov.load(Path(root).expanduser().resolve()) if root else _get(provider)
     if p is None:
         raise WsError("not-a-provider", str(root), f"{root} has no {prov.FOLDER}/provider.toml.", exit_code=1)
+    if p.problems:
+        raise WsError("invalid-provider", "; ".join(map(str, p.problems)), f"{p.name}'s declarations have problems: " + "; ".join(map(str, p.problems)), exit_code=1)
     if ctx.dry_run:
         return Resource("toolchain-generate", p.name, {"plain": "Nothing was written. These files are out of date: " + (", ".join(prov.stale(p)) or "none"), "stale": prov.stale(p)})
     try:

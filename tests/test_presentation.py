@@ -102,8 +102,9 @@ class Declared(Home):
         self.skipTest("the public root is not on this machine")
 
     def test_the_repository_declares_its_launcher_for_the_editor(self):
-        values = env.parse((ROOT / ".if-console.env").read_text(encoding="utf-8"))
-        self.assertEqual(values["IF_CONSOLE_LAUNCHER"], "./ws-host")
+        import tomllib
+        values = tomllib.loads((ROOT / ".workspaces-host" / "provider.toml").read_text(encoding="utf-8"))
+        self.assertEqual((values["name"], values["launcher"], values["protocol"]), ("ws-host", "./ws-host", 1))
         self.assertTrue(os.access(ROOT / "ws-host", os.X_OK))
 
 

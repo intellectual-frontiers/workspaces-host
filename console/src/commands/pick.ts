@@ -7,7 +7,7 @@ import * as testMode from '../test-mode';
 import { CATEGORY_ICON } from '../views/node';
 import { t } from '../l10n';
 
-const NO_REPOSITORY = 'No folder in this window declares a command line for Workspaces Console (a .if-console.env file at its root).';
+const NO_REPOSITORY = 'No folder in this window declares a command line for Workspaces Console (a .workspaces-host/provider.toml file in it).';
 
 /** The repository a command is for: the only ready one, or the person's choice among several. */
 export async function chooseRepo(app: App, placeholder?: string, filter?: (r: Repository) => boolean): Promise<Repository | null> {

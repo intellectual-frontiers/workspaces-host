@@ -19,7 +19,7 @@ const entry = (view, folder) => view.find((e) => e.description.startsWith(folder
 const labels = (e) => e.children.map((c) => c.label);
 const ALL = (e) => e.children.flatMap((c) => [c, ...(c.children ? ALL(c) : [])]);
 
-test('the Workspaces Console finds ws-host by its .if-console.env and reads what it says about itself', async () => {
+test('the Workspaces Console finds ws-host by its .workspaces-host/provider.toml and reads what it says about itself', async () => {
   const ext = vscode.extensions.getExtension('intellectual-frontiers.workspaces-console');
   assert.ok(ext, 'VS Code loaded the Workspaces Console');
   await ext.activate();

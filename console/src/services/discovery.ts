@@ -1,12 +1,23 @@
-// Finding each repository's launcher by that repository's own declaration (0043-if-console FR-004): a workspace folder holds
-// `.if-console.env`, whose IF_CONSOLE_LAUNCHER line names an executable file at the folder's root. The extension carries no list of
+// Finding each repository's launcher by that repository's own declaration (0043-console-protocol FR-004): a workspace folder holds
+// `.workspaces-host/provider.toml`, whose `launcher` key names an executable file at the folder's root. The extension carries no list of
 // launcher names; a person may add names, in their own settings only, for a folder that declares none. Reading the declaration needs no
 // trust (0041-command-line FR-062); running the launcher does (FR-006).
 import * as path from 'path';
-import { parseEnv } from '../model/envfile';
 
-export const DECLARATION = '.if-console.env';
-export const KEY = 'IF_CONSOLE_LAUNCHER';
+export const DECLARATION = '.workspaces-host/provider.toml';
+export const KEY = 'launcher';
+
+/** The top-level string keys of a TOML file: what discovery needs of `provider.toml`, read as data and never run. */
+export function parseTopLevel(text: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line.startsWith('[')) break;                       // a table: the top level ended
+    const m = /^([A-Za-z0-9_-]+)\s*=\s*"((?:[^"\\]|\\.)*)"\s*(?:#.*)?$/.exec(line);
+    if (m) out[m[1]] = m[2].replace(/\\(.)/g, '$1');
+  }
+  return out;
+}
 
 export type RootRelative = { file: string; program: string; problem?: undefined } | { problem: string; file?: undefined; program?: undefined };
 
@@ -47,7 +58,7 @@ export async function discover<F>({ folders, personLaunchers, fs }: { folders: A
   for (const folder of folders) {
     const root = folder.root;
     const text = await fs.readFile(path.join(root, DECLARATION));
-    const declared = text === null ? undefined : parseEnv(text)[KEY];
+    const declared = text === null ? undefined : parseTopLevel(text)[KEY];
     const names: Array<{ name: string; source: 'declared' | 'setting' }> = declared
       ? [{ name: declared, source: 'declared' }]
       : personLaunchers.map((name) => ({ name, source: 'setting' as const }));   // a folder that declares none

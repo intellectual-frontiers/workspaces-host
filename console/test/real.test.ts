@@ -1,5 +1,5 @@
 // The extension's core logic driven headlessly against a real command line: IF_CONSOLE_REAL_ROOT names a clone whose
-// `.if-console.env` declares its launcher. The repository's own check of this extension sets it; run alone, this file is skipped.
+// `.workspaces-host/provider.toml` declares its launcher. The repository's own check of this extension sets it; run alone, this file is skipped.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Loose } from './support/fake-launcher';

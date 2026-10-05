@@ -1,6 +1,6 @@
 // What a repository's launcher said about itself is kept (see registry.ts) until it could have changed: the launcher is a file at the
 // repository's root, and a person who edits or replaces it, or rebuilds the tool it starts, changes what `command list` answers. One file
-// system watcher for each repository's launcher tells the extension to ask that repository again. The declaration, `.if-console.env`, is
+// system watcher for each repository's launcher tells the extension to ask that repository again. The declaration, `.workspaces-host/provider.toml`, is
 // watched across the whole window by the extension itself, because a change there can add or remove a repository.
 import * as path from 'path';
 import * as vscode from 'vscode';

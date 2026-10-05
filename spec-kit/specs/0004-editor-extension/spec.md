@@ -59,7 +59,7 @@ shipped on its own are retired and say what governs now.
 
 - **FR-027**: The Workspaces Console serving `ws-host` MUST be tested in a real VS Code, under a display server, with the Console's own
   runner (`console/test/vscode/run.js`) and this repository's suite in `tests/if_console/vscode/`, run by `ws-host check console`. It MUST
-  cover: the Workspaces Console finding `ws-host` by its `.if-console.env` and reading its name and audience; the views `ws-host` asks
+  cover: the Workspaces Console finding `ws-host` by its `.workspaces-host/provider.toml` and reading its name and audience; the views `ws-host` asks
   for, planned in the order it asks; the repository and kit lists with a status icon for each row; every editor command titled and All
   commands listing its nouns and repository-wide commands; what doctor says needs a person shown on Home with the exact line that fixes
   it; and that a decision is never offered over MCP. The section MUST be skipped, naming the cause, where VS Code or a display server is

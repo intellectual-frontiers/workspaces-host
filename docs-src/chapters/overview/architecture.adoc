@@ -49,5 +49,5 @@ something first) and a `presentation` block with its views and nouns. The views 
 the rows of the repository and kit lists carry a status the editor turns into a colored icon. The declarations are in
 `ws_host/commands/presentation.py`, and `ws-host check registry` fails when a title, an icon or a view is not well formed.
 
-A repository tells the editor where its command line is in a file at its root named `.if-console.env`. This repository's holds one line,
-`IF_CONSOLE_LAUNCHER=./ws-host`, so the editor finds `ws-host` here like any other orchestrator.
+A repository tells the editor where its command line is in `.workspaces-host/provider.toml`, which names its launcher. This repository's says
+`launcher = "./ws-host"`, so the editor finds `ws-host` here like any other provider.

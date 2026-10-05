@@ -140,8 +140,8 @@ and 0026-workspaces, held in the public root, govern all of them.
   declarations live in code (`ws_host/commands/presentation.py`), `check
   registry` MUST fail on what 0041-command-line FR-072 names, and the icons MUST
   be named in the glyph map this repository pins, copied from the public root's.
-  The repository MUST declare its launcher for the editor in `.if-console.env`
-  (0043-if-console FR-004, in the public root), so that the Workspaces Console serves
+  The repository MUST declare its launcher for the editor and for ws-host in
+  `.workspaces-host/provider.toml` (0008-providers FR-001), so that the Workspaces Console serves
   `ws-host` like any other orchestrator.
 - **FR-019**: Nothing in this repository, its history or its published guide MAY
   name a confidential repository or say what one holds. It is public, and it
