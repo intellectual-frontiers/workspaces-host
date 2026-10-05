@@ -14,7 +14,11 @@ https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_i
 
 It is a window onto `ws-host`, and it holds no rules of its own:
 
-* The status line at the bottom says whether your machine is well, in plain words.
+* The status line at the bottom says whether your machine is well, in plain words. When there is something to do it says how many things,
+  for example *2 suggestions — click to fix*. Click it and VS Code lists them. Pick one and you see what is wrong, the exact line that fixes
+  it, a *Run* button where `ws-host` can do it for you and a *Copy command* button. A suggestion that no command can fix says what you do
+  yourself. When all is well, a click checks again and tells you so. You also get one message the first time something turns up, with a
+  button that runs the fix and one that shows them all.
 * The *Workspace* view lists every tool your trusted repositories bring, with who each is for.
 * Every result is a page with buttons for what you can do next. Under every button is a *Show command* link that gives you the one line
   you could paste into Debian instead.

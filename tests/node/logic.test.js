@@ -47,9 +47,9 @@ test("only an action the editor exposes is a button; others are disabled with a 
 test("status is plain language and green, amber or red from the doctor", () => {
   const doc = (checks, plain) => ({ schema: "ws-host/doctor@1", data: { plain, checks } });
   assert.strictEqual(t.statusFor(doc([{ status: "ok" }], "Your machine is ready.")).level, "ok");
-  assert.strictEqual(t.statusFor(doc([{ status: "warn" }], "There is 1 suggestion.")).level, "warn");
+  assert.strictEqual(t.statusFor(doc([{ status: "warn" }], "Your machine is ready, with 1 suggestion.")).level, "warn");
   const bad = t.statusFor(doc([{ status: "fail" }], "1 thing needs fixing."));
-  assert.deepStrictEqual([bad.level, bad.text.includes("1 thing needs fixing.")], ["error", true]);
+  assert.deepStrictEqual([bad.level, bad.text.includes("1 thing to fix")], ["error", true]);
   assert.strictEqual(t.statusFor({ schema: "ws-host/doctor@9", data: {} }).level, "warn");
 });
 
@@ -101,4 +101,38 @@ test("surfaces: the editor must be named", () => {
   assert.strictEqual(t.surfaceExposed(["terminal", "editor"]), true);
   assert.strictEqual(t.surfaceExposed(["terminal"]), false);
   assert.strictEqual(t.surfaceExposed(undefined), false);
+});
+
+test("every warning and failure becomes a suggestion with words, a line to type, a button or what to do", () => {
+  const d = {
+    schema: "ws-host/doctor@1",
+    data: { plain: "Your machine is ready, with 3 suggestions.", checks: [
+      { name: "python", status: "ok", detail: "python 3.12" },
+      { name: "git pull setting", status: "warn", detail: "git may rewrite your work", action: 0, cli: "ws-host workspace set --pull-ff-only" },
+      { name: "launcher", status: "warn", detail: "the launcher is missing", cli: "curl -fsSL x | sh" },
+      { name: "trust", status: "warn", detail: "a repository names its own trusted organizations", todo: "Nothing to do: it is ignored." },
+      { name: "uv", status: "fail", detail: "uv is missing", cli: "curl -LsSf y | sh" }] },
+    actions: [{ label: "Make git's Sync button safe", command: "workspace set", fields: { pull_ff_only: true }, cli: "ws-host workspace set --pull-ff-only", enabled: true }],
+  };
+  const s = t.suggestionsFor(d);
+  assert.deepStrictEqual(s.map(x => x.name), ["git pull setting", "launcher", "trust", "uv"]);
+  assert.strictEqual(s[0].action.label, "Make git's Sync button safe");
+  assert.strictEqual(s[1].action, null);
+  assert.strictEqual(s[1].cli, "curl -fsSL x | sh");
+  assert.strictEqual(s[2].todo, "Nothing to do: it is ignored.");
+  assert.strictEqual(s[3].level, "error");
+  for (const x of s) assert.ok(x.action || x.cli || x.todo, `${x.name} is not actionable`);
+});
+
+test("the status bar names the count and the action, and never points at something below", () => {
+  const mk = (checks, plain) => ({ schema: "ws-host/doctor@1", data: { plain, checks }, actions: [] });
+  const one = t.statusFor(mk([{ name: "a", status: "warn", detail: "x", todo: "y" }], "Your machine is ready, with 1 suggestion."));
+  assert.strictEqual(one.text, "$(warning) 1 suggestion — click to fix");
+  const two = t.statusFor(mk([{ name: "a", status: "warn", todo: "y" }, { name: "b", status: "warn", todo: "y" }], "x"));
+  assert.strictEqual(two.text, "$(warning) 2 suggestions — click to fix");
+  const bad = t.statusFor(mk([{ name: "a", status: "fail", todo: "y" }, { name: "b", status: "warn", todo: "y" }], "x"));
+  assert.strictEqual(bad.text, "$(error) 1 thing to fix — click to fix");
+  const ok = t.statusFor(mk([{ name: "a", status: "ok" }], "Your machine is ready. Everything ws-host needs is in place."));
+  assert.match(ok.text, /^\$\(pass\) /);
+  for (const s of [one, two, bad, ok]) { assert.ok(!/below|above/i.test(s.text + s.tooltip), s.text); }
 });

@@ -115,7 +115,8 @@ detail, troubleshooting, and how to take over in VS Code.
   a person: the plain sentence first with an emoji for its kind, then sections
   under headings with a count of what is fine and what is not, rows with aligned
   names and a mark (✅, ⚠️, ❌, ⏭️, ⬜) beside each, long text wrapped and never
-  wider than the terminal, a long name never pushing its text out of line, a
+  wider than the terminal except a line to type, which is never broken so that it
+  copies as one line, a long name never pushing its text out of line, a
   fix on its own line, the next steps with each command on a line of its own in
   cyan, and the audience and version last. Without colour, in a pipe, in a
   file, in JSON and in HTML the output MUST stay exactly the plain form that

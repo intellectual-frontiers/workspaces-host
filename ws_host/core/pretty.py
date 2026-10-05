@@ -21,7 +21,7 @@ SECTION_TITLE = {"checks": "Health checks", "kits": "Kits", "steps": "What happe
 NAME_KEYS = ("name", "id", "title", "heading", "label")
 TEXT_KEYS = ("detail", "plain", "message", "reason", "why", "summary", "help", "path")
 CATEGORY_EMOJI = {"read": "📖", "check": "🩺", "setup": "🔧", "build": "🏗️", "generate": "🧬", "record": "📝", "decision": "⚖️"}
-HIDDEN = {"plain", "status", "audience", "schema", "name", "id", "title", "heading", "label", "text"} | set(TEXT_KEYS)
+HIDDEN = {"plain", "status", "audience", "schema", "name", "id", "title", "heading", "label", "text", "cli", "todo", "action"} | set(TEXT_KEYS)
 FIX_KEYS = ("next", "fix")
 
 
@@ -118,6 +118,10 @@ class Page:
             if extras:
                 line = " · ".join(f"{k.replace('_', ' ')} {_short(v)}" for k, v in extras)
                 self.lines += [self.st.dim(ln) for ln in _wrap(line, pad, pad, self.w)]
+            if item.get("cli"):
+                self.lines.append(pad + self.st.cyan("→ " + str(item["cli"])))
+            if item.get("todo"):
+                self.lines += [pad + self.st.dim("↳ " + ln) for ln in _wrap(str(item["todo"]), "", "  ", self.w - len(pad) - 2)]
             for k in FIX_KEYS:
                 if item.get(k):
                     self.lines += [self.st.cyan("→ " + ln.strip()) if i == 0 else ln for i, ln in enumerate(_wrap(str(item[k]), pad, pad + "  ", self.w))] if False else \

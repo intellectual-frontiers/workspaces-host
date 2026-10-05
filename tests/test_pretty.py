@@ -58,8 +58,8 @@ class Pretty(Home):
         for argv in (("doctor",), ("kit", "list"), ("command", "list"), ("repo", "list")):
             _, text = self.styled(*argv)
             for line in text.splitlines():
-                if line.startswith("─"):
-                    continue
+                if line.startswith("─") or line.strip().startswith("→"):
+                    continue          # a line to type is never broken, so that copying it gives one line
                 self.assertLessEqual(len(line), 100, (argv, line))
 
     def test_every_status_has_a_mark_and_a_word_nearby(self):

@@ -129,7 +129,7 @@ test("it registers no command that takes an action, a command line or a resource
   const f = new Fake();
   const { vscode, restore } = await boot(f);
   try {
-    assert.deepStrictEqual([...vscode.calls.commands.keys()].sort(), ["wsHost.ensure", "wsHost.getHelp", "wsHost.learn", "wsHost.refresh", "wsHost.runChecks", "wsHost.signIn"]);
+    assert.deepStrictEqual([...vscode.calls.commands.keys()].sort(), ["wsHost.ensure", "wsHost.getHelp", "wsHost.learn", "wsHost.refresh", "wsHost.runChecks", "wsHost.showSuggestions", "wsHost.signIn"]);
     const before = f.calls().length;
     for (const [, fn] of vscode.calls.commands) { if (fn.length > 0) assert.fail("a command declares parameters"); }
     // fabricated arguments change nothing: none of them runs a decision
@@ -257,5 +257,78 @@ test("Learn lists the topics help offers, and shows the chosen topic as a page w
     assert.ok(panel, "no page");
     assert.match(panel.title, /Your repositories/);
     assert.match(panel.webview.html, /script-src 'nonce-/);
+  } finally { restore(); f.done(); }
+});
+
+const sugg = (f) => f.put("ws-host", "doctor --json", doc("ws-host/doctor@1", {
+  plain: "Your machine is ready, with 2 suggestions.",
+  checks: [
+    { name: "git pull setting", status: "warn", detail: "git's Sync button may rewrite your work", action: 0, cli: "ws-host workspace set --pull-ff-only" },
+    { name: "launcher", status: "warn", detail: "the launcher is not linked", cli: "curl -fsSL x | sh", todo: "Then open a new terminal window." }],
+}, [act("Make git's Sync button safe", "workspace set", { fields: { pull_ff_only: true }, cli: "ws-host workspace set --pull-ff-only" })]));
+
+test("with suggestions the status bar says how many and a click opens them, each with its fix", async () => {
+  const f = new Fake();
+  sugg(f);
+  f.put("ws-host", "command show workspace set --json", doc("ws-host/command@1", { id: "workspace set", arguments: [], options: [{ flag: "--pull-ff-only" }] }));
+  f.put("ws-host", "workspace set --pull-ff-only --json", doc("ws-host/workspace@1", { plain: "Git's Sync button now only moves forward." }));
+  const { vscode, restore } = await boot(f, { answers: { quickPick: items => items[0], info: msg => (/^git's Sync button/.test(msg) ? "Run: Make git's Sync button safe" : undefined) } });
+  try {
+    const bar = vscode.calls.statusBars[0];
+    assert.strictEqual(bar.text, "$(warning) 2 suggestions — click to fix");
+    assert.strictEqual(bar.command, "wsHost.showSuggestions");
+    assert.ok(!/below/i.test(bar.text + bar.tooltip));
+    const note = vscode.calls.messages[0];                    // shown once, with a way to see them all
+    assert.match(note.msg, /2 suggestions for your machine/);
+    assert.deepStrictEqual(note.btn, ["Show all"]);
+    const before = f.calls().length;
+    await vscode.calls.commands.get("wsHost.showSuggestions")();
+    const list = vscode.calls.inputs.find(i => i.items);
+    assert.deepStrictEqual(list.items.map(i => i.label), ["$(warning) git pull setting", "$(warning) launcher"]);
+    assert.match(list.items[0].detail, /Type: ws-host workspace set --pull-ff-only/);
+    assert.match(list.items[1].detail, /Type: curl -fsSL x \| sh/);
+    const one = vscode.calls.messages.find(m => /^git's Sync button/.test(m.msg));
+    assert.deepStrictEqual(one.btn, ["Run: Make git's Sync button safe", "Copy command"]);
+    assert.match(one.msg, /Type: ws-host workspace set --pull-ff-only/);
+    await new Promise(r => setTimeout(r, 800));
+    assert.ok(f.calls().slice(before).some(c => /ws-host\|editor\|workspace set --pull-ff-only/.test(c)), f.calls().slice(before).join("\n"));
+  } finally { restore(); f.done(); }
+});
+
+test("a suggestion with no command says what the person does themselves, and Copy puts the line on the clipboard", async () => {
+  const f = new Fake();
+  sugg(f);
+  const { vscode, restore } = await boot(f, { answers: { quickPick: items => items[1], info: msg => (/launcher/.test(msg) ? "Copy command" : undefined) } });
+  try {
+    await vscode.calls.commands.get("wsHost.showSuggestions")();
+    const m = vscode.calls.messages.find(x => /the launcher is not linked/.test(x.msg));
+    assert.match(m.msg, /Then open a new terminal window\./);
+    assert.deepStrictEqual(m.btn, ["Copy command"]);
+    assert.strictEqual(vscode.calls.clipboard[vscode.calls.clipboard.length - 1], "curl -fsSL x | sh");
+  } finally { restore(); f.done(); }
+});
+
+test("one suggestion with a command is notified with Run and Show all", async () => {
+  const f = new Fake();
+  f.put("ws-host", "doctor --json", doc("ws-host/doctor@1", { plain: "Your machine is ready, with 1 suggestion.",
+    checks: [{ name: "git pull setting", status: "warn", detail: "git may rewrite your work", action: 0, cli: "ws-host workspace set --pull-ff-only" }] },
+    [act("Make git's Sync button safe", "workspace set", { fields: { pull_ff_only: true }, cli: "ws-host workspace set --pull-ff-only" })]));
+  const { vscode, restore } = await boot(f);
+  try {
+    const note = vscode.calls.messages[0];
+    assert.match(note.msg, /One suggestion for your machine: git may rewrite your work/);
+    assert.deepStrictEqual(note.btn, ["Run: Make git's Sync button safe", "Show all"]);
+  } finally { restore(); f.done(); }
+});
+
+test("when all is well a click checks again and says so, and no notification is shown", async () => {
+  const f = new Fake();
+  const { vscode, restore } = await boot(f);
+  try {
+    assert.ok(!vscode.calls.messages.some(m => /suggestion/.test(m.msg)));
+    const before = f.calls().filter(c => /doctor/.test(c)).length;
+    await vscode.calls.commands.get("wsHost.showSuggestions")();
+    assert.ok(f.calls().filter(c => /doctor/.test(c)).length > before, "a click re-checks");
+    assert.match(vscode.calls.messages[vscode.calls.messages.length - 1].msg, /Your machine is ready\./);
   } finally { restore(); f.done(); }
 });
