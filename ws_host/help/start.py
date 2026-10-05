@@ -40,6 +40,9 @@ def start():
             ("🔤 One thing on Windows: a Nerd Font",
              "The prompt draws small icons from a Nerd Font. Install one on Windows and choose it in Windows Terminal, and the boxes turn into icons. "
              "The guide has the three steps, and ws-host help shell has the rest. To skip the font, use the plain prompt:\n\n    ws-host shell add bash --plain"),
+            ("🔄 Stay up to date",
+             "ws-host improves often. A new terminal window tells you in one line when a newer version is waiting. To get it, and see what is new:\n\n"
+             "    ws-host update advance"),
             ("🆘 Stuck?",
              "Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help in VS Code for a report with no passwords in it, and paste it to "
              "someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/"),
@@ -49,6 +52,7 @@ def start():
             Step("Copy your starter repositories", ("workspace", "advance")),
             Step("Set VS Code up", ("vscode", "advance")),
             Step("Give your terminal the prompt again", ("shell", "add"), {"shell": "bash"}, "setup already did this once"),
+            Step("Update ws-host", ("update", "advance")),
             Step("See where things stand", ("workspace", "status")),
             Step("Check your machine", ("doctor",)),
         ),

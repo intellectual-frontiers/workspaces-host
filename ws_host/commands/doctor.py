@@ -4,7 +4,7 @@ from __future__ import annotations
 import shutil
 
 from ..core import config, kits_state, machine, paths, registry as reg
-from ..lib import git, repos, trust
+from ..lib import git, repos, selfupdate, trust
 from ..core.resource import Action, FAILED, MISSING, OK, Resource
 
 
@@ -30,6 +30,9 @@ def report() -> dict:
                          str(link) if link.exists() else f"{link} is not there; run install.sh to link it"))
     if link.exists() and not machine.on_path(paths.bin_dir()):
         checks.append(_check("path", "warn", f"{paths.bin_dir()} is not on your PATH; add this line to your shell's startup file: export PATH=\"$HOME/.local/bin:$PATH\""))
+    note = selfupdate.read_notice()
+    checks.append(_check("ws-host version", "warn" if note else "ok", note.split("  ")[0] if note else "up to date, as far as the last look knew",
+                         **({"fix": "update advance"} if note else {})))
     cfg = config.load()
     for p in cfg.problems:
         checks.append(_check("configuration", "fail", p))

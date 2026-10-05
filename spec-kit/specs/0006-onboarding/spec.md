@@ -111,6 +111,26 @@ detail, troubleshooting, and how to take over in VS Code.
   `completion add bash|fish` MUST do the same on request, and the `base` kit MUST
   install `bash-completion`.
 
+- **FR-024**: At a terminal with colour on, `ws-host` MUST lay each answer out for
+  a person: the plain sentence first with an emoji for its kind, then sections
+  under headings with a count of what is fine and what is not, rows with aligned
+  names and a mark (✅, ⚠️, ❌, ⏭️, ⬜) beside each, long text wrapped and never
+  wider than the terminal, a long name never pushing its text out of line, a
+  fix on its own line, the next steps with each command on a line of its own in
+  cyan, and the audience and version last. Without colour, in a pipe, in a
+  file, in JSON and in HTML the output MUST stay exactly the plain form that
+  scripts read, so nothing a person sees depends on a mark alone.
+- **FR-025**: `ws-host update advance` MUST bring ws-host's own copy to its
+  newest version by fast-forward alone, leaving a copy with changes not
+  committed, diverged commits or no shared branch exactly as it was, with a
+  plain reason, the words that the person's work is safe, and exit status 0.
+  `ws-host update status` MUST say whether a newer version waits and what is
+  new. A new terminal window MUST say in one line when one waits, from a note
+  and without running ws-host, and MUST look again in the background at most
+  every six hours without making the window wait. `doctor` MUST report a
+  waiting update from the note and not from the network, and `workspace
+  advance` MUST keep the note true.
+
 ## Setting VS Code up
 
 - **FR-007**: `vscode advance` (setup) MUST install the extension, install the

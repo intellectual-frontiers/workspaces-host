@@ -159,6 +159,24 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 
 |===
 
+=== update
+
+[cols="3,1,2,5"]
+|===
+|Usage |Category |Where it runs |What it does
+
+|`ws-host update advance`
+|setup
+|terminal, editor
+|Move ws-host to its newest version, only when nothing of yours is in the way
+
+|`ws-host update status [--cached] [--background]`
+|read
+|terminal, editor, mcp
+|Look for a newer ws-host and say what is new
+
+|===
+
 === vscode
 
 [cols="3,1,2,5"]
