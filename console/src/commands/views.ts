@@ -1,4 +1,4 @@
-// What the views' rows, inline buttons, context menus and links do (0043-if-console FR-036, FR-038, FR-041): open a resource, run a suggestion or
+// What the views' rows, inline buttons, context menus and links do (0009-workspaces-console FR-036, FR-038, FR-041): open a resource, run a suggestion or
 // a resource's action, copy a command line or an identifier, find a resource among a view's rows, follow a handle from a tooltip, a hover or a
 // CodeLens, stop what is running and show Home. Each hands over to the one path every command takes, and accepts only what the views gave it.
 import * as vscode from 'vscode';

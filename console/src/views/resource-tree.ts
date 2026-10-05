@@ -1,4 +1,4 @@
-// The views each command line declares (0043-if-console FR-036, FR-038): one view for each entry of `presentation.views`, merged across
+// The views each command line declares (0009-workspaces-console FR-036, FR-038): one view for each entry of `presentation.views`, merged across
 // repositories by id, holding the nouns whose `view` is its id. A noun's resources are the rows of its `list` command, drawn as its declaration
 // says (label, muted description, status as a colored codicon, badge, tooltip fields); a noun with no `list` shows the commands the editor offers
 // for it. The manifest holds a fixed pool of slots; each slot's title, description and entries are set when the command lines are read.

@@ -1,5 +1,5 @@
 'use strict';
-// The screenshots scenario (0043-if-console FR-045): open what the extension shows, in the theme the run chose, and capture each to a PNG.
+// The screenshots scenario (0009-workspaces-console FR-045): open what the extension shows, in the theme the run chose, and capture each to a PNG.
 // Every file is named <theme>-<what>.png. A scenario that fails to open a view fails, so a missing screenshot is never silent.
 const assert = require('assert');
 const path = require('path');
@@ -127,7 +127,7 @@ test('the Test Explorer and the palette', async () => {
 });
 
 test('a hover, a CodeLens and a link in a spec', async () => {
-  const realFile = vscode.Uri.file(path.join(process.env.IF_CONSOLE_REAL_ROOT, 'spec-kit', 'specs', '0043-if-console', 'spec.md'));
+  const realFile = vscode.Uri.file(path.join(process.env.IF_CONSOLE_REAL_ROOT, 'spec-kit', 'specs', '0009-workspaces-console', 'spec.md'));
   const doc = await vscode.workspace.openTextDocument(realFile);
   const editor = await vscode.window.showTextDocument(doc);
   const text = doc.getText().split('\n');

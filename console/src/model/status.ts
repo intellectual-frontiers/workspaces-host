@@ -1,4 +1,4 @@
-// The look of each status (0043-if-console FR-038): a codicon and a theme color for each word of the fixed vocabulary of 0041-command-line
+// The look of each status (0009-workspaces-console FR-038): a codicon and a theme color for each word of the fixed vocabulary of 0041-command-line
 // FR-064. The command line names the status; the editor chooses what it looks like, and uses the colors the Testing view uses, so that a
 // theme's own contrast rules apply in light, dark and high-contrast.
 import { t } from '../l10n';

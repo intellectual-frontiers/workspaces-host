@@ -1,5 +1,5 @@
 // The interface the executor talks to, made of VS Code's own parts: quick picks and input boxes for forms, the diff editor for a dry run's
-// changes, a modal for a decision, progress for a stream. Plain words throughout (0043-if-console FR-025).
+// changes, a modal for a decision, progress for a stream. Plain words throughout (0009-workspaces-console FR-025).
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { PickItem } from '../model/forms';

@@ -1,4 +1,4 @@
-// The preview of a write (0043-if-console FR-014): the dry run's resource carries, for each file the change would touch, a unified
+// The preview of a write (0009-workspaces-console FR-014): the dry run's resource carries, for each file the change would touch, a unified
 // diff (0041-command-line FR-015). This reads it and rebuilds the two sides of each file for VS Code's diff editor.
 import { asArray, asNumber, asObject, asString } from './json';
 import { t } from '../l10n';
@@ -57,7 +57,7 @@ export function summaryOf(changes: Change[]): string {
 
 export const labelOfChange = (c: Change): string => ({ create: t('new file'), delete: t('removed'), modify: t('changed') })[c.change] ?? c.change;
 
-/** The panel's model of a dry run (0043-if-console FR-014, FR-042): the change summary and each file, with Apply and Discard. A decision's Apply
+/** The panel's model of a dry run (0009-workspaces-console FR-014, FR-042): the change summary and each file, with Apply and Discard. A decision's Apply
  * leads on to its modal, which says so. */
 export function buildPreview(detail: { id: string; title: string | null; category: string; help: string }, changes: Change[], repoName: string): Built {
   const plus = changes.reduce((n, c) => n + c.added, 0);

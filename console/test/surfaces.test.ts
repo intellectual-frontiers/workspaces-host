@@ -1,4 +1,4 @@
-// The native surfaces (0043-if-console FR-020, FR-038, FR-040): file decorations, progress in the view that started the work, the Stop action
+// The native surfaces (0009-workspaces-console FR-020, FR-038, FR-040): file decorations, progress in the view that started the work, the Stop action
 // that ends it, and the output channel.
 import test from 'node:test';
 import assert from 'node:assert/strict';

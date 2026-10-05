@@ -1,4 +1,4 @@
-// `context` for an agent and the help report (0043-if-console FR-018). Both are assembled from what the launcher returns, with
+// `context` for an agent and the help report (0009-workspaces-console FR-018). Both are assembled from what the launcher returns, with
 // secrets removed, and neither is sent anywhere: the person pastes the result themselves.
 import type { Doc } from './wire';
 

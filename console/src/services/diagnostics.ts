@@ -1,4 +1,4 @@
-// Findings of a check in the Problems panel (0043-if-console FR-009): one diagnostic for each finding that has a location, at its file
+// Findings of a check in the Problems panel (0009-workspaces-console FR-009): one diagnostic for each finding that has a location, at its file
 // and line, with its severity, its message and the section that reported it as the source; a section's diagnostics are cleared when that
 // section runs again. A finding with no location is never placed at a file it does not name.
 import * as vscode from 'vscode';

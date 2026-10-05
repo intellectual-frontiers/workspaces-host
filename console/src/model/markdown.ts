@@ -1,4 +1,4 @@
-// Rich tooltips are Markdown (0043-if-console FR-038): codicons, key facts and command links. What a launcher returned is data and is
+// Rich tooltips are Markdown (0009-workspaces-console FR-038): codicons, key facts and command links. What a launcher returned is data and is
 // never trusted as Markdown, so every value goes through `escapeMarkdown`, and the only command links in a tooltip are the ones built here
 // with `commandLink`, so that nothing a launcher says can become a link that runs a command.
 

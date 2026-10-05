@@ -1,4 +1,4 @@
-// The Home view (0043-if-console FR-037): what needs a person, across every command line found, each as a row with a status and an action.
+// The Home view (0009-workspaces-console FR-037): what needs a person, across every command line found, each as a row with a status and an action.
 // Every row says what is wrong in plain words, shows the exact command line that fixes it and has a Run button that goes through the one path
 // every command takes, or says what the person must do themselves. The count of what needs a person is the view's badge.
 import * as vscode from 'vscode';

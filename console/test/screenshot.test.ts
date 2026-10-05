@@ -1,4 +1,4 @@
-// The screenshot helper of the real-VS-Code run (0043-if-console FR-045): an X window dump of the display becomes a PNG.
+// The screenshot helper of the real-VS-Code run (0009-workspaces-console FR-045): an X window dump of the display becomes a PNG.
 import test from 'node:test';
 import assert from 'node:assert';
 import type { Loose } from './support/fake-launcher';

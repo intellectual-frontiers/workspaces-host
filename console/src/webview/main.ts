@@ -1,4 +1,4 @@
-// The entry of the webview bundle (dist/webview.js): the resource panel's own page (0043-if-console FR-042, FR-043). It draws the model the extension
+// The entry of the webview bundle (dist/webview.js): the resource panel's own page (0009-workspaces-console FR-042, FR-043). It draws the model the extension
 // posts with VS Code Elements (web components styled with VS Code's theme variables) and the codicon font, both from the extension's own lock, and
 // loads nothing from anywhere else. It holds no user-facing string (the extension sends the labels) and runs nothing: every choice is a message
 // naming an index the extension itself issued, and the extension decides what it does.

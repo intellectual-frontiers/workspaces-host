@@ -51,27 +51,27 @@ requirement	mechanism	by	note
 0003-kits FR-011	check	workspaces-host: ws-host test	tests check every download's checksum form, address template and architecture
 0003-kits FR-012	check	workspaces-host: ws-host test	tests run workspace ensure over declared kits (see 0002 FR-016); a declared kit that is unknown is reported
 0003-kits FR-013	check	workspaces-host: ws-host test	tests check doctor says a trusted repository's kits are not loaded yet
-0004-editor-extension FR-001	none	-	retired: ws-host ships no extension; the Workspaces Console is the one extension (0043-if-console FR-001, FR-002).
-0004-editor-extension FR-002	none	-	retired: the Workspaces Console discovers launchers by their own declaration and holds no rule of any orchestrator (0043-if-console FR-003 to FR-005).
-0004-editor-extension FR-003	none	-	retired: the Workspaces Console runs only in a trusted workspace for a trusted repository (0043-if-console FR-006).
-0004-editor-extension FR-004	none	-	retired: the Workspaces Console's status bar item names how many things need a person and what to do (0043-if-console FR-016, FR-048).
-0004-editor-extension FR-005	none	-	retired: the Workspaces Console's views and tree come from the command line's own presentation (0043-if-console FR-008, FR-036; 0001-ws-host FR-018).
-0004-editor-extension FR-006	none	-	retired: the Workspaces Console draws a resource in one panel from its JSON (0043-if-console FR-003, FR-042).
-0004-editor-extension FR-007	none	-	retired: the Workspaces Console builds the input of a command from its typed arguments (0043-if-console FR-013).
-0004-editor-extension FR-008	none	-	retired: the Workspaces Console follows a stream as progress (0043-if-console FR-020).
-0004-editor-extension FR-009	none	-	retired: the Workspaces Console shows the findings of a check in the Problems panel (0043-if-console FR-009).
-0004-editor-extension FR-010	none	-	retired: the Workspaces Console checks each document's schema (0043-if-console FR-021).
-0004-editor-extension FR-011	none	-	retired: a decision needs a modal and no command takes an action (0043-if-console FR-015).
-0004-editor-extension FR-012	none	-	retired: the Workspaces Console writes nothing itself (0043-if-console FR-026).
+0004-editor-extension FR-001	none	-	retired: ws-host ships no extension; the Workspaces Console is the one extension (0009-workspaces-console FR-001, FR-002).
+0004-editor-extension FR-002	none	-	retired: the Workspaces Console discovers launchers by their own declaration and holds no rule of any orchestrator (0009-workspaces-console FR-003 to FR-005).
+0004-editor-extension FR-003	none	-	retired: the Workspaces Console runs only in a trusted workspace for a trusted repository (0009-workspaces-console FR-006).
+0004-editor-extension FR-004	none	-	retired: the Workspaces Console's status bar item names how many things need a person and what to do (0009-workspaces-console FR-016, FR-048).
+0004-editor-extension FR-005	none	-	retired: the Workspaces Console's views and tree come from the command line's own presentation (0009-workspaces-console FR-008, FR-036; 0001-ws-host FR-018).
+0004-editor-extension FR-006	none	-	retired: the Workspaces Console draws a resource in one panel from its JSON (0009-workspaces-console FR-003, FR-042).
+0004-editor-extension FR-007	none	-	retired: the Workspaces Console builds the input of a command from its typed arguments (0009-workspaces-console FR-013).
+0004-editor-extension FR-008	none	-	retired: the Workspaces Console follows a stream as progress (0009-workspaces-console FR-020).
+0004-editor-extension FR-009	none	-	retired: the Workspaces Console shows the findings of a check in the Problems panel (0009-workspaces-console FR-009).
+0004-editor-extension FR-010	none	-	retired: the Workspaces Console checks each document's schema (0009-workspaces-console FR-021).
+0004-editor-extension FR-011	none	-	retired: a decision needs a modal and no command takes an action (0009-workspaces-console FR-015).
+0004-editor-extension FR-012	none	-	retired: the Workspaces Console writes nothing itself (0009-workspaces-console FR-026).
 0004-editor-extension FR-013	none	-	retired: what a command logs names its surface (0041-command-line FR-042).
-0004-editor-extension FR-014	none	-	retired: signing in is an action like any other (0043-if-console FR-013 to FR-015); the sign-in code is shown by the resource `auth new` returns.
-0004-editor-extension FR-015	none	-	retired: the Workspaces Console offers Get Help and Copy Context (0043-if-console FR-012, FR-018).
+0004-editor-extension FR-014	none	-	retired: signing in is an action like any other (0009-workspaces-console FR-013 to FR-015); the sign-in code is shown by the resource `auth new` returns.
+0004-editor-extension FR-015	none	-	retired: the Workspaces Console offers Get Help and Copy Context (0009-workspaces-console FR-012, FR-018).
 0004-editor-extension FR-016	none	-	retired: `vscode ensure` installs the Workspaces Console from the public root (FR-021).
 0004-editor-extension FR-017	none	-	retired: the contract the Workspaces Console relies on is tested from Python (FR-025).
 0003-kits FR-014	check	workspaces-host: ws-host test	tests check the shell kit's packages, fetched fish 4 package and oh-my-posh by distribution, its checks, a deb download unpacked by its step, and that nothing but the shell add command edits a startup file; the containers run the checks on Debian 13 and Ubuntu 24.04
 0003-kits FR-015	check	workspaces-host: ws-host test	tests check shell add for bash and fish: the marked block, the kept copy, no change outside the markers, a second run and a dry run changing nothing, a block missing its end refused, fish asked for first, and the login shell untouched
-0004-editor-extension FR-018	none	-	retired: the Workspaces Console offers Learn on the same panel (0043-if-console FR-031, FR-043).
-0004-editor-extension FR-019	none	-	retired: every suggestion is actionable in the Workspaces Console (0043-if-console FR-048); `doctor` supplies the actions (0001-ws-host FR-017).
+0004-editor-extension FR-018	none	-	retired: the Workspaces Console offers Learn on the same panel (0009-workspaces-console FR-031, FR-043).
+0004-editor-extension FR-019	none	-	retired: every suggestion is actionable in the Workspaces Console (0009-workspaces-console FR-048); `doctor` supplies the actions (0001-ws-host FR-017).
 0004-editor-extension FR-020	check	workspaces-host: ws-host test	a test checks console/ holds the one extension, no other package.json or .vsix is tracked, and there is no vscode add command
 0004-editor-extension FR-021	check	workspaces-host: ws-host test	tests use a stand-in code and a stand-in release to check the Console is installed from the release only, once, and a dry run installs nothing
 0004-editor-extension FR-022	none	-	retired: a release is installed as 0007-releases FR-013 states
@@ -195,7 +195,7 @@ requirement	mechanism	by	note
 0009-workspaces-console FR-043	check	workspaces-host: ws-host test	Learn tests with the stand-in and a real VS Code: a numbered step with its words, its command line and a Run through the one path, a terminal-only step disabled with its reason, a step the person does is marked, the next topic
 0009-workspaces-console FR-044	check	workspaces-host: ws-host test	the manifest check reads icon, galleryBanner, categories, keywords, nouns and the nls file; extension build makes the 128px PNG with Pillow from the brand's mark and the l10n bundle, and the .vsix holds them, the README, its screenshots and the CHANGELOG; tests prove every user-facing string goes through l10n; the real VS Code run lists no unused view slot
 0009-workspaces-console FR-045	check	workspaces-host: ws-host test	the node test of the screenshot helper reads a screen dump to a PNG; ws-host test drives extension test --screenshots (the folder, the usage errors, the files); the scenario runs in a real VS Code with ws-host extension test --screenshots
-0009-workspaces-console FR-046	check	workspaces-host: ws-host test	every test of FR-028 and FR-032 was ported to the redesigned code and passes: the trust, dry-run, decision, MCP, discovery and test-hook tests; the vault's headless harness and real VS Code suite run against it
+0009-workspaces-console FR-046	check	workspaces-host: ws-host test	every test of FR-028 and FR-032 was ported to the redesigned code and passes: the trust, dry-run, decision, MCP, discovery and test-hook tests; a provider's headless harness and real VS Code suite run against it
 0009-workspaces-console FR-047	none	-	retired: see the requirement
 0009-workspaces-console FR-048	check	workspaces-host: ws-host test	tests derive every suggestion and prove each says what is wrong, gives its command line and runs it or says what the person does, and none says see below; the notification tests; the manifest check reads the welcome content
 0009-workspaces-console FR-049	check	workspaces-host: ws-host test	view tests: Search shown only where a list declares search, it runs the list with the option and the text and shows the rows in the order given, an empty result says so and offers the full list; panel tests: the header icon from the list icon field and table cells that open the terms they name; the real VS Code run drives Search over the ontology

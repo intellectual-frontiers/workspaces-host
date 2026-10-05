@@ -1,4 +1,4 @@
-// Copy Context and Get Help (0043-if-console FR-018): what an agent needs to know about a resource, and the report to paste to a person
+// Copy Context and Get Help (0009-workspaces-console FR-018): what an agent needs to know about a resource, and the report to paste to a person
 // or an AI. Both are assembled from what the launcher returns, with secrets removed, and neither is sent anywhere.
 import * as vscode from 'vscode';
 import type { App } from '../app';

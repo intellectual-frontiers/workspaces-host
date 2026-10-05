@@ -1,4 +1,4 @@
-// Language features in the files a command line's references name (0041-command-line FR-064 `presentation.references`, 0043-if-console FR-041):
+// Language features in the files a command line's references name (0041-command-line FR-064 `presentation.references`, 0009-workspaces-console FR-041):
 // a hover that shows the resource's words, its key facts and its actions as links; Go to Definition, to the path and line the resource gives;
 // a CodeLens above the reference with its `lens` fields and a Run for the resource's check; and a document link that opens the resource's
 // page. Each runs only the launcher's `show` command, only in a trusted workspace, and the extension holds no pattern, file name or field

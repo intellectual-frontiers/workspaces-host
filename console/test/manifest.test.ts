@@ -1,4 +1,4 @@
-// The manifest's contributions (0043-if-console FR-036, FR-037, FR-038, FR-039, FR-024): the views, the welcome content, the commands'
+// The manifest's contributions (0009-workspaces-console FR-036, FR-037, FR-038, FR-039, FR-024): the views, the welcome content, the commands'
 // categories, titles and icons, the keys, the menus' groups and the settings.
 import test from 'node:test';
 import assert from 'node:assert/strict';

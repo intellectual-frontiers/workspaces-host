@@ -1,4 +1,4 @@
-// Badges and colors in VS Code's own file decorations (0043-if-console FR-038, FR-040): a file that a check found something in carries a count
+// Badges and colors in VS Code's own file decorations (0009-workspaces-console FR-038, FR-040): a file that a check found something in carries a count
 // and the color of its worst finding, its folders carry the color, and a row of a view whose noun declares a `badge` carries it as a badge.
 // Only a count and a color are drawn; the findings themselves are in Problems.
 import * as vscode from 'vscode';

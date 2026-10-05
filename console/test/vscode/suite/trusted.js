@@ -1,5 +1,5 @@
 'use strict';
-// The extension in a real VS Code, in a trusted workspace that holds this clone and a fixture second command line (0043-if-console FR-032).
+// The extension in a real VS Code, in a trusted workspace that holds this clone and a fixture second command line (0009-workspaces-console FR-032).
 const assert = require('assert');
 const path = require('path');
 const vscode = require('vscode');
@@ -272,13 +272,13 @@ test('the files a reference names have a hover, a definition, a CodeLens and lin
   // a real spec: the requirement a row of the register names
   const realFile = vscode.Uri.file(path.join(process.env.IF_CONSOLE_REAL_ROOT, 'spec-kit', 'enforcement.tsv'));
   const text = (await vscode.workspace.openTextDocument(realFile)).getText().split('\n');
-  const line = text.findIndex((l) => l.startsWith('0043-if-console FR-001\t'));
+  const line = text.findIndex((l) => l.startsWith('0009-workspaces-console FR-001\t'));
   assert.ok(line > 0);
   const realHover = await waitFor(async () => { const h = await vscode.commands.executeCommand('vscode.executeHoverProvider', realFile, new vscode.Position(line, 5)); return h.length ? h : null; }, 'the requirement\'s hover', 90000);
   const realMd = realHover.flatMap((h) => h.contents).map((c) => c.value).join('\n').replace(/\\/g, '');
   assert.match(realMd, /The extension MUST be one extension named/, 'the requirement\'s own text');
   const realDefs = await vscode.commands.executeCommand('vscode.executeDefinitionProvider', realFile, new vscode.Position(line, 5));
-  assert.ok(realDefs[0].uri.fsPath.endsWith(path.join('0043-if-console', 'spec.md')), 'its definition is the spec');
+  assert.ok(realDefs[0].uri.fsPath.endsWith(path.join('0009-workspaces-console', 'spec.md')), 'its definition is the spec');
 });
 
 test('Find Resource lists every row of every view, the command line\'s own labels and descriptions', async () => {
@@ -286,7 +286,7 @@ test('Find Resource lists every row of every view, the command line\'s own label
   vscode.commands.executeCommand('workspaces-console.findResource');
   const pick = await nextQuickPick(mark, (s) => s.title === 'Find a resource', 'the Find Resource quick pick');
   assert.ok(pick.items.some((l) => l.includes('First widget')), 'a row of the fixture\'s view');
-  assert.ok(pick.items.some((l) => l.includes('0043-if-console')), 'a spec of this repository\'s own');
+  assert.ok(pick.items.some((l) => l.includes('0009-workspaces-console')), 'a spec of this repository\'s own');
   assert.ok(pick.items.length > 1000, `all the rows, not the first few: ${pick.items.length}`);
   await vscode.commands.executeCommand('workbench.action.closeQuickOpen');
 });

@@ -1,4 +1,4 @@
-// The one service that opens a resource (0043-if-console FR-036, FR-038): a click on a row, a link in a tooltip, a document link in a spec and
+// The one service that opens a resource (0009-workspaces-console FR-036, FR-038): a click on a row, a link in a tooltip, a document link in a spec and
 // a command's own result all come here, and here they become the command line that shows the resource and a renderer that draws it. Today the
 // renderer is the launcher's own `--html` rendering in a webview; the resource panel of FR-042 replaces the renderer and nothing else.
 import { argvFromFields } from '../model/forms';

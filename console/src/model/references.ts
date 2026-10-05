@@ -1,4 +1,4 @@
-// The patterns in files that name a resource (0041-command-line FR-064 `presentation.references`, 0043-if-console FR-041). A command line
+// The patterns in files that name a resource (0041-command-line FR-064 `presentation.references`, 0009-workspaces-console FR-041). A command line
 // declares each as a regular expression, a template for the argument of the noun's `show` command, and the globs of the files it applies
 // to; this finds the matches in a file's text and holds no pattern, file name or field of its own.
 import type { ReferenceDecl } from './presentation';

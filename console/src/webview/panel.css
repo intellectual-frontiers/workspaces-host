@@ -1,4 +1,4 @@
-/* The resource panel's styles (0043-if-console FR-042): VS Code's theme variables only, so that it follows the theme in light, dark and
+/* The resource panel's styles (0009-workspaces-console FR-042): VS Code's theme variables only, so that it follows the theme in light, dark and
    high-contrast. No color, font or size is named here that a theme variable gives. */
 :root {
   --gap: 8px;

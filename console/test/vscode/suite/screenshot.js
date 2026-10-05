@@ -1,5 +1,5 @@
 'use strict';
-// A test-mode helper that captures VS Code's window to a PNG (0043-if-console FR-045). The display server the real-VS-Code run starts
+// A test-mode helper that captures VS Code's window to a PNG (0009-workspaces-console FR-045). The display server the real-VS-Code run starts
 // (Xvfb, which the command line's own setup installs) is started with -fbdir, so it keeps its whole screen in a file as an X window dump (XWD).
 // The window is the whole screen: there is no window manager and VS Code fills it. This reads that dump and writes a PNG with Node's own
 // zlib, so no program beyond the display server and Node is needed. IF_CONSOLE_SCREEN_DUMP names the dump, IF_CONSOLE_SCREENSHOTS the folder.

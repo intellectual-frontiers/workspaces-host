@@ -1,4 +1,4 @@
-// A stand-in for the VS Code API, enough for the extension's code to run under Node's own test runner (0043-if-console FR-028). It records
+// A stand-in for the VS Code API, enough for the extension's code to run under Node's own test runner (0009-workspaces-console FR-028). It records
 // what the extension does (messages, diagnostics, tree items, registered commands) and answers prompts from a script the test sets. It is
 // not VS Code: whether the real API behaves as this does is what the real-VS-Code run checks.
 import Module from 'module';

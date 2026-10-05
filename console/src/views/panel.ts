@@ -1,4 +1,4 @@
-// The resource panel (0043-if-console FR-042, FR-043, FR-014): the one webview a resource, a Learn topic and a dry run's changes open in. It is a
+// The resource panel (0009-workspaces-console FR-042, FR-043, FR-014): the one webview a resource, a Learn topic and a dry run's changes open in. It is a
 // singleton, so opening another reveals it instead of making a second; it keeps its history (back, forward, a breadcrumb); it draws the resource's
 // JSON through the model of model/panel.ts, never a page the launcher rendered; and what it asks of the extension it asks by an index into what
 // the extension itself put in the model, so that nothing a page says can name a command of its own.

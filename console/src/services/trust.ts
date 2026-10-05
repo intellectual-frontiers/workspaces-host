@@ -1,4 +1,4 @@
-// Workspace trust is VS Code's own, and the extension invents nothing (0043-if-console FR-006): it asks VS Code whether the workspace is
+// Workspace trust is VS Code's own, and the extension invents nothing (0009-workspaces-console FR-006): it asks VS Code whether the workspace is
 // trusted, offers VS Code's own page to change it, and runs nothing until it is.
 import * as vscode from 'vscode';
 

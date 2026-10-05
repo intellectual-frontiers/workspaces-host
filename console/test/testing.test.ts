@@ -1,4 +1,4 @@
-// The Testing API (0043-if-console FR-010, FR-040): the run profiles, the test items for sections, the findings as children with a range at their
+// The Testing API (0009-workspaces-console FR-010, FR-040): the run profiles, the test items for sections, the findings as children with a range at their
 // line, and the tests for the references a spec names whose enforcing action is a check.
 import test from 'node:test';
 import assert from 'node:assert/strict';

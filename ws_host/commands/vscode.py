@@ -13,6 +13,7 @@ import urllib.request
 from pathlib import Path
 
 from ..core import config, machine, paths, progress, registry as reg
+from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
 from ..install import fetch
 from ..lib import repos
@@ -297,3 +298,28 @@ def vscode_ensure(ctx):
                                               **({"next": f"Open {workspace_file(cfg)} in VS Code (File, Open Workspace from File), then press Ctrl+Shift+P and run Workspaces Console: Learn a Topic."} if done else {})},
                    actions=(actions or []) + ([] if not left or actions else [Action(("vscode", "ensure"), "Try again")]),
                    status=FAILED if any(r["status"] == "failed" for r in steps) else status)
+
+
+@command("vscode", "check", category="check", summary="Run a provider's tests of the Workspaces Console in a real VS Code under a display server",
+         args=(Arg("suite", "PATH", required=True, help="a folder whose index.js exports run()"),
+               Arg("workspace", "STRING", multiple=True, help="a folder of the test workspace, NAME=PATH or PATH"),
+               Arg("report", "PATH", help="where to write the report of each test"),
+               Arg("first", "PATH", help="the clone whose command line is the workspace's first folder (default: this repository)")), surfaces=("cli",))
+def vscode_test(ctx, suite, workspace, report, first):
+    """0009-workspaces-console FR-034: another provider's suite runs against the Console with this machine's pinned VS Code."""
+    from pathlib import Path
+    from .check import run_console_suite
+    folders = []
+    for w in workspace or []:
+        name, _, path = w.partition("=") if "=" in w else (Path(w).name, "", w)
+        folders.append({"name": name, "path": str(Path(path).resolve())})
+    if not (Path(suite) / "index.js").is_file():
+        raise WsError("no-suite", suite, f"{suite} has no index.js, so there is no suite to run.", exit_code=2)
+    try:
+        rows, p = run_console_suite(Path(suite).resolve(), folders, Path(report) if report else None, Path(first).resolve() if first else None)
+    except FileNotFoundError as e:
+        raise WsError("missing-program", str(e), f"I could not start VS Code for the tests: {e} is not on this machine.", status="missing", exit_code=3)
+    bad = [r for r in rows if r.get("status") != "passed"]
+    plain = f"{len(rows) - len(bad)} of {len(rows)} tests passed in a real VS Code." + (" " + "; ".join(r["name"] for r in bad) if bad else "")
+    return Resource("vscode-test", "console", {"plain": plain, "tests": rows, "findings": [f"{r['name']}: {str(r.get('reason', ''))[:160]}" for r in bad]},
+                    status=OK if p.returncode == 0 and not bad else FAILED)

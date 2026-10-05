@@ -1,4 +1,4 @@
-// Workspaces Console: the secondary interface of every repository's orchestrator (0043-if-console). It finds each repository's launcher by that
+// Workspaces Console: the secondary interface of every repository's orchestrator (0009-workspaces-console). It finds each repository's launcher by that
 // repository's own declaration, runs it with --json, and offers what it returns the way VS Code offers anything. It re-implements nothing,
 // writes nothing, collects no telemetry and opens no network connection.
 import type * as vscode from 'vscode';

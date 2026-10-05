@@ -1,4 +1,4 @@
-// The tree of every noun and command of a repository (0043-if-console FR-008): repository -> nouns -> commands and resources -> links and
+// The tree of every noun and command of a repository (0009-workspaces-console FR-008): repository -> nouns -> commands and resources -> links and
 // actions. Every entry is built from what a launcher returned.
 import * as vscode from 'vscode';
 import { argvFromFields } from '../model/forms';

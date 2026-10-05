@@ -1,4 +1,4 @@
-// The commands running now (0043-if-console FR-020, FR-038): each has a cancellation source, so that one Stop action in a view's title ends
+// The commands running now (0009-workspaces-console FR-020, FR-038): each has a cancellation source, so that one Stop action in a view's title ends
 // them all, and so that the view that started one can say it is working.
 import { CancelSource } from './cancellation';
 

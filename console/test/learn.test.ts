@@ -1,4 +1,4 @@
-// Learn (0043-if-console FR-031): the repository's help topics in a quick pick, a topic shown as a resource with its steps as buttons.
+// Learn (0009-workspaces-console FR-031): the repository's help topics in a quick pick, a topic shown as a resource with its steps as buttons.
 import test from 'node:test';
 import { readManifest } from './support/paths';
 import assert from 'node:assert/strict';

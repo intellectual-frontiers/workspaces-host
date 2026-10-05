@@ -127,7 +127,7 @@ work, and a failed clone reported as done. Each is a test here.
 ## Out of scope
 
 - Kits and installers: 0003-kits.
-- The sign-in action in the editor: 0043-if-console, in the public root.
+- The sign-in action in the editor: 0009-workspaces-console,.
 - Hosts other than GitHub and GitLab.
 
 ## Edge cases

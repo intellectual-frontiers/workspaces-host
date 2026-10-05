@@ -1,4 +1,4 @@
-// The Checks view (0043-if-console FR-010): each section of the repository's `check`, its last result and, under a failed one, its findings.
+// The Checks view (0009-workspaces-console FR-010): each section of the repository's `check`, its last result and, under a failed one, its findings.
 // A section's row has a status icon, its result as the muted description and a hover button that runs it again; a finding opens its file at
 // its line.
 import * as vscode from 'vscode';
