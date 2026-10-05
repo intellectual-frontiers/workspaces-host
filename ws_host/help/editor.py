@@ -10,8 +10,9 @@ def editor():
         "plain": "VS Code shows your workspace's state, through the IF Console, and lets you act on it with buttons.",
         "sections": (
             ("The IF Console", "ws-host does not ship an editor extension of its own. VS Code's window onto every repository's command line, ws-host's included, "
-                               "is the IF Console, which is built from the public root's code. ws-host vscode ensure builds and installs it, and asks you once to "
-                               "trust that repository, because building it runs that repository's code."),
+                               "is the IF Console, which the public root provides. ws-host vscode ensure installs the package from the public root's latest release when it "
+                               "has one, after checking its fingerprint. Otherwise it builds it from that repository's code, and asks you once to trust that repository, "
+                               "because building runs its code."),
             ("What you see", "A Home view that says what needs you, each with the exact line that fixes it and a Run button; the views each command line asks "
                              "for (ws-host asks for Workspace, Kits and Setup); checks as tests; and a page for every resource."),
             ("Open your repositories together", "vscode ensure writes workspaces.code-workspace in your workspaces folder, listing the repositories you work in. "

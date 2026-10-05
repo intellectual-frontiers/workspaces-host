@@ -78,6 +78,8 @@ requirement	mechanism	by	note
 0004-editor-extension FR-023	check	workspaces-host: ws-host test	tests check the workspace file lists cloned repositories, keeps the person's folders and settings and is left alone when it has comments
 0004-editor-extension FR-024	check	workspaces-host: ws-host test	a test checks workspace ensure says what to do until the IF Console is installed and then says it is, calling no VS Code
 0004-editor-extension FR-025	check	workspaces-host: ws-host test	tests check the wire shape of commands, resources, actions and the HTML, and that every warning is actionable
+0004-editor-extension FR-026	check	workspaces-host: ws-host test	tests check a release with a digest is installed with no build and no trust, once, that a missing digest, name or https address is ignored, that a failed digest falls back to building after trust, and that offline and dry runs download nothing
+0004-editor-extension FR-027	check	workspaces-host: ws-host check console	the suite in tests/if_console/vscode runs the IF Console in a real VS Code against ws-host; it is skipped where the public root or VS Code is missing, and a test checks the section exists, runs only when named and reports a failed row
 0005-help-and-docs FR-001	check	workspaces-host: ws-host test	tests list the topics, show each, and check unknown topics and offline use
 0005-help-and-docs FR-002	check	workspaces-host: ws-host test	tests check every topic's steps are actions that print as one line or none
 0005-help-and-docs FR-003	check	workspaces-host: ws-host test	tests require the ten topics

@@ -119,7 +119,8 @@ Reload Window*. Check *Extensions*, search `@installed`, and look for *IF Consol
 
 === `ws-host vscode ensure` asks me to trust the public root
 
-*Why:* The IF Console is built by running code in the public root (`.github`), and `ws-host` never runs a repository's code until you trust it.
+*Why:* The public root has not published a ready-made IF Console package yet, so it is built by running code in the public root (`.github`), and
+`ws-host` never runs a repository's code until you trust it.
 
 *Fix:* Type `yes` at the question. If you are not at a terminal, run `ws-host repo set github.com/intellectual-frontiers/.github --trusted` yourself, then
 `ws-host vscode ensure` again. You can stop trusting it later with `--untrusted`.

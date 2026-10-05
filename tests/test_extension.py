@@ -233,6 +233,30 @@ class Console(Home):
         git(self.root, "add", "-A")
         git(self.root, "commit", "-m", "first")
         self.settings = self.home / ".config" / "Code" / "User" / "settings.json"
+        self.release = None                # what the public root's latest release says; None is "no release"
+        self.downloads = []
+        saved_get, saved_download = vs._get_json, vs.fetch.download
+
+        def get(url):
+            if self.release is None:
+                raise OSError("404")
+            return self.release
+
+        def download(url, sha, offline=False):
+            self.downloads.append((url, sha))
+            if getattr(self, "bad_download", False):
+                raise vs.fetch.FetchError("checksum", "the file is not the one expected")
+            f = self.home.parent / "downloaded"
+            f.write_bytes(b"vsix")
+            return f
+
+        vs._get_json, vs.fetch.download = get, download
+        self.addCleanup(lambda: (setattr(vs, "_get_json", saved_get), setattr(vs.fetch, "download", saved_download)))
+
+    def a_release(self, **kw):
+        asset = {"name": "if-console-0.2.0.vsix", "digest": "sha256:" + "ab" * 32, "browser_download_url": "https://github.com/x/releases/download/v0.2.0/if-console-0.2.0.vsix"}
+        asset.update(kw)
+        self.release = {"tag_name": "v0.2.0", "assets": [asset]}
 
     def trust(self):
         from ws_host.core import config
@@ -330,3 +354,111 @@ class Console(Home):
         code, doc = self.run_json("workspace", "ensure")
         editor = [s for s in doc["data"]["steps"] if s["name"] == "editor"][0]
         self.assertEqual(editor["status"], "ok")
+
+
+    # ── a published, verified package needs no build and no trust (0004-editor-extension FR-026) ──
+
+    def test_a_release_with_a_digest_is_installed_without_a_build_or_trust(self):
+        self.a_release()
+        code, doc = self.run_json("vscode", "ensure")
+        self.assertEqual(code, 0, doc)
+        self.assertFalse(self.builds.exists(), "built though a release exists")
+        self.assertEqual(self.downloads, [("https://github.com/x/releases/download/v0.2.0/if-console-0.2.0.vsix", "ab" * 32)])
+        self.assertRegex(self.calls.read_text(), r"--install-extension \S+if-console-0\.2\.0\.vsix --force")
+        self.assertEqual(self.step(doc)["status"], "ok")
+        self.assertIn("after checking its fingerprint", self.step(doc)["plain"])
+        self.assertEqual(vs.read_stamp()["release"], "v0.2.0")
+
+    def test_the_same_release_is_not_downloaded_or_installed_twice(self):
+        self.a_release()
+        self.run_json("vscode", "ensure")
+        before = self.calls.read_text().count("if-console")
+        code, doc = self.run_json("vscode", "ensure")
+        self.assertEqual(len(self.downloads), 1)
+        self.assertEqual(self.step(doc)["plain"], "The IF Console is installed and current.")
+        self.assertEqual(self.calls.read_text().count("if-console"), before)
+
+    def test_a_release_with_no_digest_or_a_wrong_name_is_ignored_and_the_public_root_is_built_after_trust(self):
+        for kw in ({"digest": None}, {"digest": "sha256:short"}, {"name": "other.vsix"}, {"browser_download_url": "http://insecure/x.vsix"}):
+            self.a_release(**kw)
+            code, doc = self.run_json("vscode", "ensure")
+            self.assertEqual(self.downloads, [], kw)
+            self.assertEqual(self.step(doc)["status"], "warn", kw)         # untrusted public root: the trust is offered
+        self.assertFalse(self.builds.exists())
+
+    def test_a_download_that_does_not_match_its_digest_falls_back_to_building_after_trust(self):
+        self.a_release()
+        self.bad_download = True
+        self.trust()
+        code, doc = self.run_json("vscode", "ensure")
+        self.assertEqual(self.step(doc)["status"], "ok")
+        self.assertTrue(self.builds.exists())
+        self.assertIn("could not be used", self.step(doc)["plain"])
+        self.assertNotRegex(self.calls.read_text(), r"if-console-0\.2\.0")
+
+    def test_offline_never_asks_for_a_release(self):
+        self.a_release()
+        os.environ["WS_HOST_OFFLINE"] = "1"
+        code, doc = self.run_json("vscode", "ensure")
+        self.assertEqual(self.downloads, [])
+
+    def test_a_dry_run_downloads_nothing(self):
+        self.a_release()
+        code, doc = self.run_json("vscode", "ensure", "--dry-run")
+        self.assertEqual(self.downloads, [])
+        self.assertIn("I would download and install the IF Console v0.2.0", self.step(doc)["plain"])
+
+    def test_the_older_extension_is_removed_after_a_release_install_too(self):
+        self.a_release()
+        self.installed.write_text("ms-python.python\nintellectual-frontiers.workspaces-host\n")
+        self.run_json("vscode", "ensure")
+        self.assertIn("--uninstall-extension intellectual-frontiers.workspaces-host", self.calls.read_text())
+
+    def test_release_package_never_raises(self):
+        vs._get_json = lambda url: {"assets": "not a list"}
+        self.assertIsNone(vs.release_package())
+        vs._get_json = lambda url: (_ for _ in ()).throw(ValueError("bad json"))
+        self.assertIsNone(vs.release_package())
+
+
+class ConsoleSection(Home):
+    """`ws-host check console` runs the real-VS-Code suite through the public root's runner (0004-editor-extension FR-027)."""
+
+    def test_the_suite_is_here_and_the_section_runs_only_when_named(self):
+        self.assertTrue((REPO / "tests/if_console/vscode/index.js").is_file())
+        self.assertTrue((REPO / "tests/if_console/vscode/suite.js").is_file())
+        r = reg.discover()
+        self.assertIn("slow", r.sections["console"].suites)
+        code, doc = self.run_json("check")
+        self.assertNotIn("console", [s["name"] for s in doc["data"]["sections"]])
+
+    def test_without_the_public_root_it_is_skipped_naming_the_cause(self):
+        os.environ["WS_HOST_PUBLIC_ROOT"] = str(self.home / "nowhere")
+        code, doc = self.run_json("check", "console")
+        row = doc["data"]["sections"][0]
+        self.assertEqual(row["status"], "skipped")
+        self.assertIn("agora", row["reason"])
+
+    def test_a_failed_row_and_an_unavailable_vs_code_are_reported(self):
+        root = self.home / "root"
+        root.mkdir()
+        (root / "agora").write_text('#!/bin/sh\nreport=""\nwhile [ $# -gt 0 ]; do [ "$1" = --report ] && report=$2; shift; done\n'
+                                    'case "$FAKE" in\n'
+                                    '  fail) echo \'{"tests": [{"name": "ws-host: one", "status": "failed", "seconds": 1.5}, {"name": "ws-host: two", "status": "passed", "seconds": 1}]}\' > "$report"; exit 1;;\n'
+                                    '  none) echo \'{"data": {"message": "no display server"}}\'; exit 3;;\n'
+                                    '  ok) echo \'{"tests": [{"name": "ws-host: one", "status": "passed", "seconds": 1}]}\' > "$report"; exit 0;;\n'
+                                    'esac\n')
+        (root / "agora").chmod(0o755)
+        os.environ["WS_HOST_PUBLIC_ROOT"] = str(root)
+        os.environ["FAKE"] = "fail"
+        code, doc = self.run_json("check", "console")
+        row = doc["data"]["sections"][0]
+        self.assertEqual(row["status"], "failed")
+        self.assertEqual([f["where"] for f in row["findings"]], ["ws-host: one"])
+        os.environ["FAKE"] = "none"
+        code, doc = self.run_json("check", "console")
+        self.assertEqual(doc["data"]["sections"][0]["status"], "skipped")
+        self.assertIn("no display server", doc["data"]["sections"][0]["reason"])
+        os.environ["FAKE"] = "ok"
+        code, doc = self.run_json("check", "console")
+        self.assertEqual(doc["data"]["sections"][0]["status"], "passed")

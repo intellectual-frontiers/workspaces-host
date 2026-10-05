@@ -73,6 +73,34 @@ def specs_section(ctx):
     return [_f(*(m.split(": ", 1) if ": " in m else ("spec-kit", m))) for m in found] or [_f("spec-kit", "the public root's checker failed")]
 
 
+@section("console", suites=("slow",), programs=("agora",),
+         summary="the IF Console serves ws-host in a real VS Code (named, not part of a plain check: it needs VS Code and a display server)")
+def console_section(ctx):
+    """0004-editor-extension FR-027: the public root's `agora extension test` runs this repository's suite (tests/if_console/vscode) in a real
+    VS Code, with ws-host as a workspace folder. It is skipped, naming the cause, where the public root or VS Code is not here."""
+    root = _public_root()
+    if root is None:
+        raise FileNotFoundError("agora")
+    import json
+    import tempfile
+    suite = paths.repo_root() / "tests" / "if_console" / "vscode"
+    with tempfile.TemporaryDirectory(prefix="ws-host-console-") as tmp:
+        report = Path(tmp) / "report.json"
+        p = subprocess.run([str(root / "agora"), "extension", "test", "--suite", str(suite), "--workspace", f"ws-host={paths.repo_root()}",
+                            "--report", str(report), "--json"], capture_output=True, text=True, timeout=1800)
+        if p.returncode == 3:
+            try:
+                why = json.loads(p.stdout.strip().splitlines()[-1])["data"].get("message") or "VS Code could not start"
+            except (ValueError, KeyError, IndexError):
+                why = "VS Code could not start"
+            raise FileNotFoundError(f"VS Code ({why})")
+        rows = json.loads(report.read_text(encoding="utf-8")).get("tests", []) if report.is_file() else []
+    out = [_f(r["name"], f"failed in a real VS Code ({r.get('seconds', 0)}s)") for r in rows if r.get("status") != "passed"]
+    if p.returncode not in (0, 1) or (p.returncode == 1 and not out):
+        out.append(_f("agora extension test", f"it did not give an answer I could read (exit {p.returncode})"))
+    return out
+
+
 @reg.command("check", category="check", summary="Run the checks of this repository",
              args=(Arg("sections", "SECTION", positional=True, multiple=True), Arg("suite", "SECTION", help="a named set of sections")))
 def check(ctx, sections, suite):
@@ -83,7 +111,7 @@ def check(ctx, sections, suite):
         if not any(suite in s.suites for s in registry.sections.values()):
             raise WsError("usage", f"no section is in the suite '{suite}'", f"No check belongs to a set called '{suite}'.", exit_code=2)
     if not names and not suite:
-        names = list(registry.sections)
+        names = [n for n, s in registry.sections.items() if "slow" not in s.suites]      # a slow section runs when it is named
     results, status = [], OK
     for n in names:
         s = registry.sections.get(n)
