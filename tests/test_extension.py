@@ -45,7 +45,7 @@ class Package(unittest.TestCase):
 
     def test_every_contributed_command_is_the_documented_set_and_none_takes_arguments(self):
         cmds = sorted(c["command"] for c in self.pkg["contributes"]["commands"])
-        self.assertEqual(cmds, ["wsHost.advance", "wsHost.getHelp", "wsHost.learn", "wsHost.refresh", "wsHost.runChecks", "wsHost.signIn"])
+        self.assertEqual(cmds, ["wsHost.ensure", "wsHost.getHelp", "wsHost.learn", "wsHost.refresh", "wsHost.runChecks", "wsHost.signIn"])
 
 
 @unittest.skipUnless(shutil.which("node"), "node is needed to test the extension's logic")
@@ -139,7 +139,7 @@ class Contract(Workspace):
         (fakebin / "gh").write_text("#!/bin/sh\nexit 0\n")
         (fakebin / "gh").chmod(0o755)
         os.environ["PATH"] = f"{fakebin}:{os.environ['PATH']}"
-        code, out = self.run_cmd("workspace", "advance", "--html")
+        code, out = self.run_cmd("workspace", "ensure", "--html")
         pages = [p for p in re.split(r"(?=<!doctype html>)", out) if p.strip()]
         self.assertGreaterEqual(len(pages), 6)
         self.assertTrue(all("data-resource" in p for p in pages))
@@ -251,7 +251,7 @@ class Add(Home):
 
 
 class Setup(Home):
-    """`vscode advance` (0006-onboarding FR-007 to FR-009): extensions and settings, never overwriting a person's own."""
+    """`vscode ensure` (0006-onboarding FR-007 to FR-009): extensions and settings, never overwriting a person's own."""
 
     def setUp(self):
         super().setUp()
@@ -267,7 +267,7 @@ class Setup(Home):
         self.settings = self.home / ".config" / "Code" / "User" / "settings.json"
 
     def test_it_installs_the_missing_recommended_extensions_and_skips_what_is_there(self):
-        code, doc = self.run_json("vscode", "advance")
+        code, doc = self.run_json("vscode", "ensure")
         self.assertEqual(code, 0, doc)
         installed = self.calls.read_text()
         for ext_id, _ in vs.RECOMMENDED:
@@ -281,7 +281,7 @@ class Setup(Home):
     def test_it_adds_settings_the_person_lacks_and_keeps_every_one_they_set(self):
         self.settings.parent.mkdir(parents=True)
         self.settings.write_text(json.dumps({"files.autoSave": "off", "editor.fontSize": 18}))
-        code, doc = self.run_json("vscode", "advance")
+        code, doc = self.run_json("vscode", "ensure")
         self.assertEqual(code, 0)
         merged = json.loads(self.settings.read_text())
         self.assertEqual(merged["files.autoSave"], "off")        # theirs wins
@@ -294,19 +294,19 @@ class Setup(Home):
         self.settings.parent.mkdir(parents=True)
         original = '{\n  // my notes\n  "editor.fontSize": 18,\n}\n'
         self.settings.write_text(original)
-        code, doc = self.run_json("vscode", "advance")
+        code, doc = self.run_json("vscode", "ensure")
         self.assertEqual(self.settings.read_text(), original)
         self.assertEqual(doc["data"]["settings"]["status"], "left-alone")
         self.assertIn("git.autofetch", doc["data"]["settings"]["plain"])
 
     def test_it_is_repeatable_and_dry_run_changes_nothing(self):
-        code, doc = self.run_json("vscode", "advance", "--dry-run")
+        code, doc = self.run_json("vscode", "ensure", "--dry-run")
         self.assertEqual(code, 0)
         self.assertFalse(self.settings.exists())
         self.assertNotIn("--install-extension", self.calls.read_text() if self.calls.exists() else "")
-        self.run_cmd("vscode", "advance")
+        self.run_cmd("vscode", "ensure")
         first = self.settings.read_text()
-        code, doc = self.run_json("vscode", "advance")
+        code, doc = self.run_json("vscode", "ensure")
         self.assertEqual(self.settings.read_text(), first)
         self.assertEqual(doc["data"]["settings"]["status"], "unchanged")
 
@@ -317,14 +317,14 @@ class Setup(Home):
         self.addCleanup(lambda: setattr(machine, "distro", orig))
         (self.home / ".vscode-server" / "extensions").mkdir(parents=True)
         (self.home / ".vscode-server" / "extensions" / "extensions.json").write_text("[]")
-        self.run_cmd("vscode", "advance")
+        self.run_cmd("vscode", "ensure")
         self.assertTrue((self.home / ".vscode-server" / "data" / "Machine" / "settings.json").exists())
         self.assertFalse(self.settings.exists())
 
     def test_without_code_it_says_what_to_do_and_still_sets_the_settings_it_can(self):
         (self.bin / "code").unlink()
         os.environ["PATH"] = os.pathsep.join(p for p in os.environ["PATH"].split(os.pathsep) if not shutil.which("code", path=p))
-        code, doc = self.run_json("vscode", "advance")
+        code, doc = self.run_json("vscode", "ensure")
         self.assertIn("code .", json.dumps(doc["data"]))
         self.assertTrue(self.settings.exists())
 
@@ -333,5 +333,5 @@ class Setup(Home):
         self.assertTrue(all(isinstance(v, (str, bool)) for v in vs.baseline_settings().values()))
 
     def test_setup_is_a_setup_command_on_the_terminal_and_the_editor_never_mcp(self):
-        c = reg.discover().get(("vscode", "advance"))
+        c = reg.discover().get(("vscode", "ensure"))
         self.assertEqual((c.category, c.surfaces), ("setup", ("cli", "editor")))

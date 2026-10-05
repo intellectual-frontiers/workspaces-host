@@ -7,7 +7,7 @@ brackets.
 === Start the day [start, repos]
 
 Open VS Code from Debian with `code .` in a repository. Look at the line at the bottom. If it is green, you are ready. To bring every
-repository up to date, press `Ctrl+Shift+P`, type `Workspace: Bring everything up to date`, and press Enter. Any repository where you have
+repository up to date, press `Ctrl+Shift+P`, type `Workspace: Ensure everything is set up and up to date`, and press Enter. Any repository where you have
 changes of your own is left exactly as it was, and the result says so.
 
 === Choose which repositories you work in [start]
@@ -58,7 +58,7 @@ An AI can run everything `ws-host` does except the decisions that are yours. Giv
 
 === Update ws-host itself
 
-`ws-host workspace advance` also brings `ws-host` up to date, because it is one of your repositories. Reload VS Code afterward.
+`ws-host workspace ensure` also brings `ws-host` up to date, because it is one of your repositories. Reload VS Code afterward.
 
 === Something is wrong and I am not sure what
 

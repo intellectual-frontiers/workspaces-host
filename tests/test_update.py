@@ -23,7 +23,7 @@ class Update(Workspace):
             self.upstream_commit(self.upstream, f"f{i}.txt", "x\n", msg=f"change {i}")
 
     def test_nothing_new_says_so_and_leaves_no_note(self):
-        code, doc = self.run_json("update", "status")
+        code, doc = self.run_json("update", "--check")
         self.assertEqual(code, 0)
         self.assertEqual(doc["data"]["plain"], "ws-host is up to date.")
         self.assertFalse(selfupdate.notice_file().exists())
@@ -31,39 +31,39 @@ class Update(Workspace):
 
     def test_news_is_counted_listed_and_left_as_a_note(self):
         self.news(2)
-        code, doc = self.run_json("update", "status")
+        code, doc = self.run_json("update", "--check")
         self.assertEqual(doc["data"]["behind"], 2)
         self.assertEqual(doc["data"]["whats_new"], ["change 1", "change 0"])
         self.assertIn("2 changes", doc["data"]["plain"])
-        self.assertEqual(doc["actions"][0]["cli"], "ws-host update advance")
-        self.assertIn("ws-host update advance", selfupdate.notice_file().read_text())
+        self.assertEqual(doc["actions"][0]["cli"], "ws-host update")
+        self.assertIn("ws-host update", selfupdate.notice_file().read_text())
         self.assertIn("2 changes", selfupdate.notice_file().read_text())
 
     def test_cached_reads_the_note_and_uses_no_network(self):
         self.news(1)
-        self.run_json("update", "status")
+        self.run_json("update", "--check")
         for f in self.remotes.rglob("HEAD"):
             pass
-        code, doc = self.run_json("update", "status", "--cached")
+        code, doc = self.run_json("update", "--check", "--cached")
         self.assertTrue(doc["data"]["waiting"])
         self.assertIn("1 change", doc["data"]["plain"])
 
     def test_advance_moves_forward_and_clears_the_note(self):
         self.news(2)
-        self.run_json("update", "status")
-        code, doc = self.run_json("update", "advance")
+        self.run_json("update", "--check")
+        code, doc = self.run_json("update")
         self.assertEqual(code, 0)
         self.assertIn("moved forward by 2 changes", doc["data"]["plain"])
         self.assertTrue((self.copy / "f1.txt").exists())
         self.assertFalse(selfupdate.notice_file().exists())
-        code, doc = self.run_json("update", "advance")
+        code, doc = self.run_json("update")
         self.assertEqual(doc["data"]["plain"], "ws-host is up to date.")
 
     def test_changes_of_the_persons_are_never_in_the_way(self):
         self.news(1)
         (self.copy / "README.md").write_text("my edit\n")
         before = wgit.snapshot(self.copy)
-        code, doc = self.run_json("update", "advance")
+        code, doc = self.run_json("update")
         self.assertEqual(code, 0)
         self.assertIn("changes you have not committed", doc["data"]["plain"])
         self.assertIn("Your work is safe", doc["data"]["plain"])
@@ -76,7 +76,7 @@ class Update(Workspace):
         git(self.copy, "add", "-A")
         git(self.copy, "commit", "-m", "mine")
         before = wgit.snapshot(self.copy)
-        code, doc = self.run_json("update", "advance")
+        code, doc = self.run_json("update")
         self.assertIn("both moved on", doc["data"]["plain"])
         self.assertEqual(wgit.snapshot(self.copy), before)
 
@@ -84,32 +84,32 @@ class Update(Workspace):
         (self.copy / "mine.txt").write_text("1\n")
         git(self.copy, "add", "-A")
         git(self.copy, "commit", "-m", "mine")
-        code, doc = self.run_json("update", "advance")
+        code, doc = self.run_json("update")
         self.assertIn("1 commit you have not pushed", doc["data"]["plain"])
 
     def test_a_dry_run_changes_nothing(self):
         self.news(1)
         before = wgit.snapshot(self.copy)
-        code, doc = self.run_json("update", "advance", "--dry-run")
+        code, doc = self.run_json("update", "--dry-run")
         self.assertIn("I would move ws-host forward by 1 change", doc["data"]["plain"])
         self.assertEqual(wgit.snapshot(self.copy), before)
 
     def test_an_unreachable_remote_is_a_plain_message_and_a_quiet_background_look_still_stamps_the_time(self):
         git(self.copy, "remote", "set-url", "origin", str(self.home.parent / "nowhere"))
-        code, doc = self.run_json("update", "advance")
+        code, doc = self.run_json("update")
         self.assertEqual(code, 0)
         self.assertIn("Your copy was not touched", doc["data"]["plain"])
-        code, doc = self.run_json("update", "status", "--background")
+        code, doc = self.run_json("update", "--check", "--background")
         self.assertEqual(code, 0)
         self.assertTrue(selfupdate.checked_file().exists())
 
     def test_the_doctor_says_when_an_update_waits_from_the_last_look(self):
         self.news(1)
-        self.run_json("update", "status")
+        self.run_json("update", "--check")
         code, doc = self.run_json("doctor")
         row = [c for c in doc["data"]["checks"] if c["name"] == "ws-host version"][0]
         self.assertEqual(row["status"], "warn")
-        self.run_json("update", "advance")
+        self.run_json("update")
         code, doc = self.run_json("doctor")
         self.assertEqual([c for c in doc["data"]["checks"] if c["name"] == "ws-host version"][0]["status"], "ok")
 
@@ -147,7 +147,7 @@ class NewWindow(Workspace):
 
     def test_a_waiting_update_is_shown_once_per_window(self):
         self.state.mkdir(parents=True)
-        (self.state / "update-available").write_text("A newer ws-host is ready (3 changes). Update it with:  ws-host update advance\n")
+        (self.state / "update-available").write_text("A newer ws-host is ready (3 changes). Update it with:  ws-host update\n")
         (self.state / "update-checked").touch()
         out, calls = self.open_window()
         self.assertIn("🔄 A newer ws-host is ready (3 changes)", out)
@@ -179,7 +179,7 @@ class NewWindow(Workspace):
 
     def test_the_first_window_ever_looks_too(self):
         out, calls = self.open_window()
-        self.assertIn("update status --background", calls)
+        self.assertIn("update --check --background", calls)
 
     def test_the_fish_block_is_valid_fish(self):
         import shutil

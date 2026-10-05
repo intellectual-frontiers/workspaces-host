@@ -45,7 +45,7 @@ The extension runs only the tools of repositories you trust and does nothing in 
 
 .Steps
 
-* Set up VS Code with the extension, helpful extensions and safe settings: `ws-host vscode advance`
+* Set up VS Code with the extension, helpful extensions and safe settings: `ws-host vscode ensure`
 * Install only the extension: `ws-host vscode add`
 * Run the checks: `ws-host check`
 
@@ -147,7 +147,7 @@ VS Code's Sync button follows your git settings. Set pull.ff to only so it behav
 
 * See the repositories I know: `ws-host repo list`
 * Copy the missing ones: `ws-host repo add --all`
-* Bring them up to date: `ws-host repo advance --all`
+* Bring them up to date: `ws-host repo sync --all`
 * See each one's state: `ws-host repo status`
 * Make git's Sync button safe: `ws-host workspace set --pull-ff-only`
 
@@ -249,7 +249,7 @@ ws-host auth new github
 Two repositories come with you: .github, the shared examples and rules, and workspaces-host, this tool. This copies them to your workspaces folder and keeps them up to date without ever touching your own changes. Run it as often as you like.
 
 ----
-ws-host workspace advance
+ws-host workspace ensure
 ----
 
 .3️⃣  Open VS Code
@@ -264,7 +264,7 @@ code .
 It installs the Workspace extension, a short list of helpful extensions and a few safe settings, and never changes a setting you made. Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.
 
 ----
-ws-host vscode advance
+ws-host vscode ensure
 ----
 
 .5️⃣  Keep going in VS Code
@@ -311,7 +311,7 @@ ws-host shell add bash --plain
 ws-host improves often. A new terminal window tells you in one line when a newer version is waiting. To get it, and see what is new:
 
 ----
-ws-host update advance
+ws-host update
 ----
 
 .🆘 Stuck?
@@ -320,10 +320,10 @@ Run ws-host doctor to see what is wrong in plain words, or Workspace: Get help i
 .Steps
 
 * Sign in to GitHub: `ws-host auth new github`
-* Copy your starter repositories: `ws-host workspace advance`
-* Set VS Code up: `ws-host vscode advance`
+* Copy your starter repositories: `ws-host workspace ensure`
+* Set VS Code up: `ws-host vscode ensure`
 * Give your terminal the prompt again: `ws-host shell add bash` (setup already did this once)
-* Update ws-host: `ws-host update advance`
+* Update ws-host: `ws-host update`
 * See where things stand: `ws-host workspace status`
 * Check your machine: `ws-host doctor`
 
@@ -361,25 +361,25 @@ ws-host improves often. One command brings the newest version, and a new termina
 This looks for news and moves ws-host forward. It only ever moves forward, and it leaves your copy exactly as it was, with a plain reason, when you have changes of your own in it:
 
 ----
-ws-host update advance
+ws-host update
 ----
 
 .Is one waiting?
 Every new terminal window looks in the background, at most every six hours, and never makes you wait. When a newer version is ready, the window says so in one line. To look right now and see what is new:
 
 ----
-ws-host update status
+ws-host update --check
 ----
 
 .Everything at once
-ws-host workspace advance updates ws-host along with your repositories, so running it is enough. ws-host update advance is the quick way when you only want ws-host.
+ws-host workspace ensure updates ws-host along with your repositories, so running it is enough. ws-host update is the quick way when you only want ws-host.
 
 .Turning the reminder off
 The reminder is a few lines in the marked block of your ~/.bashrc, which is the same block that gives you your prompt. Delete the lines that mention update, or all of the block. ws-host doctor also tells you when an update is waiting.
 
 .Steps
 
-* See whether a newer ws-host is waiting: `ws-host update status`
-* Update ws-host: `ws-host update advance`
-* Update everything: `ws-host workspace advance`
+* See whether a newer ws-host is waiting: `ws-host update --check`
+* Update ws-host: `ws-host update`
+* Update everything: `ws-host workspace ensure`
 * Check your machine: `ws-host doctor`

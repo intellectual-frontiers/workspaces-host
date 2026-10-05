@@ -35,7 +35,7 @@ Back in the Debian window:
 
 ----
 ws-host vscode add
-ws-host vscode advance
+ws-host vscode ensure
 ----
 
 The first installs the Workspace extension. The second installs a short list of helpful extensions (GitHub pull requests, GitLens, Python,

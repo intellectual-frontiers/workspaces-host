@@ -142,7 +142,7 @@ def _skip(rid: RepoId, why: str, detail: str | None = None) -> dict:
     return r
 
 
-def advance(rid: RepoId, cfg: config.Config) -> dict:
+def sync(rid: RepoId, cfg: config.Config) -> dict:
     """Fetch, then fast-forward only; anything else leaves the repository exactly as it was (0002 FR-007 to FR-010)."""
     path = rid.path(cfg)
     if not (path / ".git").exists():

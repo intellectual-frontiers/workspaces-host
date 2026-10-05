@@ -39,7 +39,7 @@ and 0026-workspaces, held in the public root, govern all of them.
 - **FR-005**: `install.sh` MUST be one POSIX `sh` script that a person runs
   with one line. It MUST install what the machine lacks to get going, install
   `uv` if it is missing, clone the repository into
-  `~/workspaces/github.com/intellectual-frontiers/workspaces-host` or advance
+  `~/workspaces/github.com/intellectual-frontiers/workspaces-host` or update
   an existing clone by fast-forward only, link `~/.local/bin/ws-host`, run
   `ws-host doctor`, and set the workspace up (0006-onboarding FR-001, FR-002). It
   MUST be safe to run again, MUST change nothing a person has changed in the
@@ -82,7 +82,7 @@ and 0026-workspaces, held in the public root, govern all of them.
   (read); `doctor` and `check [SECTION...]` (check); `test` and `fresh` (check);
   `context [RESOURCE]` and `help [TOPIC]` (read); `docs build` (build);
   `docs generate` and `skill generate` (generate); and `vscode add` and
-  `vscode advance` (setup), each as 0041-command-line states them, with
+  `vscode ensure` (setup), each as 0041-command-line states them, with
   `--json`, `--html` and, where a command writes, `--dry-run`. Its audience is
   `private`: what it reports is about one person's machine.
 - **FR-012**: `doctor` MUST change nothing and MUST report: the distribution

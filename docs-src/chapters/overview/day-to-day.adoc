@@ -18,11 +18,11 @@ it is generated, and `ws-host fresh` fails if it is out of date.
 `ws-host` improves often. One command brings the newest version, and it only ever moves forward, so your own changes are safe:
 
 ----
-ws-host update advance
+ws-host update
 ----
 
 Every new terminal window looks for news in the background, at most every six hours and without making you wait. When a newer version is
-ready, the window says so in one line, and `ws-host update status` shows what is new. `ws-host doctor` reports it too. `ws-host workspace advance`
+ready, the window says so in one line, and `ws-host update --check` shows what is new. `ws-host doctor` reports it too. `ws-host workspace ensure`
 brings `ws-host` up to date along with your repositories, so running it is enough. The check lives in the marked lines of your `~/.bashrc` (or
 fish's `config.fish`) that `ws-host shell add` writes, so deleting the lines that mention `update` turns the reminder off.
 
@@ -37,7 +37,7 @@ The one thing I put outside `help` is the first line you paste on a new machine,
 
 ----
 curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh
-ws-host workspace advance
+ws-host workspace ensure
 ----
 
 The first checks for `python3` and `git`, installs `uv` if you lack it, copies `ws-host` beside your other repositories

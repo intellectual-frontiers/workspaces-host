@@ -1,4 +1,4 @@
-"""Planning and installing kits (0003-kits). The commands and `workspace advance` both come here."""
+"""Planning and installing kits (0003-kits). The commands and `workspace ensure` both come here."""
 from __future__ import annotations
 
 from ..core import kits_state, machine, progress, registry as reg
@@ -65,7 +65,7 @@ def install(ctx, kit, name: str):
 
 
 def ensure(ctx, declared: dict[str, list[str]]) -> dict:
-    """`workspace advance`'s kit step (0003 FR-012): install what repositories declare, report what cannot be done."""
+    """`workspace ensure`'s kit step (0003 FR-012): install what repositories declare, report what cannot be done."""
     if not declared:
         return {"status": "ok", "plain": "No repository asked for a kit."}
     kits = reg.discover().kits

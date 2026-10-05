@@ -5,8 +5,8 @@
 #   curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh
 #
 # It installs what is missing (python3, git, certificates, curl and wget; it says so and asks for your password first), installs uv, copies
-# workspaces-host beside your other repositories (or advances an existing copy by fast-forward only), links ~/.local/bin/ws-host,
-# checks your machine, and runs `ws-host workspace advance`. Safe to run again.
+# workspaces-host beside your other repositories (or updates an existing copy by fast-forward only), links ~/.local/bin/ws-host,
+# checks your machine, and runs `ws-host workspace ensure`. Safe to run again.
 #
 # Long steps show one line with a spinner (after half a second, at a terminal only) instead of a wall of output; what a step printed is
 # kept in a log and shown only if the step fails. A slow network therefore looks busy, not stuck.
@@ -146,7 +146,7 @@ if [ "${WS_HOST_NO_ADVANCE:-}" = 1 ]; then
 else
   say ""
   say "${b}Setting up your workspace...${z}"
-  "$ws" workspace advance || true
+  "$ws" workspace ensure || true
   say ""
   # The first steps are the program's own help page, so what this prints can never differ from what it teaches.
   "$ws" help start || say "Run  ws-host help start  for what to do next."

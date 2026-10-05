@@ -1,4 +1,4 @@
-"""auth (with a fake gh on PATH) and the one command, workspace advance (0002 FR-011, FR-016, FR-017)."""
+"""auth (with a fake gh on PATH) and the one command, workspace ensure (0002 FR-011, FR-016, FR-017)."""
 import json
 import os
 import shutil
@@ -111,13 +111,13 @@ class Advance(Workspace):
         fake(self.fakebin, "gh", "exit 0\n")           # signed in
         os.environ["PATH"] = f"{self.fakebin}:{os.environ['PATH']}"
 
-    def advance(self, *extra):
-        code, out = self.run_cmd("workspace", "advance", "--json", *extra)
+    def ensure(self, *extra):
+        code, out = self.run_cmd("workspace", "ensure", "--json", *extra)
         return code, [json.loads(l) for l in out.strip().splitlines()]
 
     def test_not_signed_in_stops_before_anything_is_copied_with_one_next_step(self):
         fake(self.fakebin, "gh", "echo no >&2; exit 1\n")
-        code, docs = self.advance()
+        code, docs = self.ensure()
         final = docs[-1]
         self.assertEqual((code, final["id"]), (0, "needs-sign-in"))
         self.assertIn("Sign in to GitHub first", final["data"]["plain"])
@@ -133,49 +133,49 @@ class Advance(Workspace):
         self.assertEqual(config.load().kits(), ["shell", "press"])
 
     def test_the_editor_step_says_what_to_do_when_vscode_is_not_reachable(self):
-        code, docs = self.advance()
+        code, docs = self.ensure()
         editor = [s for s in docs[-1]["data"]["steps"] if s["name"] == "editor"][0]
         if not shutil.which("code"):
             self.assertEqual(editor["status"], "warn")
-            self.assertIn("ws-host vscode advance", editor["plain"])
+            self.assertIn("ws-host vscode ensure", editor["plain"])
 
     def test_with_vscode_present_the_extension_is_installed_and_setup_is_offered_not_applied(self):
         fake(self.fakebin, "code", 'echo "$@" >> "$HOME/code.calls"\nexit 0\n')
         ext = self.home / ".vscode" / "extensions"
         ext.mkdir(parents=True)
         (ext / "extensions.json").write_text("[]")
-        code, docs = self.advance()
+        code, docs = self.ensure()
         editor = [s for s in docs[-1]["data"]["steps"] if s["name"] == "editor"][0]
         self.assertEqual(editor["status"], "ok")
         self.assertTrue(any(p.is_symlink() for p in ext.iterdir()))
-        self.assertIn("ws-host vscode advance", [a["cli"] for a in docs[-1]["actions"]])
+        self.assertIn("ws-host vscode ensure", [a["cli"] for a in docs[-1]["actions"]])
         self.assertFalse((self.home / ".config" / "Code").exists())       # no setting was written
 
     def test_the_one_command_copies_updates_and_reports_each_step(self):
-        code, docs = self.advance()
+        code, docs = self.ensure()
         self.assertEqual(code, 0, docs[-1])
         self.assertEqual([d["kind"] for d in docs[:-1]], ["progress"] * 8)  # one streamed line per step
         final = docs[-1]
-        self.assertEqual(final["kind"], "workspace-advance")
+        self.assertEqual(final["kind"], "workspace-ensure")
         self.assertEqual([s["name"] for s in final["data"]["steps"]], ["your-kits", "completions", "sign-in", "copy", "update", "kits", "editor", "doctor"])
         for n in ("site", "lib"):
             self.assertTrue((self.clone_path("acme", n) / ".git").is_dir())
 
     def test_a_second_run_changes_nothing(self):
-        self.advance()
+        self.ensure()
         before = wgit.snapshot(self.clone_path("acme", "site"))
-        code, docs = self.advance()
+        code, docs = self.ensure()
         self.assertEqual(code, 0)
         self.assertEqual(wgit.snapshot(self.clone_path("acme", "site")), before)
         self.assertEqual({r["outcome"] for r in docs[-1]["data"]["repositories"]}, {"current"})
 
     def test_it_updates_what_is_behind_and_leaves_unsaved_work_alone(self):
-        self.advance()
+        self.ensure()
         site, lib = self.clone_path("acme", "site"), self.clone_path("acme", "lib")
         (lib / "README.md").write_text("my edit\n")
         self.upstream_commit(self.lib, "x.txt", "1\n")
         self.upstream_commit(self.site, "y.txt", "1\n")
-        code, docs = self.advance()
+        code, docs = self.ensure()
         self.assertEqual(code, 0)
         by = {r["id"]: r["outcome"] for r in docs[-1]["data"]["repositories"]}
         self.assertEqual(by[self.rid("acme", "site")], "updated")
@@ -184,13 +184,13 @@ class Advance(Workspace):
 
     def test_it_continues_past_a_failure_and_reports_it(self):
         self.config(WS_HOST_REPOS=f"{self.rid('acme', 'site')} {self.rid('acme', 'gone')}")
-        code, docs = self.advance()
+        code, docs = self.ensure()
         self.assertEqual(code, 1)
         self.assertTrue((self.clone_path("acme", "lib") / ".git").is_dir())
         self.assertEqual([s["status"] for s in docs[-1]["data"]["steps"] if s["name"] == "copy"], ["fail"])
 
     def test_dry_run_changes_and_fetches_nothing(self):
-        code, docs = self.advance("--dry-run")
+        code, docs = self.ensure("--dry-run")
         self.assertEqual(code, 0)
         self.assertFalse(self.root.exists())
         self.assertIn("would copy " + self.rid("acme", "site"), docs[-1]["data"]["would"])
@@ -198,7 +198,7 @@ class Advance(Workspace):
     def test_status_changes_nothing_and_says_what_to_do(self):
         code, doc = self.run_json("workspace", "status")
         self.assertEqual(code, 0)
-        self.assertEqual(doc["actions"][0]["cli"], "ws-host workspace advance")
+        self.assertEqual(doc["actions"][0]["cli"], "ws-host workspace ensure")
         self.assertFalse(self.root.exists())
 
     def test_pull_ff_is_recommended_and_applied_only_on_request(self):
@@ -227,7 +227,7 @@ class Advance(Workspace):
         gc = self.home / "gitconfig"
         gc.write_text("")
         os.environ["GIT_CONFIG_GLOBAL"] = str(gc)
-        self.advance()
+        self.ensure()
         for n in ("site", "lib"):
             p = self.clone_path("acme", n)
             self.assertEqual(git(p, "status", "--porcelain", "--ignored"), "")

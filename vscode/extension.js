@@ -505,7 +505,7 @@ function activate(context) {
   // decision always goes through runAction's modal, whoever asks.
   context.subscriptions.push(
     vscode.commands.registerCommand("wsHost.refresh", () => refresh()),
-    vscode.commands.registerCommand("wsHost.advance", async () => { const o = orchestrator(OWN); if (o) await runAction(o, { label: "Bring everything up to date", command: "workspace advance", category: "setup", surfaces: ["terminal", "editor"], fields: {} }); }),
+    vscode.commands.registerCommand("wsHost.ensure", async () => { const o = orchestrator(OWN); if (o) await runAction(o, { label: "Ensure everything is set up and up to date", command: "workspace ensure", category: "setup", surfaces: ["terminal", "editor"], fields: {} }); }),
     vscode.commands.registerCommand("wsHost.signIn", () => signIn()),
     vscode.commands.registerCommand("wsHost.runChecks", () => runChecks()),
     vscode.commands.registerCommand("wsHost.getHelp", () => getHelp()),

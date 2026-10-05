@@ -3,7 +3,7 @@
 [#reference-vscode]
 == VS Code setup
 
-What `ws-host vscode advance` puts in place, taken from the code. It adds a setting only when you have not set it, and it never changes one you have.
+What `ws-host vscode ensure` puts in place, taken from the code. It adds a setting only when you have not set it, and it never changes one you have.
 
 === Recommended extensions
 

@@ -40,7 +40,7 @@ def write_notice(behind: int) -> None:
     d.mkdir(parents=True, exist_ok=True)
     checked_file().touch()
     if behind > 0:
-        notice_file().write_text(f"A newer ws-host is ready ({behind} change{'s' if behind != 1 else ''}). Update it with:  ws-host update advance\n",
+        notice_file().write_text(f"A newer ws-host is ready ({behind} change{'s' if behind != 1 else ''}). Update it with:  ws-host update\n",
                                  encoding="utf-8")
     else:
         notice_file().unlink(missing_ok=True)
@@ -92,7 +92,7 @@ def blocker(s: dict) -> str:
     return ""
 
 
-def advance(offline: bool = False) -> dict:
+def update(offline: bool = False) -> dict:
     """Fetch, then fast-forward only. Returns {outcome, behind, news, plain, ...}; a blocker is a plain reason and never an error."""
     s = state(True, 120, offline)
     if s["problem"] and not s["fetched"] and not offline:

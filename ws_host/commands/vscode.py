@@ -87,7 +87,7 @@ def run_code(args: list[str], label: str, timeout: int = CODE_WAIT) -> subproces
     except subprocess.TimeoutExpired:
         raise WsError("code-timeout", f"`code {args[0]}` took longer than {timeout // 60} minutes",
                       "VS Code's `code` command is taking very long, probably because the network is slow. Nothing was lost. Run this again and it will "
-                      "carry on from where it got to.", [Action(("vscode", "advance"), "Try again")], exit_code=1)
+                      "carry on from where it got to.", [Action(("vscode", "ensure"), "Try again")], exit_code=1)
 
 
 def install_extension(dry: bool = False) -> dict:
@@ -148,7 +148,7 @@ def _link(link: Path, src: Path) -> None:
     os.symlink(src, link)
 
 
-# What `vscode advance` puts in place so a person does not have to think about it (0006-onboarding FR-007 to FR-009).
+# What `vscode ensure` puts in place so a person does not have to think about it (0006-onboarding FR-007 to FR-009).
 RECOMMENDED = (
     ("GitHub.vscode-pull-request-github", "GitHub pull requests and issues, inside the editor"),
     ("eamodio.gitlens", "who changed each line, and when"),
@@ -205,9 +205,9 @@ def merge_settings(f: Path, wanted: dict, dry: bool) -> dict:
             "added": sorted(added), "kept": sorted(kept), "plain": ""}
 
 
-@reg.command("vscode", "advance", category="setup", summary="Put VS Code in its recommended state: the extension, helpful extensions and safe settings",
+@reg.command("vscode", "ensure", category="setup", summary="Put VS Code in its recommended state: the extension, helpful extensions and safe settings",
              surfaces=("cli", "editor"))
-def vscode_advance(ctx):
+def vscode_ensure(ctx):
     steps, status = [], OK
     code = shutil.which("code")
     if not ctx.dry_run:
@@ -262,4 +262,4 @@ def vscode_advance(ctx):
     yield Resource("vscode-setup", "vscode", {"plain": plain, "steps": [{**r, "status": "ok" if r["status"] in ("installed", "already", "would-install") else "warn" if r["status"] == "skipped" else "fail"} for r in steps],
                                               "settings": s, "reload": "Reload VS Code's window (Ctrl+Shift+P, then Developer: Reload Window) so everything starts." if not ctx.dry_run else "",
                                               **({"next": "Open VS Code in this folder with `code .`, or reload its window if it is open, then press Ctrl+Shift+P and run Workspace: Learn."} if done else {})},
-                   actions=[] if not left else [Action(("vscode", "advance"), "Try again")], status=FAILED if any(r["status"] == "failed" for r in steps) else status)
+                   actions=[] if not left else [Action(("vscode", "ensure"), "Try again")], status=FAILED if any(r["status"] == "failed" for r in steps) else status)

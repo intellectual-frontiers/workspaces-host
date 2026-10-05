@@ -65,7 +65,7 @@ You do this once, in Windows and not in Debian:
   one you installed). Microsoft explains where:
   https://learn.microsoft.com/en-us/windows/terminal/customize-settings/profile-appearance#font-face[font face].
 
-`ws-host vscode advance` already sets VS Code's terminal to look for a Nerd Font, so the prompt looks the same there.
+`ws-host vscode ensure` already sets VS Code's terminal to look for a Nerd Font, so the prompt looks the same there.
 
 === Change the theme
 

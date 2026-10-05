@@ -14,7 +14,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - A command in the `decision` category is for a person. It is not offered to you; it needs a prompt in a terminal or the editor's dialog. Tell the person what you want decided.
 - A command that needs `sudo` (`kit add`) is not offered to you either.
 - Add `--dry-run` to anything that writes, and read what it would do first.
-- A repository `repo advance` leaves alone is safe and is not an error; its resource says why.
+- A repository `repo sync` leaves alone is safe and is not an error; its resource says why.
 - `ws-host help` is the daily-work documentation; `ws-host help TOPIC` for one. `ws-host context` and `ws-host doctor` give a report with no secrets.
 
 ## Commands
@@ -38,18 +38,17 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `kit list` | read | terminal, editor, mcp | List the kits and which are installed |
 | `kit show` | read | terminal, editor, mcp | Show what a kit installs on this machine |
 | `repo add` | setup | terminal | Copy missing repositories to this machine |
-| `repo advance` | setup | terminal | Bring repositories up to date, never touching your work |
 | `repo list` | read | terminal, editor, mcp | List the repositories I know |
 | `repo set` | decision | terminal, editor | Trust or stop trusting a repository's code |
 | `repo status` | read | terminal, editor, mcp | Show the state of one or all repositories |
+| `repo sync` | setup | terminal | Bring repositories up to date, never touching your work |
 | `shell add` | setup | terminal, editor | Give bash or fish the ws-host oh-my-posh prompt (again, or the plain one) |
 | `skill generate` | generate | terminal, editor, mcp | Rewrite the skill that tells an AI agent how to use ws-host |
 | `test` | check | terminal, editor, mcp | Run this repository's tests |
-| `update advance` | setup | terminal, editor | Move ws-host to its newest version, only when nothing of yours is in the way |
-| `update status` | read | terminal, editor, mcp | Look for a newer ws-host and say what is new |
+| `update` | setup | terminal, editor | Move ws-host to its newest version, only when nothing of yours is in the way; --check only looks |
 | `vscode add` | setup | terminal | Install the VS Code extension that is the interface for every orchestrator |
-| `vscode advance` | setup | terminal, editor | Put VS Code in its recommended state: the extension, helpful extensions and safe settings |
-| `workspace advance` | setup | terminal, editor | Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health |
+| `vscode ensure` | setup | terminal, editor | Put VS Code in its recommended state: the extension, helpful extensions and safe settings |
+| `workspace ensure` | setup | terminal, editor | Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health |
 | `workspace set` | setup | terminal, editor | Make git's Sync button safe: set pull.ff to only |
 | `workspace status` | read | terminal, editor, mcp | Say how this machine and your repositories stand |
 

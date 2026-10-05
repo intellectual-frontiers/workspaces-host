@@ -10,18 +10,18 @@ def update():
         "plain": "ws-host improves often. One command brings the newest version, and a new terminal window tells you when one is waiting.",
         "sections": (
             ("Update ws-host", "This looks for news and moves ws-host forward. It only ever moves forward, and it leaves your copy exactly as it was, "
-                               "with a plain reason, when you have changes of your own in it:\n\n    ws-host update advance"),
+                               "with a plain reason, when you have changes of your own in it:\n\n    ws-host update"),
             ("Is one waiting?", "Every new terminal window looks in the background, at most every six hours, and never makes you wait. When a newer "
-                                "version is ready, the window says so in one line. To look right now and see what is new:\n\n    ws-host update status"),
-            ("Everything at once", "ws-host workspace advance updates ws-host along with your repositories, so running it is enough. "
-                                   "ws-host update advance is the quick way when you only want ws-host."),
+                                "version is ready, the window says so in one line. To look right now and see what is new:\n\n    ws-host update --check"),
+            ("Everything at once", "ws-host workspace ensure updates ws-host along with your repositories, so running it is enough. "
+                                   "ws-host update is the quick way when you only want ws-host."),
             ("Turning the reminder off", "The reminder is a few lines in the marked block of your ~/.bashrc, which is the same block that gives you your prompt. "
                                          "Delete the lines that mention update, or all of the block. ws-host doctor also tells you when an update is waiting."),
         ),
         "steps": (
-            Step("See whether a newer ws-host is waiting", ("update", "status")),
-            Step("Update ws-host", ("update", "advance")),
-            Step("Update everything", ("workspace", "advance")),
+            Step("See whether a newer ws-host is waiting", ("update",), {"check": True}),
+            Step("Update ws-host", ("update",)),
+            Step("Update everything", ("workspace", "ensure")),
             Step("Check your machine", ("doctor",)),
         ),
     }

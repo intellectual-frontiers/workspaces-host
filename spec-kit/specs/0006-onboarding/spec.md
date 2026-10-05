@@ -22,23 +22,23 @@ detail, troubleshooting, and how to take over in VS Code.
   no network), and MUST do none of this when `WS_HOST_NO_APT=1`. It MUST work
   for an ordinary user and for administrator alike.
 - **FR-002**: Unless `WS_HOST_NO_ADVANCE=1`, `install.sh` MUST end by running
-  `ws-host workspace advance`, and MUST say, in plain words, what to do next if
+  `ws-host workspace ensure`, and MUST say, in plain words, what to do next if
   that asked the person to sign in.
 - **FR-003**: Every instruction for the bootstrap MUST work in Debian from the
   Microsoft Store under WSL on Windows 11, as a person finds it: a minimal system
   with `sudo` and an account they created at first launch.
 - **FR-004**: A person MAY name the kits they always want in `WS_HOST_KIT` of
   their own configuration; it is `base` and `shell` when they say nothing and
-  none when it is empty. `workspace advance` MUST install them before anything else, because the
+  none when it is empty. `workspace ensure` MUST install them before anything else, because the
   sign-in tool is in `base`.
 - **FR-005**: Signing in to GitHub MUST be prescribed one way: `ws-host auth new
   github`, the one-time code and the browser, never a password, a token or an
-  SSH key. `workspace advance` MUST stop, before copying anything, when GitHub
+  SSH key. `workspace ensure` MUST stop, before copying anything, when GitHub
   says the person is not signed in, with that one command as the next action
   and exit status 0, and MUST go on when it cannot tell.
-- **FR-006**: `workspace advance` MUST, when the `code` command is on the
+- **FR-006**: `workspace ensure` MUST, when the `code` command is on the
   machine, install the extension (0004-editor-extension FR-016) and offer
-  `vscode advance` as an action; and MUST, when it is not, say in plain words
+  `vscode ensure` as an action; and MUST, when it is not, say in plain words
   how to get VS Code reachable from the terminal. It MUST NOT apply VS Code
   settings or install other extensions by itself.
 
@@ -54,7 +54,7 @@ detail, troubleshooting, and how to take over in VS Code.
   that what it prints is the program's own text and cannot drift. The page MUST
   give, in order and each with the one line to type: signing in to GitHub, copying
   the starter repositories, opening VS Code from the terminal, `ws-host vscode
-  advance`, continuing in VS Code with Learn, choosing which repositories to work
+  ensure`, continuing in VS Code with Learn, choosing which repositories to work
   in, the prompt that is already on, the Nerd Font it needs, and how to switch to `fish`, and what
   to do when stuck.
 - **FR-018**: Until a person's own configuration says otherwise, their
@@ -87,7 +87,7 @@ detail, troubleshooting, and how to take over in VS Code.
   MUST NOT let any program it runs edit the person's shell startup files.
 
 - **FR-022**: Setup MUST make the terminal beautiful from the first run: unless
-  the person's own configuration says `WS_HOST_PROMPT=no`, `workspace advance`
+  the person's own configuration says `WS_HOST_PROMPT=no`, `workspace ensure`
   MUST give `bash`, and `fish` when it is installed, the `oh-my-posh` prompt
   with the `ws-host-pretty` theme (0003-kits FR-015), without the person adding
   anything, and MUST never fail the setup because of it. `ws-host-pretty` assumes
@@ -104,7 +104,7 @@ detail, troubleshooting, and how to take over in VS Code.
   completes without anyone editing a script, MUST hold the command tree so that
   completing a command or an option runs no program, and MUST ask `ws-host
   completion list KIND` only for values that change while a person works, such
-  as their repositories. `workspace advance` MUST write each script where its
+  as their repositories. `workspace ensure` MUST write each script where its
   shell looks by itself (`~/.local/share/bash-completion/completions/ws-host`,
   `~/.config/fish/completions/ws-host.fish`), MUST NOT edit a startup file for
   it, MUST renew a file it wrote, and MUST leave a file it did not write alone.
@@ -120,20 +120,20 @@ detail, troubleshooting, and how to take over in VS Code.
   cyan, and the audience and version last. Without colour, in a pipe, in a
   file, in JSON and in HTML the output MUST stay exactly the plain form that
   scripts read, so nothing a person sees depends on a mark alone.
-- **FR-025**: `ws-host update advance` MUST bring ws-host's own copy to its
+- **FR-025**: `ws-host update` MUST bring ws-host's own copy to its
   newest version by fast-forward alone, leaving a copy with changes not
   committed, diverged commits or no shared branch exactly as it was, with a
   plain reason, the words that the person's work is safe, and exit status 0.
-  `ws-host update status` MUST say whether a newer version waits and what is
+  `ws-host update --check` MUST say whether a newer version waits and what is
   new. A new terminal window MUST say in one line when one waits, from a note
   and without running ws-host, and MUST look again in the background at most
   every six hours without making the window wait. `doctor` MUST report a
   waiting update from the note and not from the network, and `workspace
-  advance` MUST keep the note true.
+  ensure` MUST keep the note true.
 
 ## Setting VS Code up
 
-- **FR-007**: `vscode advance` (setup) MUST install the extension, install the
+- **FR-007**: `vscode ensure` (setup) MUST install the extension, install the
   recommended extensions the person lacks, and add the baseline settings the
   person has not set. It MUST take `--dry-run`, MUST be repeatable, and MUST
   change nothing the person set: a setting they have stays as they have it.
@@ -164,7 +164,7 @@ detail, troubleshooting, and how to take over in VS Code.
 - **FR-012**: The site MUST have, in this order: getting started on Windows 11
   with WSL and Debian from the Microsoft Store; signing in to GitHub; VS Code
   (installing it, the WSL extension, opening the workspace in WSL, `vscode
-  add` and `vscode advance`, reloading, Learn); how the extension works and why it
+  add` and `vscode ensure`, reloading, Learn); how the extension works and why it
   is installed locally and not from the Marketplace; typical uses; the reference;
   and a FAQ with troubleshooting. Each step MUST say where to type it
   (Windows Terminal, the Debian window, VS Code) and what the person will see.
@@ -197,13 +197,13 @@ detail, troubleshooting, and how to take over in VS Code.
 - No network: it says so and names what to check, per FR-001.
 - A person who is not signed in runs the installer: it stops before copying
   and shows one command, per FR-002 and FR-005.
-- `gh` is missing when `advance` runs: `base` installs it first, per FR-004.
-- VS Code is not installed: `advance` says how to get `code` reachable, per
+- `gh` is missing when `workspace ensure` runs: `base` installs it first, per FR-004.
+- VS Code is not installed: `workspace ensure` says how to get `code` reachable, per
   FR-006.
 - A person's settings file has their own `files.autoSave`: it stays, per FR-007.
 - A settings file with comments: left alone, with the values listed, per
   FR-009.
-- A person runs `vscode advance` twice: the second changes nothing, per FR-007.
+- A person runs `vscode ensure` twice: the second changes nothing, per FR-007.
 - Pages is not yet switched to GitHub Actions: the deploy job says so and the
   guide's maintainer notes name the setting, per FR-010.
 
@@ -216,13 +216,13 @@ detail, troubleshooting, and how to take over in VS Code.
 
 ## Open questions
 
-- **OQ-1**: Whether `vscode advance` should also offer to install the Nerd Font
+- **OQ-1**: Whether `vscode ensure` should also offer to install the Nerd Font
   that `oh-my-posh` draws with, which lives on the Windows side.
 
 ## Key entities
 
-- **The bootstrap** — `install.sh` and the first `workspace advance`.
-- **The baseline** — the recommended extensions and settings of `vscode advance`.
+- **The bootstrap** — `install.sh` and the first `workspace ensure`.
+- **The baseline** — the recommended extensions and settings of `vscode ensure`.
 - **The site** — the guide's multi-page HTML on GitHub Pages.
 
 ## Success criteria

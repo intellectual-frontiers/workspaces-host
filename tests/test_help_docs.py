@@ -346,7 +346,7 @@ class Site(Home):
         self.assertIn("https://intellectual-frontiers.github.io/workspaces-host/", text)
         flow = text[text.index("## The flow"):text.index("## For contributors")]
         self.assertEqual(len(re.findall(r"^\d\. \*\*", flow, re.M)), 5)
-        for needle in ("Microsoft Store", "install.sh", "ws-host auth new github", "ws-host vscode advance", "Workspace: Learn"):
+        for needle in ("Microsoft Store", "install.sh", "ws-host auth new github", "ws-host vscode ensure", "Workspace: Learn"):
             self.assertIn(needle, flow)
         self.assertLess(len(text.splitlines()), 45)
 

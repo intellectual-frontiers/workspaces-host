@@ -55,7 +55,7 @@ def block(shell: str, theme_name: str = shell_kit.PRETTY) -> str:
                 '  if [ -z "${NO_COLOR:-}" ]; then printf \'\\033[1;36m🔄 %s\\033[0m\\n\' "$(cat "$_wsh_state/update-available")"; else cat "$_wsh_state/update-available"; fi\n'
                 'fi\n'
                 'if command -v ws-host >/dev/null 2>&1 && [ -z "$(find "$_wsh_state/update-checked" -mmin -360 2>/dev/null)" ]; then\n'
-                '  (ws-host update status --background >/dev/null 2>&1 &)\n'
+                '  (ws-host update --check --background >/dev/null 2>&1 &)\n'
                 'fi\n'
                 'unset _wsh_state')
     else:
@@ -72,7 +72,7 @@ def block(shell: str, theme_name: str = shell_kit.PRETTY) -> str:
                 '  end\n'
                 '  set -l _wsh_recent (find $_wsh_state/update-checked -mmin -360 2>/dev/null)\n'
                 '  if command -q ws-host; and test (count $_wsh_recent) -eq 0\n'
-                '    ws-host update status --background >/dev/null 2>&1 &\n'
+                '    ws-host update --check --background >/dev/null 2>&1 &\n'
                 '    disown\n'
                 '  end\n'
                 'end')
@@ -102,7 +102,7 @@ def _with_block(text: str, shell: str, theme_name: str = shell_kit.PRETTY) -> st
 
 
 def add_prompt(shell: str, offline: bool = False, dry_run: bool = False, theme_name: str = shell_kit.PRETTY, keep_existing: bool = False) -> dict:
-    """Give `shell` the prompt block; raises WsError when it cannot. `shell add` replaces an existing block; `workspace advance` passes
+    """Give `shell` the prompt block; raises WsError when it cannot. `shell add` replaces an existing block; `workspace ensure` passes
     keep_existing, so a theme a person edited into the block is never put back."""
     target = startup_file(shell)
     real = target.resolve() if target.is_symlink() else target

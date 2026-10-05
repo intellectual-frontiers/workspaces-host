@@ -31,7 +31,7 @@ https://cli.github.com/manual/gh_auth_login[gh auth login].
 === Step 3: Run the setup again
 
 ----
-ws-host workspace advance
+ws-host workspace ensure
 ----
 
 This time it goes on. It copies your repositories into `workspaces`, brings them up to date, installs the tools they ask for, and checks
