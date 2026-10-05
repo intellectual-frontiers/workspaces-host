@@ -29,29 +29,29 @@ ws-host context gives it everything about your machine with no passwords in it, 
 
 _Use VS Code as the way to do everything ws-host does._
 
-VS Code shows your workspace's state, through the IF Console, and lets you act on it with buttons.
+VS Code shows your workspace's state, through the Workspaces Console, and lets you act on it with buttons.
 
-.The IF Console
-ws-host does not ship an editor extension of its own. VS Code's window onto every repository's command line, ws-host's included, is the IF Console, which the public root provides. ws-host vscode ensure installs the package from the public root's latest release when it has one, after checking its fingerprint. Otherwise it builds it from that repository's code, and asks you once to trust that repository, because building runs its code.
+.The Workspaces Console
+ws-host ships one editor extension, the Workspaces Console, which is VS Code's window onto every repository's command line, ws-host's included. ws-host vscode ensure installs the package from the latest release, after checking its fingerprint, and builds nothing on your computer.
 
 .What you see
 A Home view that says what needs you, each with the exact line that fixes it and a Run button; the views each command line asks for (ws-host asks for Workspace, Kits and Setup); checks as tests; and a page for every resource.
 
 .Open your repositories together
-vscode ensure writes workspaces.code-workspace in your workspaces folder, listing the repositories you work in. Open it with File, Open Workspace from File, and the IF Console shows each repository's own commands.
+vscode ensure writes workspaces.code-workspace in your workspaces folder, listing the repositories you work in. Open it with File, Open Workspace from File, and the Workspaces Console shows each repository's own commands.
 
 .Learn
-IF Console: Learn a Topic lists the same pages as ws-host help. Each step on a page is a button.
+Workspaces Console: Learn a Topic lists the same pages as ws-host help. Each step on a page is a button.
 
 .Decisions
 Anything only you may decide, such as trusting a repository, asks you in a dialog. Nothing, including an AI agent in the editor, can click it for you.
 
 .Safe by design
-The IF Console runs only the command lines of repositories you trust and does nothing in VS Code's Restricted Mode. It collects nothing and opens no network connection.
+The Workspaces Console runs only the command lines of repositories you trust and does nothing in VS Code's Restricted Mode. It collects nothing and opens no network connection.
 
 .Steps
 
-* Set up VS Code with the IF Console, helpful extensions and safe settings: `ws-host vscode ensure`
+* Set up VS Code with the Workspaces Console, helpful extensions and safe settings: `ws-host vscode ensure`
 * Run the checks: `ws-host check`
 
 === extend
@@ -132,6 +132,54 @@ Get help in the editor, or ws-host context and ws-host doctor in a terminal, giv
 * See each repository's state: `ws-host repo status`
 * Sign in again: `ws-host auth new github`
 * Gather a report to paste: `ws-host context`
+
+=== release
+
+_Make a release: build it, check that anyone could rebuild it, and publish it to GitHub Releases._
+
+A release is four files on GitHub Releases. You build it on your own machine, prove it is reproducible, and publish it yourself; no hosted service is involved.
+
+.Before you start
+Install the pinned tools once in your copy of workspaces-host, and sign in to GitHub. You only need the tools to build:
+
+----
+mise install --locked
+ws-host auth new github
+----
+
+.Set the version
+The version is written once, as VERSION in ws_host/__init__.py. The Workspaces Console's console/package.json must say the same; the build stops and tells you if they differ. Commit and push the change.
+
+.Build it
+This makes the program tarball, the wheel, the Workspaces Console package and their checksums in dist/, after type-checking, linting and testing the Console:
+
+----
+ws-host release build
+----
+
+.Check it
+This checks the versions, the checksums, what each file holds, and that the tarball runs where it is unpacked. With --rebuild it also builds everything again and compares every byte, which proves anyone could repeat your build:
+
+----
+ws-host release check --rebuild
+----
+
+.Publish it
+This is your decision, and it cannot be quietly taken back, so it asks you to type yes. It tags this commit and uploads the files with your own GitHub sign-in. It refuses while there are changes that are not committed, the commit is not pushed, the tag exists or a check fails:
+
+----
+ws-host release publish
+----
+
+.What people use
+Nobody follows a tag. They pin a file by its address and its SHA-256; the release notes show the exact lines.
+
+.Steps
+
+* Build the release: `ws-host release build`
+* Check the release is the same when rebuilt: `ws-host release check --rebuild`
+* Publish the release: `ws-host release publish`
+* Check your machine: `ws-host doctor`
 
 === repos
 
@@ -266,14 +314,14 @@ code .
 ----
 
 .4️⃣  Let ws-host set VS Code up
-It builds and installs the IF Console, the extension that shows your workspace in VS Code, adds a short list of helpful extensions and a few safe settings, and never changes a setting you made. The IF Console is built from the .github repository's own code, so it asks you once to trust it. It also makes a workspace file that lists your repositories. Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.
+It installs the Workspaces Console, the extension that shows your workspace in VS Code, after checking its fingerprint, adds a short list of helpful extensions and a few safe settings, and never changes a setting you made. It also makes a workspace file that lists your repositories. Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.
 
 ----
 ws-host vscode ensure
 ----
 
 .5️⃣  Keep going in VS Code
-In VS Code choose File, Open Workspace from File, and pick workspaces.code-workspace in your workspaces folder. Then press Ctrl+Shift+P and run IF Console: Learn a Topic. Every page there has a button for each step, and the Home view says what needs you. You can do everything else from VS Code.
+In VS Code choose File, Open Workspace from File, and pick workspaces.code-workspace in your workspaces folder. Then press Ctrl+Shift+P and run Workspaces Console: Learn a Topic. Every page there has a button for each step, and the Home view says what needs you. You can do everything else from VS Code.
 
 .📂 Choose which repositories you work in
 To add one, type its address. It is copied now and every time you update:
@@ -320,7 +368,7 @@ ws-host update
 ----
 
 .🆘 Stuck?
-Run ws-host doctor to see what is wrong in plain words, or IF Console: Get Help in VS Code for a report with no passwords in it, and paste it to someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/
+Run ws-host doctor to see what is wrong in plain words, or Workspaces Console: Get Help in VS Code for a report with no passwords in it, and paste it to someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/
 
 .Steps
 
@@ -411,7 +459,7 @@ Run ws-host repo add with its address, then ws-host vscode ensure. The repositor
 Workspace files go in your workspaces folder, ~/workspaces, and every repository is listed relative to that folder, for example github.com/acme/tools. That is why the file keeps working if you move or rename the folder.
 
 .What is in the file
-A list of repositories with short names, a title that starts with Workspaces, and the recommendation to use the IF Console. ws-host adds what is missing and never changes a line you wrote yourself.
+A list of repositories with short names, a title that starts with Workspaces, and the recommendation to use the Workspaces Console. ws-host adds what is missing and never changes a line you wrote yourself.
 
 .When it looks wrong
 If the Explorer shows one repository, you opened a folder instead of the file: close the window and open the file. If a repository is missing, run ws-host vscode ensure.

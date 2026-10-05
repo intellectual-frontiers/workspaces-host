@@ -1,0 +1,7 @@
+# The toolchain this repository builds and tests with (not what ws-host installs for a person). One file per concern; mise reads the
+# directory in name order. Run with MISE_SAFE=1 so that nothing here can execute code; `mise install --locked` installs exactly mise.lock.
+# Lock only the platforms ws-host supports: `mise lock --platform linux-x64,linux-arm64`.
+min_version = "2026.10.3"
+
+[settings]
+lockfile = true

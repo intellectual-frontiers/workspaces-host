@@ -37,6 +37,9 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `kit add` | setup | terminal | Install a kit (uses sudo for packages, and says so first) |
 | `kit list` | read | terminal, editor, mcp | List the kits and which are installed |
 | `kit show` | read | terminal, editor, mcp | Show what a kit installs on this machine |
+| `release build` | build | terminal, editor, mcp | Build a release: the wheel, the app tarball, the Workspaces Console and their checksums |
+| `release check` | check | terminal, editor, mcp | Check a built release: versions, checksums, contents, that it runs, and with --rebuild that it is reproducible |
+| `release publish` | decision | terminal, editor | Tag this commit and publish the release to GitHub Releases, with your own gh sign-in |
 | `repo add` | setup | terminal | Copy missing repositories to this machine |
 | `repo list` | read | terminal, editor, mcp | List the repositories I know |
 | `repo set` | decision | terminal, editor | Trust or stop trusting a repository's code |
@@ -46,7 +49,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `skill generate` | generate | terminal, editor, mcp | Rewrite the skill that tells an AI agent how to use ws-host |
 | `test` | check | terminal, editor, mcp | Run this repository's tests |
 | `update` | setup | terminal, editor | Move ws-host to its newest version, only when nothing of yours is in the way; --check only looks |
-| `vscode ensure` | setup | terminal, editor | Put VS Code in its recommended state: the IF Console, helpful extensions and safe settings |
+| `vscode ensure` | setup | terminal, editor | Put VS Code in its recommended state: the Workspaces Console, helpful extensions and safe settings |
 | `workspace ensure` | setup | terminal, editor | Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health |
 | `workspace set` | setup | terminal, editor | Make git's Sync button safe: set pull.ff to only |
 | `workspace status` | read | terminal, editor, mcp | Say how this machine and your repositories stand |
@@ -65,6 +68,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - `extend`: Add a command or a kit by asking an AI to write it in Python.
 - `kits`: Install the tools a kind of work needs, one kit at a time.
 - `recover`: What to do when something fails, or when a repository was left alone.
+- `release`: Make a release: build it, check that anyone could rebuild it, and publish it to GitHub Releases.
 - `repos`: Copy your repositories and keep them up to date without risking your work.
 - `shell`: Your prompt, bash and fish.
 - `signin`: Sign in to GitHub or GitLab with a one-time code.

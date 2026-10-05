@@ -18,7 +18,7 @@ something stops you.
    bootstrapping.
 3. **Sign in to GitHub.** Run `ws-host auth new github`, type the code into your browser, then run `ws-host workspace ensure` again.
 4. **Open VS Code.** Install VS Code on Windows, run `code .` from a repository in the Debian window, then `ws-host vscode ensure`.
-5. **Learn.** In VS Code press `Ctrl+Shift+P` and run *IF Console: Learn a Topic*. Everything you do every day is taught there, one button at a
+5. **Learn.** In VS Code press `Ctrl+Shift+P` and run *Workspaces Console: Learn a Topic*. Everything you do every day is taught there, one button at a
    time. In a terminal the same pages are `ws-host help`.
 
 ## For contributors
@@ -26,5 +26,11 @@ something stops you.
 Everything is Python, found by presence: a module in `ws_host/commands/`, `ws_host/kits/` or `ws_host/help/` adds a command, a kit or a help
 topic. `ws-host test`, `check`, `doctor` and `fresh` say whether a change is sound. The guide's reference is generated from the code by
 `ws-host docs generate`. See *Extend it with AI* in the guide, and `.claude/skills/ws-host/SKILL.md` for an AI to read first.
+
+## Releases
+
+A release is four files on GitHub Releases: the program as a tarball, the same code as a wheel, the Workspaces Console for VS Code, and their checksums. It is
+built on a maintainer's machine from pinned tools, so rebuilding it gives the same bytes, and published by a person with their own `gh` sign-in. No hosted service
+takes part. `mise install --locked`, then `ws-host release build`, `ws-host release check --rebuild` and `ws-host release publish`; `ws-host help release` has the steps.
 
 MIT licence.

@@ -104,8 +104,8 @@ WSL instance as disposable. It has no pinning, Chromium or TeX. What may simplif
   a person a diff before anything changes. This is optional and worth a follow-up spike; ws-host's bespoke marker-block editing is
   the part it would replace.
 - **Disposable instances and rebuilds.** The original treats WSL as something to delete and recreate (`wsl --unregister`,
-  `wsl --install -d Debian`), keeps all configuration in Git, and backs up the few sensitive files to a OneDrive Personal Vault
-  (`sensitivectl backup-to-onedrive-vault`, `restore-from-onedrive-vault`, both with `--dry-run`, vault path resolved from the
+  `wsl --install -d Debian`), keeps all configuration in Git, and backs up the few sensitive files to OneDrive's protected folder
+  (a `sensitivectl` script with a backup and a restore command, both with `--dry-run`, the folder's path resolved from the
   Windows environment). For non-technical people this is the missing "undo" and "move to a new computer" story: a rebuild that
   loses nothing.
 - **A Windows-side bootstrap.** It points to Microsoft's `windows-dev-box-setup-scripts` and gives the PowerShell lines; and a
@@ -130,7 +130,7 @@ down; Chromium inside a sandbox-enabled desktop session; mise upgrades beyond th
 
 Approved: mise as the single prerequisite, pinned per repository; `.workspaces-host/` with `*.d` TOML files; vendored shared entries
 with a drift check; chezmoi for ws-host's managed configuration (see `../chezmoi/NOTES.md`); forwarding aliases for one release; tagged
-releases and a stable channel; the release pipeline first. Not approved: `eidolon` in ws-host's release canary. No Debian 12 to 13
+releases and a stable channel; the release pipeline first. Not approved: a confidential repository in ws-host's release canary. No Debian 12 to 13
 one-liner. The default prompt theme is `ws-host-pretty`, assuming a Nerd Font.
 
 **ws-host is distributed as a wheel on PyPI** (a `pyproject.toml` project built to a wheel and sdist, published from GitHub Actions

@@ -8,7 +8,7 @@ You work in more than one repository, and VS Code can show them together in one 
 
 Start from `~/workspaces/workspaces.code-workspace`. `ws-host vscode ensure` writes it and keeps its list of repositories current, so it
 holds every repository you have copied and you do not edit it by hand. Starting there puts all your repositories in one window, which is the easiest
-way to begin. A window opened on one repository hides the others and the IF Console cannot show them all.
+way to begin. A window opened on one repository hides the others and the Workspaces Console cannot show them all.
 
 === Make your own
 
@@ -54,7 +54,7 @@ and why you can read it: it lists the same folders you see in `~/workspaces`.
 
 === What is in the file
 
-A list of your repositories with short names, a window title that starts with *Workspaces*, and a recommendation to use the IF Console. `ws-host
+A list of your repositories with short names, a window title that starts with *Workspaces*, and a recommendation to use the Workspaces Console. `ws-host
 vscode ensure` adds what is missing. It never changes a line you wrote yourself, and it leaves the file alone if it has comments it cannot safely rewrite.
 
 === When it looks wrong

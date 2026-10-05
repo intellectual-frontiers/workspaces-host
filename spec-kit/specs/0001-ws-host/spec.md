@@ -6,7 +6,7 @@
 **Input:** `workspaces-host` is the Intellectual Frontiers environment
 orchestrator, built to 0041-command-line. Its command, `ws-host`, prepares a
 person's machine, clones and updates their repositories, installs kits,
-checks health, and sets VS Code up with the IF Console, the one extension that
+checks health, and sets VS Code up with the Workspaces Console, the one extension that
 is the graphical interface of every orchestrator. This spec states what it is, what it needs
 on a host, how it is installed, where it keeps files, and its first commands:
 `doctor`, `check`, `test`, `context` and `command`. Repositories and trust
@@ -141,7 +141,7 @@ and 0026-workspaces, held in the public root, govern all of them.
   registry` MUST fail on what 0041-command-line FR-072 names, and the icons MUST
   be named in the glyph map this repository pins, copied from the public root's.
   The repository MUST declare its launcher for the editor in `.if-console.env`
-  (0043-if-console FR-004, in the public root), so that the IF Console serves
+  (0043-if-console FR-004, in the public root), so that the Workspaces Console serves
   `ws-host` like any other orchestrator.
 - **FR-019**: Nothing in this repository, its history or its published guide MAY
   name a confidential repository or say what one holds. It is public, and it

@@ -21,13 +21,13 @@ def start():
              "Install VS Code on Windows from https://code.visualstudio.com/ and add its WSL extension, then open your first repository from here:\n\n"
              "    cd ~/workspaces/github.com/intellectual-frontiers/.github\n    code ."),
             ("4️⃣  Let ws-host set VS Code up",
-             "It builds and installs the IF Console, the extension that shows your workspace in VS Code, adds a short list of helpful extensions and a few safe "
-             "settings, and never changes a setting you made. The IF Console is built from the .github repository's own code, so it asks you once to trust it. "
+             "It installs the Workspaces Console, the extension that shows your workspace in VS Code, after checking its fingerprint, adds a short list of helpful extensions and a few safe "
+             "settings, and never changes a setting you made. "
              "It also makes a workspace file that lists your repositories. Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.\n\n"
              "    ws-host vscode ensure"),
             ("5️⃣  Keep going in VS Code",
              "In VS Code choose File, Open Workspace from File, and pick workspaces.code-workspace in your workspaces folder. Then press Ctrl+Shift+P and run "
-             "IF Console: Learn a Topic. Every page there has a button for each step, and the Home view says what needs you. You can do everything else from VS Code."),
+             "Workspaces Console: Learn a Topic. Every page there has a button for each step, and the Home view says what needs you. You can do everything else from VS Code."),
             ("📂 Choose which repositories you work in",
              "To add one, type its address. It is copied now and every time you update:\n\n    ws-host repo add github.com/ORG/REPO\n\n"
              "To remove one or change the list, open your settings file in VS Code and edit the line that starts with WS_HOST_REPOS:\n\n"
@@ -46,7 +46,7 @@ def start():
              "ws-host improves often. A new terminal window tells you in one line when a newer version is waiting. To get it, and see what is new:\n\n"
              "    ws-host update"),
             ("🆘 Stuck?",
-             "Run ws-host doctor to see what is wrong in plain words, or IF Console: Get Help in VS Code for a report with no passwords in it, and paste it to "
+             "Run ws-host doctor to see what is wrong in plain words, or Workspaces Console: Get Help in VS Code for a report with no passwords in it, and paste it to "
              "someone who helps you. The guide's troubleshooting page lists every problem I know of: https://intellectual-frontiers.github.io/workspaces-host/"),
         ),
         "steps": (

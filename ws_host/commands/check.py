@@ -73,31 +73,48 @@ def specs_section(ctx):
     return [_f(*(m.split(": ", 1) if ": " in m else ("spec-kit", m))) for m in found] or [_f("spec-kit", "the public root's checker failed")]
 
 
-@section("console", suites=("slow",), programs=("agora",),
-         summary="the IF Console serves ws-host in a real VS Code (named, not part of a plain check: it needs VS Code and a display server)")
+def _vscode_dir() -> Path | None:
+    """The unpacked VS Code the Console's tests run in: named by WS_HOST_VSCODE_DIR, else the one this repository's pinned toolchain installs."""
+    named = os.environ.get("WS_HOST_VSCODE_DIR")
+    if named:
+        return Path(named) if (Path(named) / "bin" / "code").is_file() else None
+    mise = shutil.which("mise")
+    if mise:
+        p = subprocess.run([mise, "where", "http:vscode"], cwd=paths.repo_root(), capture_output=True, text=True, timeout=60)
+        if p.returncode == 0 and (Path(p.stdout.strip()) / "bin" / "code").is_file():
+            return Path(p.stdout.strip())
+    return None
+
+
+@section("console", suites=("slow",), programs=("node", "xvfb-run"),
+         summary="the Workspaces Console serves ws-host in a real VS Code (named, not part of a plain check: it needs VS Code and a display server)")
 def console_section(ctx):
-    """0004-editor-extension FR-027: the public root's `agora extension test` runs this repository's suite (tests/if_console/vscode) in a real
-    VS Code, with ws-host as a workspace folder. It is skipped, naming the cause, where the public root or VS Code is not here."""
-    root = _public_root()
-    if root is None:
-        raise FileNotFoundError("agora")
+    """0004-editor-extension FR-027: the Console's own runner starts a real VS Code under a display server and runs this repository's suite
+    (tests/if_console/vscode) with ws-host as a workspace folder. It is skipped, naming the cause, where VS Code or the Console's build is not here."""
     import json
     import tempfile
-    suite = paths.repo_root() / "tests" / "if_console" / "vscode"
+    root = paths.repo_root()
+    ext = root / "console"
+    vscode = _vscode_dir()
+    if vscode is None:
+        raise FileNotFoundError("VS Code (run `mise install --locked`, or name an unpacked VS Code in WS_HOST_VSCODE_DIR)")
+    if not (ext / "node_modules" / "@vscode" / "test-electron").is_dir() or not (ext / "dist" / "extension.js").is_file():
+        raise FileNotFoundError("the Console's build (run `ws-host release build`)")
     with tempfile.TemporaryDirectory(prefix="ws-host-console-") as tmp:
-        report = Path(tmp) / "report.json"
-        p = subprocess.run([str(root / "agora"), "extension", "test", "--suite", str(suite), "--workspace", f"ws-host={paths.repo_root()}",
-                            "--report", str(report), "--json"], capture_output=True, text=True, timeout=1800)
-        if p.returncode == 3:
-            try:
-                why = json.loads(p.stdout.strip().splitlines()[-1])["data"].get("message") or "VS Code could not start"
-            except (ValueError, KeyError, IndexError):
-                why = "VS Code could not start"
-            raise FileNotFoundError(f"VS Code ({why})")
+        tmp = Path(tmp)
+        (tmp / "reports").mkdir()
+        env = {**os.environ, "IF_CONSOLE_VSCODE": str(vscode / "code"), "IF_CONSOLE_VSCODE_CLI": str(vscode / "bin" / "code"),
+               "IF_CONSOLE_TEST_ELECTRON": str(ext / "node_modules" / "@vscode" / "test-electron"), "IF_CONSOLE_REAL_ROOT": str(root),
+               "IF_CONSOLE_VSCODE_REPORT": str(tmp / "report.json"), "IF_CONSOLE_VSCODE_REPORT_DIR": str(tmp / "reports"),
+               "IF_CONSOLE_VSCODE_SUITE": str(root / "tests" / "if_console" / "vscode"),
+               "IF_CONSOLE_VSCODE_FOLDERS": "[]"}
+        p = subprocess.run([shutil.which("xvfb-run"), "-a", "-s", "-screen 0 1280x800x24", shutil.which("node"), str(ext / "test" / "vscode" / "run.js")],
+                           env=env, capture_output=True, text=True, timeout=1800)
+        report = tmp / "report.json"
         rows = json.loads(report.read_text(encoding="utf-8")).get("tests", []) if report.is_file() else []
-    out = [_f(r["name"], f"failed in a real VS Code ({r.get('seconds', 0)}s)") for r in rows if r.get("status") != "passed"]
-    if p.returncode not in (0, 1) or (p.returncode == 1 and not out):
-        out.append(_f("agora extension test", f"it did not give an answer I could read (exit {p.returncode})"))
+    out = [_f(r["name"], f"failed in a real VS Code ({r.get('seconds', 0)}s): {str(r.get('reason', ''))[:160]}") for r in rows if r.get("status") != "passed"]
+    if p.returncode != 0 and not out:
+        out.append(_f("the Console's runner", f"it did not give an answer I could read (exit {p.returncode}): {(p.stderr or p.stdout).strip()[-200:]}"))
     return out
 
 

@@ -82,7 +82,7 @@ python3 - "$WS/workspaces.code-workspace" <<'P'
 import json,sys
 p=sys.argv[1]; d=json.load(open(p)); d['folders'].insert(0,{"path":"mine/own-repo"}); d['settings']['window.title']="my title"; json.dump(d,open(p,'w'),indent=2)
 P
-printf '{"wsl":false,"folders":[{"path":"github.com/org/.github","name":".github"},{"path":"github.com/org/workspaces-host","name":"workspaces-host"},{"path":"github.com/org/eidolon","name":"eidolon"}]}' > "$WORK/wsdata.json"
+printf '{"wsl":false,"folders":[{"path":"github.com/org/.github","name":".github"},{"path":"github.com/org/workspaces-host","name":"workspaces-host"},{"path":"github.com/org/another-repo","name":"another-repo"}]}' > "$WORK/wsdata.json"
 czw apply --force >/dev/null 2>&1; python3 -c "import json;d=json.load(open('$WS/workspaces.code-workspace'));print('   after a third repo is cloned:',[f['path'] for f in d['folders']]);print('   their title kept:',d['settings']['window.title'])"
 czw apply --force >/dev/null 2>&1; czw verify; echo "   second apply verify rc=$?"
 

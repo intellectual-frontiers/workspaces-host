@@ -1,0 +1,920 @@
+{
+  "name": "workspaces-console",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "0.1.0",
+  "publisher": "intellectual-frontiers",
+  "license": "MIT",
+  "private": true,
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#121820",
+    "theme": "dark"
+  },
+  "categories": [
+    "Other",
+    "Testing",
+    "Education"
+  ],
+  "keywords": [
+    "workspaces-console",
+    "intellectual frontiers",
+    "command line",
+    "orchestrator",
+    "checks",
+    "specs",
+    "dry run",
+    "decisions",
+    "learn",
+    "mcp"
+  ],
+  "homepage": "https://github.com/intellectual-frontiers/.github/tree/main/tools/workspaces-console#readme",
+  "bugs": {
+    "url": "https://github.com/intellectual-frontiers/.github/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/intellectual-frontiers/workspaces-host.git",
+    "directory": "console"
+  },
+  "engines": {
+    "vscode": "^1.101.0",
+    "node": ">=22"
+  },
+  "l10n": "./l10n",
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "workspaceContains:.if-console.env",
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "%capabilities.untrustedWorkspaces.description%"
+    },
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "%capabilities.virtualWorkspaces.description%"
+    }
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "workspaces-console",
+          "title": "%container.workspaces-console.title%",
+          "icon": "media/workspaces-console.svg"
+        }
+      ]
+    },
+    "views": {
+      "workspaces-console": [
+        {
+          "id": "workspaces-console.home",
+          "name": "%view.home.name%",
+          "contextualTitle": "%view.contextualTitle%"
+        },
+        {
+          "id": "workspaces-console.view.0",
+          "name": "%view.view.0.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.0",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.1",
+          "name": "%view.view.1.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.1",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.2",
+          "name": "%view.view.2.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.2",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.3",
+          "name": "%view.view.3.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.3",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.4",
+          "name": "%view.view.4.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.4",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.5",
+          "name": "%view.view.5.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.5",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.6",
+          "name": "%view.view.6.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.6",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.7",
+          "name": "%view.view.7.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.7",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.8",
+          "name": "%view.view.8.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.8",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.9",
+          "name": "%view.view.9.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.9",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.10",
+          "name": "%view.view.10.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.10",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.11",
+          "name": "%view.view.11.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.11",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.12",
+          "name": "%view.view.12.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.12",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.13",
+          "name": "%view.view.13.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.13",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.14",
+          "name": "%view.view.14.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.14",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.view.15",
+          "name": "%view.view.15.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.slot.15",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.checks",
+          "name": "%view.checks.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.hasRepository",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "workspaces-console.commands",
+          "name": "%view.commands.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.allCommands",
+          "visibility": "collapsed"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "workspaces-console.home",
+        "contents": "%welcome.home.0%",
+        "when": "!workspaces-console.hasRepository && !workspaces-console.untrusted && !workspaces-console.unavailable"
+      },
+      {
+        "view": "workspaces-console.home",
+        "contents": "%welcome.home.1%",
+        "when": "workspaces-console.untrusted"
+      },
+      {
+        "view": "workspaces-console.home",
+        "contents": "%welcome.home.2%",
+        "when": "!workspaces-console.hasRepository && !workspaces-console.untrusted && workspaces-console.unavailable && !workspaces-console.toolchainMissing"
+      },
+      {
+        "view": "workspaces-console.home",
+        "contents": "%welcome.home.3%",
+        "when": "!workspaces-console.hasRepository && !workspaces-console.untrusted && workspaces-console.toolchainMissing"
+      },
+      {
+        "view": "workspaces-console.commands",
+        "contents": "%welcome.commands.4%",
+        "when": "!workspaces-console.hasRepository && !workspaces-console.untrusted"
+      },
+      {
+        "view": "workspaces-console.commands",
+        "contents": "%welcome.commands.5%",
+        "when": "workspaces-console.untrusted"
+      }
+    ],
+    "commands": [
+      {
+        "command": "workspaces-console.showHome",
+        "title": "%command.showHome.title%",
+        "category": "%category%",
+        "icon": "$(home)"
+      },
+      {
+        "command": "workspaces-console.showView",
+        "title": "%command.showView.title%",
+        "category": "%category%",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "workspaces-console.runCommand",
+        "title": "%command.runCommand.title%",
+        "category": "%category%",
+        "icon": "$(play)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.check",
+        "title": "%command.check.title%",
+        "category": "%category%",
+        "icon": "$(checklist)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.checkChanged",
+        "title": "%command.checkChanged.title%",
+        "category": "%category%",
+        "icon": "$(diff)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.fresh",
+        "title": "%command.fresh.title%",
+        "category": "%category%",
+        "icon": "$(sync)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.test",
+        "title": "%command.test.title%",
+        "category": "%category%",
+        "icon": "$(beaker)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.doctor",
+        "title": "%command.doctor.title%",
+        "category": "%category%",
+        "icon": "$(pulse)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.showCommandLine",
+        "title": "%command.showCommandLine.title%",
+        "category": "%category%",
+        "icon": "$(terminal)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.getHelp",
+        "title": "%command.getHelp.title%",
+        "category": "%category%",
+        "icon": "$(question)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.learn",
+        "title": "%command.learn.title%",
+        "category": "%category%",
+        "icon": "$(book)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.copyContext",
+        "title": "%command.copyContext.title%",
+        "category": "%category%",
+        "icon": "$(sparkle)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.openView",
+        "title": "%command.openView.title%",
+        "category": "%category%",
+        "icon": "$(browser)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.findResource",
+        "title": "%command.findResource.title%",
+        "category": "%category%",
+        "icon": "$(search)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.searchView",
+        "title": "%command.searchView.title%",
+        "category": "%category%",
+        "icon": "$(search-view)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.refresh",
+        "title": "%command.refresh.title%",
+        "category": "%category%",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "workspaces-console.showOutput",
+        "title": "%command.showOutput.title%",
+        "category": "%category%",
+        "icon": "$(output)"
+      },
+      {
+        "command": "workspaces-console.trust",
+        "title": "%command.trust.title%",
+        "category": "%category%",
+        "icon": "$(shield)",
+        "enablement": "workspaces-console.untrusted"
+      },
+      {
+        "command": "workspaces-console.cancelRun",
+        "title": "%command.cancelRun.title%",
+        "category": "%category%",
+        "icon": "$(debug-stop)",
+        "enablement": "workspaces-console.running"
+      },
+      {
+        "command": "workspaces-console.toggleAllCommands",
+        "title": "%command.toggleAllCommands.title%",
+        "category": "%category%",
+        "icon": "$(list-tree)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.activateNode",
+        "title": "%command.activateNode.title%",
+        "category": "%category%",
+        "icon": "$(play)"
+      },
+      {
+        "command": "workspaces-console.runSection",
+        "title": "%command.runSection.title%",
+        "category": "%category%",
+        "icon": "$(play)"
+      },
+      {
+        "command": "workspaces-console.runSuggestion",
+        "title": "%command.runSuggestion.title%",
+        "category": "%category%",
+        "icon": "$(play)"
+      },
+      {
+        "command": "workspaces-console.openRow",
+        "title": "%command.openRow.title%",
+        "category": "%category%",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "workspaces-console.runRowAction",
+        "title": "%command.runRowAction.title%",
+        "category": "%category%",
+        "icon": "$(play)"
+      },
+      {
+        "command": "workspaces-console.runNounCommand",
+        "title": "%command.runNounCommand.title%",
+        "category": "%category%",
+        "icon": "$(play)"
+      },
+      {
+        "command": "workspaces-console.copyCommandLine",
+        "title": "%command.copyCommandLine.title%",
+        "category": "%category%",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "workspaces-console.copyId",
+        "title": "%command.copyId.title%",
+        "category": "%category%",
+        "icon": "$(key)"
+      },
+      {
+        "command": "workspaces-console.followLink",
+        "title": "%command.followLink.title%",
+        "category": "%category%",
+        "icon": "$(link)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "workspaces-console.showHome",
+          "when": "workspaces-console.hasRepository || workspaces-console.untrusted || workspaces-console.unavailable"
+        },
+        {
+          "command": "workspaces-console.showView",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.runCommand",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.check",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.checkChanged",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.fresh",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.test",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.doctor",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.showCommandLine",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.getHelp",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.learn",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.copyContext",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.openView",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.findResource",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.refresh",
+          "when": "workspaces-console.hasRepository || workspaces-console.untrusted || workspaces-console.unavailable"
+        },
+        {
+          "command": "workspaces-console.showOutput",
+          "when": "workspaces-console.hasRepository || workspaces-console.untrusted || workspaces-console.unavailable"
+        },
+        {
+          "command": "workspaces-console.trust",
+          "when": "workspaces-console.untrusted"
+        },
+        {
+          "command": "workspaces-console.cancelRun",
+          "when": "workspaces-console.running"
+        },
+        {
+          "command": "workspaces-console.toggleAllCommands",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.activateNode",
+          "when": "false"
+        },
+        {
+          "command": "workspaces-console.runSection",
+          "when": "false"
+        },
+        {
+          "command": "workspaces-console.runSuggestion",
+          "when": "false"
+        },
+        {
+          "command": "workspaces-console.openRow",
+          "when": "false"
+        },
+        {
+          "command": "workspaces-console.runRowAction",
+          "when": "false"
+        },
+        {
+          "command": "workspaces-console.runNounCommand",
+          "when": "false"
+        },
+        {
+          "command": "workspaces-console.copyCommandLine",
+          "when": "false"
+        },
+        {
+          "command": "workspaces-console.copyId",
+          "when": "false"
+        },
+        {
+          "command": "workspaces-console.followLink",
+          "when": "false"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "false"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "workspaces-console.cancelRun",
+          "when": "view =~ /^workspaces-console\\.(home|view\\.\\d+|checks|commands)$/ && workspaces-console.running",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.refresh",
+          "when": "view == workspaces-console.home",
+          "group": "navigation@1"
+        },
+        {
+          "command": "workspaces-console.learn",
+          "when": "view == workspaces-console.home && workspaces-console.hasRepository",
+          "group": "navigation@2"
+        },
+        {
+          "command": "workspaces-console.toggleAllCommands",
+          "when": "view == workspaces-console.home && workspaces-console.hasRepository",
+          "group": "9_more@1"
+        },
+        {
+          "command": "workspaces-console.showOutput",
+          "when": "view == workspaces-console.home",
+          "group": "9_more@2"
+        },
+        {
+          "command": "workspaces-console.check",
+          "when": "view == workspaces-console.checks",
+          "group": "navigation@1"
+        },
+        {
+          "command": "workspaces-console.checkChanged",
+          "when": "view == workspaces-console.checks",
+          "group": "navigation@2"
+        },
+        {
+          "command": "workspaces-console.refresh",
+          "when": "view == workspaces-console.checks",
+          "group": "navigation@3"
+        },
+        {
+          "command": "workspaces-console.findResource",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/",
+          "group": "navigation@1"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.0 && workspaces-console.search.0",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.1 && workspaces-console.search.1",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.2 && workspaces-console.search.2",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.3 && workspaces-console.search.3",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.4 && workspaces-console.search.4",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.5 && workspaces-console.search.5",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.6 && workspaces-console.search.6",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.7 && workspaces-console.search.7",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.8 && workspaces-console.search.8",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.9 && workspaces-console.search.9",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.10 && workspaces-console.search.10",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.11 && workspaces-console.search.11",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.12 && workspaces-console.search.12",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.13 && workspaces-console.search.13",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.14 && workspaces-console.search.14",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.searchView",
+          "when": "view == workspaces-console.view.15 && workspaces-console.search.15",
+          "group": "navigation@0"
+        },
+        {
+          "command": "workspaces-console.refresh",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/",
+          "group": "navigation@2"
+        },
+        {
+          "command": "workspaces-console.runCommand",
+          "when": "view == workspaces-console.commands",
+          "group": "navigation@1"
+        },
+        {
+          "command": "workspaces-console.refresh",
+          "when": "view == workspaces-console.commands",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "workspaces-console.runSuggestion",
+          "when": "view == workspaces-console.home && viewItem =~ /^suggestion/ && viewItem =~ /\\brunnable\\b/",
+          "group": "inline@1"
+        },
+        {
+          "command": "workspaces-console.copyCommandLine",
+          "when": "view == workspaces-console.home && viewItem =~ /^suggestion/ && viewItem =~ /\\bcopyable\\b/",
+          "group": "inline@2"
+        },
+        {
+          "command": "workspaces-console.runSuggestion",
+          "when": "view == workspaces-console.home && viewItem =~ /^suggestion/ && viewItem =~ /\\brunnable\\b/",
+          "group": "1_run@1"
+        },
+        {
+          "command": "workspaces-console.copyCommandLine",
+          "when": "view == workspaces-console.home && viewItem =~ /^suggestion/ && viewItem =~ /\\bcopyable\\b/",
+          "group": "2_copy@1"
+        },
+        {
+          "command": "workspaces-console.runSection",
+          "when": "view == workspaces-console.checks && viewItem =~ /^section/",
+          "group": "inline@1"
+        },
+        {
+          "command": "workspaces-console.copyCommandLine",
+          "when": "view == workspaces-console.checks && viewItem =~ /^section/",
+          "group": "inline@2"
+        },
+        {
+          "command": "workspaces-console.runSection",
+          "when": "view == workspaces-console.checks && viewItem =~ /^section/",
+          "group": "1_run@1"
+        },
+        {
+          "command": "workspaces-console.copyCommandLine",
+          "when": "view == workspaces-console.checks && viewItem =~ /^section/",
+          "group": "2_copy@1"
+        },
+        {
+          "command": "workspaces-console.copyId",
+          "when": "view == workspaces-console.checks && viewItem =~ /^section/",
+          "group": "9_cutcopypaste@1"
+        },
+        {
+          "command": "workspaces-console.openRow",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/ && viewItem =~ /\\bopenable\\b/",
+          "group": "inline@1"
+        },
+        {
+          "command": "workspaces-console.runRowAction",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/ && viewItem =~ /\\bopenable\\b/",
+          "group": "inline@2"
+        },
+        {
+          "command": "workspaces-console.copyContext",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/ && viewItem =~ /\\bcontextual\\b/",
+          "group": "inline@3"
+        },
+        {
+          "command": "workspaces-console.openRow",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/ && viewItem =~ /\\bopenable\\b/",
+          "group": "navigation@1"
+        },
+        {
+          "command": "workspaces-console.runRowAction",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/ && viewItem =~ /\\bopenable\\b/",
+          "group": "1_run@1"
+        },
+        {
+          "command": "workspaces-console.copyCommandLine",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/ && viewItem =~ /\\bopenable\\b/",
+          "group": "2_copy@1"
+        },
+        {
+          "command": "workspaces-console.copyContext",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/ && viewItem =~ /\\bcontextual\\b/",
+          "group": "2_copy@2"
+        },
+        {
+          "command": "workspaces-console.copyId",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/ && viewItem =~ /\\bopenable\\b/",
+          "group": "9_cutcopypaste@1"
+        },
+        {
+          "command": "workspaces-console.runNounCommand",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/ && viewItem =~ /^noun/",
+          "group": "inline@1"
+        },
+        {
+          "command": "workspaces-console.runNounCommand",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/ && viewItem =~ /^noun/",
+          "group": "1_run@1"
+        },
+        {
+          "command": "workspaces-console.activateNode",
+          "when": "view =~ /^workspaces-console\\.view\\.\\d+$/ && viewItem =~ /^command/",
+          "group": "1_run@1"
+        },
+        {
+          "command": "workspaces-console.copyContext",
+          "when": "view == workspaces-console.commands && viewItem =~ /\\bcontextual\\b/",
+          "group": "inline"
+        },
+        {
+          "command": "workspaces-console.copyContext",
+          "when": "view == workspaces-console.commands && viewItem =~ /\\bcontextual\\b/",
+          "group": "2_copy@1"
+        }
+      ]
+    },
+    "taskDefinitions": [
+      {
+        "type": "workspaces-console",
+        "required": [
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "enum": [
+              "check",
+              "test",
+              "fresh",
+              "doctor"
+            ],
+            "description": "%task.command.description%"
+          },
+          "section": {
+            "type": "string",
+            "description": "%task.section.description%"
+          },
+          "suite": {
+            "type": "string",
+            "description": "%task.suite.description%"
+          },
+          "changed": {
+            "type": "boolean",
+            "description": "%task.changed.description%"
+          },
+          "folder": {
+            "type": "string",
+            "description": "%task.folder.description%"
+          }
+        }
+      }
+    ],
+    "configuration": {
+      "title": "%configuration.title%",
+      "properties": {
+        "workspaces-console.launchers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "application",
+          "order": 1,
+          "markdownDescription": "%setting.launchers.description%"
+        },
+        "workspaces-console.checkOnSave": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "order": 2,
+          "markdownDescription": "%setting.checkOnSave.description%"
+        },
+        "workspaces-console.showAllCommands": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "order": 3,
+          "markdownDescription": "%setting.showAllCommands.description%"
+        },
+        "workspaces-console.rowLimit": {
+          "type": "number",
+          "default": 200,
+          "minimum": 10,
+          "maximum": 5000,
+          "scope": "application",
+          "order": 4,
+          "markdownDescription": "%setting.rowLimit.description%"
+        }
+      }
+    },
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "workspaces-console.servers",
+        "label": "%mcp.label%"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "workspaces-console.showHome",
+        "key": "ctrl+alt+i h",
+        "when": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.check",
+        "key": "ctrl+alt+i c",
+        "when": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.learn",
+        "key": "ctrl+alt+i l",
+        "when": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.copyContext",
+        "key": "ctrl+alt+i x",
+        "when": "workspaces-console.hasRepository"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "22.20.5",
+    "@types/vscode": "1.101.0",
+    "@vscode-elements/elements": "2.5.1",
+    "@vscode/codicons": "0.0.45",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.0.0",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0",
+    "globals": "17.13.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0"
+  }
+}

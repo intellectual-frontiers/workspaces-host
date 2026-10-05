@@ -26,7 +26,7 @@ PRETTY, PLAIN = "ws-host-pretty", "ws-host-plain"      # with Nerd Font icons (t
 
 
 def theme_path(name: str = PRETTY) -> Path:
-    return paths.repo_root() / "themes" / f"{name}.omp.json"
+    return Path(__file__).resolve().parents[1] / "data" / "themes" / f"{name}.omp.json"
 
 
 def fish_is_four(work: Path) -> str:

@@ -37,9 +37,8 @@ Back in the Debian window:
 ws-host vscode ensure
 ----
 
-It builds and installs the IF Console, the extension that shows your workspace in VS Code. Building runs the public root's own code, so it asks you
-once to trust that repository: type `yes`. The first time can take a few minutes while VS Code downloads a small helper into Debian and the IF Console
-is built; a spinner shows how it is going and there is nothing for you to do. It then installs a short list of helpful extensions (GitHub pull requests,
+It installs the Workspaces Console, the extension that shows your workspace in VS Code, after checking the package's fingerprint. The first time can take a few minutes
+while VS Code downloads a small helper into Debian; a spinner shows how it is going and there is nothing for you to do. It then installs a short list of helpful extensions (GitHub pull requests,
 GitLens, Python, AsciiDoc and ShellCheck), sets a few safe settings, such as saving files as you type, and never changes a setting you have already
 chosen. The exact list is in <<reference-vscode>>. It also writes `workspaces.code-workspace`, a file that lists your repositories.
 
@@ -51,8 +50,8 @@ Workspace from File*, and pick `workspaces.code-workspace` in your workspaces fo
 You now have:
 
 * A line at the bottom that says whether your machine is well, and how many things need you.
-* An *IF Console* icon on the left. Its *Home* view says what needs you, and below it are the views `ws-host` asks for.
-* A command called *IF Console: Learn a Topic*. Press `Ctrl+Shift+P`, type `IF Console: Learn`, and pick a page. Every step on a page is a button.
+* An *Workspaces Console* icon on the left. Its *Home* view says what needs you, and below it are the views `ws-host` asks for.
+* A command called *Workspaces Console: Learn a Topic*. Press `Ctrl+Shift+P`, type `Workspaces Console: Learn`, and pick a page. Every step on a page is a button.
 
 Start with *start*, then read *repos* and *signin*. Everything you do every day is taught there, and I keep it in the program so that
 it is never out of date.

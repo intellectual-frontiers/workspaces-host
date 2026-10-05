@@ -1,20 +1,18 @@
 [#extension]
-== How the IF Console works
+== How the Workspaces Console works
 
-`ws-host` ships no editor extension of its own. VS Code's window onto `ws-host`, and onto every other repository's command line, is the
-IF Console, one extension that the public root (`.github`) builds. It is not on the VS Code Marketplace, and that is on purpose: `ws-host vscode
-ensure` builds it on your computer from the public root's own code and installs the package it makes with VS Code's own `code` command, the same
-thing as VS Code's
-https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix[install from a VSIX] feature. There is nothing to
-download, no account, and no network connection from the extension itself.
+`ws-host` ships one editor extension, the Workspaces Console. It is VS Code's window onto `ws-host`, and onto every other repository's command line. It is built
+in the `workspaces-host` repository and released together with `ws-host`. It is not on the VS Code Marketplace, and that is on purpose: `ws-host vscode
+ensure` downloads the package from the latest release, checks its SHA-256 fingerprint against the one GitHub reports for it, and installs it with VS Code's
+own `code` command, the same thing as VS Code's
+https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix[install from a VSIX] feature. There is no account, and no network
+connection from the extension itself.
 
-If the public root has published a release with the IF Console's package and its SHA-256 fingerprint, `ws-host` downloads that package, checks the
-fingerprint, and installs it. That needs no build and no trust. Otherwise it builds the package, and building runs code that lives in the public
-root, so `ws-host` asks you once to trust that repository, with a typed `yes`. It builds again only when the public root has changed, which is
-when you run `ws-host update` or `ws-host workspace ensure` and then `ws-host vscode ensure`.
+`ws-host vscode ensure` installs a release once, and only a package whose fingerprint it can verify. When there is no such release, or the file does not match its
+fingerprint, it says so and installs nothing. Nothing is built on your computer, and no code from a repository you have not trusted runs.
 
 `ws-host vscode ensure` also writes `workspaces.code-workspace` in your workspaces folder. It lists the repositories you work in, and opening it
-(File, Open Workspace from File) shows each repository's own commands side by side. The IF Console finds a repository's command line by a file at
+(File, Open Workspace from File) shows each repository's own commands side by side. The Workspaces Console finds a repository's command line by a file at
 its root, `.if-console.env`; `ws-host` has one.
 
 === What you see
@@ -24,15 +22,15 @@ its root, `.if-console.env`; `ws-host` has one.
   on the status bar opens Home.
 * The views `ws-host` asks for, *Workspace* (your repositories), *Kits* and *Setup*, with a colored icon for how each row stands.
 * Every result opens in one panel, with buttons for what you can do next. A command that writes shows you what it would change first.
-* *IF Console: Learn a Topic…* lists the same pages as `ws-host help`, and each step is a button.
-* *IF Console: Get Help…* and *Copy Context…* gather a report with no passwords in it. Paste it to a person or an AI.
+* *Workspaces Console: Learn a Topic…* lists the same pages as `ws-host help`, and each step is a button.
+* *Workspaces Console: Get Help…* and *Copy Context…* gather a report with no passwords in it. Paste it to a person or an AI.
 * Problems from the checks appear in VS Code's *Problems* panel, at the file and line.
 
 === What it will not do for you
 
 It will never decide for you. Trusting a repository asks you in a dialog, and nothing in VS Code, including an AI assistant, can press that
 button for you. It runs nothing in Restricted Mode and nothing from a repository you have not trusted, it collects nothing, and it opens no
-network connection. The IF Console's own guide is in the public root, in `tools/if-console`.
+network connection. The Workspaces Console's own guide is in the `console/` folder of the `workspaces-host` repository.
 
 === Why trust matters
 
