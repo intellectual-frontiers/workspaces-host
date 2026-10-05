@@ -41,3 +41,14 @@ exactly as it was and reported in plain words. Each rule is a test: a reattach t
 Every orchestrator answers `command list`, `command show` and its resources in one shape, so the extension needs no
 knowledge of any of them. A document names its schema as `<name>/<kind>@<n>`; the extension reads versions up to the one it
 knows and says "update needed" in plain words about a newer one.
+
+=== How the editor draws `ws-host`
+
+`ws-host` also says how it should look, so the editor holds nothing about it. `ws-host command list` returns, with the commands, a title
+and an icon for each (the title is what you see in the command palette, such as *Install Kit…*, with the three dots when it asks you for
+something first) and a `presentation` block with its views and nouns. The views are *Workspace* (your repositories), *Kits* and *Setup*, and
+the rows of the repository and kit lists carry a status the editor turns into a colored icon. The declarations are in
+`ws_host/commands/presentation.py`, and `ws-host check registry` fails when a title, an icon or a view is not well formed.
+
+A repository tells the editor where its command line is in a file at its root named `.if-console.env`. This repository's holds one line,
+`IF_CONSOLE_LAUNCHER=./ws-host`, so the editor finds `ws-host` here like any other orchestrator.

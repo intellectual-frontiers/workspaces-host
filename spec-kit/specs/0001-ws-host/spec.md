@@ -127,6 +127,26 @@ and 0026-workspaces, held in the public root, govern all of them.
   plain sentence MUST NOT say "below", "above" or point at anything else a
   reader of it may not see.
 
+- **FR-018**: `ws-host` MUST say how it is presented to an editor, as 0041-command-line
+  FR-064 asks of every orchestrator: each command row of `command list` and
+  `command show` MUST carry a `title`, a verb and an object in capitals of at
+  most 40 characters whose ellipsis is present exactly when the command asks
+  for a value, and an `icon` where it has one; `command list` MUST carry
+  `presentation` with its `views` (each ordered above the editor's own Home) and
+  its `nouns`, each with a title, an icon, the view that lists it and, where the
+  noun has a `list` command that asks for nothing, how its rows read; and the
+  rows of such a list MUST carry the fields it names and a status that is, or is
+  mapped to, one of ok, warning, error, pending, skipped, info or muted. The
+  declarations live in code (`ws_host/commands/presentation.py`), `check
+  registry` MUST fail on what 0041-command-line FR-072 names, and the icons MUST
+  be named in the glyph map this repository pins, copied from the public root's.
+  The repository MUST declare its launcher for the editor in `.if-console.env`
+  (0043-if-console FR-004, in the public root), so that the IF Console serves
+  `ws-host` like any other orchestrator.
+- **FR-019**: Nothing in this repository, its history or its published guide MAY
+  name a confidential repository or say what one holds. It is public, and it
+  knows only the public root.
+
 ## Edge cases
 
 - `uv` is missing when the launcher runs: it exits 3 and says in plain words

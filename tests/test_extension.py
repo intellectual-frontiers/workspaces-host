@@ -78,7 +78,7 @@ class Contract(Workspace):
         _, lst = self.run_json("command", "list")
         self.assertEqual(lst["data"]["count"], len(lst["data"]["commands"]))
         for c in lst["data"]["commands"]:
-            self.assertEqual(set(c), {"id", "category", "group", "surfaces", "help"})
+            self.assertTrue({"id", "category", "group", "surfaces", "help"} <= set(c) <= {"id", "noun", "verb", "category", "group", "surfaces", "help", "title", "icon"})   # a field may be added (0041 FR-064)
             self.assertTrue(set(c["surfaces"]) <= WIRE_SURFACES)
             self.assertIn("terminal", c["surfaces"])
         for c in lst["data"]["commands"]:

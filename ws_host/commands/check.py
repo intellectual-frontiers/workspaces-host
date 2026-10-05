@@ -7,7 +7,7 @@ import stat
 import subprocess
 from pathlib import Path
 
-from ..core import machine, paths, registry as reg, types
+from ..core import machine, paths, presentation, registry as reg, types
 from ..core.registry import Arg, section
 from ..core.resource import FAILED, MISSING, OK, Resource, WsError
 
@@ -18,7 +18,7 @@ def _f(where: str, message: str, level: str = "error") -> dict:
     return {"level": level, "where": where, "message": message, "next": f"edit {where.split(':')[0].split(' ')[0]}, then run `check`"}
 
 
-@section("registry", suites=("quick",), summary="no two commands or kits share a name; no module-level third-party import")
+@section("registry", suites=("quick",), summary="no two commands or kits share a name; no module-level third-party import; titles, icons and views are well formed")
 def registry_section(ctx):
     r = reg.discover()
     out = [_f("registry", m) for m in r.conflicts]
@@ -29,6 +29,7 @@ def registry_section(ctx):
             out.append(_f(c.module, f"'{c.id}' uses the verb '{c.verb}', which is not in the closed set ({', '.join(reg.VERBS)})"))
         if not c.noun and c.words[0] not in reg.REPOWIDE:
             out.append(_f(c.module, f"'{c.id}' has no noun and is not one of the repository-wide commands"))
+    out += [_f("ws_host/commands/presentation.py", m) for m in presentation.problems(r)]      # 0041 FR-072
     return out
 
 
