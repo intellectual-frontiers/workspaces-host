@@ -254,7 +254,7 @@ def workspace_step(cfg, dry: bool) -> dict:
         out["extensions"] = {**(current.get("extensions") if isinstance(current.get("extensions"), dict) else {}), "recommendations": recs + [CONSOLE_ID]}
     tmp.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
     os.replace(tmp, f)
-    return {"name": name, "status": "installed", "plain": f"{f} lists your repositories. Open it in VS Code with `code {f}` (or File, Open Workspace from File) and always start from it, so every repository is in one window."}
+    return {"name": name, "status": "installed", "plain": f"{f} lists your repositories. Open it in VS Code with `code {f}` (or File, Open Workspace from File) to see every repository in one window. Make other *.code-workspace files in {f.parent} for a Git service or an organization of your own; I only manage this one."}
 
 
 # What `vscode ensure` puts in place so a person does not have to think about it (0006-onboarding FR-007 to FR-009).

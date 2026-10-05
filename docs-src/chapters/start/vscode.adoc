@@ -44,7 +44,7 @@ GitLens, Python, AsciiDoc and ShellCheck), sets a few safe settings, such as sav
 chosen. The exact list is in <<reference-vscode>>. It also writes `workspaces.code-workspace`, a file that lists your repositories.
 
 Now reload VS Code so everything starts: press `Ctrl+Shift+P`, type `Reload Window`, press Enter. Then open your workspace file: *File*, *Open
-Workspace from File*, and pick `workspaces.code-workspace` in your workspaces folder (`~/workspaces`). From now on, always start VS Code from that file; <<workspace-file>> says why.
+Workspace from File*, and pick `workspaces.code-workspace` in your workspaces folder (`~/workspaces`). This is your default way in; <<workspace-file>> explains it and how to make your own.
 
 === Step 5: Look around, then press Learn
 

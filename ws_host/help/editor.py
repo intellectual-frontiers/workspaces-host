@@ -34,8 +34,12 @@ def workspace_file():
     return {
         "plain": "One file, workspaces.code-workspace, lists every repository you work in. Open it and they are all in one window.",
         "sections": (
-            ("The rule", "Always start VS Code from workspaces.code-workspace in your workspaces folder. Do not open repositories one by one, and do not use "
-                         "Add Folder to Workspace. ws-host keeps the file's list of repositories up to date, so nothing is added by hand."),
+            ("The default", "Start from workspaces.code-workspace in your workspaces folder, ~/workspaces. ws-host writes it and keeps its list of repositories "
+                            "current, so it holds every repository you have copied in one window."),
+            ("Make your own", "The default is a starting point. Make other files in ~/workspaces when one list mixes things that do not belong together: one per Git "
+                              "service (github.code-workspace, gitlab.code-workspace) or one per organization on the same service "
+                              "(intellectual-frontiers.code-workspace). Copy the default, delete the folders you do not want, and open the copy. "
+                              "ws-host vscode ensure only manages the default and never touches yours."),
             ("Open it", "In a terminal, run: code ~/workspaces/workspaces.code-workspace. In VS Code, choose File, Open Workspace from File. "
                         "Afterwards VS Code reopens it by itself, and File, Open Recent lists it first; its title bar starts with the word Workspaces, "
                         "so you can tell it from a single-repository window."),

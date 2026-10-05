@@ -481,10 +481,19 @@ class WorkspaceFileTeaching(unittest.TestCase):
         r = reg.discover()
         t = r.topics["workspace-file"]
         text = json.dumps([t.plain, t.sections, [st.label if hasattr(st, "label") else str(st) for st in t.steps]])
-        for needle in ("workspaces.code-workspace", "Open Workspace from File", "code ~/workspaces/workspaces.code-workspace", "Add Folder to Workspace", "ws-host repo add", "ws-host vscode ensure"):
+        for needle in ("workspaces.code-workspace", "Open Workspace from File", "code ~/workspaces/workspaces.code-workspace", "Make your own", "gitlab.code-workspace", "ws-host repo add", "ws-host vscode ensure"):
             self.assertIn(needle, text)
         chapter = (REPO / "docs-src/chapters/start/workspace-file.adoc").read_text()
-        for needle in ("Always start VS Code", "Open Recent", "Explorer", "ws-host vscode ensure", "https://code.visualstudio.com/"):
+        for needle in ("Make your own", "github.code-workspace", "organization", "Open Recent", "Explorer", "ws-host vscode ensure", "https://code.visualstudio.com/"):
             self.assertIn(needle, chapter)
         self.assertIn("workspace-file.adoc", (REPO / "docs-src/manuscript.adoc").read_text())
 
+
+
+class OtherWorkspaceFiles(Console):
+    def test_a_persons_own_workspace_file_is_never_touched(self):
+        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS="github.com/intellectual-frontiers/.github"\nWS_HOST_PROMPT="no"\n')
+        mine = self.home / "workspaces" / "gitlab.code-workspace"
+        mine.write_text('{ // mine\n"folders": []}')
+        self.run_json("vscode", "ensure")
+        self.assertEqual(mine.read_text(), '{ // mine\n"folders": []}')
