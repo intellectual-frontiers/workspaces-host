@@ -165,15 +165,10 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |===
 |Usage |Category |Where it runs |What it does
 
-|`ws-host vscode add`
-|setup
-|terminal
-|Install the VS Code extension that is the interface for every orchestrator
-
 |`ws-host vscode ensure`
 |setup
 |terminal, editor
-|Put VS Code in its recommended state: the extension, helpful extensions and safe settings
+|Put VS Code in its recommended state: the IF Console, helpful extensions and safe settings
 
 |===
 

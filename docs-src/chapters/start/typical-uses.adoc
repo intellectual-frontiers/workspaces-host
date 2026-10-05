@@ -7,7 +7,7 @@ brackets.
 === Start the day [start, repos]
 
 Open VS Code from Debian with `code .` in a repository. Look at the line at the bottom. If it is green, you are ready. To bring every
-repository up to date, press `Ctrl+Shift+P`, type `Workspace: Ensure everything is set up and up to date`, and press Enter. Any repository where you have
+repository up to date, open the *Workspace* view and press *Sync Repositories* (or in Debian run `ws-host repo sync --all`). Any repository where you have
 changes of your own is left exactly as it was, and the result says so.
 
 === Choose which repositories you work in [start]
@@ -45,7 +45,7 @@ gives you a friendlier terminal.
 
 === Check your work [editor]
 
-Press `Ctrl+Shift+P`, type `Workspace: Run checks`. Anything wrong appears in the *Problems* panel, where you can click to go to it.
+Press `Ctrl+Shift+P`, type `IF Console: Run Check`. Anything wrong appears in the *Problems* panel, where you can click to go to it.
 
 === Make your terminal friendlier [shell]
 
@@ -54,13 +54,13 @@ make it permanent. bash and oh-my-posh work fine if you would rather stay as you
 
 === Work with an AI [ai]
 
-An AI can run everything `ws-host` does except the decisions that are yours. Give it the report from *Workspace: Get help*.
+An AI can run everything `ws-host` does except the decisions that are yours. Give it the report from *IF Console: Get Help*.
 
 === Update ws-host itself
 
-`ws-host workspace ensure` also brings `ws-host` up to date, because it is one of your repositories. Reload VS Code afterward.
+`ws-host workspace ensure` also brings `ws-host` up to date, because it is one of your repositories. Reload VS Code afterward, and run `ws-host vscode ensure` to rebuild the IF Console if the public root changed.
 
 === Something is wrong and I am not sure what
 
-Press `Ctrl+Shift+P`, type `Workspace: Get help`. It copies a report with no passwords in it. Paste it to someone who helps you, or to an AI.
+Press `Ctrl+Shift+P`, type `IF Console: Get Help`. It copies a report with no passwords in it. Paste it to someone who helps you, or to an AI.
 Or look in <<troubleshooting>>.

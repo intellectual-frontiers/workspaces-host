@@ -95,7 +95,7 @@ def reference_docs() -> dict:
              f"What `{NAME} vscode ensure` puts in place, taken from the code. It adds a setting only when you have not set it, and it never changes one you have.", "",
              "=== Recommended extensions", "", '[cols="2,5"]', "|===", "|Extension |What it is for", ""]
     lines += [f"|`{i}`|{_cell(w)}" for i, w in vs.RECOMMENDED]
-    lines += ["|===", "", "The Workspace extension itself is installed from your copy of `ws-host`, not from the Marketplace.", "",
+    lines += ["|===", "", "The IF Console itself is built from the public root and installed from the package that build makes, not from the Marketplace.", "",
               "=== Settings", "", '[cols="3,3"]', "|===", "|Setting |Value", ""]
     import json as _json
     lines += [f"|`{k}`|`{_cell(_json.dumps(v))}`" for k, v in sorted(vs.baseline_settings().items()) if k != "terminal.integrated.defaultProfile.linux"]

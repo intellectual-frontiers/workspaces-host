@@ -18,7 +18,7 @@ What `ws-host vscode ensure` puts in place, taken from the code. It adds a setti
 |`timonwong.shellcheck`|catches mistakes in shell scripts
 |===
 
-The Workspace extension itself is installed from your copy of `ws-host`, not from the Marketplace.
+The IF Console itself is built from the public root and installed from the package that build makes, not from the Marketplace.
 
 === Settings
 

@@ -137,7 +137,7 @@ class FirstSteps(Home):
         positions = [next(i for i, h in enumerate(headings) if o.lower() in h.lower()) for o in order]
         self.assertEqual(positions, sorted(positions))
         text = " ".join(s["text"] for s in doc["data"]["sections"])
-        for needle in ("ws-host auth new github", "ws-host workspace ensure", "code .", "ws-host vscode ensure", "Workspace: Learn", "ws-host repo add github.com/ORG/REPO",
+        for needle in ("ws-host auth new github", "ws-host workspace ensure", "code .", "ws-host vscode ensure", "IF Console: Learn a Topic", "ws-host repo add github.com/ORG/REPO",
                        "WS_HOST_REPOS", "code ~/.config/workspaces-host/ws-host.env", "exec bash -l", "ws-host shell add bash --plain", "fish", "ws-host doctor", "intellectual-frontiers.github.io/workspaces-host"):
             self.assertIn(needle, text, needle)
         self.assertIn(".github", text)

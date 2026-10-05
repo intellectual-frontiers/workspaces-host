@@ -353,17 +353,12 @@ class SlowEditor(Home):
         self.assertEqual(caught.exception.code, "code-timeout")
         self.assertIn("carry on", caught.exception.plain)
 
-    def test_setup_warns_before_the_slow_first_step(self):
-        self.paths.config_dir().mkdir(parents=True, exist_ok=True)
-        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\nWS_HOST_PROMPT="no"\n')
+    def test_vscode_ensure_warns_before_the_slow_first_step(self):
         self.fake_code("exit 0\n")
-        (self.fakebin / "gh").write_text("#!/bin/sh\nexit 0\n")
-        (self.fakebin / "gh").chmod(0o755)
-        code, out = self.run_cmd("workspace", "ensure", "--json")
-        docs = [json.loads(l) for l in out.strip().splitlines()]
-        editor = [d for d in docs if d["kind"] == "progress" and d["id"] == "editor"][0]
-        self.assertIn("downloads a small helper", editor["data"]["plain"])
-        self.assertIn("a few minutes", editor["data"]["plain"])
+        code, out = self.run_cmd("vscode", "ensure", "--json")
+        first = json.loads(out.strip().splitlines()[0])
+        self.assertIn("downloads a small helper", first["data"]["plain"])
+        self.assertIn("a few minutes", first["data"]["plain"])
 
     def test_vscode_advance_explains_itself_first_and_ends_with_what_to_do_next(self):
         self.fake_code('case "$1" in --list-extensions) echo some.other;; esac\nexit 0\n')
@@ -373,7 +368,6 @@ class SlowEditor(Home):
         self.assertIn("nothing for you to do", docs[0]["data"]["plain"])
         self.assertIn("a few minutes", docs[0]["data"]["plain"])        # the first call in WSL downloads the helper
         self.assertEqual(docs[-1]["kind"], "vscode-setup")
-        self.assertIn("Workspace: Learn", docs[-1]["data"]["next"])
         self.assertIn("Reload", docs[-1]["data"]["reload"])
         code, out = self.run_cmd("vscode", "ensure", "--dry-run", "--json")
         self.assertEqual([json.loads(l)["kind"] for l in out.strip().splitlines()], ["vscode-setup"])

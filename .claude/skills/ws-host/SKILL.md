@@ -46,8 +46,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `skill generate` | generate | terminal, editor, mcp | Rewrite the skill that tells an AI agent how to use ws-host |
 | `test` | check | terminal, editor, mcp | Run this repository's tests |
 | `update` | setup | terminal, editor | Move ws-host to its newest version, only when nothing of yours is in the way; --check only looks |
-| `vscode add` | setup | terminal | Install the VS Code extension that is the interface for every orchestrator |
-| `vscode ensure` | setup | terminal, editor | Put VS Code in its recommended state: the extension, helpful extensions and safe settings |
+| `vscode ensure` | setup | terminal, editor | Put VS Code in its recommended state: the IF Console, helpful extensions and safe settings |
 | `workspace ensure` | setup | terminal, editor | Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health |
 | `workspace set` | setup | terminal, editor | Make git's Sync button safe: set pull.ff to only |
 | `workspace status` | read | terminal, editor, mcp | Say how this machine and your repositories stand |

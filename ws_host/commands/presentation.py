@@ -36,7 +36,7 @@ for _id, _title, _icon in (
     ("repo add", "Add Repository", "add"), ("repo list", "List Repositories", None), ("repo set", "Set Repository Trust…", "shield"),
     ("repo status", "Show Repository Status", None), ("repo sync", "Sync Repositories", "sync"),
     ("shell add", "Set Up Prompt…", "terminal"), ("skill generate", "Generate Agent Skill", None), ("test", "Run Tests", "beaker"),
-    ("update", "Update ws-host", "versions"), ("vscode add", "Add Editor Extension", "extensions"), ("vscode ensure", "Set Up VS Code", None),
+    ("update", "Update ws-host", "versions"), ("vscode ensure", "Set Up VS Code", None),
     ("workspace ensure", "Set Up Workspace", "rocket"), ("workspace set", "Make Git Sync Safe", None),
     ("workspace status", "Show Workspace Status", "home"),
 ):

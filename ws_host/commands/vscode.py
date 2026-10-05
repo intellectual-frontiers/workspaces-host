@@ -1,73 +1,24 @@
-"""`vscode add`: install the editor extension (0004-editor-extension FR-016)."""
+"""`vscode ensure`: put VS Code in its recommended state, with the IF Console as its interface (0004-editor-extension FR-001 to FR-010).
+
+The extension is the IF Console of the public root (0043-if-console in `.github`), built there by `agora extension build` and installed
+with `code --install-extension`. ws-host holds no extension of its own."""
 from __future__ import annotations
 
 import json
 import os
 import shutil
 import subprocess
-import tempfile
-import zipfile
+import sys
 from pathlib import Path
 
-from ..core import machine, paths, progress, registry as reg
+from ..core import config, machine, paths, progress, registry as reg
 from ..core.resource import Action, FAILED, OK, Resource, WsError
+from ..lib import git, repos, trust as trust_mod
 
-CT = ('<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-      '<Default Extension=".json" ContentType="application/json"/><Default Extension=".js" ContentType="application/javascript"/>'
-      '<Default Extension=".md" ContentType="text/markdown"/><Default Extension=".vsixmanifest" ContentType="text/xml"/></Types>')
-
-
-def extension_dir() -> Path:
-    return paths.repo_root() / "vscode"
-
-
-def manifest() -> dict:
-    return json.loads((extension_dir() / "package.json").read_text(encoding="utf-8"))
-
-
-def ident(m: dict | None = None) -> tuple[str, str]:
-    m = m or manifest()
-    return f"{m['publisher']}.{m['name']}", m["version"]
-
-
-def target_extensions_dir() -> Path:
-    """VS Code's WSL mode keeps extensions in ~/.vscode-server (0004 FR-016)."""
-    wsl = machine.distro()["wsl"]
-    return paths.home() / (".vscode-server" if wsl else ".vscode") / "extensions"
-
-
-def build_vsix(dest: Path) -> Path:
-    m = manifest()
-    ext_id, version = ident(m)
-    vm = ('<?xml version="1.0" encoding="utf-8"?><PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">'
-          f'<Metadata><Identity Language="en-US" Id="{m["name"]}" Version="{version}" Publisher="{m["publisher"]}"/>'
-          f'<DisplayName>{m.get("displayName", m["name"])}</DisplayName><Description xml:space="preserve">{m.get("description", "")}</Description></Metadata>'
-          '<Installation><InstallationTarget Id="Microsoft.VisualStudio.Code"/></Installation><Dependencies/>'
-          '<Assets><Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true"/></Assets></PackageManifest>')
-    out = dest / f"{ext_id}-{version}.vsix"
-    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("[Content_Types].xml", CT)
-        z.writestr("extension.vsixmanifest", vm)
-        for f in sorted(extension_dir().rglob("*")):
-            if f.is_file() and "node_modules" not in f.parts:
-                z.write(f, "extension/" + f.relative_to(extension_dir()).as_posix())
-    return out
-
-
-def register(index: Path, ext_dir: Path, ext_id: str, version: str, folder: str) -> bool:
-    """Add or replace this extension's entry in extensions.json, keeping every other entry. True when it changed."""
-    entries = json.loads(index.read_text(encoding="utf-8"))
-    entry = {"identifier": {"id": ext_id}, "version": version,
-             "location": {"$mid": 1, "path": str(ext_dir / folder), "scheme": "file"}, "relativeLocation": folder,
-             "metadata": {"installedTimestamp": 0, "pinned": True, "source": "vsix"}}
-    others = [e for e in entries if e.get("identifier", {}).get("id", "").lower() != ext_id.lower()]
-    new = others + [entry]
-    if new == entries:
-        return False
-    tmp = index.with_suffix(".json.new")
-    tmp.write_text(json.dumps(new), encoding="utf-8")
-    os.replace(tmp, index)
-    return True
+CONSOLE_ID = "intellectual-frontiers.if-console"
+OLD_IDS = ("intellectual-frontiers.workspaces-host",)       # the extension ws-host shipped before it used the IF Console
+PUBLIC_ROOT = config.STARTER_REPOS[0]
+BUILD_WAIT = 1800
 
 
 CODE_WAIT = 900     # seconds: the first call downloads VS Code's Linux helper into WSL, which is slow on a slow network
@@ -90,62 +41,141 @@ def run_code(args: list[str], label: str, timeout: int = CODE_WAIT) -> subproces
                       "carry on from where it got to.", [Action(("vscode", "ensure"), "Try again")], exit_code=1)
 
 
-def install_extension(dry: bool = False) -> dict:
-    """Install the extension (0004-editor-extension FR-016). Returns {plain, did, plan}; raises WsError."""
-    ext_id, version = ident()
-    folder = f"{ext_id}-{version}"
-    ext_dir = target_extensions_dir()
-    link, index = ext_dir / folder, ext_dir / "extensions.json"
-    src = extension_dir()
-    if not (src / "extension.js").is_file():
-        raise WsError("missing-extension", "vscode/extension.js is missing", "The extension's files are missing from this copy of ws-host.", exit_code=1)
-    plan = {"extension": ext_id, "version": version, "directory": str(ext_dir), "link": str(link), "index": str(index) if index.is_file() else None}
+
+def public_root(cfg) -> tuple[repos.RepoId, Path]:
+    rid = repos.parse_id(PUBLIC_ROOT)
+    return rid, rid.path(cfg)
+
+
+def stamp_file() -> Path:
+    return paths.state_dir() / "if-console"
+
+
+def read_stamp() -> dict:
+    try:
+        return dict(l.split("=", 1) for l in stamp_file().read_text(encoding="utf-8").splitlines() if "=" in l)
+    except OSError:
+        return {}
+
+
+def write_stamp(**kv) -> None:
+    now = {**read_stamp(), **kv}
+    stamp_file().parent.mkdir(parents=True, exist_ok=True)
+    stamp_file().write_text("".join(f"{k}={v}\n" for k, v in sorted(now.items())), encoding="utf-8")
+
+
+def console_installed_here() -> bool:
+    """What the last `vscode ensure` recorded: cheap, and no call to VS Code. `workspace ensure` reads it to say what to do."""
+    return bool(read_stamp().get("installed"))
+
+
+def newest_vsix(root: Path) -> Path | None:
+    found = sorted((root / "build").glob("if-console-*.vsix"), key=lambda p: p.stat().st_mtime)
+    return found[-1] if found else None
+
+
+def build_console(root: Path) -> Path:
+    """Build the IF Console's package with the public root's own command line (0043-if-console FR-027). Raises WsError."""
+    launcher = root / "agora"
+    if not os.access(launcher, os.X_OK):
+        raise WsError("no-builder", f"{launcher} is not there", "The public root's command line is missing, so I cannot build the IF Console. Update the public root first.",
+                      [Action(("repo", "sync"), "Update the repositories", {"all": True})])
+    try:
+        with progress.working("Building the IF Console (the first time takes a minute or two)"):
+            p = subprocess.run([str(launcher), "extension", "build"], cwd=str(root), capture_output=True, text=True, timeout=BUILD_WAIT)
+    except subprocess.TimeoutExpired:
+        raise WsError("build-timeout", "the build took too long", "Building the IF Console is taking very long, probably because the network is slow. Nothing was lost; run this again and it carries on.",
+                      [Action(("vscode", "ensure"), "Try again")], exit_code=1)
+    if p.returncode != 0:
+        tail = " ".join((p.stderr or p.stdout).strip().splitlines()[-3:])
+        raise WsError("build-failed", f"agora extension build exited {p.returncode}: {tail}", "I could not build the IF Console. " + (tail or ""),
+                      [Action(("vscode", "ensure"), "Try again")], exit_code=1)
+    vsix = newest_vsix(root)
+    if vsix is None:
+        raise WsError("no-package", "the build made no .vsix", "The build finished but made no package, so there is nothing to install.", exit_code=1)
+    return vsix
+
+
+def console_step(ctx, cfg, code: str | None, have: set) -> tuple[dict, list[Action]]:
+    """Build the IF Console if the public root changed, install it if it is not there, and remove the extension ws-host used to ship."""
+    name = "IF Console extension"
+    rid, root = public_root(cfg)
+    if not code:
+        return {"name": name, "status": "skipped", "plain": "VS Code's `code` command is not available here yet; open VS Code from this terminal once with `code .`, then run this again."}, []
+    if not (root / ".git").exists():
+        return {"name": name, "status": "skipped", "plain": f"The public root ({rid.name}) is not on this machine yet, and the IF Console is built from it. Copy it first."}, \
+               [Action(("workspace", "ensure"), "Ensure everything is set up and up to date")]
+    ok, why = trust_mod.trust_state(rid, cfg)
+    if not ok:
+        trust_action = [Action(("repo", "set"), "Trust the public root", {"repo": str(rid), "trusted": True})]
+        if ctx.dry_run:
+            return {"name": name, "status": "would-install", "plain": "I would ask you to trust the public root, then build and install the IF Console."}, trust_action
+        if not (sys.stdin.isatty() and sys.stdout.isatty()):
+            return {"name": name, "status": "skipped", "plain": "The IF Console is built by running the public root's own code, so you decide first whether to trust it."}, trust_action
+        try:
+            ctx.confirm(f"The IF Console is built by running code from {rid}. Trust it?")
+            trust_mod.grant(rid, cfg)
+        except WsError:
+            return {"name": name, "status": "skipped", "plain": "You did not trust the public root, so I did not build the IF Console. Nothing was changed."}, trust_action
+    head = git.out(root, "rev-parse", "HEAD")
+    vsix = newest_vsix(root)
+    stale = read_stamp().get("built") != head or vsix is None
+    installed = CONSOLE_ID in have
+    if ctx.dry_run:
+        what = "build and install" if stale else "install" if not installed else "keep"
+        return {"name": name, "status": "would-install" if what != "keep" else "already", "plain": f"I would {what} the IF Console." if what != "keep" else "The IF Console is installed and current."}, []
+    built = False
+    if stale:
+        vsix = build_console(root)
+        write_stamp(built=head)
+        built = True
+    if built or not installed:
+        r = run_code(["--install-extension", str(vsix), "--force"], "Installing the IF Console")
+        if r.returncode != 0:
+            raise WsError("code-install", (r.stderr or r.stdout).strip()[-300:], "VS Code's `code` command could not install the IF Console.", [Action(("vscode", "ensure"), "Try again")])
+        write_stamp(installed=head)
+    for old in OLD_IDS:
+        if old in have:
+            run_code(["--uninstall-extension", old], f"Removing the older {old.split('.')[-1]} extension")
+    plain = ("Built and installed the IF Console. Reload VS Code's window to start it." if built else
+             "Installed the IF Console. Reload VS Code's window to start it." if not installed else "The IF Console is installed and current.")
+    return {"name": name, "status": "installed" if (built or not installed) else "already", "plain": plain}, []
+
+
+def workspace_file(cfg) -> Path:
+    return cfg.workspaces / "workspaces.code-workspace"
+
+
+def workspace_step(cfg, dry: bool) -> dict:
+    """A multi-root workspace of the repositories you work in, so the IF Console shows each repository's command line (0043 FR-007)."""
+    f = workspace_file(cfg)
+    wanted = []
+    for r in sorted(repos.known(cfg)[0], key=str):
+        if (r.path(cfg) / ".git").exists():
+            try:
+                rel = os.path.relpath(r.path(cfg), f.parent)
+            except ValueError:
+                rel = str(r.path(cfg))
+            wanted.append({"path": rel, "name": r.name})
+    name = "Workspace file"
+    try:
+        current = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+        if not isinstance(current, dict):
+            raise ValueError("not an object")
+    except (ValueError, OSError) as e:
+        return {"name": name, "status": "skipped", "plain": f"I left {f} alone because I cannot read it safely ({e})."}
+    folders = list(current.get("folders", []))
+    have = {os.path.normpath(os.path.join(f.parent, x.get("path", ""))) for x in folders if isinstance(x, dict)}
+    add = [w for w in wanted if os.path.normpath(os.path.join(f.parent, w["path"])) not in have]
+    if not add:
+        return {"name": name, "status": "already", "plain": f"{f.name} already lists your repositories." if f.exists() else "No repository is copied yet, so there is no workspace file to make."}
     if dry:
-        how = "link it and list it in extensions.json" if index.is_file() else "build a .vsix and install it with `code`" if shutil.which("code") else "link it"
-        return {"plain": f"Nothing was changed. I would {how}.", "did": [], "plan": plan}
-    notes = []
-    if index.is_file():
-        ext_dir.mkdir(parents=True, exist_ok=True)
-        _link(link, src)
-        changed = register(index, ext_dir, ext_id, version, folder)
-        notes.append("linked the extension" + (" and listed it" if changed else "; it was already listed"))
-        plain = "The extension is installed. Reload VS Code's window to start it."
-    elif shutil.which("code"):
-        with tempfile.TemporaryDirectory() as d:
-            vsix = build_vsix(Path(d))
-            p = run_code(["--install-extension", str(vsix), "--force"], "Setting up VS Code inside Debian (the first time downloads its helper)")
-        if p.returncode != 0:
-            raise WsError("code-install", (p.stderr or p.stdout).strip()[-300:], "VS Code's `code` command could not install the extension.")
-        notes.append("installed it with `code --install-extension`")
-        plain = "The extension is installed. Reload VS Code's window to start it. After ws-host updates, run `ws-host vscode add` again."
-    else:
-        ext_dir.mkdir(parents=True, exist_ok=True)
-        _link(link, src)
-        notes.append("linked the extension, but found neither VS Code's list of extensions nor the `code` command")
-        plain = "I linked the extension, but VS Code has not been run here yet, so I could not list it. Open VS Code once, then run this again."
-    return {"plain": plain, "did": notes, "plan": plan}
-
-
-def extension_installed() -> bool:
-    ext_id, version = ident()
-    return (target_extensions_dir() / f"{ext_id}-{version}").exists()
-
-
-@reg.command("vscode", "add", category="setup", summary="Install the VS Code extension that is the interface for every orchestrator")
-def vscode_add(ctx):
-    r = install_extension(ctx.dry_run)
-    return Resource("vscode-add", r["plan"]["extension"], {"plain": r["plain"], **r["plan"], **({"did": r["did"]} if r["did"] else {})}, status=OK)
-
-
-def _link(link: Path, src: Path) -> None:
-    if link.is_symlink() and Path(os.readlink(link)).resolve() == src.resolve():
-        return
-    if link.exists() or link.is_symlink():
-        if link.is_symlink():
-            link.unlink()
-        else:
-            raise WsError("in-the-way", f"{link} exists and is not a link", f"Something is already at {link}, so I did not replace it.", exit_code=1)
-    os.symlink(src, link)
+        return {"name": name, "status": "would-install", "plain": f"I would add {len(add)} repositor{'ies' if len(add) != 1 else 'y'} to {f}."}
+    f.parent.mkdir(parents=True, exist_ok=True)
+    tmp = f.with_suffix(".code-workspace.new")
+    tmp.write_text(json.dumps({**current, "folders": folders + add}, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp, f)
+    return {"name": name, "status": "installed", "plain": f"{f} lists your repositories. Open it in VS Code (File, Open Workspace from File) so the IF Console shows each one's commands."}
 
 
 # What `vscode ensure` puts in place so a person does not have to think about it (0006-onboarding FR-007 to FR-009).
@@ -205,34 +235,34 @@ def merge_settings(f: Path, wanted: dict, dry: bool) -> dict:
             "added": sorted(added), "kept": sorted(kept), "plain": ""}
 
 
-@reg.command("vscode", "ensure", category="setup", summary="Put VS Code in its recommended state: the extension, helpful extensions and safe settings",
+@reg.command("vscode", "ensure", category="setup", summary="Put VS Code in its recommended state: the IF Console, helpful extensions and safe settings",
              surfaces=("cli", "editor"))
 def vscode_ensure(ctx):
-    steps, status = [], OK
+    steps, status, actions = [], OK, []
     code = shutil.which("code")
+    cfg = config.load()
     if not ctx.dry_run:
         # Say what is about to happen, that nothing is needed from the person, and how long it can take, before anything slow starts.
-        yield Resource("progress", "vscode-start", {"plain": f"Setting up VS Code: the Workspace extension, {len(RECOMMENDED)} helpful extensions and a few safe settings. "
+        yield Resource("progress", "vscode-start", {"plain": f"Setting up VS Code: the IF Console, {len(RECOMMENDED)} helpful extensions and a few safe settings. "
                                                     "There is nothing for you to do while it works. " +
-                                                    ("The first time, VS Code downloads a small helper into Debian, which can take a few minutes on a slow network; the line below "
-                                                     "shows how much has arrived." if code and first_time_in_wsl() else "It usually takes under a minute."), "step": "vscode-start"})
-    ext = {"name": "Workspace extension", "status": "skipped"}
-    try:
-        r = install_extension(ctx.dry_run)
-        ext = {"name": "Workspace extension", "status": "would-install" if ctx.dry_run else "installed", "plain": r["plain"]}
-    except WsError as e:
-        ext = {"name": "Workspace extension", "status": "failed", "plain": e.plain}
-        status = FAILED
-    steps.append(ext)
+                                                    ("The first time, VS Code downloads a small helper into Debian and the IF Console is built, which can take a few minutes "
+                                                     "on a slow network; the line below shows how it is going." if code and first_time_in_wsl() else
+                                                     "It usually takes a few minutes the first time and under a minute after."), "step": "vscode-start"})
     have = set()
     if code:
         try:
             p = run_code(["--list-extensions"], "Asking VS Code what is installed")
         except WsError as e:
-            yield Resource("vscode-setup", "vscode", {"plain": e.plain, "steps": steps, "settings": {}, "reload": ""},
-                           actions=e.actions, status=FAILED)
+            yield Resource("vscode-setup", "vscode", {"plain": e.plain, "steps": steps, "settings": {}, "reload": ""}, actions=e.actions, status=FAILED)
             return
         have = {l.strip().lower() for l in p.stdout.splitlines() if l.strip()}
+    try:
+        step, more = console_step(ctx, cfg, code, have)
+    except WsError as e:
+        step, more = {"name": "IF Console extension", "status": "failed", "plain": e.plain}, list(e.actions)
+        status = FAILED
+    steps.append(step)
+    actions += more
     for n, (ext_id, why) in enumerate(RECOMMENDED, 1):
         row = {"name": ext_id, "why": why}
         if not code:
@@ -253,6 +283,7 @@ def vscode_ensure(ctx):
             if q.returncode != 0:
                 row["plain"] = (q.stderr or q.stdout).strip()[-200:]
         steps.append(row)
+    steps.append(workspace_step(cfg, ctx.dry_run))
     s = merge_settings(settings_file(), baseline_settings(), ctx.dry_run)
     left = [r for r in steps if r["status"] in ("skipped", "failed")]
     plain = ("Nothing was changed. This is what I would set up." if ctx.dry_run else
@@ -261,5 +292,6 @@ def vscode_ensure(ctx):
     done = not ctx.dry_run and not left
     yield Resource("vscode-setup", "vscode", {"plain": plain, "steps": [{**r, "status": "ok" if r["status"] in ("installed", "already", "would-install") else "warn" if r["status"] == "skipped" else "fail"} for r in steps],
                                               "settings": s, "reload": "Reload VS Code's window (Ctrl+Shift+P, then Developer: Reload Window) so everything starts." if not ctx.dry_run else "",
-                                              **({"next": "Open VS Code in this folder with `code .`, or reload its window if it is open, then press Ctrl+Shift+P and run Workspace: Learn."} if done else {})},
-                   actions=[] if not left else [Action(("vscode", "ensure"), "Try again")], status=FAILED if any(r["status"] == "failed" for r in steps) else status)
+                                              **({"next": f"Open {workspace_file(cfg)} in VS Code (File, Open Workspace from File), then press Ctrl+Shift+P and run IF Console: Learn a Topic."} if done else {})},
+                   actions=(actions or []) + ([] if not left or actions else [Action(("vscode", "ensure"), "Try again")]),
+                   status=FAILED if any(r["status"] == "failed" for r in steps) else status)

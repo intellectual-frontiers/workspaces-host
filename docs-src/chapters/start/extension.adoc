@@ -1,38 +1,41 @@
 [#extension]
-== How the extension works
+== How the IF Console works
 
-The Workspace extension is not on the VS Code Marketplace, and that is on purpose. It lives in the `workspaces-host` copy on your computer,
-in a folder called `vscode`. `ws-host vscode add` links that folder into VS Code's extensions folder (`~/.vscode-server/extensions` when
-VS Code works inside Debian). Because it is the same folder, updating `ws-host` updates the extension: run `ws-host workspace ensure`, then
-reload the VS Code window. There is nothing to download, nothing to approve, and no account.
+`ws-host` ships no editor extension of its own. VS Code's window onto `ws-host`, and onto every other repository's command line, is the
+IF Console, one extension that the public root (`.github`) builds. It is not on the VS Code Marketplace, and that is on purpose: `ws-host vscode
+ensure` builds it on your computer from the public root's own code and installs the package it makes with VS Code's own `code` command, the same
+thing as VS Code's
+https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix[install from a VSIX] feature. There is nothing to
+download, no account, and no network connection from the extension itself.
 
-If VS Code cannot see the extension folder yet, `ws-host vscode add` builds a `.vsix` file and installs it with VS Code's own `code`
-command instead. That is the same thing as VS Code's
-https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix[install from a VSIX] feature.
+Building runs code that lives in the public root, so `ws-host` asks you once to trust that repository, with a typed `yes`. It builds again only
+when the public root has changed, which is when you run `ws-host update` or `ws-host workspace ensure` and then `ws-host vscode ensure`.
 
-=== What it does and does not do
+`ws-host vscode ensure` also writes `workspaces.code-workspace` in your workspaces folder. It lists the repositories you work in, and opening it
+(File, Open Workspace from File) shows each repository's own commands side by side. The IF Console finds a repository's command line by a file at
+its root, `.if-console.env`; `ws-host` has one.
 
-It is a window onto `ws-host`, and it holds no rules of its own:
+=== What you see
 
-* The status line at the bottom says whether your machine is well, in plain words. When there is something to do it says how many things,
-  for example *2 suggestions — click to fix*. Click it and VS Code lists them. Pick one and you see what is wrong, the exact line that fixes
-  it, a *Run* button where `ws-host` can do it for you and a *Copy command* button. A suggestion that no command can fix says what you do
-  yourself. When all is well, a click checks again and tells you so. You also get one message the first time something turns up, with a
-  button that runs the fix and one that shows them all.
-* The *Workspace* view lists every tool your trusted repositories bring, with who each is for.
-* Every result is a page with buttons for what you can do next. Under every button is a *Show command* link that gives you the one line
-  you could paste into Debian instead.
-* When it needs a value only you can give, such as which repository, it asks with a pick list.
+* The *Home* view says what needs you. Each row says what is wrong in plain words, shows the exact line that fixes it, and has a *Run* button where
+  a command can do it for you and a *Copy* button. Where no command can, it says what you do yourself. The count is on the status bar, and a click
+  on the status bar opens Home.
+* The views `ws-host` asks for, *Workspace* (your repositories), *Kits* and *Setup*, with a colored icon for how each row stands.
+* Every result opens in one panel, with buttons for what you can do next. A command that writes shows you what it would change first.
+* *IF Console: Learn a Topic…* lists the same pages as `ws-host help`, and each step is a button.
+* *IF Console: Get Help…* and *Copy Context…* gather a report with no passwords in it. Paste it to a person or an AI.
 * Problems from the checks appear in VS Code's *Problems* panel, at the file and line.
-* *Get help* gathers a report with no passwords in it. Paste it to a person or an AI.
 
 === What it will not do for you
 
 It will never decide for you. Trusting a repository asks you in a dialog, and nothing in VS Code, including an AI assistant, can press that
-button for you. It runs nothing in Restricted Mode, and nothing from a repository you have not trusted. It does not change your settings or
-write files; the tools it runs do, and only when you press a button.
+button for you. It runs nothing in Restricted Mode and nothing from a repository you have not trusted, it collects nothing, and it opens no
+network connection. The IF Console's own guide is in the public root, in `tools/if-console`.
 
 === Why trust matters
 
 Copying a repository does not let its code run. You trust a repository on purpose, once, and you can stop trusting it any time.
 `ws-host help trust` explains it, and so does Learn.
+
+VS Code asks *Do you trust the authors of the files in this folder?* Press *Yes, I trust the authors*. If it says it is in *Restricted
+Mode*, that is the same question; press *Manage*, then *Trust*. See https://code.visualstudio.com/docs/editor/workspace-trust[Workspace Trust].

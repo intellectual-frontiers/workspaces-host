@@ -8,7 +8,7 @@ working in VS Code with `ws-host`, and the written guide that walks them down it
 The person knows the very basics: they can open an app, copy a line and paste it
 into a terminal, and click. They run Debian, installed from the Microsoft Store,
 under WSL. The installer does the bootstrapping, one prescribed sign-in
-connects them to GitHub, VS Code opens with the extension and a sensible set of
+connects them to GitHub, VS Code opens with the IF Console and a sensible set of
 extensions and settings already in place, and Learn teaches the rest. The
 README gives the high-level flow; a site on GitHub Pages gives the next level of
 detail, troubleshooting, and how to take over in VS Code.
@@ -37,10 +37,11 @@ detail, troubleshooting, and how to take over in VS Code.
   says the person is not signed in, with that one command as the next action
   and exit status 0, and MUST go on when it cannot tell.
 - **FR-006**: `workspace ensure` MUST, when the `code` command is on the
-  machine, install the extension (0004-editor-extension FR-016) and offer
-  `vscode ensure` as an action; and MUST, when it is not, say in plain words
-  how to get VS Code reachable from the terminal. It MUST NOT apply VS Code
-  settings or install other extensions by itself.
+  machine, say whether the IF Console is installed and offer `vscode ensure` as
+  the action when it is not (0004-editor-extension FR-024); and MUST, when it is
+  not, say in plain words how to get VS Code reachable from the terminal. It MUST
+  NOT build or install the IF Console, apply VS Code settings or install other
+  extensions by itself.
 
 ## The first run
 
@@ -134,7 +135,8 @@ detail, troubleshooting, and how to take over in VS Code.
 
 ## Setting VS Code up
 
-- **FR-007**: `vscode ensure` (setup) MUST install the extension, install the
+- **FR-007**: `vscode ensure` (setup) MUST install the IF Console
+  (0004-editor-extension FR-021), install the
   recommended extensions the person lacks, and add the baseline settings the
   person has not set. It MUST take `--dry-run`, MUST be repeatable, and MUST
   change nothing the person set: a setting they have stays as they have it.
@@ -165,8 +167,8 @@ detail, troubleshooting, and how to take over in VS Code.
 - **FR-012**: The site MUST have, in this order: getting started on Windows 11
   with WSL and Debian from the Microsoft Store; signing in to GitHub; VS Code
   (installing it, the WSL extension, opening the workspace in WSL, `vscode
-  add` and `vscode ensure`, reloading, Learn); how the extension works and why it
-  is installed locally and not from the Marketplace; typical uses; the reference;
+  ensure`, the workspace file, reloading, Learn); how the IF Console works and why
+  it is built locally and not installed from the Marketplace; typical uses; the reference;
   and a FAQ with troubleshooting. Each step MUST say where to type it
   (Windows Terminal, the Debian window, VS Code) and what the person will see.
 - **FR-013**: The FAQ MUST cover every failure that stops the bootstrap or VS
@@ -229,7 +231,7 @@ detail, troubleshooting, and how to take over in VS Code.
 ## Success criteria
 
 - **SC-001**: A person with Windows 11 follows the site from the Microsoft Store
-  to VS Code with the extension, using only copy, paste and clicks.
+  to VS Code with the IF Console, using only copy, paste and clicks.
 - **SC-002**: No setting a person made is ever changed.
 
 ## Review & acceptance checklist
