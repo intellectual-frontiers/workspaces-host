@@ -77,6 +77,15 @@ T
 mise trust other >/dev/null
 mise -C other install 2>&1 | grep -v '░\|██' | tail -2   # says "already installed": the other checksum was never compared
 
+say "6b the fix: the SHA-256 prefix is part of the tool's name, so different content never shares an install and the same content always does"
+mkdir -p hash-a hash-b
+J=https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1
+printf '[tools."http:jre-2413149700df"]\nversion = "21.0.12.1+1"\nstrip_components = 1\n[tools."http:jre-2413149700df".platforms]\nlinux-x64 = { url = "%s/OpenJDK21U-jre_x64_linux_hotspot_21.0.12.1_1.tar.gz", checksum = "sha256:2413149700df0f7d440500a84a8f764c535f21e5a5e87d38328b64eec2c5b500" }\n' "$J" > hash-a/mise.toml
+printf '[tools."http:jre-14be1f35ebdb"]\nversion = "21.0.12.1+1"\nstrip_components = 1\n[tools."http:jre-14be1f35ebdb".platforms]\nlinux-x64 = { url = "%s/OpenJDK21U-jre_aarch64_linux_hotspot_21.0.12.1_1.tar.gz", checksum = "sha256:14be1f35ebdbd1f6e8d57eb911a3ffb74d6d9aa255abc5daf2b1302002cf2cf2" }\n' "$J" > hash-b/mise.toml
+mise trust hash-a >/dev/null; mise trust hash-b >/dev/null
+MISE_SAFE=1 mise -C hash-a install 2>&1 | tail -1; MISE_SAFE=1 mise -C hash-b install 2>&1 | tail -1
+ls "$MISE_DATA_DIR/installs" | grep '^http-jre'
+
 say "7 the host environment is not scrubbed by mise; the caller must"
 TEXMFHOME=/host/texmf mise -C provider exec -- sh -c 'echo TEXMFHOME=$TEXMFHOME'
 echo done
