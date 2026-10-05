@@ -1,5 +1,5 @@
 # Copied from the public root's tools/agora/lib/codicons.txt (0041-command-line FR-072); replace it from there, never by hand.
-# The codicon ids IF Console may name for an icon (0041-command-line FR-072): every name, aliases included, of the glyph map in
+# The codicon ids Workspaces Console may name for an icon (0041-command-line FR-072): every name, aliases included, of the glyph map in
 # @vscode/codicons 0.0.45 (src/template/mapping.json of https://registry.npmjs.org/@vscode/codicons/-/codicons-0.0.45.tgz,
 # integrity sha512-1KAZ7XCMagp5Gdrlr4bbbcAqgcIL623iO1wW6rfcSVGAVUQvR0WP7bQx1SbJ11gmV3fdQTSEFIJQ/5C+HuVasw==).
 # One id per line, sorted. Replace it from a newer package with the extension's own lock (0043-if-console FR-035); never by hand.

@@ -324,7 +324,7 @@ class Site(Home):
         text = (REPO / "docs-src" / "chapters" / "faq" / "troubleshooting.adoc").read_text()
         for needle in ("WSL is not installed", "Debian window opens and closes", "password", "curl: command not found", "certificate", "sudo", "ws-host: command not found",
                        "sign-in code", "clock", "could not read Username", "code: command not found", "opens on Windows, not inside Debian",
-                       "IF Console does not show up", "Restricted Mode", "settings alone", "left alone", "boxes instead of icons"):
+                       "Workspaces Console does not show up", "Restricted Mode", "settings alone", "left alone", "boxes instead of icons"):
             self.assertIn(needle, text, needle)
         self.assertGreaterEqual(text.count("*Why:*"), 16)
         self.assertEqual(text.count("*Why:*"), text.count("*Fix:*"))
@@ -337,7 +337,7 @@ class Site(Home):
 
     def test_the_extension_chapter_says_it_is_local_and_not_from_the_marketplace(self):
         text = (REPO / "docs-src" / "chapters" / "start" / "extension.adoc").read_text()
-        for needle in ("not on the VS Code Marketplace", "ws-host vscode\nensure", "IF Console", "trust", "decide", "Restricted Mode", ".if-console.env"):
+        for needle in ("not on the VS Code Marketplace", "ws-host vscode\nensure", "Workspaces Console", "trust", "decide", "Restricted Mode", ".if-console.env"):
             self.assertIn(needle, text.replace("Reload", "reload").replace("Restricted Mode", "Restricted Mode"))
 
     def test_the_readme_is_the_five_step_flow_and_links_the_site(self):
@@ -345,7 +345,7 @@ class Site(Home):
         self.assertIn("https://intellectual-frontiers.github.io/workspaces-host/", text)
         flow = text[text.index("## The flow"):text.index("## For contributors")]
         self.assertEqual(len(re.findall(r"^\d\. \*\*", flow, re.M)), 5)
-        for needle in ("Microsoft Store", "install.sh", "ws-host auth new github", "ws-host vscode ensure", "IF Console: Learn a Topic"):
+        for needle in ("Microsoft Store", "install.sh", "ws-host auth new github", "ws-host vscode ensure", "Workspaces Console: Learn a Topic"):
             self.assertIn(needle, flow)
         self.assertLess(len(text.splitlines()), 45)
 

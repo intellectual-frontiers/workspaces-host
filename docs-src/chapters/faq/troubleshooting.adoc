@@ -2,7 +2,7 @@
 == Troubleshooting
 
 Each entry gives what you see, why it happens, and what to do. They are in the order you will meet them. If yours is not here, press
-`Ctrl+Shift+P` in VS Code and run *IF Console: Get Help*, or in Debian run `ws-host context` and `ws-host doctor`, and paste what they print
+`Ctrl+Shift+P` in VS Code and run *Workspaces Console: Get Help*, or in Debian run `ws-host context` and `ws-host doctor`, and paste what they print
 to a person or an AI. They contain no passwords.
 
 === WSL is not installed, or Debian says an error starting with 0x8007
@@ -109,32 +109,24 @@ and try again.
 *Fix:* Install the *WSL* extension from Microsoft (see <<vscode>>). Then in the Debian window go to your repository and run `code .`. Or
 in VS Code press `Ctrl+Shift+P` and run *WSL: Open Folder in WSL*.
 
-=== The IF Console does not show up
+=== The Workspaces Console does not show up
 
-*Why:* VS Code has not reloaded since `ws-host vscode ensure`, or you ran it before VS Code had opened a folder in Debian once, or the build stopped
-because you did not trust the public root.
+*Why:* VS Code has not reloaded since `ws-host vscode ensure`, or you ran it before VS Code had opened a folder in Debian once, or there was no release of it to install yet.
 
 *Fix:* Open a folder with `code .` from Debian, then run `ws-host vscode ensure` again, then in VS Code press `Ctrl+Shift+P` and run *Developer:
-Reload Window*. Check *Extensions*, search `@installed`, and look for *IF Console*.
+Reload Window*. Check *Extensions*, search `@installed`, and look for *Workspaces Console*.
 
-=== `ws-host vscode ensure` asks me to trust the public root
+=== `ws-host vscode ensure` says it could not install the Workspaces Console
 
-*Why:* The public root has not published a ready-made IF Console package yet, so it is built by running code in the public root (`.github`), and
-`ws-host` never runs a repository's code until you trust it.
+*Why:* There is no release of the Workspaces Console with a fingerprint `ws-host` can check yet, or GitHub could not be reached, or the file that arrived did not
+match its fingerprint. In each case `ws-host` installs nothing rather than something it cannot vouch for.
 
-*Fix:* Type `yes` at the question. If you are not at a terminal, run `ws-host repo set github.com/intellectual-frontiers/.github --trusted` yourself, then
-`ws-host vscode ensure` again. You can stop trusting it later with `--untrusted`.
+*Fix:* Check the network (see the entry on the network above), then run `ws-host vscode ensure` again. If it says the file did not match, wait and try again later,
+and tell whoever looks after `ws-host`: a file that does not match should never be installed by hand.
 
-=== `ws-host vscode ensure` says it could not build the IF Console
+=== VS Code says Restricted Mode, and nothing in the Workspaces Console works
 
-*Why:* The build downloads its tools, so a slow or blocked network, or a disk that is full, stops it.
-
-*Fix:* Read the last lines it printed, which say what stopped it. Check the network (see the entry on the network above), then run `ws-host vscode
-ensure` again: it carries on, and builds again only if it did not finish.
-
-=== VS Code says Restricted Mode, and nothing in the IF Console works
-
-*Why:* VS Code does not trust the folder yet. The IF Console refuses to run anything in Restricted Mode, on purpose.
+*Why:* VS Code does not trust the folder yet. The Workspaces Console refuses to run anything in Restricted Mode, on purpose.
 
 *Fix:* Press *Manage* in the banner, then *Trust*. See https://code.visualstudio.com/docs/editor/workspace-trust[Workspace Trust].
 

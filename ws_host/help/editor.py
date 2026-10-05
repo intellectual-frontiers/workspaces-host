@@ -7,23 +7,21 @@ from ..core.registry import Step, topic
 @topic("editor", "Use VS Code as the way to do everything ws-host does.")
 def editor():
     return {
-        "plain": "VS Code shows your workspace's state, through the IF Console, and lets you act on it with buttons.",
+        "plain": "VS Code shows your workspace's state, through the Workspaces Console, and lets you act on it with buttons.",
         "sections": (
-            ("The IF Console", "ws-host does not ship an editor extension of its own. VS Code's window onto every repository's command line, ws-host's included, "
-                               "is the IF Console, which the public root provides. ws-host vscode ensure installs the package from the public root's latest release when it "
-                               "has one, after checking its fingerprint. Otherwise it builds it from that repository's code, and asks you once to trust that repository, "
-                               "because building runs its code."),
+            ("The Workspaces Console", "ws-host ships one editor extension, the Workspaces Console, which is VS Code's window onto every repository's command line, ws-host's included. "
+                               "ws-host vscode ensure installs the package from the latest release, after checking its fingerprint, and builds nothing on your computer."),
             ("What you see", "A Home view that says what needs you, each with the exact line that fixes it and a Run button; the views each command line asks "
                              "for (ws-host asks for Workspace, Kits and Setup); checks as tests; and a page for every resource."),
             ("Open your repositories together", "vscode ensure writes workspaces.code-workspace in your workspaces folder, listing the repositories you work in. "
-                                                "Open it with File, Open Workspace from File, and the IF Console shows each repository's own commands."),
-            ("Learn", "IF Console: Learn a Topic lists the same pages as ws-host help. Each step on a page is a button."),
+                                                "Open it with File, Open Workspace from File, and the Workspaces Console shows each repository's own commands."),
+            ("Learn", "Workspaces Console: Learn a Topic lists the same pages as ws-host help. Each step on a page is a button."),
             ("Decisions", "Anything only you may decide, such as trusting a repository, asks you in a dialog. Nothing, including an AI agent in the editor, can click it for you."),
-            ("Safe by design", "The IF Console runs only the command lines of repositories you trust and does nothing in VS Code's Restricted Mode. "
+            ("Safe by design", "The Workspaces Console runs only the command lines of repositories you trust and does nothing in VS Code's Restricted Mode. "
                                "It collects nothing and opens no network connection."),
         ),
         "steps": (
-            Step("Set up VS Code with the IF Console, helpful extensions and safe settings", ("vscode", "ensure")),
+            Step("Set up VS Code with the Workspaces Console, helpful extensions and safe settings", ("vscode", "ensure")),
             Step("Run the checks", ("check",)),
         ),
     }
@@ -46,7 +44,7 @@ def workspace_file():
             ("Add a repository", "Run ws-host repo add with its address, then ws-host vscode ensure. The repository appears in the window's Explorer."),
             ("Where the files live", "Workspace files go in your workspaces folder, ~/workspaces, and every repository is listed relative to that folder, "
                                      "for example github.com/acme/tools. That is why the file keeps working if you move or rename the folder."),
-            ("What is in the file", "A list of repositories with short names, a title that starts with Workspaces, and the recommendation to use the IF Console. "
+            ("What is in the file", "A list of repositories with short names, a title that starts with Workspaces, and the recommendation to use the Workspaces Console. "
                                     "ws-host adds what is missing and never changes a line you wrote yourself."),
             ("When it looks wrong", "If the Explorer shows one repository, you opened a folder instead of the file: close the window and open the file. "
                                     "If a repository is missing, run ws-host vscode ensure."),

@@ -1,0 +1,8 @@
+# The VS Code the Workspaces Console's real-editor tests run in (`ws-host check console`), pinned by address and checksum.
+[tools."http:vscode"]
+version = "1.140.0"
+strip_components = 1
+bin_path = "bin"
+[tools."http:vscode".platforms]
+linux-x64 = { url = "https://vscode.download.prss.microsoft.com/dbazure/download/stable/07f806f999227108933c2e30515b26eecc1fda74/code-stable-x64-1790759436.tar.gz", checksum = "sha256:d32031e9e213d59532af3cf32fcb8b357a1cdd10417967b4f5b5ba30436dc0dc" }
+linux-arm64 = { url = "https://vscode.download.prss.microsoft.com/dbazure/download/stable/07f806f999227108933c2e30515b26eecc1fda74/code-stable-arm64-1790759311.tar.gz", checksum = "sha256:9609a7655c4bc2a101b343ff22aa91f6678b46d9565b914c0608bd7f2e577fa6" }

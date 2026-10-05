@@ -45,7 +45,7 @@ gives you a friendlier terminal.
 
 === Check your work [editor]
 
-Press `Ctrl+Shift+P`, type `IF Console: Run Check`. Anything wrong appears in the *Problems* panel, where you can click to go to it.
+Press `Ctrl+Shift+P`, type `Workspaces Console: Run Check`. Anything wrong appears in the *Problems* panel, where you can click to go to it.
 
 === Make your terminal friendlier [shell]
 
@@ -54,13 +54,13 @@ make it permanent. bash and oh-my-posh work fine if you would rather stay as you
 
 === Work with an AI [ai]
 
-An AI can run everything `ws-host` does except the decisions that are yours. Give it the report from *IF Console: Get Help*.
+An AI can run everything `ws-host` does except the decisions that are yours. Give it the report from *Workspaces Console: Get Help*.
 
 === Update ws-host itself
 
-`ws-host workspace ensure` also brings `ws-host` up to date, because it is one of your repositories. Reload VS Code afterward, and run `ws-host vscode ensure` to rebuild the IF Console if the public root changed.
+`ws-host workspace ensure` also brings `ws-host` up to date, because it is one of your repositories. Reload VS Code afterward, and run `ws-host vscode ensure` to install the newest Workspaces Console if there is one.
 
 === Something is wrong and I am not sure what
 
-Press `Ctrl+Shift+P`, type `IF Console: Get Help`. It copies a report with no passwords in it. Paste it to someone who helps you, or to an AI.
+Press `Ctrl+Shift+P`, type `Workspaces Console: Get Help`. It copies a report with no passwords in it. Paste it to someone who helps you, or to an AI.
 Or look in <<troubleshooting>>.

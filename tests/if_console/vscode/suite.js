@@ -1,5 +1,5 @@
 'use strict';
-// ws-host in a real VS Code, served by the IF Console (0001-ws-host FR-018, 0004-editor-extension FR-020 to FR-025). It needs nothing but
+// ws-host in a real VS Code, served by the Workspaces Console (0001-ws-host FR-018, 0004-editor-extension FR-027). It needs nothing but
 // the public root's runner, which names this directory and the ws-host clone as a workspace folder called ws-host.
 const assert = require('assert');
 const cp = require('child_process');
@@ -10,17 +10,18 @@ const support = require(path.join(process.env.IF_CONSOLE_EXTENSION_DIR, 'test', 
 const { test } = require(path.join(process.env.IF_CONSOLE_EXTENSION_DIR, 'test', 'vscode', 'suite', 'harness'));
 const { hook, waitFor } = support;
 
-const FOLDER = 'ws-host';
-const root = () => JSON.parse(process.env.IF_CONSOLE_VSCODE_FOLDERS).find((f) => f.name === FOLDER).path;
+// The Console's runner names the clone under test `real`; this repository is that clone.
+const FOLDER = 'real';
+const root = () => process.env.IF_CONSOLE_REAL_ROOT;
 // What ws-host itself says, run as the test's own reference and never through the extension.
 const ws = (...argv) => JSON.parse(cp.execFileSync(path.join(root(), 'ws-host'), [...argv, '--json'], { cwd: root(), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).trim().split('\n').pop());
 const entry = (view, folder) => view.find((e) => e.description.startsWith(folder));
 const labels = (e) => e.children.map((c) => c.label);
 const ALL = (e) => e.children.flatMap((c) => [c, ...(c.children ? ALL(c) : [])]);
 
-test('the IF Console finds ws-host by its .if-console.env and reads what it says about itself', async () => {
-  const ext = vscode.extensions.getExtension('intellectual-frontiers.if-console');
-  assert.ok(ext, 'VS Code loaded the IF Console');
+test('the Workspaces Console finds ws-host by its .if-console.env and reads what it says about itself', async () => {
+  const ext = vscode.extensions.getExtension('intellectual-frontiers.workspaces-console');
+  assert.ok(ext, 'VS Code loaded the Workspaces Console');
   await ext.activate();
   const snap = await waitFor(async () => { const s = await hook().describe(); return s.repositories.find((r) => r.folder === FOLDER && r.state === 'ready') ? s : null; }, 'ws-host to be ready');
   const me = snap.repositories.find((r) => r.folder === FOLDER);
@@ -70,8 +71,9 @@ test('what needs a person is on Home with the exact line that fixes it, from doc
   const fixes = (doctor.actions || []).filter((a) => a.enabled !== false && a.cli).map((a) => a.cli);
   const snap = await hook().describe({ rows: true });
   const home = entry(snap.views.home, FOLDER);
-  assert.ok(home, 'Home has a group for ws-host');
-  const lines = ALL(home).map((r) => r.description);
+  // With one command line in the window Home lists what needs a person directly; with several it groups them by repository.
+  const rows = home ? ALL(home) : snap.views.home.flatMap((e) => [e, ...(e.children ? ALL(e) : [])]);
+  const lines = rows.map((r) => r.description);
   for (const cli of fixes) assert.ok(lines.includes(cli), `Home shows ${cli}`);
   for (const c of doctor.data.checks.filter((k) => k.status === 'warn' || k.status === 'fail')) {
     assert.ok(c.action !== undefined || c.cli || c.todo, `${c.name} is actionable`);
@@ -82,6 +84,6 @@ test('ws-host runs with the editor as its surface, and nothing it was asked is a
   const snap = await hook().describe();
   assert.ok(snap.status.text.length > 0, 'the status bar says how things are');
   const decisions = ws('command', 'list').data.commands.filter((c) => c.category === 'decision');
-  assert.deepStrictEqual(decisions.map((c) => c.id), ['repo set']);
+  assert.deepStrictEqual(decisions.map((c) => c.id), ['release publish', 'repo set']);
   assert.ok(decisions[0].surfaces.includes('editor') && !decisions[0].surfaces.includes('mcp'), 'a decision is never offered over MCP');
 });

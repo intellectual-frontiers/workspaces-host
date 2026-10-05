@@ -100,6 +100,29 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 
 |===
 
+=== release
+
+[cols="3,1,2,5"]
+|===
+|Usage |Category |Where it runs |What it does
+
+|`ws-host release build [--output PATH] [--skip-tests]`
+|build
+|terminal, editor, mcp
+|Build a release: the wheel, the app tarball, the Workspaces Console and their checksums
+
+|`ws-host release check [--output PATH] [--rebuild]`
+|check
+|terminal, editor, mcp
+|Check a built release: versions, checksums, contents, that it runs, and with --rebuild that it is reproducible
+
+|`ws-host release publish [--output PATH]`
+|decision
+|terminal, editor
+|Tag this commit and publish the release to GitHub Releases, with your own gh sign-in
+
+|===
+
 === repo
 
 [cols="3,1,2,5"]
@@ -168,7 +191,7 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |`ws-host vscode ensure`
 |setup
 |terminal, editor
-|Put VS Code in its recommended state: the IF Console, helpful extensions and safe settings
+|Put VS Code in its recommended state: the Workspaces Console, helpful extensions and safe settings
 
 |===
 

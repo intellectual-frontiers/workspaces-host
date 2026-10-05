@@ -107,10 +107,10 @@ def workspace_ensure(ctx):
     editor_actions = []
     if shutil.which("code"):
         if vscode_cmd.console_installed_here():
-            steps.append({"name": "editor", "status": "ok", "plain": "VS Code is here and the IF Console is installed."})
+            steps.append({"name": "editor", "status": "ok", "plain": "VS Code is here and the Workspaces Console is installed."})
         else:
-            steps.append({"name": "editor", "status": "warn", "plain": "VS Code is here. Set it up with the IF Console, the helpful extensions and safe settings with `ws-host vscode ensure`."})
-            editor_actions.append(Action(("vscode", "ensure"), "Set up VS Code with the IF Console, helpful extensions and safe settings"))
+            steps.append({"name": "editor", "status": "warn", "plain": "VS Code is here. Set it up with the Workspaces Console, the helpful extensions and safe settings with `ws-host vscode ensure`."})
+            editor_actions.append(Action(("vscode", "ensure"), "Set up VS Code with the Workspaces Console, helpful extensions and safe settings"))
     else:
         steps.append({"name": "editor", "status": "warn", "plain": "VS Code is not reachable from this terminal yet. Install it on Windows, open it once from here with `code .`, then run `ws-host vscode ensure`."})
     yield _step("doctor", "Checking this machine's health...")

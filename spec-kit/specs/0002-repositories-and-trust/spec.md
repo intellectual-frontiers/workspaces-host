@@ -101,7 +101,7 @@ work, and a failed clone reported as done. Each is a test here.
   MUST be a `decision` command (0041-command-line FR-014, FR-023): it MUST
   NOT be exposed over MCP, and it MUST need a confirmation only a person can
   give: in the terminal an answer typed at a prompt that needs a terminal,
-  and in the editor the IF Console's modal confirmation
+  and in the editor the Workspaces Console's modal confirmation
   (0041-command-line FR-051).
 - **FR-015**: When trust is granted `ws-host` MUST record the repository's
   commit in its state directory, and `doctor` MUST warn, without failing,

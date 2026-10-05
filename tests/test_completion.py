@@ -83,7 +83,7 @@ class Generated(Home):
         self.assertIn("[ws-host ] ", out)
         lines = dict(l.split("] ", 1) for l in out.strip().splitlines())
         self.assertIn("workspace", lines["[ws-host "].split())
-        self.assertEqual(lines["[ws-host re"].split(), ["repo"])
+        self.assertEqual(lines["[ws-host re"].split(), ["release", "repo"])
         self.assertEqual(sorted(lines["[ws-host repo "].split()), sorted(self.model["verbs"]["repo"]))
         self.assertEqual(lines["[ws-host kit add "].split(), ["base", "press", "rust", "shell"])
         self.assertIn("--plain", lines["[ws-host shell add bash --"].split())

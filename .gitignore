@@ -5,3 +5,10 @@ node_modules/
 *.vsix
 .vscode-test/
 _site/
+dist/
+build/
+console/node_modules/
+console/dist/
+console/out/
+*.egg-info/
+console/l10n/

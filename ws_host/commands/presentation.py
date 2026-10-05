@@ -1,6 +1,6 @@
 """How ws-host looks in an editor (0041-command-line FR-064): its views, its nouns, and each command's palette title and icon.
 
-Nothing here runs anything. `command list` and `command show` emit it, `check registry` checks it (0041 FR-072), and the IF Console
+Nothing here runs anything. `command list` and `command show` emit it, `check registry` checks it (0041 FR-072), and the Workspaces Console
 draws its sidebar, rows and command palette from it, so the editor holds no knowledge of ws-host."""
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ reg.noun("vscode", "VS Code", "extensions", "setup")
 reg.noun("shell", "Prompt", "terminal", "setup")
 reg.noun("completion", "Tab completion", "keyboard", "setup")
 reg.noun("docs", "Guide", "book")
+reg.noun("release", "Release", "package")
 reg.noun("skill", "Agent skill", "sparkle")
 reg.noun("command", "Command", "terminal-cmd")
 
@@ -33,6 +34,7 @@ for _id, _title, _icon in (
     ("context", "Show Context", None), ("docs build", "Build Guide", "book"), ("docs generate", "Generate Guide Reference", None),
     ("doctor", "Check Machine", "pulse"), ("fresh", "Check Generated Files", None), ("help", "Learn Daily Work", "book"),
     ("kit add", "Install Kit…", "cloud-download"), ("kit list", "List Kits", None), ("kit show", "Show Kit…", None),
+    ("release build", "Build Release", "package"), ("release check", "Check Release", "checklist"), ("release publish", "Publish Release", "cloud-upload"),
     ("repo add", "Add Repository", "add"), ("repo list", "List Repositories", None), ("repo set", "Set Repository Trust…", "shield"),
     ("repo status", "Show Repository Status", None), ("repo sync", "Sync Repositories", "sync"),
     ("shell add", "Set Up Prompt…", "terminal"), ("skill generate", "Generate Agent Skill", None), ("test", "Run Tests", "beaker"),

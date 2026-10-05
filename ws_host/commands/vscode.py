@@ -1,7 +1,7 @@
-"""`vscode ensure`: put VS Code in its recommended state, with the IF Console as its interface (0004-editor-extension FR-001 to FR-010).
+"""`vscode ensure`: put VS Code in its recommended state, with the Workspaces Console as its interface (0004-editor-extension).
 
-The extension is the IF Console of the public root (0043-if-console in `.github`), built there by `agora extension build` and installed
-with `code --install-extension`. ws-host holds no extension of its own."""
+The extension is the Workspaces Console, built and released from this repository (`console/`, 0007-releases). `vscode ensure` installs the package
+of the latest GitHub release after checking its SHA-256, and builds nothing on the person's machine."""
 from __future__ import annotations
 
 import json
@@ -9,20 +9,16 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import urllib.request
 from pathlib import Path
 
 from ..core import config, machine, paths, progress, registry as reg
 from ..core.resource import Action, FAILED, OK, Resource, WsError
 from ..install import fetch
-from ..lib import git, repos, trust as trust_mod
+from ..lib import repos
 
-CONSOLE_ID = "intellectual-frontiers.if-console"
-OLD_IDS = ("intellectual-frontiers.workspaces-host",)       # the extension ws-host shipped before it used the IF Console
-PUBLIC_ROOT = config.STARTER_REPOS[0]
-BUILD_WAIT = 1800
-RELEASE_API = "https://api.github.com/repos/intellectual-frontiers/.github/releases/latest"
+CONSOLE_ID = "intellectual-frontiers.workspaces-console"
+RELEASE_API = "https://api.github.com/repos/intellectual-frontiers/workspaces-host/releases/latest"
 
 
 CODE_WAIT = 900     # seconds: the first call downloads VS Code's Linux helper into WSL, which is slow on a slow network
@@ -46,13 +42,8 @@ def run_code(args: list[str], label: str, timeout: int = CODE_WAIT) -> subproces
 
 
 
-def public_root(cfg) -> tuple[repos.RepoId, Path]:
-    rid = repos.parse_id(PUBLIC_ROOT)
-    return rid, rid.path(cfg)
-
-
 def stamp_file() -> Path:
-    return paths.state_dir() / "if-console"
+    return paths.state_dir() / "workspaces-console"
 
 
 def read_stamp() -> dict:
@@ -73,33 +64,6 @@ def console_installed_here() -> bool:
     return bool(read_stamp().get("installed"))
 
 
-def newest_vsix(root: Path) -> Path | None:
-    found = sorted((root / "build").glob("if-console-*.vsix"), key=lambda p: p.stat().st_mtime)
-    return found[-1] if found else None
-
-
-def build_console(root: Path) -> Path:
-    """Build the IF Console's package with the public root's own command line (0043-if-console FR-027). Raises WsError."""
-    launcher = root / "agora"
-    if not os.access(launcher, os.X_OK):
-        raise WsError("no-builder", f"{launcher} is not there", "The public root's command line is missing, so I cannot build the IF Console. Update the public root first.",
-                      [Action(("repo", "sync"), "Update the repositories", {"all": True})])
-    try:
-        with progress.working("Building the IF Console (the first time takes a minute or two)"):
-            p = subprocess.run([str(launcher), "extension", "build"], cwd=str(root), capture_output=True, text=True, timeout=BUILD_WAIT)
-    except subprocess.TimeoutExpired:
-        raise WsError("build-timeout", "the build took too long", "Building the IF Console is taking very long, probably because the network is slow. Nothing was lost; run this again and it carries on.",
-                      [Action(("vscode", "ensure"), "Try again")], exit_code=1)
-    if p.returncode != 0:
-        tail = " ".join((p.stderr or p.stdout).strip().splitlines()[-3:])
-        raise WsError("build-failed", f"agora extension build exited {p.returncode}: {tail}", "I could not build the IF Console. " + (tail or ""),
-                      [Action(("vscode", "ensure"), "Try again")], exit_code=1)
-    vsix = newest_vsix(root)
-    if vsix is None:
-        raise WsError("no-package", "the build made no .vsix", "The build finished but made no package, so there is nothing to install.", exit_code=1)
-    return vsix
-
-
 def _get_json(url: str):
     req = urllib.request.Request(url, headers={"User-Agent": "ws-host", "Accept": "application/vnd.github+json"})
     with urllib.request.urlopen(req, timeout=20) as r:
@@ -107,14 +71,14 @@ def _get_json(url: str):
 
 
 def release_package(offline: bool = False) -> dict | None:
-    """The public root's newest release that carries the IF Console's package with a SHA-256 digest, as {tag, name, url, sha256}; None when it
+    """The public root's newest release that carries the Workspaces Console's package with a SHA-256 digest, as {tag, name, url, sha256}; None when it
     has none, when GitHub cannot be reached or when the package has no digest to check (0004-editor-extension FR-026). Never raises."""
     if offline:
         return None
     try:
         rel = _get_json(RELEASE_API)
         for a in rel.get("assets", []):
-            m = re.fullmatch(r"if-console-[0-9][A-Za-z0-9._-]*\.vsix", str(a.get("name", "")))
+            m = re.fullmatch(r"workspaces-console-[0-9][A-Za-z0-9._-]*\.vsix", str(a.get("name", "")))
             digest = str(a.get("digest") or "")
             if m and digest.startswith("sha256:") and re.fullmatch(r"[0-9a-f]{64}", digest[7:]) and str(a.get("browser_download_url", "")).startswith("https://"):
                 return {"tag": str(rel.get("tag_name", "")), "name": a["name"], "url": a["browser_download_url"], "sha256": digest[7:]}
@@ -125,84 +89,43 @@ def release_package(offline: bool = False) -> dict | None:
 
 def download_release(rel: dict) -> Path:
     """Fetch the release package, verify its SHA-256 before anything uses it, and give it the name VS Code needs. Raises fetch.FetchError."""
-    with progress.working("Downloading the IF Console"):
+    with progress.working("Downloading the Workspaces Console"):
         got = fetch.download(rel["url"], rel["sha256"])
-    out = paths.cache_dir() / "if-console" / rel["name"]
+    out = paths.cache_dir() / "workspaces-console" / rel["name"]
     out.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(got, out)
     return out
 
 
 def release_step(ctx, rel: dict, have: set) -> dict:
-    name = "IF Console extension"
+    name = "Workspaces Console extension"
     current = read_stamp().get("release") == rel["tag"] and CONSOLE_ID in have
     if ctx.dry_run:
         return {"name": name, "status": "already" if current else "would-install",
-                "plain": "The IF Console is installed and current." if current else f"I would download and install the IF Console {rel['tag']} from the public root's release."}
+                "plain": "The Workspaces Console is installed and current." if current else f"I would download and install the Workspaces Console {rel['tag']} from the public root's release."}
     if not current:
         vsix = download_release(rel)
-        r = run_code(["--install-extension", str(vsix), "--force"], "Installing the IF Console")
+        r = run_code(["--install-extension", str(vsix), "--force"], "Installing the Workspaces Console")
         if r.returncode != 0:
-            raise WsError("code-install", (r.stderr or r.stdout).strip()[-300:], "VS Code's `code` command could not install the IF Console.", [Action(("vscode", "ensure"), "Try again")])
+            raise WsError("code-install", (r.stderr or r.stdout).strip()[-300:], "VS Code's `code` command could not install the Workspaces Console.", [Action(("vscode", "ensure"), "Try again")])
         write_stamp(release=rel["tag"], installed=rel["tag"])
-    for old in OLD_IDS:
-        if old in have:
-            run_code(["--uninstall-extension", old], f"Removing the older {old.split('.')[-1]} extension")
     return {"name": name, "status": "already" if current else "installed",
-            "plain": "The IF Console is installed and current." if current else f"Installed the IF Console {rel['tag']} from the public root's release, after checking its fingerprint. Reload VS Code's window to start it."}
+            "plain": "The Workspaces Console is installed and current." if current else f"Installed the Workspaces Console {rel['tag']} from the public root's release, after checking its fingerprint. Reload VS Code's window to start it."}
 
 
 def console_step(ctx, cfg, code: str | None, have: set) -> tuple[dict, list[Action]]:
-    """Build the IF Console if the public root changed, install it if it is not there, and remove the extension ws-host used to ship."""
-    name = "IF Console extension"
-    rid, root = public_root(cfg)
+    """Install the Workspaces Console from this repository's latest release, once, after checking its fingerprint (0007-releases FR-010)."""
+    name = "Workspaces Console extension"
     if not code:
         return {"name": name, "status": "skipped", "plain": "VS Code's `code` command is not available here yet; open VS Code from this terminal once with `code .`, then run this again."}, []
-    note = ""
     rel = release_package(ctx.offline)
-    if rel:
-        try:
-            return release_step(ctx, rel, have), []      # a published, verified package needs no build and no trust (FR-026)
-        except fetch.FetchError as e:
-            note = f" The release package could not be used ({e.message[:120]}), so I built it instead."
-    if not (root / ".git").exists():
-        return {"name": name, "status": "skipped", "plain": f"The public root ({rid.name}) is not on this machine yet, and the IF Console is built from it. Copy it first."}, \
-               [Action(("workspace", "ensure"), "Ensure everything is set up and up to date")]
-    ok, why = trust_mod.trust_state(rid, cfg)
-    if not ok:
-        trust_action = [Action(("repo", "set"), "Trust the public root", {"repo": str(rid), "trusted": True})]
-        if ctx.dry_run:
-            return {"name": name, "status": "would-install", "plain": "I would ask you to trust the public root, then build and install the IF Console."}, trust_action
-        if not (sys.stdin.isatty() and sys.stdout.isatty()):
-            return {"name": name, "status": "skipped", "plain": "The IF Console is built by running the public root's own code, so you decide first whether to trust it."}, trust_action
-        try:
-            ctx.confirm(f"The IF Console is built by running code from {rid}. Trust it?")
-            trust_mod.grant(rid, cfg)
-        except WsError:
-            return {"name": name, "status": "skipped", "plain": "You did not trust the public root, so I did not build the IF Console. Nothing was changed."}, trust_action
-    head = git.out(root, "rev-parse", "HEAD")
-    vsix = newest_vsix(root)
-    stale = read_stamp().get("built") != head or vsix is None
-    installed = CONSOLE_ID in have
-    if ctx.dry_run:
-        what = "build and install" if stale else "install" if not installed else "keep"
-        return {"name": name, "status": "would-install" if what != "keep" else "already", "plain": f"I would {what} the IF Console." if what != "keep" else "The IF Console is installed and current."}, []
-    built = False
-    if stale:
-        vsix = build_console(root)
-        write_stamp(built=head)
-        built = True
-    if built or not installed:
-        r = run_code(["--install-extension", str(vsix), "--force"], "Installing the IF Console")
-        if r.returncode != 0:
-            raise WsError("code-install", (r.stderr or r.stdout).strip()[-300:], "VS Code's `code` command could not install the IF Console.", [Action(("vscode", "ensure"), "Try again")])
-        write_stamp(installed=head)
-    for old in OLD_IDS:
-        if old in have:
-            run_code(["--uninstall-extension", old], f"Removing the older {old.split('.')[-1]} extension")
-    plain = (("Built and installed the IF Console. Reload VS Code's window to start it." if built else
-             "Installed the IF Console. Reload VS Code's window to start it." if not installed else "The IF Console is installed and current.") + note)
-    return {"name": name, "status": "installed" if (built or not installed) else "already", "plain": plain}, []
+    if rel is None:
+        return {"name": name, "status": "skipped", "plain": "I could not find a published release of the Workspaces Console with a checksum I can verify "
+                                                           "(there may be none yet, or GitHub could not be reached), so I did not install it."}, [Action(("vscode", "ensure"), "Try again")]
+    try:
+        return release_step(ctx, rel, have), []
+    except fetch.FetchError as e:
+        return {"name": name, "status": "failed", "plain": f"The release package did not pass its check ({e.message[:120]}), so I did not install it."}, [Action(("vscode", "ensure"), "Try again")]
 
 
 def workspace_file(cfg) -> Path:
@@ -217,7 +140,7 @@ WORKSPACE_SETTINGS = {
 
 
 def workspace_step(cfg, dry: bool) -> dict:
-    """A multi-root workspace of the repositories you work in, so the IF Console shows each repository's command line (0043 FR-007)."""
+    """A multi-root workspace of the repositories you work in, so the Workspaces Console shows each repository's command line (0043 FR-007)."""
     f = workspace_file(cfg)
     wanted = []
     for r in sorted(repos.known(cfg)[0], key=str):
@@ -314,7 +237,7 @@ def merge_settings(f: Path, wanted: dict, dry: bool) -> dict:
             "added": sorted(added), "kept": sorted(kept), "plain": ""}
 
 
-@reg.command("vscode", "ensure", category="setup", summary="Put VS Code in its recommended state: the IF Console, helpful extensions and safe settings",
+@reg.command("vscode", "ensure", category="setup", summary="Put VS Code in its recommended state: the Workspaces Console, helpful extensions and safe settings",
              surfaces=("cli", "editor"))
 def vscode_ensure(ctx):
     steps, status, actions = [], OK, []
@@ -322,9 +245,9 @@ def vscode_ensure(ctx):
     cfg = config.load()
     if not ctx.dry_run:
         # Say what is about to happen, that nothing is needed from the person, and how long it can take, before anything slow starts.
-        yield Resource("progress", "vscode-start", {"plain": f"Setting up VS Code: the IF Console, {len(RECOMMENDED)} helpful extensions and a few safe settings. "
+        yield Resource("progress", "vscode-start", {"plain": f"Setting up VS Code: the Workspaces Console, {len(RECOMMENDED)} helpful extensions and a few safe settings. "
                                                     "There is nothing for you to do while it works. " +
-                                                    ("The first time, VS Code downloads a small helper into Debian and the IF Console is built, which can take a few minutes "
+                                                    ("The first time, VS Code downloads a small helper into Debian and the Workspaces Console is built, which can take a few minutes "
                                                      "on a slow network; the line below shows how it is going." if code and first_time_in_wsl() else
                                                      "It usually takes a few minutes the first time and under a minute after."), "step": "vscode-start"})
     have = set()
@@ -338,7 +261,7 @@ def vscode_ensure(ctx):
     try:
         step, more = console_step(ctx, cfg, code, have)
     except WsError as e:
-        step, more = {"name": "IF Console extension", "status": "failed", "plain": e.plain}, list(e.actions)
+        step, more = {"name": "Workspaces Console extension", "status": "failed", "plain": e.plain}, list(e.actions)
         status = FAILED
     steps.append(step)
     actions += more
@@ -371,6 +294,6 @@ def vscode_ensure(ctx):
     done = not ctx.dry_run and not left
     yield Resource("vscode-setup", "vscode", {"plain": plain, "steps": [{**r, "status": "ok" if r["status"] in ("installed", "already", "would-install") else "warn" if r["status"] == "skipped" else "fail"} for r in steps],
                                               "settings": s, "reload": "Reload VS Code's window (Ctrl+Shift+P, then Developer: Reload Window) so everything starts." if not ctx.dry_run else "",
-                                              **({"next": f"Open {workspace_file(cfg)} in VS Code (File, Open Workspace from File), then press Ctrl+Shift+P and run IF Console: Learn a Topic."} if done else {})},
+                                              **({"next": f"Open {workspace_file(cfg)} in VS Code (File, Open Workspace from File), then press Ctrl+Shift+P and run Workspaces Console: Learn a Topic."} if done else {})},
                    actions=(actions or []) + ([] if not left or actions else [Action(("vscode", "ensure"), "Try again")]),
                    status=FAILED if any(r["status"] == "failed" for r in steps) else status)

@@ -1,8 +1,41 @@
+[build-system]
+# Pinned exactly so that a build is the same build; the wheel and the sdist are the repository's release artifacts (0007-releases).
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
 [project]
 name = "ws-host"
-version = "0.1.0"
+dynamic = ["version"]
 description = "The environment orchestrator for Intellectual Frontiers repositories"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = []
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: System :: Installation/Setup",
+]
+
+[project.urls]
+Homepage = "https://intellectual-frontiers.github.io/workspaces-host/"
+Source = "https://github.com/intellectual-frontiers/workspaces-host"
+Issues = "https://github.com/intellectual-frontiers/workspaces-host/issues"
+
+[project.scripts]
+ws-host = "ws_host.__main__:run"
+
+[tool.hatch.version]
+# The one place the version is written: ws_host/__init__.py (VERSION), which the command line, the wheel and the Console all use.
+path = "ws_host/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ws_host"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/ws_host", "/tests", "/README.md", "/LICENSE", "/pyproject.toml"]
 
 [dependency-groups]

@@ -27,7 +27,7 @@ class Ctx:
     debug: bool = False
     offline: bool = False
     values: dict = field(default_factory=dict)
-    confirmed: bool = False     # the IF Console passes --confirmed only after its modal (0041 FR-051)
+    confirmed: bool = False     # the Workspaces Console passes --confirmed only after its modal (0041 FR-051)
 
     def confirm(self, question: str) -> None:
         """A `decision` needs a confirmation only a person can give: a typed answer at a terminal, or the editor's modal

@@ -38,7 +38,7 @@ exactly as it was and reported in plain words. Each rule is a test: a reattach t
 === The wire shape
 
 Every orchestrator answers `command list`, `command show` and its resources in one shape, so the editor needs no
-knowledge of any of them. A document names its schema as `<name>/<kind>@<n>`; the IF Console reads versions up to the one it
+knowledge of any of them. A document names its schema as `<name>/<kind>@<n>`; the Workspaces Console reads versions up to the one it
 knows and says "update needed" in plain words about a newer one.
 
 === How the editor draws `ws-host`
