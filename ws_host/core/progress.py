@@ -40,8 +40,8 @@ def visible(stream=None) -> bool:
 class Working:
     """`with Working("Copying the guide"):` around the slow call; `detail()` adds "12 of 40 MB" and the like."""
 
-    def __init__(self, label: str, stream=None):
-        self.label, self.stream, self.text = label, stream or sys.stderr, ""
+    def __init__(self, label: str, stream=None, probe=None):
+        self.label, self.stream, self.text, self.probe = label, stream or sys.stderr, "", probe
         self.shown = False
         self.started = 0.0
         self._stop = threading.Event()
@@ -68,6 +68,11 @@ class Working:
             if elapsed < DELAY:
                 continue
             self.shown = True
+            if self.probe:
+                try:
+                    self.text = self.probe() or self.text
+                except Exception:        # a progress hint must never break the step it describes
+                    self.probe = None
             line = f"{self._style.cyan(frames[i % len(frames)])} {self.label}" + (f" {self._style.dim(self.text)}" if self.text else "") \
                    + self._style.dim(f" ({int(elapsed)}s)")
             self.stream.write("\r\033[K" + line)
@@ -91,8 +96,23 @@ class Working:
         return False
 
 
-def working(label: str) -> Working:
-    return Working(label)
+def working(label: str, probe=None) -> Working:
+    """`probe`, if given, is asked on every tick for text such as "42.0 MB so far"."""
+    return Working(label, probe=probe)
+
+
+def folder_megabytes(path, what: str = "so far"):
+    """A probe for a step whose program downloads into `path` and says nothing: how large the folder has grown."""
+    def probe():
+        total = 0
+        for root, _, files in os.walk(path):
+            for f in files:
+                try:
+                    total += os.lstat(os.path.join(root, f)).st_size
+                except OSError:
+                    pass
+        return f"{total / 1_000_000:.0f} MB {what}" if total else ""
+    return probe
 
 
 def detail(text: str) -> None:

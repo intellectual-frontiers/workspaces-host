@@ -9,7 +9,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from ..core import machine, paths, registry as reg
+from ..core import machine, paths, progress, registry as reg
 from ..core.resource import Action, FAILED, OK, Resource, WsError
 
 CT = ('<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
@@ -70,6 +70,26 @@ def register(index: Path, ext_dir: Path, ext_id: str, version: str, folder: str)
     return True
 
 
+CODE_WAIT = 900     # seconds: the first call downloads VS Code's Linux helper into WSL, which is slow on a slow network
+
+
+def first_time_in_wsl() -> bool:
+    return bool(machine.distro()["wsl"]) and not (paths.home() / ".vscode-server" / "bin").exists()
+
+
+def run_code(args: list[str], label: str, timeout: int = CODE_WAIT) -> subprocess.CompletedProcess:
+    """Run VS Code's `code` command as one visible step: a spinner with the helper's download size, and a plain error when it takes too long.
+    The first call in WSL makes Windows' `code` fetch VS Code's Linux helper into ~/.vscode-server and says nothing while it does."""
+    probe = progress.folder_megabytes(paths.home() / ".vscode-server", "downloaded") if first_time_in_wsl() else None
+    try:
+        with progress.working(label, probe):
+            return subprocess.run(["code", *args], capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise WsError("code-timeout", f"`code {args[0]}` took longer than {timeout // 60} minutes",
+                      "VS Code's `code` command is taking very long, probably because the network is slow. Nothing was lost. Run this again and it will "
+                      "carry on from where it got to.", [Action(("vscode", "advance"), "Try again")], exit_code=1)
+
+
 def install_extension(dry: bool = False) -> dict:
     """Install the extension (0004-editor-extension FR-016). Returns {plain, did, plan}; raises WsError."""
     ext_id, version = ident()
@@ -93,7 +113,7 @@ def install_extension(dry: bool = False) -> dict:
     elif shutil.which("code"):
         with tempfile.TemporaryDirectory() as d:
             vsix = build_vsix(Path(d))
-            p = subprocess.run(["code", "--install-extension", str(vsix), "--force"], capture_output=True, text=True, timeout=300)
+            p = run_code(["--install-extension", str(vsix), "--force"], "Setting up VS Code inside Debian (the first time downloads its helper)")
         if p.returncode != 0:
             raise WsError("code-install", (p.stderr or p.stdout).strip()[-300:], "VS Code's `code` command could not install the extension.")
         notes.append("installed it with `code --install-extension`")
@@ -190,6 +210,12 @@ def merge_settings(f: Path, wanted: dict, dry: bool) -> dict:
 def vscode_advance(ctx):
     steps, status = [], OK
     code = shutil.which("code")
+    if not ctx.dry_run:
+        # Say what is about to happen, that nothing is needed from the person, and how long it can take, before anything slow starts.
+        yield Resource("progress", "vscode-start", {"plain": f"Setting up VS Code: the Workspace extension, {len(RECOMMENDED)} helpful extensions and a few safe settings. "
+                                                    "There is nothing for you to do while it works. " +
+                                                    ("The first time, VS Code downloads a small helper into Debian, which can take a few minutes on a slow network; the line below "
+                                                     "shows how much has arrived." if code and first_time_in_wsl() else "It usually takes under a minute."), "step": "vscode-start"})
     ext = {"name": "Workspace extension", "status": "skipped"}
     try:
         r = install_extension(ctx.dry_run)
@@ -200,9 +226,14 @@ def vscode_advance(ctx):
     steps.append(ext)
     have = set()
     if code:
-        p = subprocess.run([code, "--list-extensions"], capture_output=True, text=True, timeout=120)
+        try:
+            p = run_code(["--list-extensions"], "Asking VS Code what is installed")
+        except WsError as e:
+            yield Resource("vscode-setup", "vscode", {"plain": e.plain, "steps": steps, "settings": {}, "reload": ""},
+                           actions=e.actions, status=FAILED)
+            return
         have = {l.strip().lower() for l in p.stdout.splitlines() if l.strip()}
-    for ext_id, why in RECOMMENDED:
+    for n, (ext_id, why) in enumerate(RECOMMENDED, 1):
         row = {"name": ext_id, "why": why}
         if not code:
             row["status"] = "skipped"
@@ -212,7 +243,12 @@ def vscode_advance(ctx):
         elif ctx.dry_run:
             row["status"] = "would-install"
         else:
-            q = subprocess.run([code, "--install-extension", ext_id, "--force"], capture_output=True, text=True, timeout=300)
+            try:
+                q = run_code(["--install-extension", ext_id, "--force"], f"Installing {ext_id} ({n} of {len(RECOMMENDED)})")
+            except WsError as e:
+                row["status"], row["plain"] = "failed", e.plain
+                steps.append(row)
+                break
             row["status"] = "installed" if q.returncode == 0 else "failed"
             if q.returncode != 0:
                 row["plain"] = (q.stderr or q.stdout).strip()[-200:]
@@ -222,6 +258,8 @@ def vscode_advance(ctx):
     plain = ("Nothing was changed. This is what I would set up." if ctx.dry_run else
              "VS Code is set up." if not left and s["status"] != "left-alone" else
              "VS Code is partly set up. " + ("The steps below say what is left." if left else s["plain"]))
-    return Resource("vscode-setup", "vscode", {"plain": plain, "steps": [{**r, "status": "ok" if r["status"] in ("installed", "already", "would-install") else "warn" if r["status"] == "skipped" else "fail"} for r in steps],
-                                               "settings": s, "reload": "Reload VS Code's window (Ctrl+Shift+P, then Developer: Reload Window) so everything starts." if not ctx.dry_run else ""},
-                    actions=[] if not left else [Action(("vscode", "advance"), "Try again")], status=FAILED if any(r["status"] == "failed" for r in steps) else status)
+    done = not ctx.dry_run and not left
+    yield Resource("vscode-setup", "vscode", {"plain": plain, "steps": [{**r, "status": "ok" if r["status"] in ("installed", "already", "would-install") else "warn" if r["status"] == "skipped" else "fail"} for r in steps],
+                                              "settings": s, "reload": "Reload VS Code's window (Ctrl+Shift+P, then Developer: Reload Window) so everything starts." if not ctx.dry_run else "",
+                                              **({"next": "Open VS Code in this folder with `code .`, or reload its window if it is open, then press Ctrl+Shift+P and run Workspace: Learn."} if done else {})},
+                   actions=[] if not left else [Action(("vscode", "advance"), "Try again")], status=FAILED if any(r["status"] == "failed" for r in steps) else status)

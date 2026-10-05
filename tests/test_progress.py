@@ -1,5 +1,6 @@
 """The spinner for slow steps, and the prompt command (0006-onboarding FR-020, 0003-kits FR-015)."""
 import io
+import json
 import os
 import re
 import time
@@ -300,3 +301,79 @@ class SetupPrompt(Home):
         self.assertEqual(self.step(doc)[0]["status"], "warn")
         self.assertIn("ws-host shell add bash", self.step(doc)[0]["plain"])
         self.assertEqual(self.bashrc.read_text(), "alias a=b\n")
+
+
+class SlowEditor(Home):
+    """VS Code's `code` command is a slow, silent step the first time in WSL (0006-onboarding FR-020)."""
+
+    def setUp(self):
+        super().setUp()
+        self.fakebin = self.home.parent / "fakebin"
+        self.fakebin.mkdir()
+        os.environ["PATH"] = f"{self.fakebin}:{os.environ['PATH']}"
+        from ws_host.core import machine
+        real = machine.distro
+        machine.distro = lambda: {**real(), "wsl": True}
+        self.addCleanup(lambda: setattr(machine, "distro", real))
+
+    def fake_code(self, script):
+        f = self.fakebin / "code"
+        f.write_text("#!/bin/sh\n" + script)
+        f.chmod(0o755)
+
+    def test_the_first_call_in_wsl_is_known_and_a_later_one_is_not(self):
+        from ws_host.commands import vscode
+        self.assertTrue(vscode.first_time_in_wsl())
+        (self.home / ".vscode-server" / "bin").mkdir(parents=True)
+        self.assertFalse(vscode.first_time_in_wsl())
+
+    def test_the_spinner_says_how_much_the_helper_has_downloaded(self):
+        from ws_host.commands import vscode
+        saved = (progress.DELAY, progress.ENABLED)
+        progress.DELAY, progress.ENABLED = 0.1, True
+        self.addCleanup(lambda: (setattr(progress, "DELAY", saved[0]), setattr(progress, "ENABLED", saved[1])))
+        os.environ.update(TERM="xterm", LANG="C.UTF-8")
+        self.fake_code(f'mkdir -p "{self.home}/.vscode-server/bin"\ndd if=/dev/zero of="{self.home}/.vscode-server/bin/vscode-server.tar.gz" bs=1000000 count=3 2>/dev/null\nsleep 0.8\nexit 0\n')
+        out = Tty()
+        real_working = progress.Working
+        progress.working = lambda label, probe=None: real_working(label, out, probe)
+        self.addCleanup(lambda: setattr(progress, "working", lambda label, probe=None: real_working(label, probe=probe)))
+        p = vscode.run_code(["--list-extensions"], "Asking VS Code what is installed")
+        self.assertEqual(p.returncode, 0)
+        text = ANSI.sub("", out.getvalue())
+        self.assertIn("Asking VS Code what is installed", text)
+        self.assertRegex(text, r"3 MB downloaded")
+
+    def test_a_code_command_that_takes_too_long_is_a_plain_error_not_a_trace(self):
+        from ws_host.commands import vscode
+        from ws_host.core.resource import WsError
+        self.fake_code("sleep 5\n")
+        with self.assertRaises(WsError) as caught:
+            vscode.run_code(["--list-extensions"], "Asking VS Code", timeout=1)
+        self.assertEqual(caught.exception.code, "code-timeout")
+        self.assertIn("carry on", caught.exception.plain)
+
+    def test_setup_warns_before_the_slow_first_step(self):
+        self.paths.config_dir().mkdir(parents=True, exist_ok=True)
+        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\nWS_HOST_PROMPT="no"\n')
+        self.fake_code("exit 0\n")
+        (self.fakebin / "gh").write_text("#!/bin/sh\nexit 0\n")
+        (self.fakebin / "gh").chmod(0o755)
+        code, out = self.run_cmd("workspace", "advance", "--json")
+        docs = [json.loads(l) for l in out.strip().splitlines()]
+        editor = [d for d in docs if d["kind"] == "progress" and d["id"] == "editor"][0]
+        self.assertIn("downloads a small helper", editor["data"]["plain"])
+        self.assertIn("a few minutes", editor["data"]["plain"])
+
+    def test_vscode_advance_explains_itself_first_and_ends_with_what_to_do_next(self):
+        self.fake_code('case "$1" in --list-extensions) echo some.other;; esac\nexit 0\n')
+        code, out = self.run_cmd("vscode", "advance", "--json")
+        docs = [json.loads(l) for l in out.strip().splitlines()]
+        self.assertEqual(docs[0]["kind"], "progress")
+        self.assertIn("nothing for you to do", docs[0]["data"]["plain"])
+        self.assertIn("a few minutes", docs[0]["data"]["plain"])        # the first call in WSL downloads the helper
+        self.assertEqual(docs[-1]["kind"], "vscode-setup")
+        self.assertIn("Workspace: Learn", docs[-1]["data"]["next"])
+        self.assertIn("Reload", docs[-1]["data"]["reload"])
+        code, out = self.run_cmd("vscode", "advance", "--dry-run", "--json")
+        self.assertEqual([json.loads(l)["kind"] for l in out.strip().splitlines()], ["vscode-setup"])
