@@ -72,13 +72,18 @@ detail, troubleshooting, and how to take over in VS Code.
   terminal, one line with a spinner, replaced in place, shown only after half a
   second and carrying the elapsed time and, for a download, how much has come.
   A step that ends quickly MUST show nothing, one that took a while MUST leave
-  one line, and one that fails MUST show why. The installer, package
-  installation, downloads, copying and updating repositories, and every call
-  of VS Code's `code` command MUST use it. The first `code` call in WSL
+  one line, and one that fails MUST show why. The launcher's first run
+  (the pinned `mise`, then Python and `uv`), the installer, package
+  installation, every download, the installation of a provider's programs,
+  release builds, the Console's tests, copying and updating repositories, and every call
+  of VS Code's `code` command MUST use it. Each line starts with an emoji that says what the
+  step does (📥 download, 📦 install, 🔨 build, 🧪 test, 🔐 lock, 📂 copy, 🔄 update) and ends with ✅ or ❌ when a terminal shows
+  the result. Where there is no terminal (a log, a pipe) such a step MUST print one plain line when it starts, on
+  standard error, so a long download never looks stuck. The first `code` call in WSL
   downloads VS Code's Linux helper into Debian without saying anything, so
   setup MUST warn before it that this can take a few minutes, MUST show how much
   has arrived, and MUST turn a call that takes longer than fifteen minutes into
-  a plain error that says a second run carries on. It
+  a plain error that says a second run carries on. The spinner
   MUST NOT appear in a pipe, a file, JSON, HTML or on a `dumb` terminal, and
   what a quiet step printed MUST be shown only when the step fails.
 - **FR-021**: When the installer finishes it MUST tell the person, in one

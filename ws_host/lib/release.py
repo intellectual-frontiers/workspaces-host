@@ -96,8 +96,10 @@ def need_program(name: str, hint: str) -> str:
 
 
 def run(argv: list[str], cwd: Path, what: str, env: dict[str, str] | None = None, timeout: int = 900) -> str:
+    from ..core import progress
     try:
-        p = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=timeout, env={**os.environ, **(env or {})})
+        with progress.step(f"🔨 {what[:1].upper() + what[1:]}", announce=True):
+            p = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=timeout, env={**os.environ, **(env or {})})
     except subprocess.TimeoutExpired:
         raise ReleaseError("timeout", f"{what} took longer than {timeout // 60} minutes", f"{what} is taking very long. Nothing was published; run it again.")
     if p.returncode != 0:

@@ -127,7 +127,7 @@ class Bootstrap(Home):
         text = b"".join(chunks).decode(errors="replace")
         self.assertIn("Installing git", text)
         self.assertIn("\r\x1b[K", text)
-        self.assertIn("✔", text)
+        self.assertIn("✅", text)
         self.assertNotIn("Refreshing the package list", text, "the quick step before it shows nothing at all")
         self.assertNotIn("Copying workspaces-host", text, "a quick step shows nothing at all")
 

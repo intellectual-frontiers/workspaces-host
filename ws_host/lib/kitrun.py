@@ -41,7 +41,7 @@ def install(ctx, kit, name: str):
             if prefix:
                 yield ("packages", "info", "This needs administrator rights, so I will use sudo to install: " + ", ".join(p["to_install"]) + ".")
             try:
-                with progress.working("Installing " + (f"{len(p['to_install'])} packages" if len(p["to_install"]) > 1 else p["to_install"][0])):
+                with progress.working("📦 Installing " + (f"{len(p['to_install'])} packages" if len(p["to_install"]) > 1 else p["to_install"][0])):
                     apt.install(p["to_install"])
                 yield ("packages", "ok", f"Installed {len(p['to_install'])} packages.")
             except apt.AptError as e:
@@ -53,7 +53,7 @@ def install(ctx, kit, name: str):
         yield ("packages", "ok", "All the packages are already installed." if p["packages"] else "This kit needs no packages.")
     for dl in kit.downloads(d):
         try:
-            with progress.working(f"Downloading {dl.name}"):
+            with progress.working(f"📥 Downloading {dl.name}"):
                 r = fetch.install(dl, offline=ctx.offline)
             yield (f"download {dl.name}", "ok", f"{dl.name} {dl.version} was already installed." if r["outcome"] == "present" else f"Installed {dl.name} {dl.version}.")
         except fetch.FetchError as e:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import os
 import re
 import shutil
 import subprocess
@@ -235,7 +236,9 @@ def _have(program: str) -> bool:
 
 
 def _run(argv, cwd=None):
-    return subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=900)
+    from ..core import progress
+    with progress.step(f"📚 Running {os.path.basename(argv[0])}", announce=False):
+        return subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=900)
 
 
 @command("docs", "build", category="build", summary="Build the guide: HTML, PDF and, where the converter is here, EPUB",

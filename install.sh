@@ -28,7 +28,7 @@ else
   b=""; c=""; g=""; r=""; d=""; z=""
 fi
 case "${LC_ALL:-${LC_CTYPE:-${LANG:-}}}" in
-  *[Uu][Tt][Ff]*) frames='⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏'; tick='✔'; cross='✖' ;;
+  *[Uu][Tt][Ff]*) frames='⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏'; tick='✅'; cross='❌' ;;
   *) frames='| / - \'; tick='ok'; cross='x' ;;
 esac
 
@@ -38,6 +38,8 @@ say() { printf '%s\n' "$*"; }
 step() {
   label=$1; shift
   log=$(mktemp "${TMPDIR:-/tmp}/ws-host-install.XXXXXX")
+  # Anywhere but a terminal (a log, a pipe) a slow step still says what it is doing, once, so it never looks stuck.
+  [ -t 2 ] && [ "${TERM:-dumb}" != dumb ] || printf '%s...\n' "$label" >&2
   "$@" >"$log" 2>&1 &
   pid=$!
   trap 'kill "$pid" 2>/dev/null; rm -f "$log"; exit 130' INT TERM
@@ -99,10 +101,10 @@ if [ -n "$missing" ]; then
   else
     say "Installing:$missing."
   fi
-  step "Refreshing the package list" $sudo_cmd env DEBIAN_FRONTEND=noninteractive apt-get update -qq ||
+  step "📋 Refreshing the package list" $sudo_cmd env DEBIAN_FRONTEND=noninteractive apt-get update -qq ||
     need "the package list could not be refreshed." "check your network, then run this again"
   # shellcheck disable=SC2086
-  step "Installing$missing" $sudo_cmd env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $missing ||
+  step "📦 Installing$missing" $sudo_cmd env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $missing ||
     need "the packages could not be installed." "run: sudo apt install$missing"
 fi
 
@@ -112,7 +114,7 @@ PATH=$HOME/.local/bin:$PATH
 export PATH
 
 if [ -d "$target/.git" ]; then
-  if step "Checking workspaces-host for news" git -C "$target" fetch --quiet origin; then
+  if step "🔄 Checking workspaces-host for news" git -C "$target" fetch --quiet origin; then
     git -C "$target" merge --ff-only --quiet '@{upstream}' 2>/dev/null ||
       say "Your copy was left exactly as it was; your work is safe."
   else
@@ -120,15 +122,16 @@ if [ -d "$target/.git" ]; then
   fi
 else
   mkdir -p "$(dirname "$target")"
-  GIT_TERMINAL_PROMPT=0 step "Copying workspaces-host" git clone --quiet "$url" "$target" || need "could not copy $url." "check your network, then run this again"
+  GIT_TERMINAL_PROMPT=0 step "📂 Copying workspaces-host" git clone --quiet "$url" "$target" || need "could not copy $url." "check your network, then run this again"
 fi
 
 mkdir -p "$HOME/.local/bin"
 ln -sf "$target/ws-host" "$HOME/.local/bin/ws-host"
 
 ws="$HOME/.local/bin/ws-host"
-# ws-host's own runtime (the pinned mise, Python and uv, in ws-host's store): fetched once, here, so the first command is not the slow one.
-WS_HOST_BOOTSTRAP_ONLY=1 step "Preparing ws-host's runtime" "$ws" || need "ws-host's runtime could not be prepared." "check your network, then run this again"
+# ws-host's own runtime (the pinned mise, Python and uv, in ws-host's store): fetched once, here, so the first command is not the slow one. The
+# launcher shows its own spinner and sizes, so this is not wrapped in a quiet step.
+WS_HOST_BOOTSTRAP_ONLY=1 "$ws" || need "ws-host's runtime could not be prepared." "check your network, then run this again"
 if [ "${WS_HOST_NO_ADVANCE:-}" = 1 ]; then
   "$ws" doctor || true
   say ""
