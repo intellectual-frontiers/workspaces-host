@@ -11,14 +11,15 @@ const manifest = readManifest() as Loose;
 const c = manifest.contributes as Loose;
 const COMMANDS = c.commands as Loose[];
 
-test('FR-036: the activity bar has one container with a monochrome icon, and its views are Home, the slots, Checks and All commands, in that order', () => {
+test('FR-036: the activity bar has one container with a monochrome icon, and its views are Home, Services, the slots, Checks and All commands, in that order', () => {
   assert.equal(c.viewsContainers.activitybar.length, 1);
   const svg = fs.readFileSync(path.join(EXT_ROOT, c.viewsContainers.activitybar[0].icon), 'utf8');
   assert.match(svg, /currentColor/);
   assert.doesNotMatch(svg, /#[0-9a-f]{3,8}\b|fill="(?!none|currentColor)|stroke="(?!none|currentColor)/i, 'it draws in no color of its own');
   const ids = c.views['workspaces-console'].map((v: Loose) => v.id);
   assert.equal(ids[0], 'workspaces-console.home');
-  assert.deepEqual(ids.slice(1, -2), Array.from({ length: 16 }, (_, i) => `workspaces-console.view.${i}`));
+  assert.equal(ids[1], 'workspaces-console.services');
+  assert.deepEqual(ids.slice(2, -2), Array.from({ length: 16 }, (_, i) => `workspaces-console.view.${i}`));
   assert.deepEqual(ids.slice(-2), ['workspaces-console.checks', 'workspaces-console.commands']);
   const slots = c.views['workspaces-console'].filter((v: Loose) => /\.view\./.test(v.id));
   assert.ok(slots.every((v: Loose, i: number) => v.when === `workspaces-console.slot.${i}`), 'a slot shows only when a view is planned into it');
@@ -74,4 +75,17 @@ test('FR-024, FR-040: each setting has a markdownDescription and the scope appli
   assert.deepEqual(Object.keys(props).sort(), ['workspaces-console.checkOnSave', 'workspaces-console.launchers', 'workspaces-console.rowLimit', 'workspaces-console.showAllCommands']);
   for (const p of Object.values(props)) { assert.equal(p.scope, 'application'); assert.ok(p.markdownDescription.length > 20); }
   assert.equal(props['workspaces-console.showAllCommands'].default, false, 'All commands is hidden by default');
+});
+
+test('FR-055: the getting-started walkthrough has its steps, each with a page in the extension and buttons that run commands the extension contributes', () => {
+  const w = c.walkthroughs[0];
+  assert.equal(w.id, 'getStarted');
+  assert.ok(w.steps.length >= 6);
+  const known = new Set(COMMANDS.map((x: Loose) => x.command));
+  for (const step of w.steps) {
+    assert.ok(fs.existsSync(path.join(EXT_ROOT, step.media.markdown)), `${step.id} has its page`);
+    const text = String(step.description);      // the manifest is read with its words filled in
+    for (const m of text.matchAll(/\(command:([\w.-]+)\)/g)) assert.ok(known.has(m[1]), `${step.id}: ${m[1]} is a command of this extension`);
+    assert.ok(/\(command:/.test(text), `${step.id} has a button`);
+  }
 });

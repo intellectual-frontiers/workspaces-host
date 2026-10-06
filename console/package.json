@@ -75,6 +75,12 @@
           "contextualTitle": "%view.contextualTitle%"
         },
         {
+          "id": "workspaces-console.services",
+          "name": "%view.services.name%",
+          "contextualTitle": "%view.contextualTitle%",
+          "when": "workspaces-console.hasServices"
+        },
+        {
           "id": "workspaces-console.view.0",
           "name": "%view.view.0.name%",
           "contextualTitle": "%view.contextualTitle%",
@@ -435,6 +441,54 @@
         "title": "%command.followLink.title%",
         "category": "%category%",
         "icon": "$(link)"
+      },
+      {
+        "command": "workspaces-console.startService",
+        "title": "%command.startService.title%",
+        "category": "%category%",
+        "icon": "$(play)"
+      },
+      {
+        "command": "workspaces-console.stopService",
+        "title": "%command.stopService.title%",
+        "category": "%category%",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "workspaces-console.openService",
+        "title": "%command.openService.title%",
+        "category": "%category%",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "workspaces-console.setUpEverything",
+        "title": "%command.setUpEverything.title%",
+        "category": "%category%",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "workspaces-console.signIn",
+        "title": "%command.signIn.title%",
+        "category": "%category%",
+        "icon": "$(github)"
+      },
+      {
+        "command": "workspaces-console.addRepository",
+        "title": "%command.addRepository.title%",
+        "category": "%category%",
+        "icon": "$(repo-clone)"
+      },
+      {
+        "command": "workspaces-console.updateEverything",
+        "title": "%command.updateEverything.title%",
+        "category": "%category%",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "workspaces-console.openWalkthrough",
+        "title": "%command.openWalkthrough.title%",
+        "category": "%category%",
+        "icon": "$(rocket)"
       }
     ],
     "menus": {
@@ -558,6 +612,38 @@
         {
           "command": "workspaces-console.searchView",
           "when": "false"
+        },
+        {
+          "command": "workspaces-console.startService",
+          "when": "workspaces-console.hasServices"
+        },
+        {
+          "command": "workspaces-console.stopService",
+          "when": "workspaces-console.servicesRunning"
+        },
+        {
+          "command": "workspaces-console.openService",
+          "when": "workspaces-console.servicesRunning"
+        },
+        {
+          "command": "workspaces-console.setUpEverything",
+          "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.signIn",
+          "when": "workspaces-console.hasRepository || workspaces-console.unavailable"
+        },
+        {
+          "command": "workspaces-console.addRepository",
+          "when": "workspaces-console.hasRepository || workspaces-console.unavailable"
+        },
+        {
+          "command": "workspaces-console.updateEverything",
+          "when": "workspaces-console.hasRepository || workspaces-console.unavailable"
+        },
+        {
+          "command": "workspaces-console.openWalkthrough",
+          "when": "true"
         }
       ],
       "view/title": [
@@ -812,6 +898,21 @@
           "command": "workspaces-console.copyContext",
           "when": "view == workspaces-console.commands && viewItem =~ /\\bcontextual\\b/",
           "group": "2_copy@1"
+        },
+        {
+          "command": "workspaces-console.startService",
+          "when": "view == workspaces-console.services && viewItem =~ /^service (stopped|failed)/",
+          "group": "inline@1"
+        },
+        {
+          "command": "workspaces-console.openService",
+          "when": "view == workspaces-console.services && viewItem == 'service running'",
+          "group": "inline@1"
+        },
+        {
+          "command": "workspaces-console.stopService",
+          "when": "view == workspaces-console.services && viewItem == 'service running'",
+          "group": "inline@2"
         }
       ]
     },
@@ -915,6 +1016,71 @@
         "command": "workspaces-console.copyContext",
         "key": "ctrl+alt+i x",
         "when": "workspaces-console.hasRepository"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "getStarted",
+        "title": "%walkthrough.title%",
+        "description": "%walkthrough.description%",
+        "steps": [
+          {
+            "id": "home",
+            "title": "%walkthrough.home.title%",
+            "description": "%walkthrough.home.description%",
+            "media": {
+              "markdown": "media/walkthrough/home.md"
+            }
+          },
+          {
+            "id": "signIn",
+            "title": "%walkthrough.signIn.title%",
+            "description": "%walkthrough.signIn.description%",
+            "media": {
+              "markdown": "media/walkthrough/signIn.md"
+            }
+          },
+          {
+            "id": "setUp",
+            "title": "%walkthrough.setUp.title%",
+            "description": "%walkthrough.setUp.description%",
+            "media": {
+              "markdown": "media/walkthrough/setUp.md"
+            }
+          },
+          {
+            "id": "addRepo",
+            "title": "%walkthrough.addRepo.title%",
+            "description": "%walkthrough.addRepo.description%",
+            "media": {
+              "markdown": "media/walkthrough/addRepo.md"
+            }
+          },
+          {
+            "id": "check",
+            "title": "%walkthrough.check.title%",
+            "description": "%walkthrough.check.description%",
+            "media": {
+              "markdown": "media/walkthrough/check.md"
+            }
+          },
+          {
+            "id": "website",
+            "title": "%walkthrough.website.title%",
+            "description": "%walkthrough.website.description%",
+            "media": {
+              "markdown": "media/walkthrough/website.md"
+            }
+          },
+          {
+            "id": "update",
+            "title": "%walkthrough.update.title%",
+            "description": "%walkthrough.update.description%",
+            "media": {
+              "markdown": "media/walkthrough/update.md"
+            }
+          }
+        ]
       }
     ]
   },

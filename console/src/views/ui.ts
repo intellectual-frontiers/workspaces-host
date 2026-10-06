@@ -55,6 +55,20 @@ export interface UiParts {
   showResult: (repo: Repository, detail: CommandDetail, argv: string[], real: RunResult) => Promise<void>;
 }
 
+/** Signing in shows a short code and an address in the stream (`auth-code`): the code goes on the clipboard, the address opens, and a notice says what to do, so nobody has to find
+ * the words in a result. Only an https address opens (0009-workspaces-console FR-056). */
+function signInCode(doc: Doc): void {
+  if (doc.kind !== 'auth-code') return;
+  const code = typeof doc.data.code === 'string' ? doc.data.code : '';
+  const url = typeof doc.data.url === 'string' ? doc.data.url : '';
+  if (!code || !/^https:\/\//.test(url)) return;
+  void vscode.env.clipboard.writeText(code);
+  void vscode.env.openExternal(vscode.Uri.parse(url));
+  const again = t('Open the page again');
+  void vscode.window.showInformationMessage(t('To sign in, type the code {0} on the page that just opened. It is already copied: press Ctrl+V.', code), again)
+    .then((pick) => { if (pick === again) void vscode.env.openExternal(vscode.Uri.parse(url)); });
+}
+
 export function createUi({ log, showResult, where, running, review }: UiParts): Ui {
   const ui: Ui = {
     async pick<V>({ title, placeholder, items, canPickMany }: { title?: string; placeholder?: string; items: Array<PickItem<V>>; canPickMany?: boolean }): Promise<V | V[] | undefined> {
@@ -77,7 +91,7 @@ export function createUi({ log, showResult, where, running, review }: UiParts): 
 
     progress<T>(title: string, fn: (token: Cancellation, report: (doc: Doc) => void) => Promise<T>): Promise<T> {
       const view = where ? where() : null;
-      const said = (progress: vscode.Progress<{ message?: string }>) => (doc: Doc): void => { const w = streamWords(doc); if (w) progress.report({ message: w }); };
+      const said = (progress: vscode.Progress<{ message?: string }>) => (doc: Doc): void => { signInCode(doc); const w = streamWords(doc); if (w) progress.report({ message: w }); };
       // Work a view started is shown in that view, and ended by the Stop action in its title; any other is a notification with its own Cancel.
       if (view && running) {
         const source = running.begin();

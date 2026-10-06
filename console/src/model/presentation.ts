@@ -41,9 +41,12 @@ export interface ReferenceDecl {
   definition: string[];
 }
 
-export interface Presentation { views: ViewDecl[]; nouns: NounDecl[]; references: ReferenceDecl[] }
+/** A command that goes on running (0041-command-line FR-064): the editor starts it, shows where it answers and stops it. `prepare` builds what it serves. */
+export interface ServiceDecl { id: string; title: string; icon: string; command: string; prepare?: string; description: string }
 
-export const NO_PRESENTATION: Presentation = { views: [], nouns: [], references: [] };
+export interface Presentation { views: ViewDecl[]; nouns: NounDecl[]; references: ReferenceDecl[]; services: ServiceDecl[] }
+
+export const NO_PRESENTATION: Presentation = { views: [], nouns: [], references: [], services: [] };
 
 function listOf(v: unknown): ListDecl | undefined {
   const o = asObject(v);
@@ -63,6 +66,14 @@ function nounOf(v: unknown): NounDecl | null {
   const noun = asString(o.noun);
   if (!noun) return null;
   return { noun, title: asString(o.title, noun), icon: asString(o.icon, 'symbol-namespace'), view: optString(o.view), list: listOf(o.list) };
+}
+
+function serviceOf(v: unknown): ServiceDecl | null {
+  const o = asObject(v);
+  const id = asString(o.id);
+  const command = asString(o.command);
+  if (!id || !command) return null;
+  return { id, title: asString(o.title, id), icon: asString(o.icon, 'server-process'), command, prepare: optString(o.prepare), description: asString(o.description) };
 }
 
 function referenceOf(v: unknown): ReferenceDecl | null {
@@ -86,6 +97,7 @@ export function presentationOf(data: JsonObject): Presentation {
     views,
     nouns: asArray(p.nouns).map(nounOf).filter((n): n is NounDecl => n !== null),
     references: asArray(p.references).map(referenceOf).filter((r): r is ReferenceDecl => r !== null),
+    services: asArray(p.services).map(serviceOf).filter((x): x is ServiceDecl => x !== null),
   };
 }
 

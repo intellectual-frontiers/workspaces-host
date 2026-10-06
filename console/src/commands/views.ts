@@ -30,6 +30,18 @@ export class ViewCommands {
     if (picked) await vscode.commands.executeCommand(`${picked.id}.focus`);
   }
 
+  /** The one button for a newcomer: ws-host's own `workspace ensure` installs everything every enabled command line pins, with its progress; then the views are asked again. */
+  async setUpEverything(): Promise<unknown> {
+    const owner = this.app.repos.find((r) => r.has('workspace ensure'));
+    if (!owner) {
+      void vscode.window.showInformationMessage(t('Open the ws-host folder in this window to set everything up from here, or run "ws-host workspace ensure" in a terminal.'));
+      return null;
+    }
+    const outcome = await this.run.runWords(owner, ['workspace', 'ensure']);
+    await this.app.refresh();
+    return outcome;
+  }
+
   runSuggestion(node: unknown): Promise<unknown> {
     if (!(node instanceof Node) || node.kind !== 'suggestion' || !node.data.suggestion) return Promise.resolve(null);
     const { suggestion } = node.data;

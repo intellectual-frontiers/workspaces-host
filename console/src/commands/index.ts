@@ -8,6 +8,7 @@ import { Node } from '../views/node';
 import { ContextCommands } from './context';
 import { LearnCommands } from './learn';
 import { RunCommands } from './run';
+import { StartCommands } from './start';
 import { ViewCommands } from './views';
 
 export interface Handlers {
@@ -17,6 +18,7 @@ export interface Handlers {
   context: ContextCommands;
   run: RunCommands;
   views: ViewCommands;
+  start: StartCommands;
   /** Register every command; `sub` keeps what it returns until the extension is deactivated. */
   register(sub: (d: vscode.Disposable) => unknown): void;
 }
@@ -26,8 +28,9 @@ export function registerCommands(app: App): Handlers {
   const learn = new LearnCommands(app);
   const context = new ContextCommands(app);
   const views = new ViewCommands(app, run, context);
+  const start = new StartCommands(app, run);
   return {
-    run, learn, context, views,
+    run, learn, context, views, start,
     showResult: (...a) => run.showResult(...a),
     runWords: (...a) => run.runWords(...a),
     register(sub) {
@@ -52,6 +55,18 @@ export function registerCommands(app: App): Handlers {
       cmd('refresh', () => app.refresh());
       cmd('showOutput', () => { app.log.show(true); });
       cmd('enableProvider', () => enableProviders(app));
+      const keyOf = (node: unknown): string | undefined => {
+        const info = (node as { info?: { key?: string } } | undefined)?.info;
+        return info?.key ?? app.services.list()[0]?.key;
+      };
+      cmd('setUpEverything', () => views.setUpEverything());
+      cmd('signIn', () => start.signIn());
+      cmd('addRepository', () => start.addRepository());
+      cmd('updateEverything', () => start.updateEverything());
+      cmd('openWalkthrough', () => start.openWalkthrough());
+      cmd('startService', (node) => app.services.start(keyOf(node) ?? ''));
+      cmd('stopService', (node) => { app.services.stop(keyOf(node) ?? ''); });
+      cmd('openService', (node) => app.services.open(keyOf(node) ?? ''));
       cmd('trust', () => manageTrust());
       cmd('cancelRun', () => views.cancelRun());
       cmd('toggleAllCommands', () => views.toggleAllCommands());
