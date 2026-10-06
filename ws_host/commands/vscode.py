@@ -90,7 +90,7 @@ def release_package(offline: bool = False) -> dict | None:
 
 def download_release(rel: dict) -> Path:
     """Fetch the release package, verify its SHA-256 before anything uses it, and give it the name VS Code needs. Raises fetch.FetchError."""
-    with progress.working("Downloading the Workspaces Console"):
+    with progress.working("📥 Downloading the Workspaces Console"):
         got = fetch.download(rel["url"], rel["sha256"])
     out = paths.cache_dir() / "workspaces-console" / rel["name"]
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -106,7 +106,7 @@ def release_step(ctx, rel: dict, have: set) -> dict:
                 "plain": "The Workspaces Console is installed and current." if current else f"I would download and install the Workspaces Console {rel['tag']} from the public root's release."}
     if not current:
         vsix = download_release(rel)
-        r = run_code(["--install-extension", str(vsix), "--force"], "Installing the Workspaces Console")
+        r = run_code(["--install-extension", str(vsix), "--force"], "📦 Installing the Workspaces Console")
         if r.returncode != 0:
             raise WsError("code-install", (r.stderr or r.stdout).strip()[-300:], "VS Code's `code` command could not install the Workspaces Console.", [Action(("vscode", "ensure"), "Try again")])
         write_stamp(release=rel["tag"], installed=rel["tag"])
@@ -273,7 +273,7 @@ def vscode_ensure(ctx):
             row["status"] = "would-install"
         else:
             try:
-                q = run_code(["--install-extension", ext_id, "--force"], f"Installing {ext_id} ({n} of {len(RECOMMENDED)})")
+                q = run_code(["--install-extension", ext_id, "--force"], f"📦 Installing {ext_id} ({n} of {len(RECOMMENDED)})")
             except WsError as e:
                 row["status"], row["plain"] = "failed", e.plain
                 steps.append(row)

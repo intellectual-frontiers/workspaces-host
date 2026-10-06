@@ -14,9 +14,9 @@ class ToolchainError(Exception):
         self.code, self.plain, self.exit_code = code, plain or message, exit_code
 
 
-def _mise(p: prov.Provider, args: list[str], offline: bool = False, timeout: int = 1800):
+def _mise(p: prov.Provider, args: list[str], offline: bool = False, timeout: int = 1800, label: str | None = None):
     try:
-        done = mise.run(args, p.mise_dir, offline=offline, timeout=timeout)
+        done = mise.run(args, p.mise_dir, offline=offline, timeout=timeout, label=label)
     except mise.MiseMissing as e:
         raise ToolchainError("no-mise", str(e), f"I need mise to install what {p.name} pins, and {e}. " + ("Run this again with a network." if e.offline else ""),
                              exit_code=3)
@@ -42,7 +42,7 @@ def lock(p: prov.Provider, offline: bool = False) -> list[str]:
     if not p.entries:
         return changed
     before = _locks(p)
-    done = _mise(p, ["lock", "--platform", ",".join(prov.PLATFORMS)], offline)
+    done = _mise(p, ["lock", "--platform", ",".join(prov.PLATFORMS)], offline, label=f"🔐 Locking what {p.name} pins")
     if done.returncode != 0:
         raise ToolchainError("lock", (done.stderr or done.stdout).strip()[-400:], "mise could not lock " + p.name + "'s entries: " + " ".join((done.stderr or done.stdout).strip().splitlines()[-3:]))
     after = _locks(p)
@@ -81,7 +81,7 @@ def ensure(p: prov.Provider, names: list[str] | None, offline: bool = False) -> 
     if not lockfile(p).is_file():
         raise ToolchainError("no-lock", "mise.lock", f"{p.name} has no lock yet. Run ws-host toolchain generate {p.name} and commit what it writes.")
     args = ["install", "--locked"] + ([f"{p.entries[n].tool_id()}@{p.entries[n].version}" for n in wanted] if names else [])
-    done = _mise(p, args, offline)
+    done = _mise(p, args, offline, label=f"📦 Installing {', '.join(wanted)} for {p.name}")
     if done.returncode != 0:
         raise ToolchainError("install", (done.stderr or done.stdout).strip()[-500:], "mise could not install " + ", ".join(wanted) + ": " +
                              " ".join((done.stderr or done.stdout).strip().splitlines()[-3:]))

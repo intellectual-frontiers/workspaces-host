@@ -4,6 +4,8 @@ import json
 import os
 import re
 import time
+import unittest
+import unittest.mock
 
 from ws_host.core import progress
 from .helpers import Home
@@ -44,7 +46,7 @@ class Spinner(Home):
         self.assertIn("Downloading oh-my-posh", text)
         self.assertIn("1.5 of 3.0 MB", text)
         self.assertIn("\r\033[K", text)
-        self.assertEqual(ANSI.sub("", text).rstrip("\n").splitlines()[-1].split("\r")[-1].replace("\x1b[K", ""), "✔ Downloading oh-my-posh")
+        self.assertEqual(ANSI.sub("", text).rstrip("\n").splitlines()[-1].split("\r")[-1].replace("\x1b[K", ""), "✅ Downloading oh-my-posh")
 
     def test_a_step_that_fails_leaves_a_cross(self):
         out = Tty()
@@ -52,7 +54,7 @@ class Spinner(Home):
             with progress.Working("Installing git", out):
                 time.sleep(0.4)
                 raise ValueError("no")
-        self.assertIn("✖ Installing git", ANSI.sub("", out.getvalue()))
+        self.assertIn("❌ Installing git", ANSI.sub("", out.getvalue()))
 
     def test_nothing_is_drawn_in_json_a_dumb_terminal_or_when_switched_off(self):
         for how in ("json", "dumb", "never"):
@@ -79,7 +81,7 @@ class Spinner(Home):
         with progress.Working("Slow", out):
             time.sleep(0.6)
         plain = ANSI.sub("", out.getvalue())
-        self.assertNotIn("✔", plain)
+        self.assertNotIn("✅", plain)
         self.assertIn("ok Slow", plain)
 
     def test_the_command_line_turns_it_off_for_json(self):
@@ -371,3 +373,34 @@ class SlowEditor(Home):
         self.assertIn("Reload", docs[-1]["data"]["reload"])
         code, out = self.run_cmd("vscode", "ensure", "--dry-run", "--json")
         self.assertEqual([json.loads(l)["kind"] for l in out.strip().splitlines()], ["vscode-setup"])
+
+
+class AnnouncedStep(unittest.TestCase):
+    """0006-onboarding FR-020: where there is no terminal, a long step says once what it is doing."""
+
+    def test_a_step_prints_one_plain_line_when_there_is_no_terminal_and_nothing_inside_another_spinner(self):
+        import io
+        from contextlib import redirect_stderr
+        err = io.StringIO()
+        with redirect_stderr(err), progress.step("📥 Downloading x", announce=True):
+            with progress.step("📦 Inner", announce=True):
+                pass
+        self.assertEqual(err.getvalue(), "📥 Downloading x...\n")
+
+    def test_the_growth_probe_reports_what_a_silent_program_has_fetched(self):
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as d:
+            probe = progress.growth(d)
+            self.assertEqual(probe(), "")
+            (Path(d) / "f").write_bytes(b"x" * 5_000_000)
+            self.assertEqual(probe(), "5 MB downloaded")
+
+    def test_the_result_line_is_an_emoji(self):
+        import io
+        out = io.StringIO()
+        with unittest.mock.patch.object(progress, "visible", lambda stream=None: True), unittest.mock.patch.object(progress, "_utf8", lambda: True), unittest.mock.patch.object(progress, "LEFT_BEHIND", 0.0), unittest.mock.patch.object(progress, "DELAY", 0.0):
+            with progress.Working("Installing x", out):
+                import time
+                time.sleep(0.3)
+        self.assertIn("✅ Installing x", out.getvalue())

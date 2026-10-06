@@ -6,7 +6,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from ..core import paths
+from ..core import paths, progress
 from ..core.kit import Download
 from ..install import fetch
 
@@ -91,10 +91,15 @@ def environment(extra: dict[str, str] | None = None) -> dict[str, str]:
     return env
 
 
-def run(args: list[str], mise_dir: Path, offline: bool = False, fetch_it: bool = True, timeout: int = 1800) -> subprocess.CompletedProcess:
+def run(args: list[str], mise_dir: Path, offline: bool = False, fetch_it: bool = True, timeout: int = 1800, label: str | None = None) -> subprocess.CompletedProcess:
     """`mise -C <mise_dir> ARGS...`, searching for configuration in that folder only, never above it."""
     exe = program(fetch_it=fetch_it, offline=offline)
     env = environment({"MISE_CEILING_PATHS": str(mise_dir.parent)})
     if offline:
         env["MISE_OFFLINE"] = "1"
-    return subprocess.run([str(exe), "-C", str(mise_dir), *args], capture_output=True, text=True, timeout=timeout, env=env)
+    argv = [str(exe), "-C", str(mise_dir), *args]
+    if label is None:
+        return subprocess.run(argv, capture_output=True, text=True, timeout=timeout, env=env)
+    # a long step says what it is doing and how much it has fetched, so it never looks stuck (0006-onboarding FR-020)
+    with progress.step(label, progress.growth(data_dir(), paths.cache_dir() / "mise"), announce=not offline):
+        return subprocess.run(argv, capture_output=True, text=True, timeout=timeout, env=env)

@@ -96,7 +96,7 @@ def clone(rid: RepoId, cfg: config.Config) -> dict:
     if (dest / ".git").exists():
         return {"id": str(rid), "path": str(dest), "outcome": "current", "status": "ok", "plain": f"{rid.name} is already here."}
     dest.parent.mkdir(parents=True, exist_ok=True)
-    with progress.working(f"Copying {rid.name}"):
+    with progress.working(f"📂 Copying {rid.name}"):
         p = git.run(None, "clone", "--quiet", rid.url, str(dest))
     if p.returncode == 0:
         return {"id": str(rid), "path": str(dest), "outcome": "cloned", "status": "ok", "plain": f"Copied {rid.name} to {dest}."}
@@ -147,7 +147,7 @@ def sync(rid: RepoId, cfg: config.Config) -> dict:
     path = rid.path(cfg)
     if not (path / ".git").exists():
         return {"id": str(rid), "outcome": "missing", "status": "skip", "plain": f"{rid.name} is not copied yet, so there is nothing to update."}
-    with progress.working(f"Checking {rid.name} for news"):
+    with progress.working(f"🔄 Checking {rid.name} for news"):
         f = git.run(path, "fetch", "--quiet")
     if f.returncode != 0:
         auth = git.is_auth_failure(f.stderr)

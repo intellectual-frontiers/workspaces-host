@@ -55,10 +55,11 @@ def _build() -> tuple[dict, list[Action]]:
     d = machine.distro()
     py = machine.python_version()
     checks.append(_check("python", "ok" if tuple(map(int, py.split("."))) >= (3, 11) else "fail", f"python {py}, ws-host's own",
-                         cli=INSTALLER, todo="ws-host runs on a Python it installs itself; run the installer again to repair it."))
+                         cli=None if tuple(map(int, py.split("."))) >= (3, 11) else INSTALLER,
+                         todo=None if tuple(map(int, py.split("."))) >= (3, 11) else "ws-host runs on a Python it installs itself; run the installer again to repair it."))
     uv = machine.program_version("uv")
     checks.append(_check("uv", "ok" if uv else "warn", f"uv {uv}" if uv else "uv is not on this run's PATH; ws-host's launcher puts its own there",
-                         cli="ws-host provider show ws-host"))
+                         cli=None if uv else "ws-host provider show ws-host"))
     git_ver = git_v = machine.program_version("git")
     checks.append(_check("git", "ok" if git_v else "warn", f"git {git_v}" if git_v else "git is not installed; `ws-host kit add base` installs it",
                          action=(("kit", "add"), "Install the base kit", {"kit": "base"})))
@@ -72,7 +73,7 @@ def _build() -> tuple[dict, list[Action]]:
         exe = cz.program()                 # not fetched here: doctor reads, it does not download
         v = cz.version_of(exe)
         checks.append(_check("chezmoi", "ok" if v and v >= cz.MINIMUM else "warn", f"chezmoi {'.'.join(map(str, v)) if v else '?'} at {exe}",
-                             cli="chezmoi upgrade", todo=f"ws-host needs chezmoi {cz.VERSION} or newer."))
+                             cli=None if v and v >= cz.MINIMUM else "chezmoi upgrade", todo=None if v and v >= cz.MINIMUM else f"ws-host needs chezmoi {cz.VERSION} or newer."))
         stale = [r for r in config_cmd._states(False) if r["state"] != "current"]
         if stale:
             checks.append(_check("managed files", "warn", "not current: " + ", ".join(r["name"] for r in stale), action=(("config", "ensure"), "Update managed files", {}),

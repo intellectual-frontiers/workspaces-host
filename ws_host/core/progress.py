@@ -89,9 +89,9 @@ class Working:
             took = time.monotonic() - self.started
             self.stream.write("\r\033[K")
             if exc_type is not None:
-                self.stream.write(f"{self._style.red('✖' if _utf8() else 'x')} {self.label}\n")
+                self.stream.write(f"{'❌' if _utf8() else 'x'} {self.label}\n")
             elif took >= LEFT_BEHIND:
-                self.stream.write(f"{self._style.green('✔' if _utf8() else 'ok')} {self.label}\n")
+                self.stream.write(f"{'✅' if _utf8() else 'ok'} {self.label}\n")
             self.stream.flush()
         return False
 
@@ -124,3 +124,60 @@ def detail(text: str) -> None:
 def megabytes(done: int, total: int | None) -> str:
     mb = done / 1_000_000
     return f"{mb:.1f} of {total / 1_000_000:.1f} MB" if total else f"{mb:.1f} MB"
+
+
+def growth(*folders, what: str = "downloaded"):
+    """A probe for a step whose program downloads into `folders` and says nothing: how much they have grown since the step began."""
+    def size() -> int:
+        total = 0
+        for folder in folders:
+            for root, _, files in os.walk(folder):
+                for f in files:
+                    try:
+                        total += os.lstat(os.path.join(root, f)).st_size
+                    except OSError:
+                        pass
+        return total
+    start = size()
+
+    def probe():
+        grown = size() - start
+        return f"{grown / 1_000_000:.0f} MB {what}" if grown > 100_000 else ""
+    return probe
+
+
+class _Quiet:
+    """A step that draws nothing. `claim` makes it the current step while it runs, so a step inside it adds no second line."""
+
+    def __init__(self, claim: bool = False):
+        self.claim = claim
+
+    def __enter__(self):
+        global _current
+        if self.claim:
+            self._previous, _current = _current, self
+        return self
+
+    def __exit__(self, *exc):
+        global _current
+        if self.claim:
+            _current = self._previous
+        return False
+
+    def detail(self, text: str) -> None:
+        pass
+
+
+def step(label: str, probe=None, announce: bool = False):
+    """`with step("📦 Installing chromium"):` around a slow step: the spinner at a terminal, and with `announce`, one plain line at the start
+    anywhere else (a log, a pipe) so a long download never looks stuck. Inside another spinner it adds nothing: one line at a time."""
+    if _current is not None:
+        return _Quiet()
+    if announce and ENABLED and not visible():
+        try:
+            sys.stderr.write(label + "...\n")
+            sys.stderr.flush()
+        except (OSError, ValueError):
+            pass
+        return _Quiet(claim=True)
+    return Working(label, probe=probe)

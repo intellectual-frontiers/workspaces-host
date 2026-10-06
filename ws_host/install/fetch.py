@@ -135,7 +135,8 @@ def install(d: Download, offline: bool = False) -> dict:
     root = paths.tools_dir() / d.name
     target = version_dir(d)
     if not target.is_dir():
-        archive = download(d.url_for(a), d.sha256[a], offline)
+        with progress.step(f"📥 Downloading {d.name} {d.version}", announce=not offline):
+            archive = download(d.url_for(a), d.sha256[a], offline)
         root.mkdir(parents=True, exist_ok=True)
         partial = root / f"{d.version}.partial"
         shutil.rmtree(partial, ignore_errors=True)

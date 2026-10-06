@@ -73,7 +73,7 @@ def add_prompt(shell: str, offline: bool = False, dry_run: bool = False, theme_n
     if not (shutil.which("oh-my-posh") or (paths.bin_dir() / "oh-my-posh").exists()):
         from ..core import progress
         try:
-            with progress.working("Downloading oh-my-posh"):
+            with progress.working("📥 Downloading oh-my-posh"):
                 fetch.install(shell_kit.POSH, offline=offline)
         except fetch.FetchError as e:
             raise WsError("download", e.message, "I could not download oh-my-posh, so I left your shell file alone. Check your network and run this again.")

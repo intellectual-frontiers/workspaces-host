@@ -76,13 +76,17 @@ def install(packages: list[str]) -> subprocess.CompletedProcess:
     env = ["env", "DEBIAN_FRONTEND=noninteractive"]
     if prefix == ["sudo"]:
         subprocess.run(["sudo", "-v"])      # ask for the password first, in plain view, so the spinner never covers the question
+    from ..core import progress
     if prefix:
-        u = _run([*prefix, *env, "apt-get", "update", "-qq"])
+        with progress.step("📋 Refreshing the package list", announce=True):
+            u = _run([*prefix, *env, "apt-get", "update", "-qq"])
         if u.returncode != 0 and prefix == ["sudo", "-n"] and "password" in (u.stderr or "").lower():
             raise AptError("needs-password", "sudo needs a password and there is no terminal to ask it in")
     else:
-        u = _run([*env, "apt-get", "update", "-qq"])
-    p = _run([*prefix, *env, "apt-get", "install", "-y", "-qq", "--no-install-recommends", *packages])
+        with progress.step("📋 Refreshing the package list", announce=True):
+            u = _run([*env, "apt-get", "update", "-qq"])
+    with progress.step("📦 Installing " + ", ".join(packages), announce=True):
+        p = _run([*prefix, *env, "apt-get", "install", "-y", "-qq", "--no-install-recommends", *packages])
     if p.returncode != 0:
         if "password" in (p.stderr or "").lower() and prefix == ["sudo", "-n"]:
             raise AptError("needs-password", "sudo needs a password and there is no terminal to ask it in")
