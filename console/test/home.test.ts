@@ -78,7 +78,7 @@ test('doctor: a toolchain entry not fetched is fetched by its own action; one wi
     { entry: 'jre', cache: 'not fetched', hint: 'fetched on first use, or `other toolchain ensure jre`' },
     { entry: 'weird', cache: 'no build', hint: 'set AGORA_WEIRD to a program of your own' },
     { entry: 'fine', cache: 'ready' }] }, [act('fetch chromium', 'toolchain ensure', 'setup', { entries: ['chromium'] }, 'other toolchain ensure chromium')]);
-  const needs = deriveHome(source({ doctor: d })).needs;
+  const needs = deriveHome(source({ doctor: d }), { group: false }).needs;
   const byId = (id: string) => needs.find((x) => x.id === id) as Loose;
   assert.equal(needs.filter((x) => x.group === 'toolchain').length, 3);
   assert.equal(byId('toolchain:chromium').run.kind, 'action');
@@ -130,7 +130,7 @@ test('FR-048: every suggestion says what is wrong in plain words and is either r
     assert.ok(s.commandLine !== null || s.yourself !== null || s.run?.kind === 'ext' || s.run?.kind === 'action', `${s.id} has its command line, or says what the person does`);
     const words = [s.label, s.why, s.yourself ?? '', s.runLabel].join(' ');
     assert.doesNotMatch(words, /\bsee below\b|\bsuggestion below\b|\ba suggestion\b|\bbelow\b|\bsee above\b/i, s.id);
-    if (s.run?.kind === 'ext') assert.ok(['workspaces-console.trust', 'workspaces-console.learn', 'workspaces-console.getHelp', 'workspaces-console.copyContext', 'workbench.extensions.action.checkForUpdates'].includes(s.run.command));
+    if (s.run?.kind === 'ext') assert.ok(['workspaces-console.trust', 'workspaces-console.learn', 'workspaces-console.getHelp', 'workspaces-console.copyContext', 'workspaces-console.setUpEverything', 'workbench.extensions.action.checkForUpdates'].includes(s.run.command));
   }
   assert.ok(n > 12);
 });
@@ -146,4 +146,20 @@ test('what needs a person is sorted worst first, and Get help is its own group, 
 test('a command in backticks in a hint is read with the orchestrator\'s own name replaced by the launcher\'s path', () => {
   assert.deepEqual(commandIn('run `other system ensure` once', { name: 'other', program: './other' }), { line: './other system ensure', words: ['system', 'ensure'] });
   assert.equal(commandIn('no command here', { name: 'other', program: './other' }), null);
+});
+
+
+test('FR-054: several programs not installed yet are one row with one Install everything button, and one that is alone stays as it is', () => {
+  const d = doc('doctor', { status: 'missing', conflicts: [], missing: [], toolchain: [
+    { entry: 'chromium', cache: 'not fetched' }, { entry: 'jre', cache: 'not fetched' }, { entry: 'tinytex', cache: 'not fetched' }, { entry: 'fine', cache: 'ready' }] }, []);
+  const needs = deriveHome(source({ doctor: d })).needs;
+  const all = needs.filter((x) => x.group === 'toolchain') as Loose[];
+  assert.equal(all.length, 1);
+  assert.equal(all[0].id, 'toolchain:all');
+  assert.match(all[0].label, /^3 programs the tools need are not installed yet$/);
+  assert.match(all[0].why, /chromium, jre, tinytex/);
+  assert.deepEqual(all[0].run, { kind: 'ext', command: 'workspaces-console.setUpEverything' });
+  assert.equal(all[0].runLabel, 'Install everything');
+  const one = doc('doctor', { status: 'missing', conflicts: [], missing: [], toolchain: [{ entry: 'jre', cache: 'not fetched' }] }, []);
+  assert.equal((deriveHome(source({ doctor: one })).needs.find((x) => x.group === 'toolchain') as Loose).id, 'toolchain:jre');
 });

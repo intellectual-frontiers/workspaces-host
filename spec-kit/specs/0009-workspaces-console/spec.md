@@ -507,6 +507,29 @@ knowledge (FR-003).
   the person's own typed yes at a terminal, never answered for them and never over MCP; without a person it MUST be left alone with the one command to run.
   `WS_HOST_PROVIDERS=no` opts out.
 
+- **FR-053**: The extension MUST show a Services view, second after Home and shown only where a command line declares a service
+  (0041-command-line FR-074): each service as a row with whether it is running (stopped, starting, building, running or failed), where it answers and the
+  buttons that matter, Start, Open in Browser and Stop, the row itself doing the obvious one. Start MUST run the service's `command` through the command line's
+  own launcher with `--json` and treat its first line's `data.url` as the moment it is running, offering Open in Browser at once; when the command ends before it is up
+  the extension MUST run its `prepare` command once and start it again, and say in plain words why when that also fails. Open in Browser MUST use VS Code's own
+  address mapping, so it works from a window in WSL or a container. A running service MUST show in the status bar, and the extension MUST end every service it started when
+  the window closes. The extension starts no program of its own for this (FR-003).
+
+- **FR-054**: Several programs a command line reports as not installed yet MUST be one Home row with one button, *Install everything* (which runs the
+  workspace setup of the command line that offers it, with its progress), and not a column of warnings; one program alone keeps its own row.
+- **FR-055**: The extension MUST contribute a getting-started walkthrough for a newcomer: sign in to GitHub, install everything, add a repository, check that it
+  works, see the website on this computer, and keep everything current, each step one button that runs a command the extension contributes (*Sign In to GitHub*,
+  *Set Up Everything*, *Add Repository…*, *Check Environment*, *Start Service*, *Update Everything*) through the command line that offers it, so that nobody needs
+  a terminal or has to know a command line exists. VS Code opens a new extension's walkthrough by itself, so the extension stores nothing to do it (FR-026).
+
+- **FR-056**: When a command streams a sign-in code (a document of kind `auth-code` with `data.code` and an `https` `data.url`), the extension MUST put the code on
+  the clipboard, open the address through VS Code, and say in one notice to type the code there and paste it, with a button that opens the page again. Any other
+  address MUST open nothing.
+- **FR-057**: *Add Repository…* MUST ask for the repository's address, refuse in the box one that is not `host/organization/repository`, run the command line's
+  `repo add` for it, and add every repository that arrived to the open window, so that its command line shows with no reload. Home's words for an untrusted window,
+  a window with nothing set up and a command line that has not started MUST say in plain words what VS Code is asking or what is missing, and each MUST carry the
+  button that fixes it (*Trust this workspace*, *Open Getting Started*, *Install everything*).
+
 ## Out of scope
 
 - The commands a repository's orchestrator has: each orchestrator's spec states

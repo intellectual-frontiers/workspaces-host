@@ -19,7 +19,7 @@ export type Run =
 
 /** The commands of VS Code and of this extension that a suggestion may run: nothing a launcher says can name another. */
 export const EXT_COMMANDS: readonly string[] = ['workspaces-console.trust', 'workspaces-console.learn', 'workspaces-console.getHelp', 'workspaces-console.copyContext', 'workspaces-console.refresh',
-  'workbench.extensions.action.checkForUpdates'];
+  'workbench.extensions.action.checkForUpdates', 'workspaces-console.setUpEverything'];
 
 export interface Suggestion {
   id: string;
@@ -209,10 +209,23 @@ function doctorItems(src: HomeSource): Suggestion[] {
   return out;
 }
 
+/** Programs that are simply not installed yet are one row with one button, never a column of warnings: a person who has just installed everything is shown
+ * what is happening, not sixteen things to do by hand (0009-workspaces-console FR-054). */
+export function groupMissing(items: Suggestion[]): Suggestion[] {
+  const gone = items.filter((i) => i.group === 'toolchain' && i.id.startsWith('toolchain:'));
+  if (gone.length < 2) return items;
+  const names = gone.map((i) => i.id.slice('toolchain:'.length));
+  const grouped = make({ id: 'toolchain:all', group: 'toolchain', status: 'warning',
+    label: t('{0} the tools need are not installed yet', plural(gone.length, 'program')),
+    why: t('Not installed yet: {0}. One button installs them all, showing how far it has got. It can take several minutes the first time.', names.join(', ')),
+    run: { kind: 'ext', command: 'workspaces-console.setUpEverything' }, runLabel: t('Install everything'), commandLine: null, yourself: null });
+  return [...items.filter((i) => !gone.includes(i)), grouped];
+}
+
 // --- the whole --------------------------------------------------------------------------------------------------------
 export interface HomeItems { needs: Suggestion[]; help: Suggestion[] }
 
-export function deriveHome(src: HomeSource): HomeItems {
+export function deriveHome(src: HomeSource, o: { group?: boolean } = {}): HomeItems {
   const needs: Suggestion[] = [];
   if (src.state === 'untrusted') {
     needs.push(make({ id: 'trust', group: 'trust', status: 'warning', label: t('Trust this workspace to use {0}', src.program),
@@ -224,6 +237,9 @@ export function deriveHome(src: HomeSource): HomeItems {
   } else if (src.state === 'ready') {
     needs.push(...checkItems(src), ...proposalItems(src), ...freshItems(src), ...doctorItems(src));
   }
+  const grouped = o.group === false ? [...needs] : [...groupMissing(needs)];
+  needs.length = 0;
+  needs.push(...grouped);
   needs.sort((a, b) => SEVERITY[a.status] - SEVERITY[b.status]);
   const help: Suggestion[] = [];
   if (src.state === 'ready') {

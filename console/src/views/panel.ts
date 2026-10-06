@@ -107,7 +107,7 @@ export class ResourcePanel implements vscode.Disposable {
     const ok = checkSchema(doc);
     if (!ok.ok) { void vscode.window.showInformationMessage(ok.message); return; }
     if (doc.kind === 'help' && typeof doc.data.topic === 'string') { await this.showTopicDoc(repo, doc, argv); return; }
-    const ctx = { presentation: repo.list?.presentation ?? { views: [], nouns: [], references: [] }, isFile: (p: string) => this.isFile(repo, p) };
+    const ctx = { presentation: repo.list?.presentation ?? { views: [], nouns: [], references: [], services: [] }, isFile: (p: string) => this.isFile(repo, p) };
     const built = buildResource(doc, ctx);
     const resource = doc.id && doc.id !== 'all' ? `${doc.kind.replace(/-/g, '_')}:${doc.id}` : null;
     await this.push(this.entry(repo, 'resource', { repoKey: repo.key, argv, topic: null }, built, repo.line(argv), doc, resource, built.header.title));

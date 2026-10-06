@@ -82,3 +82,16 @@ test('FR-033, FR-042: in test mode the hook delivers a message to the panel as i
   t.done();
   b.cleanup();
 });
+
+test('FR-056: a sign-in code in the stream goes on the clipboard, its https address opens, and a notice says to paste it; another address opens nothing', async () => {
+  const t = load(1);
+  const doc = (url: string): Loose => ({ schema: 'x/auth-code@1', kind: 'auth-code', id: 'github.com', audience: 'p', data: { code: 'ABCD-1234', url, plain: 'x' }, links: [], actions: [] });
+  await t.ui.progress('Signing in', async (_token: Loose, report: (d: Loose) => void) => { report(doc('https://github.com/login/device')); });
+  assert.ok(t.stub.calls.clipboard.includes('ABCD-1234'));
+  assert.equal(((t.stub.calls as Loose).opened ?? []).length, 1);
+  assert.ok(t.stub.calls.messages.some((m: Loose) => /type the code ABCD-1234/.test(String(m.text ?? m.message ?? m[0] ?? JSON.stringify(m)))));
+  (t.stub.calls as Loose).opened = [];
+  await t.ui.progress('Signing in', async (_token: Loose, report: (d: Loose) => void) => { report(doc('http://example.test/')); });
+  assert.deepEqual((t.stub.calls as Loose).opened, []);
+  t.done();
+});

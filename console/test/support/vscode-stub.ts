@@ -129,6 +129,7 @@ export function createStub(options: StubOptions = {}): Stub {
     },
     workspace: {
       workspaceFolders: folders, isTrusted: options.trusted !== false,
+      updateWorkspaceFolders: (start: number, del: number, ...add: Loose[]) => { (calls as Loose).folderChanges = [...((calls as Loose).folderChanges ?? []), { start, del, add: add.map((a) => a.uri?.fsPath ?? a.uri) }]; return true; },
       getConfiguration: () => ({ inspect: (k: string) => ({ globalValue: config[k], workspaceValue: (options.workspaceConfig ?? {})[k] }), get: (k: string) => config[k] }),
       getWorkspaceFolder: (uri: Uri) => folders.find((f: Loose) => uri.fsPath === f.uri.fsPath || uri.fsPath.startsWith(f.uri.fsPath + path.sep)),
       onDidChangeWorkspaceFolders: () => ({ dispose() { /* none */ } }), onDidGrantWorkspaceTrust: () => ({ dispose() { /* none */ } }), onDidChangeConfiguration: () => ({ dispose() { /* none */ } }),
@@ -162,7 +163,7 @@ export function createStub(options: StubOptions = {}): Stub {
     tests: { createTestController: (id: string, label: string) => makeController(id, label, calls) },
     tasks: { registerTaskProvider: (type: string, provider: Loose) => { calls.tasks = { type, provider }; return { dispose() { /* none */ } }; } },
     l10n: { t: (m: string, ...a: Loose[]) => m.replace(/\{(\d+)\}/g, (x: string, i: string) => (a[Number(i)] === undefined ? x : String(a[Number(i)]))) },
-    env: { clipboard: { writeText: (t: string) => Promise.resolve(calls.clipboard.push(t)) } },
+    env: { clipboard: { writeText: (t: string) => Promise.resolve(calls.clipboard.push(t)) }, openExternal: (u: Loose) => { (calls as Loose).opened = [...((calls as Loose).opened ?? []), String(u)]; return Promise.resolve(true); }, asExternalUri: (u: Loose) => Promise.resolve(u) },
   };
   if (options.mcp !== false) {
     vscode.McpStdioServerDefinition = McpStdioServerDefinition;

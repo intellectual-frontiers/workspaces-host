@@ -27,6 +27,8 @@ import * as testMode from './test-mode';
 import { ChecksProvider } from './views/checks-tree';
 import { CommandsProvider } from './views/commands-tree';
 import { FileDecorations } from './views/decorations';
+import { Services } from './services/services';
+import { ServicesProvider, type ServiceNode } from './views/services-tree';
 import { HomeProvider } from './views/home-tree';
 import { ReferenceLanguage } from './views/language';
 import type { Node } from './views/node';
@@ -54,7 +56,7 @@ const nodeFs: DiscoveryFs = {
   },
 };
 
-const VIEW_IDS = { home: 'workspaces-console.home', checks: 'workspaces-console.checks', commands: 'workspaces-console.commands' } as const;
+const VIEW_IDS = { home: 'workspaces-console.home', checks: 'workspaces-console.checks', commands: 'workspaces-console.commands', services: 'workspaces-console.services' } as const;
 export const slotId = (n: number): string => `workspaces-console.view.${n}`;
 
 export class App {
@@ -70,8 +72,11 @@ export class App {
   readonly homeView: HomeProvider;
   readonly commandsView: CommandsProvider;
   readonly checksView: ChecksProvider;
+  readonly services: Services;
+  readonly servicesView: ServicesProvider;
+  private readonly servicesItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 49);
   readonly slots: ResourceProvider[] = [];
-  readonly treeViews = new Map<string, vscode.TreeView<Node>>();
+  readonly treeViews = new Map<string, vscode.TreeView<Node | ServiceNode>>();
   readonly mcp: McpRegistration;
   readonly tests: CheckTests;
   readonly tasks: TaskProvider;
@@ -104,6 +109,13 @@ export class App {
     this.homeView = new HomeProvider(this);
     this.commandsView = new CommandsProvider(this);
     this.checksView = new ChecksProvider(this);
+    this.services = new Services({
+      repos: () => this.repos, log: (l) => this.log.info(l), changed: () => this.servicesChanged(),
+      notify: async (message, buttons, kind) => (kind === 'error' ? vscode.window.showErrorMessage(message, ...buttons) : vscode.window.showInformationMessage(message, ...buttons)),
+      openExternal: async (url) => { await vscode.env.openExternal(await vscode.env.asExternalUri(vscode.Uri.parse(url))); },
+      busy: (title, fn) => Promise.resolve(vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title }, fn)),
+    });
+    this.servicesView = new ServicesProvider(this.services);
     for (let i = 0; i < SLOTS; i += 1) this.slots.push(new ResourceProvider(this, i));
     this.mcp = new McpRegistration(this.log, () => this.repos);
     this.tests = new CheckTests(this);
@@ -206,6 +218,7 @@ export class App {
     this.decorations.refreshRows();
     this.updateBadges();
     this.updateContexts();
+    this.servicesChanged();
     this.status.render(this.activeRepo(), this.activeRepo() ? deriveHome(this.activeRepo() as Repository).needs : []);
   }
 
@@ -220,6 +233,21 @@ export class App {
       void vscode.commands.executeCommand('setContext', `workspaces-console.slot.${i}`, p !== null);
       void vscode.commands.executeCommand('setContext', `workspaces-console.search.${i}`, p?.entries.some((e) => e.nouns.some((n) => e.source.listDecl(n.noun)?.search !== undefined)) ?? false);
     });
+  }
+
+  /** A service started, stopped or failed: the view, the status bar and the contexts follow. */
+  servicesChanged(): void {
+    this.servicesView.refresh();
+    const running = this.services.running();
+    const first = running[0];
+    if (first) {
+      this.servicesItem.text = first.state === 'running' ? `$(broadcast) ${first.decl.title}` : `$(sync~spin) ${first.decl.title}`;
+      this.servicesItem.tooltip = first.plain;
+      this.servicesItem.command = first.state === 'running' ? { command: 'workspaces-console.openService', title: t('Open in Browser'), arguments: [{ info: first }] } : undefined;
+      this.servicesItem.show();
+    } else this.servicesItem.hide();
+    void vscode.commands.executeCommand('setContext', 'workspaces-console.hasServices', this.services.list().length > 0);
+    void vscode.commands.executeCommand('setContext', 'workspaces-console.servicesRunning', running.length > 0);
   }
 
   private updateBadges(): void {
@@ -442,6 +470,8 @@ export class App {
     tree(VIEW_IDS.home, this.homeView, true);
     this.slots.forEach((slot, i) => tree(slotId(i), slot, true));
     tree(VIEW_IDS.checks, this.checksView, true);
+    { const view = vscode.window.createTreeView(VIEW_IDS.services, { treeDataProvider: this.servicesView }); this.treeViews.set(VIEW_IDS.services, view); sub(view); }
+    sub(this.servicesItem); sub({ dispose: () => this.services.stopAll() });
     tree(VIEW_IDS.commands, this.commandsView, true);
     sub(vscode.window.registerWebviewPanelSerializer(PANEL_TYPE, { deserializeWebviewPanel: (panel, state) => this.panel.restore(panel, state) }));
     sub(vscode.tasks.registerTaskProvider('workspaces-console', this.tasks));

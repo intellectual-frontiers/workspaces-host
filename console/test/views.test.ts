@@ -16,7 +16,7 @@ test('FR-036: Home is first, then a view for each view the command line declares
   const ids = manifest.contributes.views['workspaces-console'].map((v: Loose) => v.id);
   assert.equal(ids[0], 'workspaces-console.home');
   assert.deepEqual(ids.slice(-2), ['workspaces-console.checks', 'workspaces-console.commands']);
-  assert.equal(ids.length, 2 + 16 + 1);
+  assert.equal(ids.length, 2 + 16 + 1 + 1);      // Home, Services, the slots, Checks, All commands
   const entries = manifest.contributes.views['workspaces-console'];
   assert.match(entries.at(-1).when, /allCommands/, 'All commands is hidden until the setting or the toggle shows it');
   const first = b.stub.calls.treeViews.get('workspaces-console.view.0');
