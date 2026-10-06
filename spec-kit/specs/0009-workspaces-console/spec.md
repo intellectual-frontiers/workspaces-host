@@ -535,6 +535,8 @@ knowledge (FR-003).
   never be offered.
 - **FR-059**: A failure MUST never be a dead end: its notice MUST offer *Show Output* and *Copy a report for help*, and, when the command line says a prerequisite
   is missing (exit status 3), *Install everything*. A repository in a view shows which folder it is, then what its own declaration says it is (`summary`), in words for people.
+- **FR-060**: By default the Console MUST show only the views a command line marks `simple` (0041-command-line FR-076), or every view when none is marked; the
+  setting `workspaces-console.simpleViews` and Home's *Show Every View* command switch it.
 
 ## Out of scope
 

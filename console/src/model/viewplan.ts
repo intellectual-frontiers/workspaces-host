@@ -32,12 +32,16 @@ export function nounShows(list: CommandList, noun: NounDecl): boolean {
   return list.commands.some((c) => c.noun === noun.noun && exposed(c));
 }
 
-export function planViews<S extends PlanSource>(sources: S[], slots = SLOTS): Array<PlannedView<S>> {
+/** With `simple`, only the views a command line calls everyday (`simple = true`) are planned, so a newcomer sees Books and Papers, not twenty views of records and tools; a window where no
+ * command line marks any view simple shows every view, since nothing says which are everyday (0041-command-line FR-076). */
+export function planViews<S extends PlanSource>(sources: S[], slots = SLOTS, simple = false): Array<PlannedView<S>> {
+  const anySimple = sources.some((s) => s.state === 'ready' && s.list?.presentation.views.some((v) => v.simple));
   const byId = new Map<string, PlannedView<S>>();
   for (const source of sources) {
     if (source.state !== 'ready' || !source.list) continue;
     const { list } = source;
     for (const decl of list.presentation.views) {
+      if (simple && anySimple && !decl.simple) continue;
       const nouns = list.presentation.nouns.filter((n) => n.view === decl.id && nounShows(list, n));
       if (!nouns.length) continue;
       const held = byId.get(decl.id) ?? fresh<S>(decl);

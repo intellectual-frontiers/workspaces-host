@@ -91,6 +91,8 @@ export class App {
   /** The view that started the work in hand, so that its progress is shown there (0043 FR-038). */
   private origin: string | null = null;
   private allCommands = false;
+  /** Only the everyday views: the setting `workspaces-console.simpleViews`, flipped for this session by the Home menu (the extension writes no setting). */
+  private simpleOverride: boolean | null = null;
   private unavailable = 0;
   private unavailableMissing = false;
   /** Roots whose launcher asks for its repository to be enabled as a provider. */
@@ -224,7 +226,7 @@ export class App {
 
   /** The views the command lines declare, merged by id, one in each slot of the manifest's pool. */
   private applyPlan(): void {
-    const plan = planViews(this.repos, SLOTS);
+    const plan = planViews(this.repos, SLOTS, this.simpleViews());
     this.slots.forEach((slot, i) => {
       const p = plan[i] ?? null;
       slot.setPlan(p);
@@ -264,7 +266,19 @@ export class App {
     set('workspaces-console.unavailable', this.unavailable > 0);
     set('workspaces-console.toolchainMissing', this.unavailableMissing && this.unenabled.length === 0);
     set('workspaces-console.providerNotEnabled', this.unenabled.length > 0);
+    set('workspaces-console.simpleViews', this.simpleViews());
     set('workspaces-console.allCommands', this.allCommands || vscode.workspace.getConfiguration('workspaces-console').get<boolean>('showAllCommands') === true);
+  }
+
+  simpleViews(): boolean {
+    return this.simpleOverride ?? (vscode.workspace.getConfiguration('workspaces-console').get<boolean>('simpleViews') !== false);
+  }
+
+  /** Show every view, or only the everyday ones, for this session. */
+  toggleSimpleViews(): boolean {
+    this.simpleOverride = !this.simpleViews();
+    this.refreshViews();
+    return this.simpleViews();
   }
 
   /** The view-title toggle of the tree of every command: for this session only, since the extension writes no setting. */

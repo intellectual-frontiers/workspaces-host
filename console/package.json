@@ -489,6 +489,13 @@
         "title": "%command.openWalkthrough.title%",
         "category": "%category%",
         "icon": "$(rocket)"
+      },
+      {
+        "command": "workspaces-console.toggleSimpleViews",
+        "title": "%command.toggleSimpleViews.title%",
+        "category": "%category%",
+        "icon": "$(eye)",
+        "enablement": "workspaces-console.hasRepository"
       }
     ],
     "menus": {
@@ -644,6 +651,10 @@
         {
           "command": "workspaces-console.openWalkthrough",
           "when": "true"
+        },
+        {
+          "command": "workspaces-console.toggleSimpleViews",
+          "when": "workspaces-console.hasRepository"
         }
       ],
       "view/title": [
@@ -786,6 +797,11 @@
           "command": "workspaces-console.refresh",
           "when": "view == workspaces-console.commands",
           "group": "navigation@2"
+        },
+        {
+          "command": "workspaces-console.toggleSimpleViews",
+          "when": "view == workspaces-console.home && workspaces-console.hasRepository",
+          "group": "9_more@0"
         }
       ],
       "view/item/context": [
@@ -987,6 +1003,13 @@
           "scope": "application",
           "order": 4,
           "markdownDescription": "%setting.rowLimit.description%"
+        },
+        "workspaces-console.simpleViews": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "order": 4,
+          "markdownDescription": "%setting.simpleViews.description%"
         }
       }
     },
