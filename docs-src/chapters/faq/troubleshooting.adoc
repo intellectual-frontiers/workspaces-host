@@ -69,7 +69,7 @@ says so, nothing is lost, and running `ws-host workspace ensure` again carries o
 
 *Why:* Downloads over a slow connection take minutes, and the installer keeps its output quiet so the screen stays calm.
 
-*Fix:* Look at the line at the bottom of the window. A spinner with a number of seconds, such as `⠴ Installing uv (42s)`, means it is working,
+*Fix:* Look at the line at the bottom of the window. A spinner with a number of seconds, such as `⠴ Preparing ws-host's runtime (42s)`, means it is working,
 and a download shows how much has come. Wait for the tick. If it stops with a cross, the lines under it say why, and running the same
 installer again is safe and carries on where it left off.
 

@@ -2,8 +2,8 @@
 == How it is built
 
 ----
-ws-host                  a POSIX sh launcher: needs python3 and uv, finds the clone through any symlink
-install.sh               checks python3 and git, installs uv, clones, links ws-host, runs doctor
+ws-host                  a POSIX sh launcher: fetches mise, Python and uv into its own store on first run, finds the clone through any symlink
+install.sh               checks git, curl and xz, clones, links ws-host, prepares the runtime, runs doctor
 ws_host/
   core/                  standard library only: registry, resources, renderings, errors,
                          typed arguments, the env-file parser, logging
@@ -17,7 +17,7 @@ docs-src/                this book; Part II is generated
 tests/                   standard-library unittest with real temporary git repositories
 ----
 
-The launcher runs the plain standard-library interpreter through `uv`, so no host site-packages are ever involved. The
+The launcher runs the plain standard-library interpreter that ws-host's own mise installed, so no host Python or site-packages are ever involved. The
 registry imports every module under the commands, kits and help packages and records what they declare. The core never
 imports a package. Every command returns one `Resource`, and the same resource becomes text, JSON or HTML.
 

@@ -28,6 +28,9 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `command show` | read | terminal, editor, mcp | Show one command in full |
 | `completion add` | setup | terminal, editor | Set up Tab completion for ws-host in bash or fish |
 | `completion list` | read | terminal, editor, mcp | List the values an argument can take, which is what Tab offers |
+| `config check` | check | terminal, editor, mcp | Say whether the files ws-host manages are as this ws-host would write them |
+| `config ensure` | setup | terminal | Bring the files ws-host manages up to date, keeping a copy of each first |
+| `config show` | read | terminal, editor, mcp | List the files ws-host manages for you and whether each is current |
 | `context` | read | terminal, editor, mcp | Everything needed to get help with this machine, with secrets removed |
 | `docs build` | build | terminal, editor, mcp | Build the guide: HTML, PDF and, where the converter is here, EPUB |
 | `docs generate` | generate | terminal, editor, mcp | Rewrite the guide's generated reference chapters |

@@ -60,7 +60,7 @@ When it finishes it says `Sign in to GitHub first`, and then shows a page called
 line to type for each, in colour. It is the same page as `ws-host help start`, so you can show it again whenever you like. Go on to
 <<sign-in>>.
 
-While it works you see one line at the bottom with a spinner and the seconds that have passed, for example `⠴ Installing uv (42s)`. On a slow
+While it works you see one line at the bottom with a spinner and the seconds that have passed, for example `⠴ Preparing ws-host's runtime (42s)`. On a slow
 network that is normal: a download can take minutes, and a finished step leaves a tick. The very last thing it shows is one line to type,
 `exec bash -l`. Type it once so this window finds the new `ws-host` command (or close the window and open a new one).
 

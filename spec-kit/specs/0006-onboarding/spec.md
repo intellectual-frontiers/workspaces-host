@@ -16,7 +16,7 @@ detail, troubleshooting, and how to take over in VS Code.
 ## The bootstrap
 
 - **FR-001**: `install.sh` MUST install what it needs and the machine lacks
-  (`python3`, `git`, certificates, `curl` and `wget`, by the distribution's package
+  (`git`, certificates, `curl`, `wget` and `xz-utils`, by the distribution's package
   manager), MUST say what it will install and that it needs administrator
   rights before it asks, MUST name the command to run when it cannot (no `sudo`,
   no network), and MUST do none of this when `WS_HOST_NO_APT=1`. It MUST work

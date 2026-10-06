@@ -16,7 +16,7 @@ from ..core import config, machine, paths, progress, registry as reg
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
 from ..install import fetch
-from ..lib import repos
+from ..lib import chezmoi, repos
 
 CONSOLE_ID = "intellectual-frontiers.workspaces-console"
 RELEASE_API = "https://api.github.com/repos/intellectual-frontiers/workspaces-host/releases/latest"
@@ -211,8 +211,12 @@ def settings_file() -> Path:
     return paths.home() / ".config" / "Code" / "User" / "settings.json"
 
 
+def settings_target(wanted: dict) -> chezmoi.Target:
+    return chezmoi.Target("VS Code settings", settings_file(), "vscode-settings", (json.dumps(wanted),))
+
+
 def merge_settings(f: Path, wanted: dict, dry: bool) -> dict:
-    """Add the settings the person has not set; never change one they have. A file with comments is left alone and said so."""
+    """Add the settings the person has not set; never change one they have; chezmoi writes the file. A file with comments is left alone and said so."""
     try:
         text = f.read_text(encoding="utf-8") if f.exists() else "{}"
         current = json.loads(text or "{}")
@@ -225,15 +229,7 @@ def merge_settings(f: Path, wanted: dict, dry: bool) -> dict:
     added = {k: v for k, v in wanted.items() if k not in current}
     kept = [k for k in wanted if k in current and current[k] != wanted[k]]
     if added and not dry:
-        f.parent.mkdir(parents=True, exist_ok=True)
-        if f.exists():
-            bk = paths.state_dir() / "backups"
-            bk.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(f, bk / "vscode-settings.json")
-        merged = {**current, **added}
-        tmp = f.with_suffix(".json.new")
-        tmp.write_text(json.dumps(merged, indent=2) + "\n", encoding="utf-8")
-        os.replace(tmp, f)
+        chezmoi.apply_targets([settings_target(wanted)])
     return {"file": str(f), "status": "would-add" if dry and added else ("added" if added else "unchanged"),
             "added": sorted(added), "kept": sorted(kept), "plain": ""}
 

@@ -40,5 +40,5 @@ curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-h
 ws-host workspace ensure
 ----
 
-The first checks for `python3` and `git`, installs `uv` if you lack it, copies `ws-host` beside your other repositories
+The first checks for `git`, `curl` and `xz`, prepares ws-host's own Python and `uv`, copies `ws-host` beside your other repositories
 and links it into `~/.local/bin`. The second does everything else, and you can run it as often as you like.

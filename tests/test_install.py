@@ -1,12 +1,13 @@
 import os
 import shutil
 import subprocess
+import sys
 import unittest
 
 from .helpers import REPO, Home, git, make_remote
 
 
-@unittest.skipUnless(shutil.which("uv") and shutil.which("git"), "uv and git are needed")
+@unittest.skipUnless(shutil.which("git"), "git is needed")
 class Install(Home):
     def setUp(self):
         super().setUp()
@@ -14,7 +15,7 @@ class Install(Home):
         subprocess.run(["git", "clone", "--bare", "-q", str(REPO), str(self.bare)], check=True,
                        capture_output=True)  # a local "remote": the repository's committed state
         self.env = {**os.environ, "WS_HOST_URL": str(self.bare), "WS_HOST_HOME": str(self.home / "workspaces"), "WS_HOST_NO_ADVANCE": "1",
-                    "PATH": f"{os.path.dirname(shutil.which('uv'))}:{os.environ['PATH']}"}
+                    "WS_HOST_PYTHON": sys.executable}
 
     def install(self):
         return subprocess.run(["sh", str(REPO / "install.sh")], capture_output=True, text=True, env=self.env)
@@ -47,7 +48,7 @@ class Install(Home):
         env = {**self.env, "PATH": str(self.home)}
         p = subprocess.run([sh, str(REPO / "install.sh")], capture_output=True, text=True, env=env)
         self.assertEqual(p.returncode, 3)
-        self.assertIn("python3", p.stderr)
+        self.assertIn("git", p.stderr)
         self.assertIn("Fix:", p.stderr)
 
     def test_install_sh_is_posix_sh_and_executable(self):
@@ -55,7 +56,7 @@ class Install(Home):
         self.assertTrue(os.access(REPO / "install.sh", os.X_OK))
 
 
-@unittest.skipUnless(shutil.which("uv") and shutil.which("git"), "uv and git are needed")
+@unittest.skipUnless(shutil.which("git"), "git is needed")
 class Bootstrap(Home):
     """0006-onboarding FR-001: the installer installs what is missing, after saying so, and then sets the workspace up."""
 
@@ -65,10 +66,9 @@ class Bootstrap(Home):
         subprocess.run(["git", "clone", "--bare", "-q", str(REPO), str(self.bare)], check=True, capture_output=True)
         self.tools = self.home.parent / "tools"
         self.tools.mkdir()
-        for t in ("sh", "env", "dirname", "mkdir", "ln", "cat", "printf", "tr", "sleep", "uname", "chmod", "rm", "grep", "sed", "mktemp", "readlink", "date", "ls", "cp", "mv"):
+        for t in ("sh", "env", "dirname", "mkdir", "ln", "cat", "printf", "tr", "sleep", "uname", "chmod", "rm", "grep", "sed", "mktemp", "readlink", "date", "ls", "cp", "mv", "tar", "xz", "tail", "head", "cut", "sha256sum"):
             if shutil.which(t):
                 (self.tools / t).symlink_to(shutil.which(t))
-        (self.tools / "uv").symlink_to(shutil.which("uv"))
         (self.tools / "id").write_text("#!/bin/sh\necho 1000\n")      # an ordinary user, whoever runs the tests
         (self.tools / "id").chmod(0o755)
         self.log = self.home.parent / "apt.log"
@@ -78,7 +78,8 @@ class Bootstrap(Home):
         (self.tools / "apt-get").chmod(0o755)
         (self.tools / "sudo").write_text(f'#!/bin/sh\necho "sudo $*" >> "{self.log}"\n[ "$1" = -v ] && exit 0\nexec "$@"\n')
         (self.tools / "sudo").chmod(0o755)
-        self.env = {**os.environ, "PATH": str(self.tools), "WS_HOST_URL": str(self.bare), "WS_HOST_HOME": str(self.home / "workspaces"), "WS_HOST_NO_ADVANCE": "1"}
+        self.env = {**os.environ, "PATH": str(self.tools), "WS_HOST_URL": str(self.bare), "WS_HOST_HOME": str(self.home / "workspaces"), "WS_HOST_NO_ADVANCE": "1",
+                    "WS_HOST_PYTHON": sys.executable}
 
     def run_install(self, **extra):
         return subprocess.run(["sh", str(REPO / "install.sh")], capture_output=True, text=True, env={**self.env, **extra})
@@ -87,11 +88,10 @@ class Bootstrap(Home):
         if not git(REPO, "rev-parse", "HEAD", check=False):
             self.skipTest("the repository has no commit yet")
         p = self.run_install()
-        self.assertIn("I need to install: python3 git curl wget.", p.stdout)
+        self.assertIn("I need to install: git curl wget.", p.stdout)
         self.assertIn("administrator rights", p.stdout)
         log = self.log.read_text()
         self.assertIn("sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq", log)
-        self.assertIn("python3", log)
         self.assertIn("git", log)
         self.assertEqual(log.splitlines()[0], "sudo -v", "the password is asked first, in plain view, before any spinner")
         self.assertTrue((self.home / ".local/bin/ws-host").is_symlink(), p.stdout + p.stderr)
@@ -106,12 +106,10 @@ class Bootstrap(Home):
         self.assertNotIn("One last thing", p.stdout)
         self.assertNotIn("this window does not know", p.stdout)
 
-    def test_uvs_own_installer_is_told_not_to_edit_shell_files(self):
-        (self.tools / "uv").unlink()
-        (self.tools / "curl").write_text(f'#!/bin/sh\necho "UV_NO_MODIFY_PATH=$UV_NO_MODIFY_PATH INSTALLER_NO_MODIFY_PATH=$INSTALLER_NO_MODIFY_PATH" >> "{self.log}"\necho exit 0\n')
-        (self.tools / "curl").chmod(0o755)
-        self.run_install()
-        self.assertIn("UV_NO_MODIFY_PATH=1 INSTALLER_NO_MODIFY_PATH=1", self.log.read_text())
+    def test_the_installer_fetches_no_uv_of_its_own(self):
+        text = (REPO / "install.sh").read_text()
+        self.assertNotIn("astral.sh", text)
+        self.assertIn("WS_HOST_BOOTSTRAP_ONLY=1", text)      # the launcher prepares the runtime, through the pinned mise
 
     def test_on_a_terminal_a_slow_step_shows_a_spinner_and_a_quick_one_nothing(self):
         import pty
@@ -127,7 +125,7 @@ class Bootstrap(Home):
             os.environ.clear()
             os.environ.update(saved)
         text = b"".join(chunks).decode(errors="replace")
-        self.assertIn("Installing python3 git", text)
+        self.assertIn("Installing git", text)
         self.assertIn("\r\x1b[K", text)
         self.assertIn("✔", text)
         self.assertNotIn("Refreshing the package list", text, "the quick step before it shows nothing at all")

@@ -2,8 +2,8 @@
 # mechanism: check | gate | review | none. by: "<repo>: <command>" for check and gate, the defining requirement for review, "-" for none.
 requirement	mechanism	by	note
 0001-ws-host FR-001	none	-	scope
-0001-ws-host FR-002	check	workspaces-host: ws-host doctor	doctor reports python, uv and the distribution; tests run the install in fresh Debian and Ubuntu containers
-0001-ws-host FR-003	check	workspaces-host: ws-host test	tests run the launcher from another directory, through absolute and relative links, and without uv
+0001-ws-host FR-002	check	workspaces-host: ws-host doctor	doctor reports the runtime's Python and the distribution; tests run the install in fresh Debian and Ubuntu containers
+0001-ws-host FR-003	check	workspaces-host: ws-host test	tests run the launcher from another directory, through absolute and relative links, bootstrap the runtime into an empty store, verify the pinned checksum, and refuse offline
 0001-ws-host FR-004	check	workspaces-host: ws-host test	a test reads pyproject.toml and the presence of uv.lock; the core's imports are parsed
 0001-ws-host FR-005	check	workspaces-host: ws-host test	tests run install.sh against a local remote: clone, link, doctor, a repeat, a clone with edits, a missing prerequisite
 0001-ws-host FR-006	check	workspaces-host: ws-host test	the install tests use WS_HOST_URL and WS_HOST_HOME
@@ -200,3 +200,13 @@ requirement	mechanism	by	note
 0009-workspaces-console FR-048	check	workspaces-host: ws-host test	tests derive every suggestion and prove each says what is wrong, gives its command line and runs it or says what the person does, and none says see below; the notification tests; the manifest check reads the welcome content
 0009-workspaces-console FR-049	check	workspaces-host: ws-host test	view tests: Search shown only where a list declares search, it runs the list with the option and the text and shows the rows in the order given, an empty result says so and offers the full list; panel tests: the header icon from the list icon field and table cells that open the terms they name; the real VS Code run drives Search over the ontology
 0009-workspaces-console FR-050	none	-	retired: see the requirement
+0010-managed-config FR-001	check	workspaces-host: ws-host test	tests check the prompt block and the settings are written through chezmoi's source state
+0010-managed-config FR-002	check	workspaces-host: ws-host test	tests check the pinned chezmoi names a checksum per architecture, WS_HOST_CHEZMOI is the only override, and offline without chezmoi ends with exit 3
+0010-managed-config FR-003	check	workspaces-host: ws-host test	tests run chezmoi in a throwaway home with a person's own chezmoi folder present and see it untouched
+0010-managed-config FR-004	check	workspaces-host: ws-host test	tests check the source state is rewritten at each use and the text functions give the same text twice
+0010-managed-config FR-005	check	workspaces-host: ws-host test	tests check text outside the markers and set settings are kept, and a settings file with comments is left alone
+0010-managed-config FR-006	check	workspaces-host: ws-host test	tests check a copy is kept before a change, none for an unchanged file, and a link is followed
+0010-managed-config FR-007	check	workspaces-host: ws-host test	tests check a block without its end marker is left alone and a chosen theme survives an update
+0010-managed-config FR-008	check	workspaces-host: ws-host test	tests check a dry run changes nothing
+0010-managed-config FR-009	check	workspaces-host: ws-host test	tests check config show, check and ensure on current and stale files
+0010-managed-config FR-010	check	workspaces-host: ws-host test	tests check shell add and vscode ensure write through chezmoi

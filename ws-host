@@ -1,10 +1,15 @@
 #!/bin/sh
-# ws-host, the environment orchestrator (0001-ws-host FR-003, 0041-command-line FR-001).
-# POSIX sh. Needs python3 (3.11 or later) and uv from the host, runs from a fresh clone with no other step, and finds the
-# clone from its own location even when run through a symbolic link such as ~/.local/bin/ws-host. Everything else is
-# ws_host/: this file only finds the clone, finds the prerequisites, and hands over.
+# ws-host, the environment orchestrator (0001-ws-host FR-003, 0041-command-line FR-001, 0008-providers FR-008).
+# POSIX sh. Needs only sh, tar with xz, and curl or wget; it runs from a fresh clone with no other step, and finds the clone from its own
+# location even when run through a symbolic link such as ~/.local/bin/ws-host. Python and uv are not the host's: the first run fetches the
+# pinned `mise` (verified by SHA-256 before it is unpacked) and has it install the pinned Python and uv into ws-host's own store, the one
+# every provider's programs live in. Everything else is ws_host/: this file only finds the clone, makes sure the runtime is there, and hands over.
 #
-#   WS_HOST_OFFLINE=1 or --offline   never download anything
+#   WS_HOST_OFFLINE=1 or --offline   never download anything (exit 3 when the runtime is not already here)
+#   WS_HOST_BOOTSTRAP_ONLY=1         make sure the runtime is here and stop (install.sh uses it)
+#   WS_HOST_PYTHON=PATH              run this interpreter instead (tests and development only)
+#   WS_HOST_MISE=PATH                use this mise instead of the pinned one
+#   WS_HOST_MISE_URL=URL             fetch the pinned mise's archive from here (tests); its checksum is still the pinned one
 set -eu
 
 self=$0
@@ -18,17 +23,6 @@ while [ -h "$self" ]; do
 done
 here=$(cd "$(dirname "$self")" && pwd -P)
 
-if ! command -v uv >/dev/null 2>&1; then
-  echo "ws-host needs a small tool called uv, and it is not installed." >&2
-  echo "Install it with: curl -LsSf https://astral.sh/uv/install.sh | sh" >&2
-  exit 3
-fi
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "ws-host needs python3, and it is not installed." >&2
-  echo "Install it with: sudo apt install python3" >&2
-  exit 3
-fi
-
 for arg in "$@"; do
   [ "$arg" = "--offline" ] && WS_HOST_OFFLINE=1
 done
@@ -37,8 +31,80 @@ if [ "${WS_HOST_OFFLINE:-}" = 1 ]; then
   export UV_OFFLINE WS_HOST_OFFLINE
 fi
 
+data=${XDG_DATA_HOME:-$HOME/.local/share}
+case $data in /*) ;; *) data=$HOME/.local/share ;; esac
+data=$data/workspaces-host
+store=$data/mise/data/installs
+
+pin() { sed -n "s/^$1=//p" "$here/ws_host/bootstrap.env" | head -n 1; }
+
+fail() {
+  echo "ws-host cannot start: $1" >&2
+  echo "$2" >&2
+  exit 3
+}
+
+runtime_ready() {
+  [ -x "$store/python/$py_version/bin/python3" ] && [ -x "$store/uv/$uv_version/.mise-bins/uv" -o -x "$store/uv/$uv_version/uv" ]
+}
+
+fetch_file() {  # fetch_file URL DEST
+  if command -v curl >/dev/null 2>&1; then curl -fsSL --retry 3 -o "$2" "$1"
+  elif command -v wget >/dev/null 2>&1; then wget -q -O "$2" "$1"
+  else return 1; fi
+}
+
+bootstrap() {
+  [ "${WS_HOST_OFFLINE:-}" = 1 ] && fail "its runtime (Python $py_version and uv $uv_version) is not here yet, and I am not allowed to download it." "Run ws-host once with a network connection."
+  mise=${WS_HOST_MISE:-}
+  if [ -z "$mise" ]; then
+    mise_version=$(pin MISE_VERSION)
+    case $(uname -m) in
+      x86_64 | amd64) arch=x64; sum=$(pin MISE_SHA256_X86_64) ;;
+      aarch64 | arm64) arch=arm64; sum=$(pin MISE_SHA256_AARCH64) ;;
+      *) fail "there is no mise for $(uname -m)." "ws-host runs on Linux, x86_64 or aarch64." ;;
+    esac
+    mise=$data/tools/mise/$mise_version/bin/mise
+    if [ ! -x "$mise" ]; then
+      cache=${XDG_CACHE_HOME:-$HOME/.cache}/workspaces-host/downloads
+      mkdir -p "$cache" "$data/tools/mise"
+      file=$cache/$sum
+      if [ ! -f "$file" ] || [ "$(sha256sum "$file" | cut -d' ' -f1)" != "$sum" ]; then
+        echo "ws-host: fetching mise $mise_version (once)..." >&2
+        fetch_file "${WS_HOST_MISE_URL:-https://mise.jdx.dev/v$mise_version/mise-v$mise_version-linux-$arch.tar.xz}" "$file.part" ||
+          fail "mise $mise_version could not be fetched." "Check your network and that curl or wget is installed, then run ws-host again."
+        [ "$(sha256sum "$file.part" | cut -d' ' -f1)" = "$sum" ] || { rm -f "$file.part"; fail "the file fetched for mise $mise_version is not the one ws-host expects; nothing was installed." "Run ws-host again; if it repeats, the download is being altered on its way."; }
+        mv "$file.part" "$file"
+      fi
+      tmp=$data/tools/mise/.unpack.$$
+      rm -rf "$tmp"; mkdir -p "$tmp"
+      tar -xJf "$file" -C "$tmp" --strip-components=1 || { rm -rf "$tmp"; fail "mise could not be unpacked." "Install xz-utils (sudo apt install xz-utils), then run ws-host again."; }
+      rm -rf "$data/tools/mise/$mise_version"
+      mv "$tmp" "$data/tools/mise/$mise_version"
+    fi
+  fi
+  echo "ws-host: installing its runtime, Python $py_version and uv $uv_version (once)..." >&2
+  mkdir -p "$data/mise/data" "${XDG_STATE_HOME:-$HOME/.local/state}/workspaces-host/mise/config"
+  for v in $(env | sed -n 's/^\(MISE_[A-Z_]*\)=.*/\1/p'); do unset "$v"; done
+  MISE_DATA_DIR=$data/mise/data MISE_CACHE_DIR=${XDG_CACHE_HOME:-$HOME/.cache}/workspaces-host/mise \
+    MISE_STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/workspaces-host/mise/state \
+    MISE_CONFIG_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/workspaces-host/mise/config \
+    MISE_SAFE=1 MISE_YES=1 NO_COLOR=1 MISE_QUIET=1 \
+    "$mise" install "python@$py_version" "uv@$uv_version" >&2 ||
+    fail "Python and uv could not be installed." "Check your network, then run ws-host again."
+}
+
+if [ -n "${WS_HOST_PYTHON:-}" ]; then
+  py=$WS_HOST_PYTHON
+else
+  py_version=$(pin PYTHON_VERSION); uv_version=$(pin UV_VERSION)
+  runtime_ready || bootstrap
+  py=$store/python/$py_version/bin/python3
+  PATH=$store/python/$py_version/bin:$store/uv/$uv_version/.mise-bins:$store/uv/$uv_version:$PATH
+  export PATH
+fi
+[ "${WS_HOST_BOOTSTRAP_ONLY:-}" = 1 ] && exit 0
+
 PYTHONPATH="$here${PYTHONPATH:+:$PYTHONPATH}"
 export PYTHONPATH PYTHONDONTWRITEBYTECODE=1
-
-# No packages: the plain standard-library interpreter, through uv so that no host site-packages is involved.
-exec uv run --no-project --no-config --no-python-downloads --python ">=3.11" python -m ws_host "$@"
+exec "$py" -m ws_host "$@"

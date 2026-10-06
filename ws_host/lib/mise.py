@@ -10,11 +10,24 @@ from ..core import paths
 from ..core.kit import Download
 from ..install import fetch
 
-VERSION = "2026.10.3"
+
+
+def _pins() -> dict[str, str]:
+    """ws_host/bootstrap.env: the one place the launcher and this module read mise's version and checksums from."""
+    out = {}
+    for line in (Path(__file__).resolve().parents[1] / "bootstrap.env").read_text(encoding="utf-8").splitlines():
+        if "=" in line and not line.lstrip().startswith("#"):
+            k, v = line.split("=", 1)
+            out[k.strip()] = v.strip()
+    return out
+
+
+PINS = _pins()
+VERSION = PINS["MISE_VERSION"]
 _URL = "https://mise.jdx.dev/v{version}/mise-v{version}-linux-%s.tar.xz"
 DOWNLOADS = {
-    "x86_64": Download("mise", VERSION, _URL % "x64", {"x86_64": "ff0870ddad7f8c5ba673ceb3e7659f0353da8263eabe8b82220f5816a772c786"}, kind="tar", strip=1),
-    "aarch64": Download("mise", VERSION, _URL % "arm64", {"aarch64": "a5141f834d883239c2542b9a2136e75428779b2040206537399714d8c534d91f"}, kind="tar", strip=1),
+    "x86_64": Download("mise", VERSION, _URL % "x64", {"x86_64": PINS["MISE_SHA256_X86_64"]}, kind="tar", strip=1),
+    "aarch64": Download("mise", VERSION, _URL % "arm64", {"aarch64": PINS["MISE_SHA256_AARCH64"]}, kind="tar", strip=1),
 }
 
 

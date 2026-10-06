@@ -59,6 +59,29 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 
 |===
 
+=== config
+
+[cols="3,1,2,5"]
+|===
+|Usage |Category |Where it runs |What it does
+
+|`ws-host config check`
+|check
+|terminal, editor, mcp
+|Say whether the files ws-host manages are as this ws-host would write them
+
+|`ws-host config ensure`
+|setup
+|terminal
+|Bring the files ws-host manages up to date, keeping a copy of each first
+
+|`ws-host config show`
+|read
+|terminal, editor, mcp
+|List the files ws-host manages for you and whether each is current
+
+|===
+
 === docs
 
 [cols="3,1,2,5"]
