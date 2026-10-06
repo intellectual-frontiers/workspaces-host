@@ -54,9 +54,9 @@ test('FR-003: sources require only VS Code, Node\'s built-ins the extension need
   for (const [name, version] of Object.entries(manifest.devDependencies ?? {}) as Array<[string, string]>) assert.match(version, /^\d+\.\d+\.\d+$/, `${name} is pinned to one exact version`);
 });
 
-test('FR-024: the settings are the four the spec lists, none can be set by a workspace, and none changes what a command does', () => {
+test('FR-024: the settings are the five the spec lists, none can be set by a workspace, and none changes what a command does', () => {
   const props = manifest.contributes.configuration.properties;
-  assert.deepEqual(Object.keys(props).sort(), ['workspaces-console.checkOnSave', 'workspaces-console.launchers', 'workspaces-console.rowLimit', 'workspaces-console.showAllCommands']);
+  assert.deepEqual(Object.keys(props).sort(), ['workspaces-console.checkOnSave', 'workspaces-console.launchers', 'workspaces-console.rowLimit', 'workspaces-console.showAllCommands', 'workspaces-console.simpleViews']);
   for (const p of Object.values(props) as Loose[]) assert.equal(p.scope, 'application');
   assert.equal(props['workspaces-console.checkOnSave'].default, false);
 });

@@ -1,6 +1,7 @@
 // The handlers of the commands the manifest contributes. Each is registered by the local `cmd` function under the prefix `workspaces-console.`, and the repository's check of this
 // extension reads this file to prove that every contributed command has a handler and every handler is contributed.
 import * as vscode from 'vscode';
+import { t } from '../l10n';
 import type { App } from '../app';
 import { enableProviders } from '../services/enable';
 import { manageTrust } from '../services/trust';
@@ -70,6 +71,7 @@ export function registerCommands(app: App): Handlers {
       cmd('trust', () => manageTrust());
       cmd('cancelRun', () => views.cancelRun());
       cmd('toggleAllCommands', () => views.toggleAllCommands());
+      cmd('toggleSimpleViews', () => { const simple = app.toggleSimpleViews(); void vscode.window.showInformationMessage(simple ? t('Showing the everyday views only.') : t('Showing every view.')); });
       cmd('activateNode', (node) => run.activateNode(node));
       cmd('runSection', (node) => (node instanceof Node && node.kind === 'section' && node.data.name ? app.fromView(node.data.view, () => app.runSectionsShown(node.repo, [node.data.name ?? ''])) : null));
       cmd('runSuggestion', (node) => views.runSuggestion(node));

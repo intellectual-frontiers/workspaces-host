@@ -8,7 +8,7 @@ type Loose = any;
 /** A repository whose launcher answers as the test says: the commands it was asked, and what each does. */
 function repo(behave: (words: string[], o: Loose) => Promise<Loose>) {
   const asked: string[] = [];
-  return { asked, key: 'file:///eid', list: { presentation: { services: [{ id: 'website', title: 'Website on this computer', icon: 'globe', command: 'site serve', prepare: 'site build', description: 'Shows the site.' }] } },
+  return { asked, key: 'file:///tool', list: { presentation: { services: [{ id: 'website', title: 'Website on this computer', icon: 'globe', command: 'site serve', prepare: 'site build', description: 'Shows the site.' }] } },
     launcher: { run: (words: string[], o: Loose) => { asked.push(words.join(' ')); return behave(words, o); } } } as Loose;
 }
 
@@ -20,7 +20,7 @@ const deps = (r: Loose, said: string[] = []): { d: ServiceDeps; opened: string[]
     busy: (_t: string, fn: () => Promise<unknown>) => fn() as Promise<never> } };
 };
 
-const upDoc = { schema: 'eid/service@1', kind: 'service', id: 'site serve', audience: 'x', data: { url: 'http://127.0.0.1:8790/', plain: 'up' }, links: [], actions: [] };
+const upDoc = { schema: 'x/service@1', kind: 'service', id: 'site serve', audience: 'x', data: { url: 'http://127.0.0.1:8790/', plain: 'up' }, links: [], actions: [] };
 const result = (o: Loose = {}) => ({ exit: 0, stdout: '', stderr: '', docs: [], doc: null, error: null, cancelled: false, failed: null, ...o });
 
 test('a declared service starts through its launcher, is running once its first line says where it answers, and stops when asked', async () => {

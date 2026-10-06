@@ -97,5 +97,7 @@
   "walkthrough.website.title": "See the website on your computer",
   "walkthrough.website.description": "Start it, then open it in your browser. Stop it when you are done.\n[Start Service](command:workspaces-console.startService)",
   "walkthrough.update.title": "Keep everything current",
-  "walkthrough.update.description": "One button brings Workspaces, your repositories and their programs up to date, never touching your own changes.\n[Update Everything](command:workspaces-console.updateEverything)"
+  "walkthrough.update.description": "One button brings Workspaces, your repositories and their programs up to date, never touching your own changes.\n[Update Everything](command:workspaces-console.updateEverything)",
+  "command.toggleSimpleViews.title": "Show Every View",
+  "setting.simpleViews.description": "Show only the everyday views a command line marks (Books and Papers, say) instead of every view it declares. On by default so a newcomer is not shown twenty views; the *Show Every View* action in Home's `…` menu shows all of them for this session only."
 }

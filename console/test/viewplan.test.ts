@@ -42,3 +42,11 @@ test('a list that is not a read command the editor offers shows no rows, and a r
   assert.equal(planViews([many]).length, 16);
   assert.equal(planViews([many], 3).length, 3);
 });
+
+test('simple mode keeps only views marked simple, and shows every view when none is marked (0009 FR-060)', () => {
+  const mk = (simple: boolean) => repo('a', [{ id: 'one', title: 'One', icon: 'x', order: 20, simple }, { id: 'two', title: 'Two', icon: 'x', order: 30 }],
+    [listed('n1', 'one'), listed('n2', 'two')], [cmd('n1 list'), cmd('n2 list')]);
+  assert.deepEqual(planViews([mk(true)], 16, true).map((p) => p.id), ['one']);
+  assert.deepEqual(planViews([mk(true)], 16, false).map((p) => p.id), ['one', 'two']);
+  assert.deepEqual(planViews([mk(false)], 16, true).map((p) => p.id), ['one', 'two']);
+});

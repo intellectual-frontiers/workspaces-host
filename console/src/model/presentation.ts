@@ -9,7 +9,7 @@ export type Status = (typeof STATUSES)[number];
 
 export const isStatus = (v: unknown): v is Status => typeof v === 'string' && (STATUSES as readonly string[]).includes(v);
 
-export interface ViewDecl { id: string; title: string; icon: string; order: number; description: string }
+export interface ViewDecl { id: string; title: string; icon: string; order: number; description: string; simple: boolean }
 
 export interface ListDecl {
   command: string;
@@ -91,7 +91,7 @@ export function presentationOf(data: JsonObject): Presentation {
   const p = asObject(data.presentation);
   const views = asArray(p.views).map(asObject).filter((o) => asString(o.id) !== '').map((o): ViewDecl => ({
     id: asString(o.id), title: asString(o.title, asString(o.id)), icon: asString(o.icon, 'folder'), order: asNumber(o.order, 100),
-    description: asString(o.description) }));
+    description: asString(o.description), simple: o.simple === true }));
   views.sort((a, b) => a.order - b.order);
   return {
     views,
