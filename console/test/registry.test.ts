@@ -47,3 +47,12 @@ test('FR-020: a cancellation source ends what listens to its token, once', () =>
   assert.equal(source.token.isCancellationRequested, true);
   sub.dispose();
 });
+
+test('a command of several words is described by asking for each word, not for one argument holding spaces', async () => {
+  const b = await boot();
+  const repo = b.context.subscriptions.find((s: Loose) => s.id === 'workspaces-console.commands').o.treeDataProvider.host.repos[0];
+  await repo.detail('widget show');
+  const call = b.first.invocations().find((i: Loose) => i.argv[0] === 'command' && i.argv[1] === 'show' && i.argv[2] === 'widget');
+  assert.deepEqual(call?.argv.slice(0, 4), ['command', 'show', 'widget', 'show']);
+  b.cleanup();
+});

@@ -89,3 +89,11 @@ test('FR-055: the getting-started walkthrough has its steps, each with a page in
     assert.ok(/\(command:/.test(text), `${step.id} has a button`);
   }
 });
+
+test('FR-062: Home\'s title bar offers Add Repository, and Sign In only while GitHub is not signed in', () => {
+  const title = c.menus['view/title'] as Loose[];
+  const mine = (command: string) => title.find((m) => m.command === `workspaces-console.${command}` && /workspaces-console\.home/.test(m.when));
+  assert.ok(mine('addRepository'));
+  assert.match(mine('signIn')?.when ?? '', /workspaces-console\.signedOut/);
+  assert.doesNotMatch(mine('addRepository')?.when ?? '', /signedOut/);
+});
