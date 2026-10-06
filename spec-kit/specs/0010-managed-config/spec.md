@@ -13,11 +13,14 @@ it only when it differs; `ws-host` adds the consent, the copy kept first and the
 
 - **FR-001**: `ws-host` MUST write every file it manages through `chezmoi`, and MUST NOT write a managed file any other way. The
   managed files are the shell prompt block of `bash` and `fish` (0003-kits FR-015) and VS Code's settings file (0004-editor-extension).
-- **FR-002**: `ws-host` MUST run its own pinned `chezmoi`: one exact version and SHA-256 per architecture written in its code, verified
-  before anything is unpacked, fetched into `ws-host`'s tools folder, and MUST NOT use a `chezmoi` found on PATH unless the person names
-  it in `WS_HOST_CHEZMOI`. Offline, a `chezmoi` that is not already here MUST end the command with exit status 3 naming it.
+- **FR-002**: `ws-host` MUST run the person's own `chezmoi`: the one named in `WS_HOST_CHEZMOI`, else the first on their PATH, else the one
+  it installed into `~/.local/bin` earlier. A person may upgrade, replace or configure it as they like, and `ws-host` MUST accept any version
+  not older than the one this spec was tested against (`ws_host/lib/chezmoi.py` `VERSION`), and MUST end with exit status 3 and the
+  upgrade command when it is older. When there is none, `ws-host` MUST fetch that version (SHA-256 per architecture written in its code,
+  verified before anything is unpacked) and install it as a plain file in `~/.local/bin` that `ws-host` never replaces afterwards. Offline,
+  with none here, the command MUST end with exit status 3 naming chezmoi. `doctor` MUST report the version in use and warn when it is too old.
 - **FR-003**: Every `chezmoi` run MUST pass `ws-host`'s own configuration, persistent state, cache and source state, with the person's home
-  folder as the destination, and MUST NOT read a person's own `chezmoi` configuration or source state, nor start one.
+  folder as the destination, and MUST NOT read a person's own `chezmoi` configuration or source state, nor start one: it is their binary, not their dotfiles.
 - **FR-004**: The source state MUST be written from code at every use and replace what was there, so it is a cache of what the code says:
   one `modify_` script per managed file, which runs `ws_host.lib.managed` on the file's current text. Those functions MUST be pure,
   use only the standard library, and give the same text when run twice on their own output.
@@ -53,6 +56,7 @@ it only when it differs; `ws-host` adds the consent, the copy kept first and the
 
 ## Open questions
 
+- **OQ-2**: Whether a person who keeps dotfiles in chezmoi may opt in to `ws-host` writing its files into their own source state instead of its own.
 - **OQ-1**: Whether `config ensure` should also run from `update`, so a new block text reaches people without a command.
 
 ## Key entities
