@@ -7,6 +7,7 @@ import stat
 import subprocess
 import sys
 import unittest
+import unittest.mock
 from pathlib import Path
 
 from ws_host.commands import vscode as vs
@@ -211,6 +212,7 @@ class Console(Home):
 
     def setUp(self):
         super().setUp()
+        os.environ["WS_HOST_CONSOLE"] = "release"      # these tests are of the release path, for a ws-host without the Console's source
         self.bin = self.home.parent / "bin"
         self.bin.mkdir()
         self.calls = self.home / "code.calls"
@@ -418,3 +420,78 @@ class OtherWorkspaceFiles(Console):
         mine.write_text('{ // mine\n"folders": []}')
         self.run_json("vscode", "ensure")
         self.assertEqual(mine.read_text(), '{ // mine\n"folders": []}')
+
+
+class LocalBuild(Home):
+    """0007-releases FR-013: a clone builds the Console itself, with its own Node, and rebuilds only when the source changed."""
+
+    def setUp(self):
+        super().setUp()
+        self.bin = self.home.parent / "bin"
+        self.bin.mkdir()
+        self.calls = self.home / "code.calls"
+        self.installed = self.home / "code.installed"
+        self.installed.write_text("ms-python.python\n")
+        (self.bin / "code").write_text(
+            f'#!/bin/sh\necho "$@" >> "{self.calls}"\n'
+            f'[ "$1" = --list-extensions ] && cat "{self.installed}"\n'
+            f'[ "$1" = --install-extension ] && echo "$2" | sed -n "s/.*workspaces-console.*/intellectual-frontiers.workspaces-console/p" >> "{self.installed}"\n'
+            'exit 0\n')
+        (self.bin / "code").chmod(0o755)
+        os.environ["PATH"] = f"{self.bin}:{os.environ['PATH']}"
+        self.paths.config_dir().mkdir(parents=True, exist_ok=True)
+        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\nWS_HOST_PROMPT="no"\n')
+        self.built = []
+        from ws_host.lib import release, toolchain as tc
+
+        def fake_build(out, env):
+            out.mkdir(parents=True, exist_ok=True)
+            f = out / "workspaces-console-0.0.0.vsix"
+            f.write_bytes(b"pk")
+            self.built.append(env["PATH"])
+            return f
+        for target, repl in ((release, ("build_console_local", fake_build)), (tc, ("ensure", lambda p, names, offline=False: names))):
+            patch = unittest.mock.patch.object(target, *repl)
+            patch.start()
+            self.addCleanup(patch.stop)
+        self.source = unittest.mock.patch.object(release, "source_hash", lambda: "abc123")
+        self.source.start()
+        self.addCleanup(self.source.stop)
+
+    def installs(self):
+        return [l for l in self.calls.read_text().splitlines() if "--install-extension" in l and "workspaces-console" in l]
+
+    def test_it_builds_from_the_clone_installs_it_and_asks_github_for_nothing(self):
+        code, doc = self.run_json("vscode", "ensure")
+        step = doc["data"]["steps"][0]
+        self.assertEqual(step["status"], "ok", doc)
+        self.assertIn("Built the Workspaces Console from this clone", step["plain"])
+        self.assertEqual(len(self.installs()), 1)
+        self.assertEqual(len(self.built), 1)
+
+    def test_an_unchanged_source_is_not_built_or_installed_again_and_a_changed_one_is(self):
+        self.run_json("vscode", "ensure")
+        self.run_json("vscode", "ensure")
+        self.assertEqual(len(self.built), 1)
+        from ws_host.lib import release
+        self.source.stop()
+        with unittest.mock.patch.object(release, "source_hash", lambda: "def456"):
+            self.run_json("vscode", "ensure")
+        self.assertEqual(len(self.built), 2)
+
+    def test_a_dry_run_builds_nothing(self):
+        code, doc = self.run_json("vscode", "ensure", "--dry-run")
+        self.assertEqual(self.built, [])
+        self.assertIn("build the Workspaces Console from this clone", doc["data"]["steps"][0]["plain"])
+
+    def test_the_source_fingerprint_ignores_what_a_build_leaves_behind(self):
+        from ws_host.lib import release
+        self.source.stop()
+        before = release.source_hash()
+        (REPO / "console" / "out").mkdir(exist_ok=True)
+        marker = REPO / "console" / "out" / "x.js"
+        marker.write_text("1")
+        try:
+            self.assertEqual(release.source_hash(), before)
+        finally:
+            marker.unlink()

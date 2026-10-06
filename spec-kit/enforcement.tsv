@@ -132,7 +132,7 @@ requirement	mechanism	by	note
 0007-releases FR-010	check	workspaces-host: ws-host test	tests check publish is a decision never over MCP, refuses a dirty tree, an unpushed commit, an existing tag and a failing check, uses gh and takes no token
 0007-releases FR-011	check	workspaces-host: ws-host test	a test checks the notes carry each file and checksum and the exact mise entry
 0007-releases FR-012	check	workspaces-host: ws-host test	a test checks no workflow in the repository builds or publishes a release
-0007-releases FR-013	check	workspaces-host: ws-host test	tests check a release with a digest, name and https address is installed once after its digest is checked, others are ignored, a mismatch installs nothing, and offline asks for nothing
+0007-releases FR-013	check	workspaces-host: ws-host test	tests check a clone builds the Console with ws-host's own Node, installs it and rebuilds only when its source changed; and, for a ws-host without the source, a release with a digest, name and https address is installed once after its digest is checked, others are ignored, a mismatch installs nothing, and offline asks for nothing
 0008-providers FR-001	check	workspaces-host: ws-host test	tests check a valid provider loads, a folder without provider.toml is not one, unknown keys are ignored and no provider code runs
 0008-providers FR-002	check	workspaces-host: ws-host test	tests check entries are read one per file with an exact version, a summary and a kind
 0008-providers FR-003	check	workspaces-host: ws-host test	tests check archive platforms, checksums, strip, bin, provides, env, needs and system are read
