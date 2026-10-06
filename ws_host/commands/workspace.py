@@ -6,7 +6,7 @@ import shutil
 from ..core import config, env, paths, registry as reg
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
-from ..lib import completion as completion_lib, git, kitrun, repos, selfupdate, trust as trust_mod
+from ..lib import completion as completion_lib, git, kitrun, repos, selfupdate, trust as trust_mod, updates
 from . import auth as auth_cmd, doctor as doctor_cmd, shell as shell_cmd, vscode as vscode_cmd
 
 
@@ -37,6 +37,14 @@ def workspace_status(ctx):
     plain = "Everything is in place." if rows and not needs else ("I do not know any repositories yet. Add one with: ws-host repo add github.com/ORG/REPO" if not rows else "Some things need doing; `workspace ensure` does them.")
     return Resource("workspace-status", "workspace", {"plain": plain, "repositories": rows, "kits": kit_rows, "ignored": invalid},
                     actions=[Action(("workspace", "ensure"), "Ensure everything is set up and up to date")] if rows else [])
+
+
+@command("updates", "status", category="read", summary="Look quietly for news in ws-host and your repositories; changes nothing",
+         args=(Arg("fresh", flag=True, help="ask the network even if it was asked a few minutes ago"),), surfaces=("cli", "editor"))
+def workspace_updates(ctx, fresh=False):
+    r = updates.look(config.load(), ctx.offline, 0 if fresh else updates.FRESH_SECONDS)
+    return Resource("workspace-updates", "workspace", {"plain": r["plain"], "waiting": r["waiting"], "items": r["items"], "unreachable": r["unreachable"]},
+                    actions=[Action(("update",), "Update everything")] if r["waiting"] else [])
 
 
 def _step(name, plain):

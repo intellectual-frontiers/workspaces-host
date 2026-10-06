@@ -14,6 +14,7 @@ reg.view("setup", "Setup", "settings-gear", 40, "Sign-in, the editor, your promp
 reg.noun("repo", "Repository", "repo", "workspace", {
     "command": "repo list", "rows": "repositories", "id": "id", "label": "id", "description": "path", "status": "status", "tooltip": ["trust", "listed_by"]})
 reg.noun("workspace", "Workspace", "home", "workspace")
+reg.noun("updates", "Updates", "cloud-download", "workspace")
 reg.noun("kit", "Kit", "package", "kits", {
     "command": "kit list", "rows": "kits", "id": "name", "label": "name", "description": "plain", "status": "status",
     "status_map": {"ok": "ok", "warn": "warning"}, "tooltip": ["missing"]})
@@ -52,6 +53,6 @@ for _id, _title, _icon in (
     ("shell add", "Set Up Prompt…", "terminal"), ("skill generate", "Generate Agent Skill", None), ("test", "Run Tests", "beaker"),
     ("update", "Update ws-host", "versions"), ("vscode ensure", "Set Up VS Code", None), ("vscode check", "Test Console With VS Code…", "beaker"),
     ("workspace ensure", "Set Up Workspace", "rocket"), ("workspace set", "Make Git Sync Safe", None),
-    ("workspace status", "Show Workspace Status", "home"),
+    ("workspace status", "Show Workspace Status", "home"), ("updates status", "Look for Updates", "cloud-download"),
 ):
     reg.present(_id, _title, _icon)

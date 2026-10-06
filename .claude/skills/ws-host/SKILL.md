@@ -62,6 +62,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `toolchain remove` | setup | terminal | Remove stored programs no enabled provider pins |
 | `toolchain show` | read | terminal, editor, mcp | Show one pinned program: version, where it is, what it provides and sets |
 | `update` | setup | terminal, editor | Bring everything up to date: ws-host, your repositories, the editor and what they need; only where nothing of yours is in the way; --check only looks |
+| `updates status` | read | terminal, editor | Look quietly for news in ws-host and your repositories; changes nothing |
 | `vscode check` | check | terminal | Run a provider's tests of the Workspaces Console in a real VS Code under a display server |
 | `vscode ensure` | setup | terminal, editor | Put VS Code in its recommended state: the Workspaces Console, helpful extensions and safe settings |
 | `workspace ensure` | setup | terminal, editor | Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health |

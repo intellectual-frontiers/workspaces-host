@@ -123,6 +123,41 @@ class Update(Workspace):
         os.utime(selfupdate.checked_file(), (old, old))
         self.assertTrue(selfupdate.due())
 
+    def test_workspace_updates_looks_at_repositories_too_and_changes_nothing(self):
+        other = self.remote("acme", "site")
+        self.run_json("repo", "add", self.rid("acme", "site"))
+        code, doc = self.run_json("updates", "status", "--fresh")
+        self.assertFalse(doc["data"]["waiting"])
+        self.assertFalse(selfupdate.notice_file().exists())
+        self.upstream_commit(other, "n.txt", "x\n")
+        code, doc = self.run_json("updates", "status", "--fresh")
+        self.assertTrue(doc["data"]["waiting"])
+        self.assertEqual([i["name"] for i in doc["data"]["items"]], ["site"])
+        self.assertIn("site", doc["data"]["plain"])
+        self.assertEqual(doc["actions"][0]["cli"], "ws-host update")
+        self.assertIn("site", selfupdate.notice_file().read_text())
+        self.assertFalse((self.clone_path("acme", "site") / "n.txt").exists(), "a look moves nothing")
+        self.upstream_commit(other, "m.txt", "x\n")
+        code, doc = self.run_json("updates", "status")
+        self.assertEqual(doc["data"]["items"][0]["behind"], 1, "a look a few minutes old is given again without asking the network")
+
+    def test_the_background_look_covers_repositories_for_the_note(self):
+        other = self.remote("acme", "site")
+        self.run_json("repo", "add", self.rid("acme", "site"))
+        self.upstream_commit(other, "n.txt", "x\n")
+        self.run_json("update", "--check", "--background")
+        self.assertIn("site", selfupdate.notice_file().read_text())
+
+    def test_an_unreachable_remote_leaves_the_last_note_alone(self):
+        self.news(1)
+        self.run_json("updates", "status", "--fresh")
+        had = selfupdate.notice_file().read_text()
+        git(self.copy, "remote", "set-url", "origin", str(self.home.parent / "nowhere"))
+        code, doc = self.run_json("updates", "status", "--fresh")
+        self.assertEqual(code, 0)
+        self.assertIn("ws-host", doc["data"]["unreachable"])
+        self.assertEqual(selfupdate.notice_file().read_text(), had)
+
 
 class NewWindow(Workspace):
     """The lines in the prompt block that tell a new terminal window about an update."""
@@ -153,6 +188,13 @@ class NewWindow(Workspace):
         out, calls = self.open_window()
         self.assertIn("🔄 A newer ws-host is ready (3 changes)", out)
         self.assertEqual(calls, "", "a recent look is not repeated")
+
+    def test_nothing_is_said_in_vs_codes_own_terminal(self):
+        self.state.mkdir(parents=True)
+        (self.state / "update-available").write_text("A newer ws-host is ready.\n")
+        (self.state / "update-checked").touch()
+        out, _ = self.open_window(TERM_PROGRAM="vscode")
+        self.assertNotIn("newer ws-host", out)
 
     def test_no_colour_when_asked(self):
         self.state.mkdir(parents=True)

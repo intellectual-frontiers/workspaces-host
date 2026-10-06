@@ -7,11 +7,11 @@ import os
 import subprocess
 import sys
 
-from ..core import paths
+from ..core import config, paths
 from ..core import registry as reg
 from ..core.registry import Arg, command
 from ..core.resource import Action, OK, Resource
-from ..lib import completion, selfupdate
+from ..lib import completion, selfupdate, updates
 
 
 def _report(s: dict) -> dict:
@@ -19,8 +19,13 @@ def _report(s: dict) -> dict:
 
 
 def _look(ctx, background: bool) -> Resource:
+    looked = None
+    if background:
+        looked = updates.look(config.load(), ctx.offline)          # repositories too, so the note a new terminal shows is true of all of them
     s = selfupdate.state(True, 60 if background else 30, ctx.offline)
-    if s["fetched"] or ctx.offline:
+    if looked is not None and (s["fetched"] or ctx.offline):
+        pass                                                         # the look above wrote the note
+    elif s["fetched"] or ctx.offline:
         selfupdate.write_notice(s["behind"])
     elif background:
         selfupdate.checked_file().parent.mkdir(parents=True, exist_ok=True)
