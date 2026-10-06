@@ -220,3 +220,5 @@ requirement	mechanism	by	note
 0009-workspaces-console FR-058	check	workspaces-host: ws-host release build	console unit tests (executor.test.ts) check what a build made is offered, and absolute, escaping and missing paths are not
 0009-workspaces-console FR-059	check	workspaces-host: ws-host release build	console unit tests (executor.test.ts, app.test.ts) check a failure's buttons, with and without exit status 3, and the repository row's words
 0009-workspaces-console FR-060	check	workspaces-host: ws-host release build	console unit tests (viewplan.test.ts) check simple views, and showing all when none is marked
+0006-onboarding FR-026	check	workspaces-host: ws-host test	test_update.py checks updates status (repositories, the few minutes' memory, nothing moved), the background note, an unreachable remote leaving the note, and no note inside VS Code's terminal
+0009-workspaces-console FR-061	check	workspaces-host: ws-host release build	console unit tests (updates.test.ts) check the first look and the hourly one, telling once, the button, a failed look and a busy window

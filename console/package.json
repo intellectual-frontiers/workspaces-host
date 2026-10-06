@@ -496,6 +496,13 @@
         "category": "%category%",
         "icon": "$(eye)",
         "enablement": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.lookForUpdates",
+        "title": "%command.lookForUpdates.title%",
+        "category": "%category%",
+        "icon": "$(cloud-download)",
+        "enablement": "workspaces-console.hasRepository"
       }
     ],
     "menus": {
@@ -655,6 +662,10 @@
         {
           "command": "workspaces-console.toggleSimpleViews",
           "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.lookForUpdates",
+          "when": "workspaces-console.hasRepository"
         }
       ],
       "view/title": [
@@ -802,6 +813,11 @@
           "command": "workspaces-console.toggleSimpleViews",
           "when": "view == workspaces-console.home && workspaces-console.hasRepository",
           "group": "9_more@0"
+        },
+        {
+          "command": "workspaces-console.lookForUpdates",
+          "when": "view == workspaces-console.home && workspaces-console.hasRepository",
+          "group": "9_more@1"
         }
       ],
       "view/item/context": [

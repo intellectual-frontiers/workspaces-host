@@ -143,6 +143,11 @@ detail, troubleshooting, and how to take over in VS Code.
   0009-workspaces-console FR-052) and the removal of programs nothing pins any more. It MUST pass `--offline` on, share the person's terminal so that its
   progress and its questions work, answer one JSON document for a program, and end with the status of the setup it ran. `workspace ensure` MUST itself set the
   editor up when `code` is there.
+- **FR-026**: `updates status` (read) MUST look quietly, by fetching alone, at ws-host's own copy and at every repository copied here, and answer whether
+  anything is new, which repositories and how much, and which could not be reached. It MUST change nothing but git's record of the remote, MUST give an answer
+  a few minutes old again without asking the network unless `--fresh` is given, and MUST keep the note a new terminal window shows true of all of them: the
+  background look of FR-025 covers the repositories too, a note is cleared only when everything was seen, and a repository that cannot be reached leaves
+  the last note alone. A terminal inside VS Code MUST NOT show the note, because the Console says it there (0009-workspaces-console FR-061).
 
 ## Setting VS Code up
 

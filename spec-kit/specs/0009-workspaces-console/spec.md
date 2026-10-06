@@ -537,6 +537,10 @@ knowledge (FR-003).
   is missing (exit status 3), *Install everything*. A repository in a view shows which folder it is, then what its own declaration says it is (`summary`), in words for people.
 - **FR-060**: By default the Console MUST show only the views a command line marks `simple` (0041-command-line FR-076), or every view when none is marked; the
   setting `workspaces-console.simpleViews` and Home's *Show Every View* command switch it.
+- **FR-061**: While a window is open the Console MUST ask the command line's `updates status` (read) once soon after it starts and then once an hour, never while
+  a command of its own is running, and, when something is new, MUST say so in plain words once per news in the window, with *Update Everything* (the one command that writes) and
+  *Later*, show a status bar item that does the same, and refresh Home. A look that cannot be made MUST say nothing and change nothing, and the Console MUST keep
+  nothing of it between windows. *Look for Updates* asks at once and says when everything is up to date.
 
 ## Out of scope
 

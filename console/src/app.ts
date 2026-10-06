@@ -28,6 +28,7 @@ import { ChecksProvider } from './views/checks-tree';
 import { CommandsProvider } from './views/commands-tree';
 import { FileDecorations } from './views/decorations';
 import { Services } from './services/services';
+import { Updates } from './services/updates';
 import { ServicesProvider, type ServiceNode } from './views/services-tree';
 import { HomeProvider } from './views/home-tree';
 import { ReferenceLanguage } from './views/language';
@@ -74,6 +75,8 @@ export class App {
   readonly checksView: ChecksProvider;
   readonly services: Services;
   readonly servicesView: ServicesProvider;
+  readonly updates: Updates;
+  private readonly updatesItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 48);
   private readonly servicesItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 49);
   readonly slots: ResourceProvider[] = [];
   readonly treeViews = new Map<string, vscode.TreeView<Node | ServiceNode>>();
@@ -118,6 +121,14 @@ export class App {
       busy: (title, fn) => Promise.resolve(vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title }, fn)),
     });
     this.servicesView = new ServicesProvider(this.services);
+    this.updates = new Updates({
+      look: () => this.lookForUpdates(),
+      notify: async (message, buttons) => vscode.window.showInformationMessage(message, ...buttons),
+      bringCurrent: () => { void vscode.commands.executeCommand('workspaces-console.updateEverything'); },
+      changed: () => { this.updatesChanged(); void this.refresh(); },
+      later: (ms, fn) => { const h = setTimeout(fn, ms); return { dispose: () => clearTimeout(h) }; },
+      busy: () => this.running.count > 0,
+    });
     for (let i = 0; i < SLOTS; i += 1) this.slots.push(new ResourceProvider(this, i));
     this.mcp = new McpRegistration(this.log, () => this.repos);
     this.tests = new CheckTests(this);
@@ -250,6 +261,27 @@ export class App {
     } else this.servicesItem.hide();
     void vscode.commands.executeCommand('setContext', 'workspaces-console.hasServices', this.services.list().length > 0);
     void vscode.commands.executeCommand('setContext', 'workspaces-console.servicesRunning', running.length > 0);
+  }
+
+  /** One quiet look through the command line that offers it (ws-host's), or null when there is none or it could not look. */
+  private async lookForUpdates(): Promise<{ waiting: boolean; plain: string } | null> {
+    const repo = this.repos.find((r) => r.has('updates status'));
+    if (!repo) return null;
+    const result = await repo.launcher.run(['updates', 'status']);
+    const data = result.doc?.data;
+    if (result.exit !== 0 || !data || typeof data.waiting !== 'boolean') return null;
+    return { waiting: data.waiting, plain: typeof data.plain === 'string' ? data.plain : '' };
+  }
+
+  /** Newer code waits, or no longer does: the status bar follows. */
+  updatesChanged(): void {
+    const news = this.updates.current;
+    if (news.waiting) {
+      this.updatesItem.text = `$(cloud-download) ${t('Updates ready')}`;
+      this.updatesItem.tooltip = t('Newer versions are ready. Click to bring everything up to date.');
+      this.updatesItem.command = 'workspaces-console.updateEverything';
+      this.updatesItem.show();
+    } else this.updatesItem.hide();
   }
 
   private updateBadges(): void {
@@ -486,6 +518,7 @@ export class App {
     tree(VIEW_IDS.checks, this.checksView, true);
     { const view = vscode.window.createTreeView(VIEW_IDS.services, { treeDataProvider: this.servicesView }); this.treeViews.set(VIEW_IDS.services, view); sub(view); }
     sub(this.servicesItem); sub({ dispose: () => this.services.stopAll() });
+    sub(this.updatesItem); sub({ dispose: () => this.updates.stop() });
     tree(VIEW_IDS.commands, this.commandsView, true);
     sub(vscode.window.registerWebviewPanelSerializer(PANEL_TYPE, { deserializeWebviewPanel: (panel, state) => this.panel.restore(panel, state) }));
     sub(vscode.tasks.registerTaskProvider('workspaces-console', this.tasks));
@@ -505,5 +538,6 @@ export class App {
     this.mcp.start();
     testMode.install(this.context, (o) => this.snapshot(o), (m) => this.panel.handle(m));
     sub({ dispose: () => testMode.uninstall() });
+    if (!testMode.active()) this.updates.start();   // a test host looks only when a test asks
   }
 }

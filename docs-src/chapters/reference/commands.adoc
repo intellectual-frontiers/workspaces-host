@@ -279,6 +279,19 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 
 |===
 
+=== updates
+
+[cols="3,1,2,5"]
+|===
+|Usage |Category |Where it runs |What it does
+
+|`ws-host updates status [--fresh]`
+|read
+|terminal, editor
+|Look quietly for news in ws-host and your repositories; changes nothing
+
+|===
+
 === vscode
 
 [cols="3,1,2,5"]
