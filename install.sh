@@ -4,9 +4,9 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh
 #
-# It installs what is missing (python3, git, certificates, curl and wget; it says so and asks for your password first), installs uv, copies
+# It installs what is missing (git, xz, certificates, curl and wget; it says so and asks for your password first), copies
 # workspaces-host beside your other repositories (or updates an existing copy by fast-forward only), links ~/.local/bin/ws-host,
-# checks your machine, and runs `ws-host workspace ensure`. Safe to run again.
+# has the launcher fetch ws-host's own Python and uv through mise, checks your machine, and runs `ws-host workspace ensure`. Safe to run again.
 #
 # Long steps show one line with a spinner (after half a second, at a terminal only) instead of a wall of output; what a step printed is
 # kept in a log and shown only if the step fails. A slow network therefore looks busy, not stuck.
@@ -78,12 +78,14 @@ need() {
 
 # Packages this script needs and does not find. On Debian and Ubuntu it installs them, after saying so.
 missing=""
-command -v python3 >/dev/null 2>&1 || missing="$missing python3"
 command -v git >/dev/null 2>&1 || missing="$missing git"
 [ -e /etc/ssl/certs/ca-certificates.crt ] || missing="$missing ca-certificates"
 # curl and wget both: VS Code's server in WSL is fetched with one or the other, and a person's own tools use either.
 command -v curl >/dev/null 2>&1 || missing="$missing curl"
 command -v wget >/dev/null 2>&1 || missing="$missing wget"
+# tar and xz: the launcher unpacks the pinned mise (a .tar.xz) with them.
+command -v tar >/dev/null 2>&1 || missing="$missing tar"
+command -v xz >/dev/null 2>&1 || missing="$missing xz-utils"
 if [ -n "$missing" ]; then
   if [ "${WS_HOST_NO_APT:-}" = 1 ] || ! command -v apt-get >/dev/null 2>&1; then
     need "this machine lacks:$missing." "sudo apt install$missing"
@@ -104,24 +106,10 @@ if [ -n "$missing" ]; then
     need "the packages could not be installed." "run: sudo apt install$missing"
 fi
 
-command -v python3 >/dev/null 2>&1 || need "python3 is not installed." "sudo apt install python3"
-python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' ||
-  need "python3 is older than 3.11." "use Debian 12 or later, or Ubuntu 24.04 or later"
 command -v git >/dev/null 2>&1 || need "git is not installed." "sudo apt install git"
 
 PATH=$HOME/.local/bin:$PATH
 export PATH
-if ! command -v uv >/dev/null 2>&1; then
-  # uv's own installer edits shell startup files unless told not to; ws-host never does that unasked.
-  export UV_NO_MODIFY_PATH=1 INSTALLER_NO_MODIFY_PATH=1
-  if command -v curl >/dev/null 2>&1; then
-    step "Installing uv, the tool ws-host runs on" sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh' || need "uv could not be installed." "check your network, then run this again"
-  elif command -v wget >/dev/null 2>&1; then
-    step "Installing uv, the tool ws-host runs on" sh -c 'wget -qO- https://astral.sh/uv/install.sh | sh' || need "uv could not be installed." "check your network, then run this again"
-  else
-    need "uv is not installed, and neither curl nor wget is here to fetch it." "sudo apt install curl, then run this again"
-  fi
-fi
 
 if [ -d "$target/.git" ]; then
   if step "Checking workspaces-host for news" git -C "$target" fetch --quiet origin; then
@@ -139,6 +127,8 @@ mkdir -p "$HOME/.local/bin"
 ln -sf "$target/ws-host" "$HOME/.local/bin/ws-host"
 
 ws="$HOME/.local/bin/ws-host"
+# ws-host's own runtime (the pinned mise, Python and uv, in ws-host's store): fetched once, here, so the first command is not the slow one.
+WS_HOST_BOOTSTRAP_ONLY=1 step "Preparing ws-host's runtime" "$ws" || need "ws-host's runtime could not be prepared." "check your network, then run this again"
 if [ "${WS_HOST_NO_ADVANCE:-}" = 1 ]; then
   "$ws" doctor || true
   say ""

@@ -1,0 +1,6 @@
+name = "uv"
+version = "0.12.23"
+summary = "uv, which runs ws-host commands that declare packages"
+kind = "tool"
+tool = "uv"
+bin = ".mise-bins"

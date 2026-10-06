@@ -23,6 +23,34 @@ def git(cwd, *args, check=True):
     return p.stdout.strip()
 
 
+_CHEZMOI: list = []
+
+
+def chezmoi_for_tests() -> str | None:
+    """A chezmoi the tests may run: the one named in WS_HOST_CHEZMOI, else the pinned release, fetched and verified once into a shared folder
+    (a throwaway HOME would otherwise fetch it again for every test). None when it cannot be had; a test that needs it then skips."""
+    if _CHEZMOI:
+        return _CHEZMOI[0]
+    found = os.environ.get("WS_HOST_CHEZMOI")
+    if not found:
+        import shutil
+        from ws_host.core import paths
+        from ws_host.lib import chezmoi
+        shared = Path(tempfile.gettempdir()) / "ws-host-tests-shared"
+        saved = {k: os.environ.get(k) for k in ("HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME")}
+        try:
+            os.environ.update({"HOME": str(shared), "XDG_DATA_HOME": str(shared / "data"), "XDG_CACHE_HOME": str(shared / "cache")})
+            os.environ.pop("WS_HOST_CHEZMOI", None)
+            found = str(chezmoi.program(fetch_it=True))
+        except Exception:
+            found = None
+        finally:
+            for k, v in saved.items():
+                os.environ.pop(k, None) if v is None else os.environ.__setitem__(k, v)
+    _CHEZMOI.append(found)
+    return found
+
+
 class Home(unittest.TestCase):
     """A throwaway HOME with XDG directories inside it, so no test touches the person's real files."""
 
@@ -36,7 +64,8 @@ class Home(unittest.TestCase):
         for var, sub in (("RUSTUP_HOME", ".rustup"), ("CARGO_HOME", ".cargo")):   # a throwaway HOME must not hide the machine's own toolchains
             if var not in os.environ and (real_home / sub).exists():
                 os.environ[var] = str(real_home / sub)
-        os.environ.update({"HOME": str(self.home), **GIT_ENV})
+        cz = chezmoi_for_tests()
+        os.environ.update({"HOME": str(self.home), **GIT_ENV, **({"WS_HOST_CHEZMOI": cz} if cz else {})})
         for k in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "WS_HOST_SURFACE", "WS_HOST_OFFLINE",
                   "WS_HOST_PUBLIC_ROOT", "WS_HOST_IN_GROUP"):
             os.environ.pop(k, None)

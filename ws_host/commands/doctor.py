@@ -54,11 +54,11 @@ def _build() -> tuple[dict, list[Action]]:
     checks: list[dict] = []
     d = machine.distro()
     py = machine.python_version()
-    checks.append(_check("python", "ok" if tuple(map(int, py.split("."))) >= (3, 11) else "fail", f"python {py}",
-                         cli="sudo apt install python3", todo="ws-host needs Python 3.11 or later: Debian 12 or newer and Ubuntu 24.04 or newer have it."))
+    checks.append(_check("python", "ok" if tuple(map(int, py.split("."))) >= (3, 11) else "fail", f"python {py}, ws-host's own",
+                         cli=INSTALLER, todo="ws-host runs on a Python it installs itself; run the installer again to repair it."))
     uv = machine.program_version("uv")
-    checks.append(_check("uv", "ok" if uv else "fail", f"uv {uv}" if uv else "uv is not installed; see https://docs.astral.sh/uv/",
-                         cli="curl -LsSf https://astral.sh/uv/install.sh | sh", **({} if uv else {"missing": True})))
+    checks.append(_check("uv", "ok" if uv else "warn", f"uv {uv}" if uv else "uv is not on this run's PATH; ws-host's launcher puts its own there",
+                         cli="ws-host provider show ws-host"))
     git_ver = git_v = machine.program_version("git")
     checks.append(_check("git", "ok" if git_v else "warn", f"git {git_v}" if git_v else "git is not installed; `ws-host kit add base` installs it",
                          action=(("kit", "add"), "Install the base kit", {"kit": "base"})))
@@ -66,6 +66,16 @@ def _build() -> tuple[dict, list[Action]]:
                          f"{d['pretty']} ({d['arch']}){' under WSL' if d['wsl'] else ''}"
                          + ("" if machine.debian_family(d) else "; ws-host is built for Debian and Ubuntu"),
                          todo="Use Debian or Ubuntu: in WSL on Windows, or in a virtual machine or a container on a Mac."))
+    try:
+        from ..lib import chezmoi as cz
+        from . import config as config_cmd
+        cz.program()                       # not fetched here: doctor reads, it does not download
+        stale = [r for r in config_cmd._states(False) if r["state"] != "current"]
+        if stale:
+            checks.append(_check("managed files", "warn", "not current: " + ", ".join(r["name"] for r in stale), action=(("config", "ensure"), "Update managed files", {}),
+                                 cli="ws-host config ensure"))
+    except Exception:
+        pass                               # chezmoi is not here yet, or nothing is managed: nothing to say
     link = paths.bin_dir() / "ws-host"
     checks.append(_check("launcher", "ok" if link.exists() else "warn",
                          str(link) if link.exists() else f"{link} is not there; run install.sh to link it", cli=INSTALLER))

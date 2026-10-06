@@ -19,16 +19,19 @@ and 0026-workspaces, held in the public root, govern all of them.
 - **FR-001**: The repository MUST provide one orchestrator, `ws-host`, that
   follows 0041-command-line in every respect these specs do not state
   otherwise. It is a new repository with no legacy path.
-- **FR-002**: `ws-host` MUST need only `python3` (3.11 or later) and `uv` on the
-  host. It targets a Debian-family Linux distribution, on bare metal, under
+- **FR-002**: `ws-host` MUST need only `sh`, `tar` with `xz`, `git` and `curl` or
+  `wget` on the host: its Python and `uv` are its own (FR-003). It targets a Debian-family Linux distribution, on bare metal, under
   WSL, or inside a virtual machine or container (which is how macOS is
   supported), and MUST NOT require a container, a Nix or a version manager
   (0026-workspaces FR-001).
 - **FR-003**: The launcher MUST be `ws-host` at the repository root, in POSIX
   `sh`, finding the repository from its own location even when it is run
-  through a symbolic link, and running the orchestrator on the plain
-  standard-library interpreter unless a command declares packages
-  (0041-command-line FR-001, FR-002).
+  through a symbolic link. When its Python and `uv` are not yet in `ws-host`'s own
+  store it MUST fetch the one pinned `mise` (version and SHA-256 per architecture in
+  `ws_host/bootstrap.env`, verified before it is unpacked), have it install the pinned Python and `uv`
+  (0008-providers FR-007, FR-008), and run the orchestrator on that plain
+  standard-library interpreter unless a command declares packages. Offline with the runtime
+  absent, it MUST exit 3 and say so (0041-command-line FR-001, FR-002).
 - **FR-004**: `ws-host` MUST need no third-party Python package. The
   repository's `pyproject.toml` and `uv.lock` MUST exist, name no
   dependency, and be the only TOML it keeps (0041-command-line FR-003,
@@ -37,8 +40,8 @@ and 0026-workspaces, held in the public root, govern all of them.
 ## Installing
 
 - **FR-005**: `install.sh` MUST be one POSIX `sh` script that a person runs
-  with one line. It MUST install what the machine lacks to get going, install
-  `uv` if it is missing, clone the repository into
+  with one line. It MUST install what the machine lacks to get going, have the launcher
+  prepare `ws-host`'s runtime (FR-003), clone the repository into
   `~/workspaces/github.com/intellectual-frontiers/workspaces-host` or update
   an existing clone by fast-forward only, link `~/.local/bin/ws-host`, run
   `ws-host doctor`, and set the workspace up (0006-onboarding FR-001, FR-002). It
@@ -149,8 +152,8 @@ and 0026-workspaces, held in the public root, govern all of them.
 
 ## Edge cases
 
-- `uv` is missing when the launcher runs: it exits 3 and says in plain words
-  how to install it, per FR-003 and 0041-command-line FR-021.
+- The runtime is missing and the computer is offline when the launcher runs: it exits 3 and says in plain words
+  to run `ws-host` once with a network, per FR-003 and 0041-command-line FR-021.
 - `install.sh` is run twice: the second run advances by fast-forward and
   changes nothing else, per FR-005.
 - `install.sh` finds a clone with edits not yet committed: it leaves the clone
@@ -169,7 +172,7 @@ and 0026-workspaces, held in the public root, govern all of them.
 
 ## Assumptions
 
-- The host has `python3` 3.11 or later and `git`, or the person can install
+- The host has `git`, `curl` or `wget`, and `xz-utils`, or the person can install
   them with the distribution's package manager.
 - The person's home directory is writable.
 
@@ -187,8 +190,8 @@ and 0026-workspaces, held in the public root, govern all of them.
 
 ## Success criteria
 
-- **SC-001**: In a fresh Debian and a fresh Ubuntu container with only `python3`,
-  `git` and `uv`, the install line works, and `ws-host doctor --json` and
+- **SC-001**: In a fresh Debian and a fresh Ubuntu container with only `git`,
+  `curl` and `xz-utils`, the install line works, and `ws-host doctor --json` and
   `ws-host test` pass.
 - **SC-002**: `doctor` holds no secret.
 - **SC-003**: Adding a module to the commands package adds its commands with

@@ -20,6 +20,7 @@ reg.noun("kit", "Kit", "package", "kits", {
 reg.noun("auth", "Sign-in", "account", "setup")
 reg.noun("vscode", "VS Code", "extensions", "setup")
 reg.noun("shell", "Prompt", "terminal", "setup")
+reg.noun("config", "Managed files", "gear", "setup")
 reg.noun("completion", "Tab completion", "keyboard", "setup")
 reg.noun("docs", "Guide", "book")
 reg.noun("release", "Release", "package")
@@ -35,7 +36,8 @@ reg.noun("command", "Command", "terminal-cmd")
 for _id, _title, _icon in (
     ("auth new", "Sign In…", "key"), ("auth status", "Show Sign-In Status", "account"),
     ("check", "Run Checks", "checklist"), ("command list", "List Commands", None), ("command show", "Show Command", None),
-    ("completion add", "Set Up Tab Completion…", "keyboard"), ("completion list", "List Completion Values…", None),
+    ("completion add", "Set Up Tab Completion…", "keyboard"), ("config check", "Check Managed Files", None), ("config ensure", "Update Managed Files", "sync"),
+    ("config show", "List Managed Files", None), ("completion list", "List Completion Values…", None),
     ("context", "Show Context", None), ("docs build", "Build Guide", "book"), ("docs generate", "Generate Guide Reference", None),
     ("doctor", "Check Machine", "pulse"), ("fresh", "Check Generated Files", None), ("help", "Learn Daily Work", "book"),
     ("kit add", "Install Kit…", "cloud-download"), ("kit list", "List Kits", None), ("kit show", "Show Kit…", None),

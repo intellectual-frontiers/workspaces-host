@@ -1,0 +1,6 @@
+name = "python"
+version = "3.13.16"
+summary = "Python, which ws-host runs on"
+kind = "tool"
+tool = "python"
+bin = "bin"
