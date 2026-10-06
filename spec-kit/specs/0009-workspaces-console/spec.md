@@ -541,6 +541,9 @@ knowledge (FR-003).
   a command of its own is running, and, when something is new, MUST say so in plain words once per news in the window, with *Update Everything* (the one command that writes) and
   *Later*, show a status bar item that does the same, and refresh Home. A look that cannot be made MUST say nothing and change nothing, and the Console MUST keep
   nothing of it between windows. *Look for Updates* asks at once and says when everything is up to date.
+- **FR-062**: Home's title bar MUST offer *Add Repository*, and MUST offer *Sign In to GitHub* while the command line's `auth status` (read) says a forge is not
+  signed in, so that neither is found only through the Command Palette. A description of a command of several words MUST be asked of the command line one word
+  at a time.
 
 ## Out of scope
 

@@ -109,7 +109,7 @@ export class Repository {
   async detail(id: string): Promise<CommandDetail> {
     const held = this.registry.details.get(id);
     if (held) return held;
-    const r = await this.launcher.run(['command', 'show', id]);
+    const r = await this.launcher.run(['command', 'show', ...id.split(/\s+/)]);
     if (r.failed || !r.doc) throw new WireError('launcher', `${this.program} could not describe "${id}".`);
     const d = commandDetail(r.doc);
     this.registry.details.set(id, d);

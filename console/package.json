@@ -675,6 +675,11 @@
           "group": "navigation@0"
         },
         {
+          "command": "workspaces-console.signIn",
+          "when": "view == workspaces-console.home && workspaces-console.hasRepository && workspaces-console.signedOut",
+          "group": "navigation@0"
+        },
+        {
           "command": "workspaces-console.addRepository",
           "when": "view == workspaces-console.home && workspaces-console.hasRepository",
           "group": "navigation@0"

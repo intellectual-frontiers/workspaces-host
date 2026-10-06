@@ -126,7 +126,7 @@ export class App {
       notify: async (message, buttons) => vscode.window.showInformationMessage(message, ...buttons),
       bringCurrent: () => { void vscode.commands.executeCommand('workspaces-console.updateEverything'); },
       changed: () => { this.updatesChanged(); void this.refresh(); },
-      later: (ms, fn) => { const h = setTimeout(fn, ms); return { dispose: () => clearTimeout(h) }; },
+      later: (ms, fn) => { const h = setTimeout(fn, ms); h.unref?.(); return { dispose: () => clearTimeout(h) }; },
       busy: () => this.running.count > 0,
     });
     for (let i = 0; i < SLOTS; i += 1) this.slots.push(new ResourceProvider(this, i));
@@ -192,9 +192,22 @@ export class App {
     await this.tests.rebuild();
     // The health the status bar states comes from `doctor`; it is cheap, and runs only for a trusted repository.
     for (const repo of repos) if (repo.state === 'ready') { await repo.runDoctor(); await this.loadProposals(repo); }
+    await this.lookAtSignIn();
     this.refreshViews();
     this.markReady();
     return repos;
+  }
+
+  /** Whether GitHub is signed in, from the command line's own read (`auth status`); the Sign In button shows only while it is not. Unknown counts as signed in. */
+  private async lookAtSignIn(): Promise<void> {
+    let signedOut = false;
+    const repo = this.repos.find((r) => r.has('auth status'));
+    if (repo) {
+      const result = await repo.launcher.run(['auth', 'status']);
+      const forges = result.doc?.data.forges;
+      signedOut = result.exit === 0 && Array.isArray(forges) && forges.some((f) => (f as { signed_in?: unknown }).signed_in === false);
+    }
+    void vscode.commands.executeCommand('setContext', 'workspaces-console.signedOut', signedOut);
   }
 
   /** The launcher or its declaration changed on disk: one repository is asked again, the others are left alone. */
