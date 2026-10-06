@@ -223,6 +223,37 @@ def build_console(out: Path, tests: bool = True) -> tuple[Path, list[dict]]:
     return target, steps
 
 
+def source_hash() -> str:
+    """A fingerprint of everything the Console is built from: its source, its manifest and its npm lock (not what a build leaves behind)."""
+    ext = console_dir()
+    h = hashlib.sha256()
+    for f in sorted(p for p in ext.rglob("*") if p.is_file()):
+        rel = f.relative_to(ext).parts
+        if rel[0] in ("node_modules", "out", "dist") or f.suffix in (".vsix", ".map"):
+            continue
+        h.update("/".join(rel).encode() + b"\0" + f.read_bytes() + b"\0")
+    return h.hexdigest()[:16]
+
+
+def build_console_local(out: Path, env: dict[str, str]) -> Path:
+    """The Console for this computer, built from the source in this clone with `env`'s node and npm (0004-editor-extension FR-026): the locked packages,
+    the bundle, the translations and the package. The type checks, lint and tests are the release build's (`release build`), not a person's install."""
+    ext = console_dir()
+    node, npm = shutil.which("node", path=env["PATH"]), shutil.which("npm", path=env["PATH"])
+    if not node or not npm:
+        raise ReleaseError("missing-program", "node is not on the toolchain's PATH", "I need Node.js to build the Workspaces Console, and ws-host's own toolchain has none yet.",
+                           "ws-host toolchain ensure node --provider ws-host")
+    out.mkdir(parents=True, exist_ok=True)
+    run([npm, "ci", "--ignore-scripts", "--no-audit", "--no-fund"], ext, "Installing the Console's locked packages", env)
+    run([node, "esbuild.mjs", "bundle"], ext, "Bundling the Console", env)
+    write_l10n(ext)
+    target = out / names()["console"]
+    run([node, str(ext / "node_modules" / "@vscode" / "vsce" / "vsce"), "package", "--no-dependencies", "--skip-license", "--allow-missing-repository",
+         "--no-rewrite-relative-links", "--out", str(target)], ext, "Packing the Console", env)
+    normalize_zip(target)
+    return target
+
+
 # ---- checksums and the whole build ----------------------------------------------------------------------------------------------
 
 def sha256(path: Path) -> str:

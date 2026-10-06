@@ -114,14 +114,61 @@ def release_step(ctx, rel: dict, have: set) -> dict:
             "plain": "The Workspaces Console is installed and current." if current else f"Installed the Workspaces Console {rel['tag']} from the public root's release, after checking its fingerprint. Reload VS Code's window to start it."}
 
 
+def local_source() -> bool:
+    """Whether this clone holds the Console's source: a clone does, an installed wheel does not. WS_HOST_CONSOLE=release asks for the published release
+    instead, as a ws-host without the source would."""
+    if os.environ.get("WS_HOST_CONSOLE") == "release":
+        return False
+    return (paths.repo_root() / "console" / "package.json").is_file()
+
+
+def local_step(ctx, have: set) -> dict:
+    """Build the Console from this clone's own source with ws-host's own Node, and install it (0004-editor-extension FR-026). Nothing is downloaded from a
+    release and nothing needs a network but the npm packages the clone's lock names; a rebuild happens only when the source has changed."""
+    from ..lib import provider as prov, release, toolchain as tc
+    name = "Workspaces Console extension"
+    fingerprint = release.source_hash()
+    current = read_stamp().get("source") == fingerprint and CONSOLE_ID in have
+    if ctx.dry_run:
+        return {"name": name, "status": "already" if current else "would-install",
+                "plain": "The Workspaces Console is installed and matches this clone." if current else "I would build the Workspaces Console from this clone and install it."}
+    if current:
+        return {"name": name, "status": "already", "plain": "The Workspaces Console is installed and matches this clone."}
+    p = prov.load(paths.repo_root())
+    try:
+        if p is None or "node" not in p.entries:
+            raise release.ReleaseError("no-provider", "ws-host does not declare node", "ws-host's own toolchain does not name Node.js.")
+        tc.ensure(p, ["node"], offline=ctx.offline)
+        env = tc.environment(p)
+        out = paths.cache_dir() / "workspaces-console"
+        for old in out.glob("*.vsix"):
+            old.unlink()
+        vsix = release.build_console_local(out, env)
+    except tc.ToolchainError as e:
+        raise WsError(f"toolchain-{e.code}", str(e), e.plain, exit_code=e.exit_code)
+    except release.ReleaseError as e:
+        raise WsError("console-build", str(e), e.plain, [Action(("vscode", "ensure"), "Try again")])
+    r = run_code(["--install-extension", str(vsix), "--force"], "📦 Installing the Workspaces Console")
+    if r.returncode != 0:
+        raise WsError("code-install", (r.stderr or r.stdout).strip()[-300:], "VS Code's `code` command could not install the Workspaces Console.", [Action(("vscode", "ensure"), "Try again")])
+    write_stamp(source=fingerprint, installed=fingerprint)
+    return {"name": name, "status": "installed", "plain": "Built the Workspaces Console from this clone and installed it. Reload VS Code's window to start it."}
+
+
 def console_step(ctx, cfg, code: str | None, have: set) -> tuple[dict, list[Action]]:
-    """Install the Workspaces Console from this repository's latest release, once, after checking its fingerprint (0007-releases FR-010)."""
+    """Put the Workspaces Console in VS Code: built here from this clone's source, so that everyone who installed ws-host has it with no release to wait for;
+    only a ws-host without the source (a wheel) takes the published release, after checking its fingerprint (0007-releases FR-010)."""
     name = "Workspaces Console extension"
     if not code:
         return {"name": name, "status": "skipped", "plain": "VS Code's `code` command is not available here yet; open VS Code from this terminal once with `code .`, then run this again."}, []
+    if local_source():
+        try:
+            return local_step(ctx, have), []
+        except WsError as e:
+            return {"name": name, "status": "failed", "plain": e.plain}, list(e.actions) or [Action(("vscode", "ensure"), "Try again")]
     rel = release_package(ctx.offline)
     if rel is None:
-        return {"name": name, "status": "skipped", "plain": "I could not find a published release of the Workspaces Console with a checksum I can verify "
+        return {"name": name, "status": "skipped", "plain": "This ws-host has no copy of the Console's source, and I could not find a published release with a checksum I can verify "
                                                            "(there may be none yet, or GitHub could not be reached), so I did not install it."}, [Action(("vscode", "ensure"), "Try again")]
     try:
         return release_step(ctx, rel, have), []
@@ -290,7 +337,7 @@ def vscode_ensure(ctx):
              "VS Code is partly set up. " + ("The steps below say what is left." if left else s["plain"]))
     done = not ctx.dry_run and not left
     yield Resource("vscode-setup", "vscode", {"plain": plain, "steps": [{**r, "status": "ok" if r["status"] in ("installed", "already", "would-install") else "warn" if r["status"] == "skipped" else "fail"} for r in steps],
-                                              "settings": s, "reload": "Reload VS Code's window (Ctrl+Shift+P, then Developer: Reload Window) so everything starts." if not ctx.dry_run else "",
+                                              "settings": s, "reload": "Reload VS Code's window (Ctrl+Shift+P, then Developer: Reload Window) so everything starts." if not ctx.dry_run and any(r["status"] == "installed" for r in steps) else "",
                                               **({"next": f"Open {workspace_file(cfg)} in VS Code (File, Open Workspace from File), then press Ctrl+Shift+P and run Workspaces Console: Learn a Topic."} if done else {})},
                    actions=(actions or []) + ([] if not left or actions else [Action(("vscode", "ensure"), "Try again")]),
                    status=FAILED if any(r["status"] == "failed" for r in steps) else status)

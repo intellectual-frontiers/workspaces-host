@@ -52,10 +52,13 @@ FR-015 to FR-018, in the public root), never by a tag. No continuous-integration
 
 ## Installing the Console
 
-- **FR-013**: `vscode ensure` MUST install the Workspaces Console from this repository's latest release and MUST build nothing on the
-  person's machine. It MUST use only an asset named `workspaces-console-<version>.vsix` with an `https` address and a SHA-256 digest,
-  MUST check the digest before anything uses the file, MUST install a given release once, and MUST say in plain words when there is no
-  usable release or the file does not match its digest, installing nothing.
+- **FR-013**: `vscode ensure` MUST put the Workspaces Console in VS Code from the source in the clone `ws-host` runs from, so that everyone who
+  installed `ws-host` has it with no release to wait for: it MUST build it with `ws-host`'s own Node (an entry of `ws-host`'s own provider
+  declarations, installed from its lock), from the Console's own npm lock, install the package with `code`, and rebuild only when the Console's
+  source has changed. Only a `ws-host` that has no copy of that source (an installed wheel) MUST take the latest release instead: it MUST use only
+  an asset named `workspaces-console-<version>.vsix` with an `https` address and a SHA-256 digest, MUST check the digest before anything uses the
+  file, MUST install a given release once, and MUST say in plain words when there is no usable release or the file does not match its digest,
+  installing nothing. Publishing a release (FR-010) is for people who do not run `ws-host` from a clone.
 
 ## Out of scope
 
@@ -68,7 +71,7 @@ FR-015 to FR-018, in the public root), never by a tag. No continuous-integration
 - The Console's version and `ws_host/__init__.py` differ: the build stops before anything is made, per FR-008.
 - A rebuild differs from the published files: `check reproducible` fails naming the file, per FR-009.
 - `gh` is not signed in or not installed: `release publish` says so and does nothing, per FR-010.
-- A release exists on GitHub without a digest on the package: `vscode ensure` ignores it, per FR-013.
+- A release exists on GitHub without a digest on the package: `vscode ensure` ignores it, per FR-013 (and a clone does not use a release at all).
 
 ## Assumptions
 

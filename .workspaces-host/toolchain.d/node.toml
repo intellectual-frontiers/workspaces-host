@@ -1,0 +1,6 @@
+name = "node"
+version = "22.23.3"
+summary = "Node.js, which builds the Workspaces Console on this computer"
+kind = "tool"
+tool = "node"
+bin = "bin"
