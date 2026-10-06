@@ -193,6 +193,50 @@ def provider_candidates(cfg) -> list[Path]:
     return out
 
 
+def runtime_rows(ctx, p, actions: list) -> list[dict]:
+    """Install everything a provider in use pins (so its Home in the Console shows nothing missing), then the shared libraries its programs link."""
+    from ..install import apt
+    from ..lib import toolchain as tc
+    todo = [n for n, v in tc.state(p).items() if v["state"] != "ready"]
+    rows = []
+    name = f"Install what {p.name} needs"
+    if not todo:
+        rows.append({"name": name, "status": "already", "plain": f"Every program {p.name} pins is installed."})
+    elif ctx.dry_run:
+        rows.append({"name": name, "status": "would-install", "plain": f"I would install {len(todo)} program{'s' if len(todo) != 1 else ''} for {p.name}: " + ", ".join(todo) + "."})
+    else:
+        done, failed = [], None
+        for n in todo:                      # one at a time: each shows its own progress, and one that fails does not hide the others
+            try:
+                tc.ensure(p, [n], offline=ctx.offline)
+                done.append(n)
+            except tc.ToolchainError as e:
+                failed = e
+                break
+        if failed is None:
+            rows.append({"name": name, "status": "installed", "plain": f"Installed {len(done)} program{'s' if len(done) != 1 else ''} for {p.name}: " + ", ".join(done) + "."})
+        else:
+            rows.append({"name": name, "status": "failed", "plain": f"Installed {len(done)} of {len(todo)}; then: {failed.plain}"})
+            actions.append(Action(("toolchain", "ensure"), f"Install what {p.name} pins", {"provider": p.name, "all": True}))
+    libs = sorted({x for e in p.entries.values() for x in e.system})
+    if libs:
+        names, _missing = apt.resolve(libs)
+        need = apt.to_install(names)
+        label = f"Install shared libraries for {p.name}"
+        if not need:
+            rows.append({"name": label, "status": "already", "plain": "The shared libraries its programs need are installed."})
+        elif ctx.dry_run:
+            rows.append({"name": label, "status": "would-install", "plain": "I would install: " + ", ".join(need) + " (it asks for your password)."})
+        else:
+            try:
+                apt.install(need)
+                rows.append({"name": label, "status": "installed", "plain": "Installed " + ", ".join(need) + "."})
+            except apt.AptError as e:
+                rows.append({"name": label, "status": "skipped", "plain": f"I could not install {', '.join(need)} ({e}). It needs your password: run ws-host system ensure yourself."})
+                actions.append(Action(("system", "ensure"), "Install shared libraries"))
+    return rows
+
+
 def providers_steps(ctx, cfg) -> tuple[list[dict], list[Action]]:
     """Enable the clones that declare themselves providers, and fetch the runtime their launchers start with, so the Workspaces Console opens with
     its views ready and nothing left for a person to work out (0009-workspaces-console FR-009). Enabling is a decision: it is asked at the terminal
@@ -209,7 +253,7 @@ def providers_steps(ctx, cfg) -> tuple[list[dict], list[Action]]:
         name = f"Enable {p.name} for ws-host"
         have = prov.get(p.name)
         if have is not None and have.root.resolve() == root:
-            row = {"name": name, "status": "already", "plain": f"{p.name} is enabled."}
+            row = {"name": name, "status": "already", "plain": f"{p.name} is in use: {prov.how_enabled(p.name)}."}
         elif ctx.dry_run:
             row = {"name": name, "status": "would-install", "plain": f"I would ask you to let ws-host use {p.name} ({root}), so the Workspaces Console can show it."}
         else:
@@ -223,13 +267,8 @@ def providers_steps(ctx, cfg) -> tuple[list[dict], list[Action]]:
                 continue
             have = prov.get(p.name)
         rows.append(row)
-        if have is not None and not ctx.dry_run:
-            need = [n for n in ("python", "uv") if n in have.entries]
-            if need:
-                try:
-                    tc.ensure(have, need, offline=ctx.offline)
-                except tc.ToolchainError as e:
-                    rows.append({"name": f"Prepare {p.name}'s runtime", "status": "failed", "plain": e.plain})
+        if have is not None:
+            rows.extend(runtime_rows(ctx, have, actions))
     return rows, actions
 
 

@@ -17,9 +17,13 @@ def record_path(rid: RepoId) -> Path:
     return paths.trust_dir() / f"{rid.host}__{rid.org}__{rid.name}.env"
 
 
+DEFAULT_TRUSTED = ("intellectual-frontiers",)      # where ws-host itself and the starter repositories come from: installing ws-host was the person's yes
+
+
 def trusted_orgs(cfg: config.Config) -> set[str]:
-    """From the person's own configuration only; no repository's file can add to it (FR-013)."""
-    return set(cfg.words("WS_HOST_TRUSTED"))
+    """From the person's own configuration only; no repository's file can add to it (FR-013). Until their file says otherwise it is the organization
+    ws-host itself comes from (0002 FR-012)."""
+    return set(cfg.words("WS_HOST_TRUSTED")) if "WS_HOST_TRUSTED" in cfg.values else set(DEFAULT_TRUSTED)
 
 
 def _links_here(rid: RepoId, cfg: config.Config) -> bool:
@@ -34,7 +38,7 @@ def trust_state(rid: RepoId, cfg: config.Config) -> tuple[bool, str]:
     if _links_here(rid, cfg):
         return True, "you trusted it"
     if rid.org in trusted_orgs(cfg):
-        return True, f"your configuration trusts {rid.org}"
+        return True, (f"your configuration trusts {rid.org}" if "WS_HOST_TRUSTED" in cfg.values else f"{rid.org} is where ws-host itself comes from")
     return False, "not trusted"
 
 

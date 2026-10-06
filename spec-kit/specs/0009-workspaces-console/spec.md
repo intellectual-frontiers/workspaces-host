@@ -501,9 +501,11 @@ knowledge (FR-003).
   enabled for its repository (its launcher says so: exit status 3 and `ws-host provider add`), Home MUST say so in plain words, show what the launcher
   itself said in the Output, and offer one button, *Enable this repository*. The button asks in a dialog, then opens a terminal with `ws-host provider add`
   typed in, where `ws-host` asks for the final yes. The extension starts no program of its own for it (FR-003).
-- **FR-052**: `vscode ensure` MUST enable the clones the person works in that declare themselves providers, and this clone of `ws-host`, by the person's
-  own typed yes at a terminal (never answered for them, never over MCP), and MUST install the runtime (`python`, `uv`) their launchers start with, so the
-  Console opens with its views ready. Without a person to answer it MUST leave them and say the one command to run. `WS_HOST_PROVIDERS=no` opts out.
+- **FR-052**: `vscode ensure` MUST leave every provider in use (0008-providers FR-010) ready, so the Console opens with nothing missing: it MUST
+  install every program the provider pins, one at a time with each one's progress shown, and the shared libraries they link (asking for the person's
+  password, or saying the one command to run when nobody can answer). A clone that declares itself a provider and is not in use MUST be enabled only by
+  the person's own typed yes at a terminal, never answered for them and never over MCP; without a person it MUST be left alone with the one command to run.
+  `WS_HOST_PROVIDERS=no` opts out.
 
 ## Out of scope
 

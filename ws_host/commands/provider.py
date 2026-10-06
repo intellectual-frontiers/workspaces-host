@@ -39,7 +39,7 @@ def _row(p: prov.Provider) -> dict:
     n_ready = sum(v["state"] == "ready" for v in st.values())
     status = "error" if p.problems else ("ok" if n_ready == len(st) else "warn")
     return {"name": p.name, "summary": p.summary, "launcher": p.launcher, "root": str(p.root), "entries": len(p.entries), "ready": n_ready,
-            "problems": [str(x) for x in p.problems], "status": status,
+            "problems": [str(x) for x in p.problems], "status": status, "via": prov.how_enabled(p.name),
             "plain": p.summary + (f" ({n_ready} of {len(st)} programs installed)" if st else "")}
 
 
@@ -74,6 +74,9 @@ def provider_add(ctx, path):
     if clash:
         raise WsError("provider-conflict", "; ".join(clash), "I did not enable " + p.name + ", because " + "; ".join(clash) + ".", exit_code=1)
     link = prov.providers_dir() / p.name
+    already = prov.implicit().get(p.name)
+    if already is not None and already[0].root.resolve() == root and not link.exists():
+        return Resource("provider", p.name, {"plain": f"{p.name} is already in use and needs nothing from you: {already[1]}.", "name": p.name, "root": str(root)}, status=OK)
     if ctx.dry_run:
         return Resource("provider", p.name, {"plain": f"Nothing was changed. I would enable {p.name} from {root}.", "name": p.name, "root": str(root)})
     ctx.confirm(f"This lets {p.name} ({root}) have programs installed and run for it on this machine: {', '.join(sorted(p.entries)) or 'none yet'}.")
@@ -88,6 +91,9 @@ def provider_add(ctx, path):
 @command("provider", "remove", category="decision", summary="Stop using a provider (its programs stay until you prune them)", args=(Arg("provider", "PROVIDER", positional=True, required=True),))
 def provider_remove(ctx, provider):
     p = _get(provider)
+    if not (prov.providers_dir() / p.name).is_symlink():
+        raise WsError("not-enabled-by-hand", p.name, f"{p.name} is in use because {prov.how_enabled(p.name)}, not because you enabled it, so there is nothing to remove. "
+                      "To stop using a repository's provider, stop trusting it: put WS_HOST_TRUSTED in ~/.config/workspaces-host/ws-host.env without its organization.", exit_code=1)
     if ctx.dry_run:
         return Resource("provider", p.name, {"plain": f"Nothing was changed. I would stop using {p.name}.", "name": p.name})
     ctx.confirm(f"This stops ws-host installing or running anything for {p.name}.")
