@@ -41,6 +41,9 @@ def real_mise() -> bool:
         return False
 
 
+REAL_MISE = str(mise.program()) if real_mise() else None      # found before a test's throwaway HOME hides the pinned one
+
+
 class Declarations(Home):
     """0008-providers FR-001 to FR-005."""
 
@@ -237,7 +240,7 @@ class Installing(Home):
 
     def setUp(self):
         super().setUp()
-        self.mise = str(mise.program())
+        self.mise = REAL_MISE
         os.environ["WS_HOST_MISE"] = self.mise
         os.environ["WS_HOST_SURFACE"] = "editor"
 

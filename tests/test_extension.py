@@ -159,7 +159,7 @@ class Setup(Home):
         self.assertEqual(merged["editor.fontSize"], 18)          # untouched
         self.assertIs(merged["git.autofetch"], True)             # added
         self.assertIn("files.autoSave", doc["data"]["settings"]["kept"])
-        self.assertTrue((self.home / ".local/state/workspaces-host/backups/vscode-settings.json").exists())
+        self.assertTrue(list((self.home / ".local/state/workspaces-host/backups").glob("settings.json.*")))
 
     def test_a_settings_file_with_comments_is_left_alone_and_the_values_are_listed(self):
         self.settings.parent.mkdir(parents=True)
