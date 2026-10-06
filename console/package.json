@@ -216,7 +216,12 @@
       {
         "view": "workspaces-console.home",
         "contents": "%welcome.home.2%",
-        "when": "!workspaces-console.hasRepository && !workspaces-console.untrusted && workspaces-console.unavailable && !workspaces-console.toolchainMissing"
+        "when": "!workspaces-console.hasRepository && !workspaces-console.untrusted && workspaces-console.unavailable && !workspaces-console.toolchainMissing && !workspaces-console.providerNotEnabled"
+      },
+      {
+        "view": "workspaces-console.home",
+        "contents": "%welcome.home.6%",
+        "when": "!workspaces-console.hasRepository && !workspaces-console.untrusted && workspaces-console.providerNotEnabled"
       },
       {
         "view": "workspaces-console.home",
@@ -349,6 +354,12 @@
         "title": "%command.showOutput.title%",
         "category": "%category%",
         "icon": "$(output)"
+      },
+      {
+        "command": "workspaces-console.enableProvider",
+        "title": "%command.enableProvider.title%",
+        "category": "%category%",
+        "icon": "$(plug)"
       },
       {
         "command": "workspaces-console.trust",
@@ -491,6 +502,10 @@
         {
           "command": "workspaces-console.showOutput",
           "when": "workspaces-console.hasRepository || workspaces-console.untrusted || workspaces-console.unavailable"
+        },
+        {
+          "command": "workspaces-console.enableProvider",
+          "when": "workspaces-console.providerNotEnabled"
         },
         {
           "command": "workspaces-console.trust",

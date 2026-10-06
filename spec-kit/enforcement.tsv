@@ -210,3 +210,5 @@ requirement	mechanism	by	note
 0010-managed-config FR-008	check	workspaces-host: ws-host test	tests check a dry run changes nothing
 0010-managed-config FR-009	check	workspaces-host: ws-host test	tests check config show, check and ensure on current and stale files
 0010-managed-config FR-010	check	workspaces-host: ws-host test	tests check shell add and vscode ensure write through chezmoi
+0009-workspaces-console FR-051	check	workspaces-host: ws-host release build	console unit tests (provider-not-enabled.test.ts) check a launcher's own words are kept, an unenabled provider is recognized and another missing prerequisite is not mistaken for it; the manifest test checks the command and the welcome view exist
+0009-workspaces-console FR-052	check	workspaces-host: ws-host test	tests check setup leaves an unenabled provider alone with its one command when nobody can answer, enables it on a typed yes, asks for nothing on a dry run, and honors WS_HOST_PROVIDERS=no

@@ -18,6 +18,7 @@ KEYS = {
     "WS_HOST_REPOS": "the repositories you work in, as host/org/repo, space-separated (the two starter repositories when you say nothing)",
     "WS_HOST_KIT": "kits to install for you whatever your repositories ask, space-separated (base and shell when you say nothing; empty for none)",
     "WS_HOST_PROMPT": "the prompt setup gives bash and fish: pretty when you say nothing (needs a Nerd Font), plain (emoji and box lines only), or no to keep your own",
+    "WS_HOST_PROVIDERS": "whether VS Code setup asks to enable the repositories that declare themselves providers: yes when you say nothing, no to enable them yourself",
     "WS_HOST_TRUSTED": "organizations whose repositories you trust, space-separated; only your own file can set this",
 }
 # The keys a repository's own `.workspaces-host/ws-host.env` may hold (0001-ws-host, 0002-repositories-and-trust FR-002).

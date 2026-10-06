@@ -88,6 +88,8 @@ export class App {
   private allCommands = false;
   private unavailable = 0;
   private unavailableMissing = false;
+  /** Roots whose launcher asks for its repository to be enabled as a provider. */
+  unenabled: string[] = [];
   /** The suggestion Home last revealed when the status bar or a notice asked for the suggestions, for the test hook's snapshot. */
   private revealed: string | null = null;
 
@@ -144,12 +146,13 @@ export class App {
     const repos: Repository[] = [];
     this.unavailable = 0;
     this.unavailableMissing = false;
+    this.unenabled = [];
     for (const c of found) {
       if (c.status === 'rejected' || !c.file || !c.program) { this.log.info(`${c.folder.name}: ${c.reason ?? 'not a launcher'}`); continue; }
       const repo = new Repository({ folder: c.folder.raw, root: c.root, file: c.file, program: c.program, source: c.source,
         spawn: this.deps.spawn, log: (l) => this.log.info(l), trusted: () => this.trusted(), env: this.deps.env });
       await repo.load();
-      if (repo.state === 'unavailable') { this.unavailable += 1; this.unavailableMissing = this.unavailableMissing || repo.missing; this.log.info(`${c.folder.name}: not shown as an orchestrator. ${repo.reason}`); continue; }
+      if (repo.state === 'unavailable') { this.unavailable += 1; this.unavailableMissing = this.unavailableMissing || repo.missing; if (repo.needsProvider) this.unenabled.push(c.root); this.log.info(`${c.folder.name}: not shown as an orchestrator. ${repo.reason}`); continue; }
       repos.push(repo);
     }
     this.repos = repos;
@@ -231,7 +234,8 @@ export class App {
   private updateContexts(): void {
     const set = (k: string, v: boolean): void => { void vscode.commands.executeCommand('setContext', k, v); };
     set('workspaces-console.unavailable', this.unavailable > 0);
-    set('workspaces-console.toolchainMissing', this.unavailableMissing);
+    set('workspaces-console.toolchainMissing', this.unavailableMissing && this.unenabled.length === 0);
+    set('workspaces-console.providerNotEnabled', this.unenabled.length > 0);
     set('workspaces-console.allCommands', this.allCommands || vscode.workspace.getConfiguration('workspaces-console').get<boolean>('showAllCommands') === true);
   }
 

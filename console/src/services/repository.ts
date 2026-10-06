@@ -39,6 +39,10 @@ export class Repository {
   reason = '';
   /** The launcher could not start because something it needs is not on this machine yet (its exit status says missing). */
   missing = false;
+  /** What the launcher itself printed when it did not answer with a document: its own words, which say what to do. */
+  said = '';
+  /** The launcher asked for its repository to be enabled as a provider (`ws-host provider add`), which only a person may do. */
+  needsProvider = false;
   doctor: Doc | null = null;
   readonly checks = new Map<string, CheckRecord>();   // section -> its last result
   fresh: Doc | null = null;
@@ -70,7 +74,9 @@ export class Repository {
     if (r.failed || !r.doc) {
       this.state = 'unavailable';
       this.missing = r.exit === 3;
-      this.reason = `${this.program} did not answer "command list" (${r.failed ?? `exit ${String(r.exit)}`}).`;
+      this.said = `${r.stdout}\n${r.stderr}`.split(/\r?\n/).map((l) => l.trim()).filter((l) => l !== '' && !l.startsWith('{')).slice(0, 3).join(' ');
+      this.needsProvider = /provider add|No enabled provider/i.test(this.said);
+      this.reason = `${this.program} did not answer "command list" (${r.failed ?? `exit ${String(r.exit)}`}).` + (this.said ? ` It said: ${this.said}` : '');
       this.log(this.reason);
       return this;
     }

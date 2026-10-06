@@ -497,6 +497,14 @@ knowledge (FR-003).
   `.workspaces-host/provider.toml` and the test hook, and every test of FR-028 and FR-032 MUST
   pass against it, ported to the new code.
 
+- **FR-051**: A person MUST NOT be left in front of an error to work out. When a command line does not start because `ws-host` has not been
+  enabled for its repository (its launcher says so: exit status 3 and `ws-host provider add`), Home MUST say so in plain words, show what the launcher
+  itself said in the Output, and offer one button, *Enable this repository*. The button asks in a dialog, then opens a terminal with `ws-host provider add`
+  typed in, where `ws-host` asks for the final yes. The extension starts no program of its own for it (FR-003).
+- **FR-052**: `vscode ensure` MUST enable the clones the person works in that declare themselves providers, and this clone of `ws-host`, by the person's
+  own typed yes at a terminal (never answered for them, never over MCP), and MUST install the runtime (`python`, `uv`) their launchers start with, so the
+  Console opens with its views ready. Without a person to answer it MUST leave them and say the one command to run. `WS_HOST_PROVIDERS=no` opts out.
+
 ## Out of scope
 
 - The commands a repository's orchestrator has: each orchestrator's spec states
