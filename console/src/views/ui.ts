@@ -1,7 +1,9 @@
 // The interface the executor talks to, made of VS Code's own parts: quick picks and input boxes for forms, the diff editor for a dry run's
 // changes, a modal for a decision, progress for a stream. Plain words throughout (0009-workspaces-console FR-025).
 import * as path from 'path';
+import * as fs from 'fs';
 import * as vscode from 'vscode';
+import { outputsOf } from '../model/outputs';
 import type { PickItem } from '../model/forms';
 import { asString } from '../model/json';
 import { sides, summaryOf, type Change } from '../model/preview';
@@ -106,11 +108,34 @@ export function createUi({ log, showResult, where, running, review }: UiParts): 
       }));
     },
 
+    async offerOutputs(repo: Repository, real: RunResult): Promise<void> {
+      const found: Array<{ rel: string; abs: string; dir: boolean }> = [];
+      for (const rel of outputsOf(real.doc)) {
+        const abs = path.resolve(repo.root, rel);
+        if (path.relative(repo.root, abs).startsWith('..')) continue;
+        try { found.push({ rel, abs, dir: (await fs.promises.stat(abs)).isDirectory() }); } catch { /* it is not there */ }
+      }
+      const first = found[0];
+      if (!first) return;
+      const open = t('Open');
+      const show = t('Show in Folder');
+      const what = found.length > 1 ? t('{0} and {1} more', path.basename(first.rel), found.length - 1) : path.basename(first.rel);
+      const pick = await vscode.window.showInformationMessage(t('Built {0}.', what), ...(first.dir ? [show] : [open, show]));
+      if (pick === open) void vscode.commands.executeCommand('vscode.open', vscode.Uri.file(first.abs));
+      else if (pick === show) void vscode.commands.executeCommand(first.dir ? 'revealInExplorer' : 'revealFileInOS', vscode.Uri.file(first.abs));
+    },
+
     async showFailure(repo: Repository, detail: CommandDetail, r: RunResult): Promise<void> {
       const words = r.error ? r.error.message : r.failed ? `${repo.program} could not run "${detail.id}": ${r.failed}` : `"${detail.id}" did not finish (exit ${String(r.exit)}).`;
       log.error(`${detail.id}: ${words}`);
-      const pick = await vscode.window.showErrorMessage(words, t('Show Output'));
-      if (pick === 'Show Output') log.show(true);
+      // A failure is never a dead end: a missing prerequisite (exit 3) offers the one button that installs it, and every failure can show the output or put a report for help on the clipboard.
+      const install = t('Install everything');
+      const output = t('Show Output');
+      const help = t('Copy a report for help');
+      const pick = await vscode.window.showErrorMessage(words, ...(r.exit === 3 ? [install] : []), output, help);
+      if (pick === output) log.show(true);
+      else if (pick === help) void vscode.commands.executeCommand('workspaces-console.getHelp');
+      else if (pick === install) void vscode.commands.executeCommand('workspaces-console.setUpEverything');
     },
 
     /** The change summary in the resource panel, with Apply and Discard, and each file as a diff on request (FR-014, FR-042). */

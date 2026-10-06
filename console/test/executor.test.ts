@@ -1,10 +1,14 @@
 import test from 'node:test';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import assert from 'node:assert/strict';
 import type { Loose } from './support/fake-launcher';
 import * as executor from '../src/services/executor';
 import { CancelSource } from '../src/services/cancellation';
 import { Repository } from '../src/services/repository';
 import { makeRepo, secondCommandLine } from './support/fake-launcher';
+import { createStub, install } from './support/vscode-stub';
 
 const k = secondCommandLine('other');
 const folder = (root: Loose): Loose => ({ name: 'repo', uri: { toString: () => `file://${root}`, fsPath: root } });
@@ -152,4 +156,38 @@ test('FR-013: the form ends with the whole command line, one line with no placeh
   assert.deepEqual(copied, ['./other widget new w9']);
   assert.deepEqual(runs(fake).filter((c: Loose) => c.startsWith('widget new')), []);
   fake.cleanup();
+});
+
+test('FR-058: what a build made is offered as buttons that open it or show it in its folder; paths that leave the repository or are not there are never offered', async () => {
+  const stub = createStub({});
+  const restore = install(stub);
+  const { createUi, DiffDocuments } = require('../src/views/ui') as Loose;
+  const ui = createUi({ docs: new DiffDocuments(), output: { appendLine() { /* none */ } } });
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'outputs-'));
+  fs.mkdirSync(path.join(root, 'build'));
+  fs.writeFileSync(path.join(root, 'build', 'Book.pdf'), 'x');
+  const real = (outputs: string[]) => ({ doc: { data: { outputs } } });
+  const asked = (): Loose[] => stub.calls.messages.filter((m: Loose) => m.kind === 'info');
+  stub.script.infos.push('Open');
+  await ui.offerOutputs({ root }, real(['build/Book.pdf', '../escape.pdf', '/etc/passwd', 'build/missing.pdf']));
+  assert.equal(asked().length, 1);
+  assert.match(asked()[0].text, /^Built Book\.pdf\.$/);
+  assert.deepEqual(asked()[0].rest, ['Open', 'Show in Folder']);
+  await ui.offerOutputs({ root }, real(['../escape.pdf', 'nothing']));
+  assert.equal(asked().length, 1, 'nothing real, nothing offered');
+  fs.rmSync(root, { recursive: true, force: true });
+  restore();
+});
+
+test('FR-059: a failure offers the output and a report for help, and one that is a missing prerequisite (exit 3) also offers the one button that installs everything', async () => {
+  const stub = createStub({});
+  const restore = install(stub);
+  const { createUi, DiffDocuments } = require('../src/views/ui') as Loose;
+  const ui = createUi({ docs: new DiffDocuments(), output: { appendLine() { /* none */ } }, log: { error() { /* none */ }, info() { /* none */ }, show() { /* none */ } } });
+  await ui.showFailure({ program: './x' }, { id: 'check' }, { error: { message: 'nothing is here' }, exit: 3 });
+  const one = stub.calls.messages.filter((m: Loose) => m.kind === 'error').at(-1);
+  assert.deepEqual(one.rest, ['Install everything', 'Show Output', 'Copy a report for help']);
+  await ui.showFailure({ program: './x' }, { id: 'check' }, { error: { message: 'bad value' }, exit: 1 });
+  assert.deepEqual(stub.calls.messages.filter((m: Loose) => m.kind === 'error').at(-1).rest, ['Show Output', 'Copy a report for help']);
+  restore();
 });

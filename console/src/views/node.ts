@@ -91,7 +91,8 @@ export abstract class BaseProvider implements vscode.TreeDataProvider<Node> {
   protected repoItem(node: Node): vscode.TreeItem {
     const r = node.repo;
     const item = new vscode.TreeItem(r.name, vscode.TreeItemCollapsibleState.Expanded);
-    item.description = `${r.folder.name}${r.state === 'ready' ? ` · ${r.audience}` : ''}`;
+    const what = r.summary ? r.summary.split(/(?<=\.)\s/)[0] ?? '' : '';
+    item.description = `${r.folder.name}${what ? ` · ${what}` : r.state === 'ready' ? ` · ${r.audience}` : ''}`;      // which folder, then what it is in its own words
     item.iconPath = icon(r.state === 'ready' ? 'terminal' : r.state === 'untrusted' ? 'shield' : 'warning');
     item.contextValue = 'repo';
     item.tooltip = `${r.displayName}: ${r.state === 'ready' ? `the command line states its audience as "${r.audience}"` : r.reason}`;

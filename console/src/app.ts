@@ -161,7 +161,7 @@ export class App {
     this.unenabled = [];
     for (const c of found) {
       if (c.status === 'rejected' || !c.file || !c.program) { this.log.info(`${c.folder.name}: ${c.reason ?? 'not a launcher'}`); continue; }
-      const repo = new Repository({ folder: c.folder.raw, root: c.root, file: c.file, program: c.program, source: c.source,
+      const repo = new Repository({ folder: c.folder.raw, root: c.root, file: c.file, program: c.program, source: c.source, summary: c.summary,
         spawn: this.deps.spawn, log: (l) => this.log.info(l), trusted: () => this.trusted(), env: this.deps.env });
       await repo.load();
       if (repo.state === 'unavailable') { this.unavailable += 1; this.unavailableMissing = this.unavailableMissing || repo.missing; if (repo.needsProvider) this.unenabled.push(c.root); this.log.info(`${c.folder.name}: not shown as an orchestrator. ${repo.reason}`); continue; }
