@@ -65,7 +65,7 @@ class Home(unittest.TestCase):
             if var not in os.environ and (real_home / sub).exists():
                 os.environ[var] = str(real_home / sub)
         cz = chezmoi_for_tests()
-        os.environ.update({"HOME": str(self.home), **GIT_ENV, **({"WS_HOST_CHEZMOI": cz} if cz else {})})
+        os.environ.update({"HOME": str(self.home), "WS_HOST_IMPLICIT": "no", **GIT_ENV, **({"WS_HOST_CHEZMOI": cz} if cz else {})})
         for k in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "WS_HOST_SURFACE", "WS_HOST_OFFLINE",
                   "WS_HOST_PUBLIC_ROOT", "WS_HOST_IN_GROUP"):
             os.environ.pop(k, None)

@@ -87,7 +87,10 @@ work, and a failed clone reported as done. Each is a test here.
 - **FR-012**: A repository is trusted when a link for it exists in the
   person's `enabled/` directory, or when its organization is named in
   `WS_HOST_TRUSTED` of the person's own configuration (0026-workspaces
-  FR-014). The link, named for the repository, MUST point, relatively where
+  FR-014). Until that file names `WS_HOST_TRUSTED` the trusted organization is
+  `intellectual-frontiers`, where `ws-host` itself and the starter repositories
+  come from: installing `ws-host` was the person's yes, and an empty
+  `WS_HOST_TRUSTED` trusts none. The link, named for the repository, MUST point, relatively where
   both lie in the person's home, to the repository's `.workspaces-host`
   directory (0026-workspaces FR-023). Nothing but the person's own act,
   `repo add --trust` or `repo set ID --trusted`, MUST create it.

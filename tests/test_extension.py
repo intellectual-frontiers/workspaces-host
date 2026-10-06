@@ -541,7 +541,7 @@ class ProvidersAtSetup(Home):
         from ws_host.lib import provider as prov
         self.assertIsNotNone(prov.get("demo"))
         code, again = self.run_json("vscode", "ensure")
-        self.assertEqual(self.step(again, "Enable demo for ws-host")["plain"], "demo is enabled.")
+        self.assertEqual(self.step(again, "Enable demo for ws-host")["plain"], "demo is in use: you enabled it.")
 
     def test_a_dry_run_asks_for_nothing_and_enables_nothing(self):
         code, doc = self.run_json("vscode", "ensure", "--dry-run")
@@ -553,3 +553,38 @@ class ProvidersAtSetup(Home):
         self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS="github.com/acme/demo"\nWS_HOST_PROMPT="no"\nWS_HOST_PROVIDERS="no"\n')
         code, doc = self.run_json("vscode", "ensure")
         self.assertFalse([s for s in doc["data"]["steps"] if s["name"].startswith("Enable ")])
+
+
+class RuntimeAtSetup(ProvidersAtSetup):
+    """0009-workspaces-console FR-052: everything an enabled provider pins is installed by setup, so Home shows nothing missing."""
+
+    def test_setup_installs_every_pinned_program_one_by_one_and_says_so(self):
+        import unittest.mock
+        from ws_host.lib import toolchain as tc
+        calls = []
+        state = {"alpha": "missing", "beta": "missing"}
+        fake_state = lambda p: {n: {"state": v} for n, v in state.items()}
+        def fake_ensure(p, names, offline=False):
+            calls.append(names)
+            state[names[0]] = "ready"
+            return names
+        with unittest.mock.patch.object(tc, "state", fake_state), unittest.mock.patch.object(tc, "ensure", fake_ensure):
+            os.environ["WS_HOST_PROVIDERS"] = "yes"
+            from ws_host.commands import vscode
+            from ws_host.lib import provider as prov
+            p = prov.load(self.repo)
+            rows = vscode.runtime_rows(type("C", (), {"dry_run": False, "offline": False})(), p, [])
+        self.assertEqual(calls, [["alpha"], ["beta"]])
+        self.assertEqual(rows[0]["status"], "installed")
+        self.assertIn("alpha, beta", rows[0]["plain"])
+
+    def test_a_dry_run_names_what_it_would_install(self):
+        import unittest.mock
+        from ws_host.lib import toolchain as tc
+        with unittest.mock.patch.object(tc, "state", lambda p: {"alpha": {"state": "missing"}, "tex": {"state": "ready"}}):
+            from ws_host.commands import vscode
+            from ws_host.lib import provider as prov
+            rows = vscode.runtime_rows(type("C", (), {"dry_run": True, "offline": False})(), prov.load(self.repo), [])
+        self.assertEqual(rows[0]["status"], "would-install")
+        self.assertIn("alpha", rows[0]["plain"])
+        self.assertNotIn("tex", rows[0]["plain"])

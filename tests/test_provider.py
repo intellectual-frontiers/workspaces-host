@@ -332,3 +332,51 @@ class VscodeTest(Home):
         os.environ["WS_HOST_VSCODE_DIR"] = str(self.home / "no-vscode")
         code, r = self.run_json("vscode", "check", "--suite", str(empty))
         self.assertEqual((code, r["data"]["code"]), (3, "missing-program"))
+
+
+class InUseWithoutEnabling(Home):
+    """0008-providers FR-010, 0002-repositories-and-trust FR-012: what ws-host installed needs no enabling; the person is asked only about the rest."""
+
+    def setUp(self):
+        super().setUp()
+        os.environ.pop("WS_HOST_IMPLICIT")
+        self.paths.config_dir().mkdir(parents=True, exist_ok=True)
+
+    def clone(self, org, name):
+        base = self.home / "workspaces" / "github.com" / org
+        base.mkdir(parents=True, exist_ok=True)
+        return make_provider(base, name, entries={})
+
+    def names(self):
+        return {p.name for p in prov.enabled()}
+
+    def test_this_ws_host_is_in_use_with_no_step(self):
+        self.paths.config_file().write_text('WS_HOST_REPOS=""\n')
+        self.assertIn("ws-host", self.names())
+        self.assertEqual(prov.how_enabled("ws-host"), "this is the ws-host you are running")
+
+    def test_a_repository_of_the_default_organization_is_in_use_and_another_is_not(self):
+        self.clone("intellectual-frontiers", "starter")
+        self.clone("acme", "other")
+        self.paths.config_file().write_text('WS_HOST_REPOS="github.com/intellectual-frontiers/starter github.com/acme/other"\n')
+        self.assertIn("starter", self.names())
+        self.assertNotIn("other", self.names())
+        self.assertIn("where ws-host itself comes from", prov.how_enabled("starter"))
+
+    def test_an_empty_trusted_list_trusts_nobody_and_a_named_organization_is_trusted(self):
+        self.clone("intellectual-frontiers", "starter")
+        self.clone("acme", "other")
+        self.paths.config_file().write_text('WS_HOST_TRUSTED=""\nWS_HOST_REPOS="github.com/intellectual-frontiers/starter github.com/acme/other"\n')
+        self.assertEqual(self.names() - {"ws-host"}, set())
+        self.paths.config_file().write_text('WS_HOST_TRUSTED="acme"\nWS_HOST_REPOS="github.com/intellectual-frontiers/starter github.com/acme/other"\n')
+        self.assertEqual(self.names() - {"ws-host"}, {"other"})
+
+    def test_adding_one_that_is_already_in_use_needs_nothing_and_removing_it_says_how_to_stop_trusting(self):
+        root = self.clone("intellectual-frontiers", "starter")
+        self.paths.config_file().write_text('WS_HOST_REPOS="github.com/intellectual-frontiers/starter"\n')
+        code, doc = self.run_json("provider", "add", str(root))
+        self.assertEqual(code, 0)
+        self.assertIn("needs nothing from you", doc["data"]["plain"])
+        code, doc = self.run_json("provider", "remove", "starter")
+        self.assertEqual(code, 1)
+        self.assertIn("WS_HOST_TRUSTED", doc["data"]["plain"])

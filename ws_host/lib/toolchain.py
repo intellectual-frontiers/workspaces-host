@@ -81,7 +81,7 @@ def ensure(p: prov.Provider, names: list[str] | None, offline: bool = False) -> 
     if not lockfile(p).is_file():
         raise ToolchainError("no-lock", "mise.lock", f"{p.name} has no lock yet. Run ws-host toolchain generate {p.name} and commit what it writes.")
     args = ["install", "--locked"] + ([f"{p.entries[n].tool_id()}@{p.entries[n].version}" for n in wanted] if names else [])
-    done = _mise(p, args, offline, label=f"📦 Installing {', '.join(wanted)} for {p.name}")
+    done = _mise(p, args, offline, label=f"📦 Installing {', '.join(wanted) if len(wanted) <= 3 else str(len(wanted)) + ' programs'} for {p.name}")
     if done.returncode != 0:
         raise ToolchainError("install", (done.stderr or done.stdout).strip()[-500:], "mise could not install " + ", ".join(wanted) + ": " +
                              " ".join((done.stderr or done.stdout).strip().splitlines()[-3:]))

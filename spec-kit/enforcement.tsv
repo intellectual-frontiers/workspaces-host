@@ -31,7 +31,7 @@ requirement	mechanism	by	note
 0002-repositories-and-trust FR-009	check	workspaces-host: ws-host test	tests read the plain-language reason of each skip and the note on unpushed work
 0002-repositories-and-trust FR-010	check	workspaces-host: ws-host test	tests read each outcome: updated with a count, current, skipped, failed
 0002-repositories-and-trust FR-011	check	workspaces-host: ws-host test	tests run auth status and auth new against a fake gh and glab: signed in or out, the streamed code and address, a failed login, a missing program (exit 3)
-0002-repositories-and-trust FR-012	check	workspaces-host: ws-host test	tests grant and revoke trust through the relative link, an organization in the person's configuration, and a name collision
+0002-repositories-and-trust FR-012	check	workspaces-host: ws-host test	tests grant and revoke trust through the relative link, an organization in the person's configuration (and the default organization when the file says nothing, none when it is empty), and a name collision
 0002-repositories-and-trust FR-013	check	workspaces-host: ws-host test	tests list a repository named by a trusted one as untrusted and ignore a repository's own WS_HOST_TRUSTED, with doctor saying so
 0002-repositories-and-trust FR-014	check	workspaces-host: ws-host test	tests confirm a decision only from a terminal answer or the editor's confirmation, refuse it otherwise, keep it off MCP, and list what --trust trusts
 0002-repositories-and-trust FR-015	check	workspaces-host: ws-host test	tests record the commit and make doctor warn, not fail, when a trusted repository's kits changed
@@ -142,7 +142,7 @@ requirement	mechanism	by	note
 0008-providers FR-007	check	workspaces-host: ws-host test	tests check an install uses only the translation, in one store, and reads no configuration above the provider
 0008-providers FR-008	check	workspaces-host: ws-host test	tests check the pinned mise per architecture, and WS_HOST_MISE as the only override
 0008-providers FR-009	check	workspaces-host: ws-host test	tests check two providers declaring one name and version differently conflict, and provider add refuses
-0008-providers FR-010	check	workspaces-host: ws-host test	tests check nothing is enabled without a person's decision, add links and remove unlinks
+0008-providers FR-010	check	workspaces-host: ws-host test	tests check an untrusted provider is not enabled without a person's decision, add links and remove unlinks, and that this ws-host and the repositories of a trusted organization are in use with the reason given
 0008-providers FR-011	check	workspaces-host: ws-host test	tests check provider list and show say each provider, entry and state
 0008-providers FR-012	check	workspaces-host: ws-host test	tests check ensure installs from the lock, toolchain show reports state and path, and a stale translation stops it
 0008-providers FR-013	check	workspaces-host: ws-host test	tests check provider run puts the entries first on PATH, passes the exit status and puts nothing on a person's PATH
