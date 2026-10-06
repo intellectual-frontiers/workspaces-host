@@ -65,10 +65,16 @@ class Home(unittest.TestCase):
             if var not in os.environ and (real_home / sub).exists():
                 os.environ[var] = str(real_home / sub)
         cz = chezmoi_for_tests()
-        os.environ.update({"HOME": str(self.home), "WS_HOST_IMPLICIT": "no", **GIT_ENV, **({"WS_HOST_CHEZMOI": cz} if cz else {})})
+        os.environ.update({"HOME": str(self.home), "WS_HOST_IMPLICIT": "no", "WS_HOST_UPDATE_SELF_ONLY": "1", "WS_HOST_CONSOLE": "release", **GIT_ENV, **({"WS_HOST_CHEZMOI": cz} if cz else {})})
         for k in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "WS_HOST_SURFACE", "WS_HOST_OFFLINE",
                   "WS_HOST_PUBLIC_ROOT", "WS_HOST_IN_GROUP"):
             os.environ.pop(k, None)
+        # A harmless `code` first on PATH: a real VS Code that happens to be on a developer's PATH must never be driven by a test.
+        stub = Path(self._tmp.name) / "stubs"
+        stub.mkdir(exist_ok=True)
+        (stub / "code").write_text("#!/bin/sh\nexit 0\n")
+        (stub / "code").chmod(0o755)
+        os.environ["PATH"] = f"{stub}{os.pathsep}{os.environ.get('PATH', '')}"
         self.addCleanup(self._restore)
         from ws_host.core import paths
         self.paths = paths

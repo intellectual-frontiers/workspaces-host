@@ -138,6 +138,11 @@ detail, troubleshooting, and how to take over in VS Code.
   every six hours without making the window wait. `doctor` MUST report a
   waiting update from the note and not from the network, and `workspace
   ensure` MUST keep the note true.
+  Run without options, `ws-host update` MUST be the one command that brings everything current: ws-host first, then, in a new process so that the newest code
+  does the rest, `workspace ensure` (every repository by fast-forward, the kits, the prompt, the editor and what every provider in use pins, per
+  0009-workspaces-console FR-052) and the removal of programs nothing pins any more. It MUST pass `--offline` on, share the person's terminal so that its
+  progress and its questions work, answer one JSON document for a program, and end with the status of the setup it ran. `workspace ensure` MUST itself set the
+  editor up when `code` is there.
 
 ## Setting VS Code up
 

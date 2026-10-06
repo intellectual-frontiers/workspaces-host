@@ -47,11 +47,11 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `provider show` | read | terminal, editor, mcp | Show one provider, its launcher and the programs it pins |
 | `release build` | build | terminal, editor, mcp | Build a release: the wheel, the app tarball, the Workspaces Console and their checksums |
 | `release publish` | decision | terminal, editor | Tag this commit and publish the release to GitHub Releases, with your own gh sign-in |
-| `repo add` | setup | terminal | Copy missing repositories to this machine |
+| `repo add` | setup | terminal, editor | Copy missing repositories to this machine |
 | `repo list` | read | terminal, editor, mcp | List the repositories I know |
 | `repo set` | decision | terminal, editor | Trust or stop trusting a repository's code |
 | `repo status` | read | terminal, editor, mcp | Show the state of one or all repositories |
-| `repo sync` | setup | terminal | Bring repositories up to date, never touching your work |
+| `repo sync` | setup | terminal, editor | Bring repositories up to date, never touching your work |
 | `shell add` | setup | terminal, editor | Give bash or fish the ws-host oh-my-posh prompt (again, or the plain one) |
 | `skill generate` | generate | terminal, editor, mcp | Rewrite the skill that tells an AI agent how to use ws-host |
 | `system ensure` | setup | terminal | Install the shared libraries enabled providers' programs need (uses sudo, and says so first) |
@@ -61,7 +61,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `toolchain list` | read | terminal, editor, mcp | List the programs enabled providers pin and whether each is installed |
 | `toolchain remove` | setup | terminal | Remove stored programs no enabled provider pins |
 | `toolchain show` | read | terminal, editor, mcp | Show one pinned program: version, where it is, what it provides and sets |
-| `update` | setup | terminal, editor | Move ws-host to its newest version, only when nothing of yours is in the way; --check only looks |
+| `update` | setup | terminal, editor | Bring everything up to date: ws-host, your repositories, the editor and what they need; only where nothing of yours is in the way; --check only looks |
 | `vscode check` | check | terminal | Run a provider's tests of the Workspaces Console in a real VS Code under a display server |
 | `vscode ensure` | setup | terminal, editor | Put VS Code in its recommended state: the Workspaces Console, helpful extensions and safe settings |
 | `workspace ensure` | setup | terminal, editor | Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health |
@@ -86,7 +86,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - `repos`: Copy your repositories and keep them up to date without risking your work.
 - `shell`: Your prompt, bash and fish.
 - `signin`: Sign in to GitHub or GitLab with a one-time code.
-- `start`: Your first steps: sign in, copy your starter repositories, and move into VS Code.
+- `start`: Your first steps: sign in, set everything up with one command, and move into VS Code.
 - `trust`: Decide whose code may run on your machine.
 - `update`: Keep ws-host itself up to date, and learn when a newer version is waiting.
 - `workspace-file`: Open all your repositories in one VS Code window, from one file.

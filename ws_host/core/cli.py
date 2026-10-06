@@ -186,6 +186,7 @@ def run(argv: list[str], surface: str = "cli", out=None, err=None) -> int:
             code = ctx.exit_code or 0
         else:
             code = _emit(result if isinstance(result, _types.GeneratorType) else [result], mode, registry, out)
+            code = ctx.exit_code or code      # a stream that ran other commands reports their status
     except WsError as e:
         r = e.resource()
         out.write(render(r, mode, registry, mode == "text" and use_color(out)) + "\n")

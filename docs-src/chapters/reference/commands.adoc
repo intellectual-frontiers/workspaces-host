@@ -182,7 +182,7 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 
 |`ws-host repo add [REPO] [--all] [--trust]`
 |setup
-|terminal
+|terminal, editor
 |Copy missing repositories to this machine
 
 |`ws-host repo list`
@@ -202,7 +202,7 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 
 |`ws-host repo sync [REPO] [--all]`
 |setup
-|terminal
+|terminal, editor
 |Bring repositories up to date, never touching your work
 
 |===
@@ -359,7 +359,7 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |`ws-host update [--check] [--cached] [--background]`
 |setup
 |terminal, editor
-|Move ws-host to its newest version, only when nothing of yours is in the way; --check only looks
+|Bring everything up to date: ws-host, your repositories, the editor and what they need; only where nothing of yours is in the way; --check only looks
 
 |===
 

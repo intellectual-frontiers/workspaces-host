@@ -357,7 +357,7 @@ class Console(Home):
         code, doc = self.run_json("workspace", "ensure")
         editor = [s for s in doc["data"]["steps"] if s["name"] == "editor"][0]
         self.assertEqual(editor["status"], "warn")
-        self.assertIn("ws-host vscode ensure", editor["plain"])
+        self.assertIn("partly set up", editor["plain"])      # setup runs the editor step itself now (0009 FR-052)
         self.a_release()
         self.run_json("vscode", "ensure")
         code, doc = self.run_json("workspace", "ensure")
@@ -427,6 +427,7 @@ class LocalBuild(Home):
 
     def setUp(self):
         super().setUp()
+        os.environ.pop("WS_HOST_CONSOLE", None)      # the clone builds the Console itself
         self.bin = self.home.parent / "bin"
         self.bin.mkdir()
         self.calls = self.home / "code.calls"
