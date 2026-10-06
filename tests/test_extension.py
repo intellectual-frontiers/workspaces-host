@@ -226,7 +226,7 @@ class Console(Home):
         (self.bin / "code").chmod(0o755)
         os.environ["PATH"] = f"{self.bin}:{os.environ['PATH']}"
         self.paths.config_dir().mkdir(parents=True, exist_ok=True)
-        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\nWS_HOST_PROMPT="no"\n')
+        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\nWS_HOST_PROMPT="no"\nWS_HOST_PROVIDERS="no"\n')
         self.root = self.home / "workspaces/github.com/intellectual-frontiers/.github"
         self.root.mkdir(parents=True)
         git(self.root, "init", "-b", "main")
@@ -324,7 +324,7 @@ class Console(Home):
         self.assertNotIn("--install-extension", self.calls.read_text() if self.calls.exists() else "")
 
     def test_the_workspace_file_lists_the_cloned_repositories_and_keeps_the_persons_own(self):
-        self.paths.config_file().write_text(f'WS_HOST_KIT=""\nWS_HOST_REPOS="github.com/intellectual-frontiers/.github github.com/acme/none"\nWS_HOST_PROMPT="no"\n')
+        self.paths.config_file().write_text(f'WS_HOST_KIT=""\nWS_HOST_REPOS="github.com/intellectual-frontiers/.github github.com/acme/none"\nWS_HOST_PROMPT="no"\nWS_HOST_PROVIDERS="no"\n')
         f = self.home / "workspaces" / "workspaces.code-workspace"
         self.run_json("vscode", "ensure")
         data = json.loads(f.read_text())
@@ -415,7 +415,7 @@ class WorkspaceFileTeaching(unittest.TestCase):
 
 class OtherWorkspaceFiles(Console):
     def test_a_persons_own_workspace_file_is_never_touched(self):
-        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS="github.com/intellectual-frontiers/.github"\nWS_HOST_PROMPT="no"\n')
+        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS="github.com/intellectual-frontiers/.github"\nWS_HOST_PROMPT="no"\nWS_HOST_PROVIDERS="no"\n')
         mine = self.home / "workspaces" / "gitlab.code-workspace"
         mine.write_text('{ // mine\n"folders": []}')
         self.run_json("vscode", "ensure")
@@ -440,7 +440,7 @@ class LocalBuild(Home):
         (self.bin / "code").chmod(0o755)
         os.environ["PATH"] = f"{self.bin}:{os.environ['PATH']}"
         self.paths.config_dir().mkdir(parents=True, exist_ok=True)
-        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\nWS_HOST_PROMPT="no"\n')
+        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\nWS_HOST_PROMPT="no"\nWS_HOST_PROVIDERS="no"\n')
         self.built = []
         from ws_host.lib import release, toolchain as tc
 
@@ -495,3 +495,61 @@ class LocalBuild(Home):
             self.assertEqual(release.source_hash(), before)
         finally:
             marker.unlink()
+
+
+class ProvidersAtSetup(Home):
+    """0009-workspaces-console FR-009: setup enables the clones that declare themselves providers, by the person's own yes, so the Console opens ready."""
+
+    def setUp(self):
+        super().setUp()
+        self.bin = self.home.parent / "bin"
+        self.bin.mkdir()
+        (self.bin / "code").write_text('#!/bin/sh\n[ "$1" = --list-extensions ] && echo intellectual-frontiers.workspaces-console\nexit 0\n')
+        (self.bin / "code").chmod(0o755)
+        os.environ["PATH"] = f"{self.bin}:{os.environ['PATH']}"
+        os.environ["WS_HOST_CONSOLE"] = "release"
+        self.repo = self.home / "workspaces" / "github.com" / "acme" / "demo"
+        (self.repo / ".workspaces-host").mkdir(parents=True)
+        (self.repo / ".workspaces-host" / "provider.toml").write_text('name = "demo"\nsummary = "a demo"\nlauncher = "./demo"\nprotocol = 1\n')
+        (self.repo / "demo").write_text("#!/bin/sh\nexit 0\n")
+        (self.repo / "demo").chmod(0o755)
+        self.paths.config_dir().mkdir(parents=True, exist_ok=True)
+        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS="github.com/acme/demo"\nWS_HOST_PROMPT="no"\n')
+
+    def step(self, doc, name):
+        return [s for s in doc["data"]["steps"] if s["name"] == name][0]
+
+    def test_without_a_person_to_answer_it_is_left_alone_and_says_how_to_do_it(self):
+        code, doc = self.run_json("vscode", "ensure")
+        s = self.step(doc, "Enable demo for ws-host")
+        self.assertEqual(s["status"], "warn")
+        self.assertIn("ws-host provider add", s["plain"])
+        self.assertTrue(any(a["cli"].startswith("ws-host provider add") for a in doc["actions"]))
+        from ws_host.lib import provider as prov
+        self.assertIsNone(prov.get("demo"))
+
+    def test_a_typed_yes_at_a_terminal_enables_it_and_a_second_run_says_so(self):
+        import io
+        import unittest.mock
+
+        class Tty(io.StringIO):
+            def isatty(self):
+                return True
+        with unittest.mock.patch("sys.stdin", Tty("yes\n")), unittest.mock.patch("sys.stdout", Tty()):
+            code, doc = self.run_json("vscode", "ensure")
+        self.assertEqual(self.step(doc, "Enable demo for ws-host")["status"], "ok", doc)
+        from ws_host.lib import provider as prov
+        self.assertIsNotNone(prov.get("demo"))
+        code, again = self.run_json("vscode", "ensure")
+        self.assertEqual(self.step(again, "Enable demo for ws-host")["plain"], "demo is enabled.")
+
+    def test_a_dry_run_asks_for_nothing_and_enables_nothing(self):
+        code, doc = self.run_json("vscode", "ensure", "--dry-run")
+        self.assertIn("I would ask you", self.step(doc, "Enable demo for ws-host")["plain"])
+        from ws_host.lib import provider as prov
+        self.assertIsNone(prov.get("demo"))
+
+    def test_the_person_can_opt_out(self):
+        self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS="github.com/acme/demo"\nWS_HOST_PROMPT="no"\nWS_HOST_PROVIDERS="no"\n')
+        code, doc = self.run_json("vscode", "ensure")
+        self.assertFalse([s for s in doc["data"]["steps"] if s["name"].startswith("Enable ")])

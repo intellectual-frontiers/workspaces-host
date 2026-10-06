@@ -176,6 +176,63 @@ def console_step(ctx, cfg, code: str | None, have: set) -> tuple[dict, list[Acti
         return {"name": name, "status": "failed", "plain": f"The release package did not pass its check ({e.message[:120]}), so I did not install it."}, [Action(("vscode", "ensure"), "Try again")]
 
 
+def provider_candidates(cfg) -> list[Path]:
+    """The clones this person works in that declare themselves providers (and this clone of ws-host itself), in a stable order, each once."""
+    from ..lib import provider as prov
+    roots, seen = [], set()
+    for r in sorted(repos.known(cfg)[0], key=str):
+        roots.append(r.path(cfg))
+    roots.append(paths.repo_root())
+    out = []
+    for root in roots:
+        real = root.resolve()
+        if real in seen or not (real / prov.FOLDER / "provider.toml").is_file():
+            continue
+        seen.add(real)
+        out.append(real)
+    return out
+
+
+def providers_steps(ctx, cfg) -> tuple[list[dict], list[Action]]:
+    """Enable the clones that declare themselves providers, and fetch the runtime their launchers start with, so the Workspaces Console opens with
+    its views ready and nothing left for a person to work out (0009-workspaces-console FR-009). Enabling is a decision: it is asked at the terminal
+    in plain words, and never answered for the person."""
+    from ..lib import provider as prov, toolchain as tc
+    from . import provider as prov_cmd
+    rows, actions = [], []
+    if cfg.get("WS_HOST_PROVIDERS", "yes").strip().lower() in ("no", "false", "0", "off"):
+        return rows, actions
+    for root in provider_candidates(cfg):
+        p = prov.load(root)
+        if p is None or p.problems:
+            continue
+        name = f"Enable {p.name} for ws-host"
+        have = prov.get(p.name)
+        if have is not None and have.root.resolve() == root:
+            row = {"name": name, "status": "already", "plain": f"{p.name} is enabled."}
+        elif ctx.dry_run:
+            row = {"name": name, "status": "would-install", "plain": f"I would ask you to let ws-host use {p.name} ({root}), so the Workspaces Console can show it."}
+        else:
+            try:
+                prov_cmd.provider_add(ctx, str(root))
+                row = {"name": name, "status": "installed", "plain": f"{p.name} is enabled."}
+            except WsError as e:
+                row = {"name": name, "status": "skipped", "plain": e.plain + f" Until it is enabled the Workspaces Console cannot show {p.name}. To do it yourself: ws-host provider add {root}"}
+                actions.append(Action(("provider", "add"), f"Enable {p.name}", {"path": str(root)}))
+                rows.append(row)
+                continue
+            have = prov.get(p.name)
+        rows.append(row)
+        if have is not None and not ctx.dry_run:
+            need = [n for n in ("python", "uv") if n in have.entries]
+            if need:
+                try:
+                    tc.ensure(have, need, offline=ctx.offline)
+                except tc.ToolchainError as e:
+                    rows.append({"name": f"Prepare {p.name}'s runtime", "status": "failed", "plain": e.plain})
+    return rows, actions
+
+
 def workspace_file(cfg) -> Path:
     return cfg.workspaces / "workspaces.code-workspace"
 
@@ -330,6 +387,9 @@ def vscode_ensure(ctx):
                 row["plain"] = (q.stderr or q.stdout).strip()[-200:]
         steps.append(row)
     steps.append(workspace_step(cfg, ctx.dry_run))
+    more_steps, more_actions = providers_steps(ctx, cfg)
+    steps += more_steps
+    actions += more_actions
     s = merge_settings(settings_file(), baseline_settings(), ctx.dry_run)
     left = [r for r in steps if r["status"] in ("skipped", "failed")]
     plain = ("Nothing was changed. This is what I would set up." if ctx.dry_run else

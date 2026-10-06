@@ -31,7 +31,7 @@ test('references are found with their line and columns, by the declared pattern,
   const text = 'See 0009-workspaces-console FR-036 and 0041 FR-064.\nnothing here\nAlso 0043/FR-041, twice 0043 FR-041.\n';
   const found = findReferences([decl], text);
   assert.deepEqual(found.map((m) => [m.line, m.start, m.end, m.value, m.text]), [
-    [0, 4, 26, '0043/FR-036', '0009-workspaces-console FR-036'], [0, 31, 42, '0041/FR-064', '0041 FR-064'], [2, 5, 16, '0043/FR-041', '0043/FR-041'], [2, 24, 35, '0043/FR-041', '0043 FR-041']]);
+    [0, 4, 34, '0009/FR-036', '0009-workspaces-console FR-036'], [0, 39, 50, '0041/FR-064', '0041 FR-064'], [2, 5, 16, '0043/FR-041', '0043/FR-041'], [2, 24, 35, '0043/FR-041', '0043 FR-041']]);
   assert.deepEqual(findReferences([{ ...decl, pattern: '(' }], text), [], 'a pattern that is not a regular expression finds nothing');
   assert.deepEqual(findReferences([{ ...decl, pattern: 'x*' }], 'abc'), [], 'an empty match is not a reference');
 });

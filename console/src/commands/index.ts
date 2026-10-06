@@ -2,6 +2,7 @@
 // extension reads this file to prove that every contributed command has a handler and every handler is contributed.
 import * as vscode from 'vscode';
 import type { App } from '../app';
+import { enableProviders } from '../services/enable';
 import { manageTrust } from '../services/trust';
 import { Node } from '../views/node';
 import { ContextCommands } from './context';
@@ -50,6 +51,7 @@ export function registerCommands(app: App): Handlers {
       cmd('searchView', (node, text) => views.searchView(node, text));
       cmd('refresh', () => app.refresh());
       cmd('showOutput', () => { app.log.show(true); });
+      cmd('enableProvider', () => enableProviders(app));
       cmd('trust', () => manageTrust());
       cmd('cancelRun', () => views.cancelRun());
       cmd('toggleAllCommands', () => views.toggleAllCommands());
