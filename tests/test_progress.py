@@ -404,3 +404,17 @@ class AnnouncedStep(unittest.TestCase):
                 import time
                 time.sleep(0.3)
         self.assertIn("✅ Installing x", out.getvalue())
+
+
+class ProgressBesideJson(Home):
+    def test_progress_always_puts_the_lines_on_standard_error_and_the_json_stays_clean(self):
+        import subprocess, sys
+        env = {**os.environ, "WS_HOST_PROGRESS": "always", "PYTHONPATH": str(self.paths.repo_root())}
+        p = subprocess.run([sys.executable, "-m", "ws_host", "command", "list", "--json"], capture_output=True, text=True, env=env)
+        self.assertEqual(json.loads(p.stdout.strip().splitlines()[-1])["kind"], "command-list")
+        from ws_host.core import cli, progress
+        cli.run(["command", "list", "--json"], out=io.StringIO(), err=io.StringIO())
+        self.assertFalse(progress.ENABLED)
+        os.environ["WS_HOST_PROGRESS"] = "always"
+        cli.run(["command", "list", "--json"], out=io.StringIO(), err=io.StringIO())
+        self.assertTrue(progress.ENABLED)

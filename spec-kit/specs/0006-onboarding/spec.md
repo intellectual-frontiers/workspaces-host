@@ -85,7 +85,8 @@ detail, troubleshooting, and how to take over in VS Code.
   has arrived, and MUST turn a call that takes longer than fifteen minutes into
   a plain error that says a second run carries on. The spinner
   MUST NOT appear in a pipe, a file, JSON, HTML or on a `dumb` terminal, and
-  what a quiet step printed MUST be shown only when the step fails.
+  what a quiet step printed MUST be shown only when the step fails. A program that asks for JSON and shows `ws-host`'s standard
+  error to a person MAY set `WS_HOST_PROGRESS=always` to have these lines on standard error beside the JSON.
 - **FR-021**: When the installer finishes it MUST tell the person, in one
   pasteable line, how to make the window they are in find `ws-host` (starting a
   new login shell, `exec bash -l`) or to open a new one, when `~/.local/bin` was
