@@ -69,13 +69,18 @@ def _build() -> tuple[dict, list[Action]]:
     try:
         from ..lib import chezmoi as cz
         from . import config as config_cmd
-        cz.program()                       # not fetched here: doctor reads, it does not download
+        exe = cz.program()                 # not fetched here: doctor reads, it does not download
+        v = cz.version_of(exe)
+        checks.append(_check("chezmoi", "ok" if v and v >= cz.MINIMUM else "warn", f"chezmoi {'.'.join(map(str, v)) if v else '?'} at {exe}",
+                             cli="chezmoi upgrade", todo=f"ws-host needs chezmoi {cz.VERSION} or newer."))
         stale = [r for r in config_cmd._states(False) if r["state"] != "current"]
         if stale:
             checks.append(_check("managed files", "warn", "not current: " + ", ".join(r["name"] for r in stale), action=(("config", "ensure"), "Update managed files", {}),
                                  cli="ws-host config ensure"))
-    except Exception:
-        pass                               # chezmoi is not here yet, or nothing is managed: nothing to say
+    except Exception as e:
+        if getattr(e, "too_old", False):
+            checks.append(_check("chezmoi", "warn", str(e), cli="chezmoi upgrade"))
+        # otherwise chezmoi is not here yet, or nothing is managed: nothing to say
     link = paths.bin_dir() / "ws-host"
     checks.append(_check("launcher", "ok" if link.exists() else "warn",
                          str(link) if link.exists() else f"{link} is not there; run install.sh to link it", cli=INSTALLER))

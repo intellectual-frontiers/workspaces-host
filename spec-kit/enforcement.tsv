@@ -201,7 +201,7 @@ requirement	mechanism	by	note
 0009-workspaces-console FR-049	check	workspaces-host: ws-host test	view tests: Search shown only where a list declares search, it runs the list with the option and the text and shows the rows in the order given, an empty result says so and offers the full list; panel tests: the header icon from the list icon field and table cells that open the terms they name; the real VS Code run drives Search over the ontology
 0009-workspaces-console FR-050	none	-	retired: see the requirement
 0010-managed-config FR-001	check	workspaces-host: ws-host test	tests check the prompt block and the settings are written through chezmoi's source state
-0010-managed-config FR-002	check	workspaces-host: ws-host test	tests check the pinned chezmoi names a checksum per architecture, WS_HOST_CHEZMOI is the only override, and offline without chezmoi ends with exit 3
+0010-managed-config FR-002	check	workspaces-host: ws-host test	tests check the person's chezmoi on PATH or in WS_HOST_CHEZMOI is used, one older than the tested version ends with exit 3 and the upgrade command, the fetched one is a plain file in the bin folder, and offline without chezmoi ends with exit 3
 0010-managed-config FR-003	check	workspaces-host: ws-host test	tests run chezmoi in a throwaway home with a person's own chezmoi folder present and see it untouched
 0010-managed-config FR-004	check	workspaces-host: ws-host test	tests check the source state is rewritten at each use and the text functions give the same text twice
 0010-managed-config FR-005	check	workspaces-host: ws-host test	tests check text outside the markers and set settings are kept, and a settings file with comments is left alone

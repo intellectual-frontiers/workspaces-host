@@ -43,7 +43,7 @@ class Managed(unittest.TestCase):
         p = subprocess.run([sys.executable, "-m", "ws_host.lib.managed", "vscode-settings", '{"b": 1}'], input='{"a": 1}', capture_output=True, text=True, cwd=REPO)
         self.assertEqual(json.loads(p.stdout), {"a": 1, "b": 1})
 
-    def test_the_pinned_chezmoi_names_a_checksum_for_both_architectures(self):
+    def test_the_tested_chezmoi_names_a_checksum_for_both_architectures(self):
         for arch in ("x86_64", "aarch64"):
             self.assertRegex(chezmoi.DOWNLOAD.sha256[arch], r"^[0-9a-f]{64}$")
         self.assertIn("{goarch}", chezmoi.DOWNLOAD.url)
@@ -99,8 +99,50 @@ class Config(Home):
         self.assertIn("git.autofetch", data)
         self.assertEqual(vscode.merge_settings(f, vscode.baseline_settings(), False)["status"], "unchanged")
 
+    def fake(self, version: str):
+        d = self.home / "fakebin"
+        d.mkdir(exist_ok=True)
+        (d / "chezmoi").write_text(f'#!/bin/sh\ncase "$1" in --version) echo "chezmoi version v{version}, commit x";; *) exec "{chezmoi_for_tests()}" "$@";; esac\n')
+        (d / "chezmoi").chmod(0o755)
+        return d
+
+    def test_the_chezmoi_on_the_path_is_the_one_used_and_nothing_is_installed(self):
+        os.environ.pop("WS_HOST_CHEZMOI", None)
+        os.environ["PATH"] = f"{self.fake('9.9.9')}:{os.environ['PATH']}"
+        self.assertEqual(chezmoi.program(), self.home / "fakebin" / "chezmoi")
+        (self.home / ".bashrc").write_text("")
+        self.assertEqual(self.run_json("shell", "add", "bash")[0], 0)
+        self.assertFalse((self.home / ".local" / "bin" / "chezmoi").exists())
+
+    def test_a_chezmoi_older_than_the_tested_one_ends_with_exit_3_and_says_how_to_upgrade(self):
+        os.environ.pop("WS_HOST_CHEZMOI", None)
+        os.environ["PATH"] = f"{self.fake('2.1.0')}:{os.environ['PATH']}"
+        (self.home / ".bashrc").write_text("")
+        code, doc = self.run_json("shell", "add", "bash")
+        self.assertEqual(code, 3, doc)
+        self.assertIn("chezmoi upgrade", doc["data"]["plain"])
+
+    def test_a_newer_chezmoi_is_accepted(self):
+        os.environ["WS_HOST_CHEZMOI"] = str(self.fake("99.0.0") / "chezmoi")
+        self.assertEqual(chezmoi.program().name, "chezmoi")
+
+    def test_with_none_here_the_fetched_one_is_a_plain_file_the_person_owns(self):
+        os.environ.pop("WS_HOST_CHEZMOI", None)
+        os.environ["PATH"] = "/usr/bin:/bin"
+        if chezmoi.on_path():
+            self.skipTest("this machine has a chezmoi on its system PATH")
+        (self.home / ".bashrc").write_text("")
+        code, doc = self.run_json("shell", "add", "bash")
+        self.assertEqual(code, 0, doc)
+        mine = self.home / ".local" / "bin" / "chezmoi"
+        self.assertTrue(mine.is_file() and not mine.is_symlink())
+        mine.write_text(mine.read_text(errors="ignore")[:0] + "#!/bin/sh\necho 'chezmoi version v99.0.0, commit x'\n")      # the person replaces it
+        mine.chmod(0o755)
+        self.assertEqual(chezmoi.version_of(chezmoi.program()), (99, 0, 0))
+
     def test_a_missing_chezmoi_while_offline_exits_3(self):
         os.environ.pop("WS_HOST_CHEZMOI", None)
+        os.environ["PATH"] = "/nonexistent"
         (self.home / ".bashrc").write_text("")
         os.environ["WS_HOST_OFFLINE"] = "1"
         self.run_json("shell", "add", "bash", "--dry-run")

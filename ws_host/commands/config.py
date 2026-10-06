@@ -52,8 +52,7 @@ def _states(offline: bool) -> list[dict]:
         chezmoi.render(targets)
         return [_state(t, offline) for t in targets]
     except chezmoi.ChezmoiMissing as e:
-        raise WsError("missing-chezmoi", str(e), "I need chezmoi to compare your files, and " +
-                      ("I may not download it while you are offline." if e.offline else "I could not get it. Check your network."), status="missing", exit_code=3)
+        raise WsError("missing-chezmoi", str(e), chezmoi.missing_plain(e), status="missing", exit_code=3)
     except chezmoi.OutsideHome as e:
         raise WsError("outside-home", f"{e} is not under your home folder", f"I only manage files under your home folder, and {e} is not.")
 

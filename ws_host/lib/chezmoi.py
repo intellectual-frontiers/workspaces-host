@@ -8,6 +8,7 @@ configuration, state and source on every call, and the `chezmoi` it runs is the 
 from __future__ import annotations
 
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -21,16 +22,74 @@ from ..core.kit import Download
 from ..core.resource import WsError
 from ..install import fetch
 
-VERSION = "2.73.0"
+VERSION = "2.73.0"          # the newest chezmoi these requirements were tested against: the oldest ws-host accepts, and what it installs when none is here
 DOWNLOAD = Download("chezmoi", VERSION, "https://github.com/twpayne/chezmoi/releases/download/v{version}/chezmoi_{version}_linux_{goarch}.tar.gz",
                     {"x86_64": "b597729b687af4488a848240134cb633de8ca0f04e0d26d48f400ee2ac338ffa",
                      "aarch64": "abcb840401d3c1f2356e0f53f5d52aa10d10f572654d9626db9ad0ca4dc03355"}, kind="tar", strip=0)
 
 
 class ChezmoiMissing(Exception):
-    def __init__(self, message: str, offline: bool = False):
+    def __init__(self, message: str, offline: bool = False, too_old: bool = False):
         super().__init__(message)
-        self.offline = offline
+        self.offline, self.too_old = offline, too_old
+
+
+def version_of(exe: Path | str) -> tuple[int, ...] | None:
+    """The version a chezmoi reports, as a tuple of numbers; None when it will not say."""
+    try:
+        p = subprocess.run([str(exe), "--version"], capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    m = re.search(r"version v?(\d+)\.(\d+)\.(\d+)", p.stdout)
+    return tuple(int(x) for x in m.groups()) if m else None
+
+
+MINIMUM = tuple(int(x) for x in VERSION.split("."))
+
+
+def on_path() -> str | None:
+    """The chezmoi a person already has: WS_HOST_CHEZMOI if they name one, else the first on their PATH."""
+    named = os.environ.get("WS_HOST_CHEZMOI")
+    if named:
+        if not os.access(named, os.X_OK):
+            raise ChezmoiMissing(f"WS_HOST_CHEZMOI names {named}, which is not an executable file")
+        return named
+    return shutil.which("chezmoi")
+
+
+def _accept(exe: str) -> Path:
+    v = version_of(exe)
+    if v is not None and v < MINIMUM:
+        raise ChezmoiMissing(f"the chezmoi at {exe} is version {'.'.join(map(str, v))}; ws-host needs {VERSION} or newer. Upgrade it with: chezmoi upgrade", too_old=True)
+    return Path(exe)
+
+
+def program(fetch_it: bool = False, offline: bool = False) -> Path:
+    """The chezmoi to run: the person's own (WS_HOST_CHEZMOI, else PATH), which they may upgrade as they like, provided it is not older than VERSION.
+    When there is none, the pinned release is fetched and verified, and installed as the person's own: a plain file in their bin folder, which ws-host
+    never replaces afterwards."""
+    have = on_path()
+    if have:
+        return _accept(have)
+    mine = paths.bin_dir() / "chezmoi"
+    if os.access(mine, os.X_OK):                      # installed earlier, and the person's bin folder is not on this PATH
+        return _accept(str(mine))
+    if not DOWNLOAD.supports(fetch.arch()):
+        raise ChezmoiMissing(f"there is no chezmoi for {fetch.arch()}")
+    if not fetch_it:
+        raise ChezmoiMissing(f"chezmoi is not here yet", offline)
+    if offline:
+        raise ChezmoiMissing(f"chezmoi {VERSION} is not here, and I am not allowed to download it", True)
+    try:
+        fetch.install(DOWNLOAD, offline=offline)
+    except fetch.FetchError as e:
+        raise ChezmoiMissing(f"could not fetch chezmoi {VERSION}: {e.message}", offline)
+    src = fetch.version_dir(DOWNLOAD) / "chezmoi"
+    paths.bin_dir().mkdir(parents=True, exist_ok=True)
+    tmp = paths.bin_dir() / ".chezmoi.new"
+    shutil.copy2(src, tmp)
+    os.replace(tmp, mine)                             # a copy, not a link into ws-host's store: `chezmoi upgrade` then works on the person's own file
+    return mine
 
 
 class OutsideHome(Exception):
@@ -45,29 +104,6 @@ class Target:
     kind: str
     args: tuple[str, ...] = ()
     keep_existing: bool = False
-
-
-def program(fetch_it: bool = False, offline: bool = False) -> Path:
-    """The chezmoi to run: WS_HOST_CHEZMOI if the person names one, else the pinned release in ws-host's own tools folder, fetched first when asked."""
-    named = os.environ.get("WS_HOST_CHEZMOI")
-    if named:
-        if not os.access(named, os.X_OK):
-            raise ChezmoiMissing(f"WS_HOST_CHEZMOI names {named}, which is not an executable file")
-        return Path(named)
-    if not DOWNLOAD.supports(fetch.arch()):
-        raise ChezmoiMissing(f"there is no chezmoi for {fetch.arch()}")
-    exe = fetch.version_dir(DOWNLOAD) / "chezmoi"
-    if exe.is_file():
-        return exe
-    if not fetch_it:
-        raise ChezmoiMissing(f"chezmoi {VERSION} is not here yet", offline)
-    if offline:
-        raise ChezmoiMissing(f"chezmoi {VERSION} is not here, and I am not allowed to download it", True)
-    try:
-        fetch.install(DOWNLOAD, offline=offline)
-    except fetch.FetchError as e:
-        raise ChezmoiMissing(f"could not fetch chezmoi {VERSION}: {e.message}", offline)
-    return exe
 
 
 def source_dir() -> Path:
@@ -167,10 +203,15 @@ def apply_targets(targets: list[Target], offline: bool = False) -> list[str | No
         render(targets)
         return [apply(t, offline) for t in targets]
     except ChezmoiMissing as e:
-        raise WsError("missing-chezmoi", str(e), "I need a small tool called chezmoi to change your files safely, and " +
-                      ("I may not download it while you are offline. Run this again with a network." if e.offline else "I could not get it. Check your network and run this again."),
-                      status="missing", exit_code=3)
+        raise WsError("missing-chezmoi", str(e), missing_plain(e), status="missing", exit_code=3)
     except OutsideHome as e:
         raise WsError("outside-home", f"{e} is not under your home folder", f"I only manage files under your home folder, and {e} is not.")
     except (RuntimeError, subprocess.TimeoutExpired) as e:
         raise WsError("chezmoi", str(e), f"chezmoi could not change the file, so it was left as it was: {e}")
+
+
+def missing_plain(e: ChezmoiMissing) -> str:
+    if e.too_old:
+        return f"{e} Then run this again."
+    return ("I need a small tool called chezmoi to change your files safely, and " +
+            ("I may not download it while you are offline. Run this again with a network." if e.offline else "I could not get it. Check your network and run this again."))
