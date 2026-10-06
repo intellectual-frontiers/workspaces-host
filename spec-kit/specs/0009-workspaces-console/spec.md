@@ -530,6 +530,12 @@ knowledge (FR-003).
   a window with nothing set up and a command line that has not started MUST say in plain words what VS Code is asking or what is missing, and each MUST carry the
   button that fixes it (*Trust this workspace*, *Open Getting Started*, *Install everything*).
 
+- **FR-058**: When a command's result carries `data.outputs` (0041-command-line FR-075), the extension MUST offer what was made as buttons after a successful
+  build: *Open* (a file) and *Show in Folder*, for the first and a count of the rest; a path that is absolute, leaves the repository or is not there MUST
+  never be offered.
+- **FR-059**: A failure MUST never be a dead end: its notice MUST offer *Show Output* and *Copy a report for help*, and, when the command line says a prerequisite
+  is missing (exit status 3), *Install everything*. A repository in a view shows which folder it is, then what its own declaration says it is (`summary`), in words for people.
+
 ## Out of scope
 
 - The commands a repository's orchestrator has: each orchestrator's spec states

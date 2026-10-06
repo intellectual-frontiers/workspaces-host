@@ -50,6 +50,8 @@ export interface Candidate<F> {
   file?: string;
   program?: string;
   reason?: string;
+  /** What the repository's own declaration says it is, in one sentence, for people. */
+  summary?: string;
 }
 
 /** One entry for each folder that has a candidate. */
@@ -58,7 +60,9 @@ export async function discover<F>({ folders, personLaunchers, fs }: { folders: A
   for (const folder of folders) {
     const root = folder.root;
     const text = await fs.readFile(path.join(root, DECLARATION));
-    const declared = text === null ? undefined : parseTopLevel(text)[KEY];
+    const top = text === null ? {} : parseTopLevel(text);
+    const declared = top[KEY];
+    const summary = top.summary;
     const names: Array<{ name: string; source: 'declared' | 'setting' }> = declared
       ? [{ name: declared, source: 'declared' }]
       : personLaunchers.map((name) => ({ name, source: 'setting' as const }));   // a folder that declares none
@@ -69,7 +73,7 @@ export async function discover<F>({ folders, personLaunchers, fs }: { folders: A
         out.push({ folder, root, status: 'rejected', source, program: r.program, reason: `${r.program} is not an executable file at the repository's root.` });
         continue;
       }
-      out.push({ folder, root, status: 'candidate', source, file: r.file, program: r.program });
+      out.push({ folder, root, status: 'candidate', source, file: r.file, program: r.program, summary });
     }
   }
   return out;

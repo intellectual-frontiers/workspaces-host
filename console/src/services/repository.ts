@@ -21,6 +21,7 @@ export interface RepositoryInit {
   file: string;
   program: string;
   source: string;
+  summary?: string;
   spawn?: SpawnFn;
   log?: (line: string) => void;
   trusted?: () => boolean;
@@ -32,6 +33,8 @@ export class Repository {
   readonly root: string;
   readonly program: string;
   readonly source: string;
+  /** What its declaration says this repository is, for people. */
+  readonly summary: string;
   readonly trusted: () => boolean;
   readonly launcher: Launcher;
   readonly registry = new RegistryCache();
@@ -49,11 +52,12 @@ export class Repository {
   proposals: Link[] | null = null;
   private readonly log: (line: string) => void;
 
-  constructor({ folder, root, file, program, source, spawn, log, trusted, env }: RepositoryInit) {
+  constructor({ folder, root, file, program, source, summary, spawn, log, trusted, env }: RepositoryInit) {
     this.folder = folder;
     this.root = root;
     this.program = program;
     this.source = source;
+    this.summary = summary ?? '';
     this.trusted = trusted ?? (() => true);
     this.log = log ?? (() => undefined);
     this.launcher = new Launcher({ root, file, program, log, spawn, env });

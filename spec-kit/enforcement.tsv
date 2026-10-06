@@ -217,3 +217,5 @@ requirement	mechanism	by	note
 0009-workspaces-console FR-055	check	workspaces-host: ws-host release build	console manifest tests check the walkthrough's steps, their pages and that every button runs a command the extension contributes
 0009-workspaces-console FR-056	check	workspaces-host: ws-host release build	console unit tests (testmode.test.ts) check the code is copied, an https address opens and any other opens nothing
 0009-workspaces-console FR-057	check	workspaces-host: ws-host release build	console unit tests (start.test.ts) check the address box, the repo add it runs and the repositories joining the window; the manifest test checks Home's welcome buttons
+0009-workspaces-console FR-058	check	workspaces-host: ws-host release build	console unit tests (executor.test.ts) check what a build made is offered, and absolute, escaping and missing paths are not
+0009-workspaces-console FR-059	check	workspaces-host: ws-host release build	console unit tests (executor.test.ts, app.test.ts) check a failure's buttons, with and without exit status 3, and the repository row's words

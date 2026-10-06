@@ -21,6 +21,8 @@ export interface Ui extends FormUi {
   reviewWithoutFiles(o: { repo: Repository; detail: CommandDetail; doc: Doc }): Promise<boolean>;
   confirmDecision(o: { repo: Repository; detail: CommandDetail; argv: string[]; changes: Change[]; line: string }): Promise<boolean>;
   showResult(repo: Repository, detail: CommandDetail, argv: string[], real: RunResult): Promise<void>;
+  /** What a build made, offered as buttons that open it (0009-workspaces-console FR-058). */
+  offerOutputs?(repo: Repository, real: RunResult): Promise<void>;
 }
 
 export interface Refused { key: string; message: string }
@@ -71,7 +73,7 @@ export async function runRead(ui: Ui, repo: Repository, detail: CommandDetail, a
 /** Run a command with the argv already decided. */
 export async function runArgv(ui: Ui, repo: Repository, detail: CommandDetail, argv: string[]): Promise<Outcome> {
   const out = WRITES.includes(detail.category) ? await runWrite(ui, repo, detail, argv) : await runRead(ui, repo, detail, argv);
-  if (out.ran && out.real) await ui.showResult(repo, detail, argv, out.real);
+  if (out.ran && out.real) { await ui.showResult(repo, detail, argv, out.real); await ui.offerOutputs?.(repo, out.real); }
   return out;
 }
 
