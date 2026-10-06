@@ -6,7 +6,7 @@ from ..core.registry import Step, topic
 INSTALL = "curl -fsSL https://raw.githubusercontent.com/intellectual-frontiers/workspaces-host/main/install.sh | sh"
 
 
-@topic("start", "Your first steps: sign in, copy your starter repositories, and move into VS Code.")
+@topic("start", "Your first steps: sign in, set everything up with one command, and move into VS Code.")
 def start():
     return {
         "plain": "🎉 ws-host is installed. Do these things in order, and you will be working in VS Code.",
@@ -14,24 +14,18 @@ def start():
             ("1️⃣  Sign in to GitHub (you only do this once)",
              "Type the line below. It shows a short code and a web address. Open the address in your browser, type the code, and press Authorize. "
              "You never type a password into this window.\n\n    ws-host auth new github"),
-            ("2️⃣  Copy your starter repositories",
-             "Two repositories come with you: .github, the shared examples and rules, and workspaces-host, this tool. This copies them to your "
-             "workspaces folder and keeps them up to date without ever touching your own changes. Run it as often as you like.\n\n    ws-host workspace ensure"),
+            ("2️⃣  Set everything up",
+             "One command does it all. It copies your starter repositories, .github (the shared examples and rules) and workspaces-host (this tool), builds the "
+             "Workspaces Console for VS Code, installs every program they need and the helpful VS Code extensions, and keeps it all up to date without ever touching your own "
+             "changes. Long steps show a spinner with the seconds and how much has arrived. Run it as often as you like.\n\n    ws-host workspace ensure"),
             ("3️⃣  Open VS Code",
-             "Install VS Code on Windows from https://code.visualstudio.com/ and add its WSL extension, then open your first repository from here:\n\n"
-             "    cd ~/workspaces/github.com/intellectual-frontiers/.github\n    code ."),
-            ("4️⃣  Let ws-host set VS Code up",
-             "It installs the Workspaces Console, the extension that shows your workspace in VS Code, after checking its fingerprint, adds a short list of helpful extensions and a few safe "
-             "settings, and never changes a setting you made. "
-             "It also makes a workspace file that lists your repositories. Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.\n\n"
-             "    ws-host vscode ensure"),
-            ("5️⃣  Keep going in VS Code",
-             "In VS Code choose File, Open Workspace from File, and pick workspaces.code-workspace in your workspaces folder. Then press Ctrl+Shift+P and run "
-             "Workspaces Console: Learn a Topic. Every page there has a button for each step, and the Home view says what needs you. You can do everything else from VS Code."),
-            ("📂 Choose which repositories you work in",
-             "To add one, type its address. It is copied now and every time you update:\n\n    ws-host repo add github.com/ORG/REPO\n\n"
-             "To remove one or change the list, open your settings file in VS Code and edit the line that starts with WS_HOST_REPOS:\n\n"
-             "    code ~/.config/workspaces-host/ws-host.env"),
+             "Install VS Code on Windows from https://code.visualstudio.com/ and add its WSL extension, then open your workspace from here:\n\n"
+             "    code ~/workspaces/workspaces.code-workspace\n\n"
+             "The Workspaces Console is in the Activity Bar. Its Home says what needs you, with a button on each line."),
+            ("4️⃣  Keep going in VS Code",
+             "Press Ctrl+Shift+P and run Workspaces Console: Learn a Topic; every page there has a button for each step. To work in another repository, run "
+             "Workspaces Console: Add Repository and type its address; it is copied, joins the workspace and, when it comes from your own organization, needs no trust step. "
+             "To get everything up to date later, run Workspaces Console: Update ws-host. You can do everything else from VS Code."),
             ("🎨 Your prompt is ready",
              "Setup already gave your terminal a colorful prompt that shows where you are and what git is doing. It lives in a few marked "
              "lines of your ~/.bashrc, which you can delete any time, and you will see it in a new terminal window, or right now if you type:\n\n"
@@ -43,7 +37,8 @@ def start():
              "The prompt draws small icons from a Nerd Font. Install one on Windows and choose it in Windows Terminal, and the boxes turn into icons. "
              "The guide has the three steps, and ws-host help shell has the rest. To skip the font, use the plain prompt:\n\n    ws-host shell add bash --plain"),
             ("🔄 Stay up to date",
-             "ws-host improves often. A new terminal window tells you in one line when a newer version is waiting. To get it, and see what is new:\n\n"
+             "ws-host improves often. A new terminal window tells you in one line when a newer version is waiting. One command brings everything current: ws-host, your repositories, "
+             "the editor, and the programs they pin:\n\n"
              "    ws-host update"),
             ("🆘 Stuck?",
              "Run ws-host doctor to see what is wrong in plain words, or Workspaces Console: Get Help in VS Code for a report with no passwords in it, and paste it to "
@@ -51,10 +46,9 @@ def start():
         ),
         "steps": (
             Step("Sign in to GitHub", ("auth", "new"), {"forge": "github"}),
-            Step("Copy your starter repositories", ("workspace", "ensure")),
-            Step("Set VS Code up", ("vscode", "ensure")),
+            Step("Set everything up", ("workspace", "ensure")),
             Step("Give your terminal the prompt again", ("shell", "add"), {"shell": "bash"}, "setup already did this once"),
-            Step("Update ws-host", ("update",)),
+            Step("Update everything", ("update",)),
             Step("See where things stand", ("workspace", "status")),
             Step("Check your machine", ("doctor",)),
         ),

@@ -68,7 +68,7 @@ def _actions_for(results, cfg) -> list[Action]:
 
 
 @command("repo", "add", category="setup", summary="Copy missing repositories to this machine",
-         args=(REPO_ARG, Arg("all", flag=True, help="every known repository"), Arg("trust", flag=True, help="also trust them")))
+         args=(REPO_ARG, Arg("all", flag=True, help="every known repository"), Arg("trust", flag=True, help="also trust them")), surfaces=("cli", "editor"))
 def repo_add(ctx, repo, all, trust: bool):
     cfg = config.load()
     listed = None
@@ -107,6 +107,12 @@ def repo_add(ctx, repo, all, trust: bool):
                     trust_mod.grant(r, cfg)
                 except FileExistsError as e:
                     raise WsError("trust-conflict", str(e), "Another repository with the same name is already trusted, so I did not trust this one.")
+    try:         # a repository that arrives joins the VS Code workspace, so the Workspaces Console shows its command line at once
+        from . import vscode as vscode_cmd
+        if vscode_cmd.workspace_file(cfg).exists():
+            vscode_cmd.workspace_step(cfg, False)
+    except Exception:
+        pass
     bad = any(r["outcome"] == "failed" for r in results)
     data = {"plain": repos.summarize(results) + (f" I added {listed} to your list in {paths.config_file()}." if listed else ""), "repositories": results}
     if listed:
@@ -118,7 +124,7 @@ def repo_add(ctx, repo, all, trust: bool):
 
 
 @command("repo", "sync", category="setup", summary="Bring repositories up to date, never touching your work",
-         args=(REPO_ARG, Arg("all", flag=True, help="every cloned repository")))
+         args=(REPO_ARG, Arg("all", flag=True, help="every cloned repository")), surfaces=("cli", "editor"))
 def repo_sync(ctx, repo, all):
     cfg = config.load()
     chosen = _selected(cfg, repo)

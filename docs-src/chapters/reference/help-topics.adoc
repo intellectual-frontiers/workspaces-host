@@ -289,7 +289,7 @@ In the credential storage of gh and glab, which is where they keep it. ws-host s
 
 === start
 
-_Your first steps: sign in, copy your starter repositories, and move into VS Code._
+_Your first steps: sign in, set everything up with one command, and move into VS Code._
 
 🎉 ws-host is installed. Do these things in order, and you will be working in VS Code.
 
@@ -300,43 +300,24 @@ Type the line below. It shows a short code and a web address. Open the address i
 ws-host auth new github
 ----
 
-.2️⃣  Copy your starter repositories
-Two repositories come with you: .github, the shared examples and rules, and workspaces-host, this tool. This copies them to your workspaces folder and keeps them up to date without ever touching your own changes. Run it as often as you like.
+.2️⃣  Set everything up
+One command does it all. It copies your starter repositories, .github (the shared examples and rules) and workspaces-host (this tool), builds the Workspaces Console for VS Code, installs every program they need and the helpful VS Code extensions, and keeps it all up to date without ever touching your own changes. Long steps show a spinner with the seconds and how much has arrived. Run it as often as you like.
 
 ----
 ws-host workspace ensure
 ----
 
 .3️⃣  Open VS Code
-Install VS Code on Windows from https://code.visualstudio.com/ and add its WSL extension, then open your first repository from here:
+Install VS Code on Windows from https://code.visualstudio.com/ and add its WSL extension, then open your workspace from here:
 
 ----
-cd ~/workspaces/github.com/intellectual-frontiers/.github
-code .
+code ~/workspaces/workspaces.code-workspace
 ----
 
-.4️⃣  Let ws-host set VS Code up
-It installs the Workspaces Console, the extension that shows your workspace in VS Code, after checking its fingerprint, adds a short list of helpful extensions and a few safe settings, and never changes a setting you made. It also makes a workspace file that lists your repositories. Then reload VS Code: press Ctrl+Shift+P and run Developer: Reload Window.
+The Workspaces Console is in the Activity Bar. Its Home says what needs you, with a button on each line.
 
-----
-ws-host vscode ensure
-----
-
-.5️⃣  Keep going in VS Code
-In VS Code choose File, Open Workspace from File, and pick workspaces.code-workspace in your workspaces folder. Then press Ctrl+Shift+P and run Workspaces Console: Learn a Topic. Every page there has a button for each step, and the Home view says what needs you. You can do everything else from VS Code.
-
-.📂 Choose which repositories you work in
-To add one, type its address. It is copied now and every time you update:
-
-----
-ws-host repo add github.com/ORG/REPO
-----
-
-To remove one or change the list, open your settings file in VS Code and edit the line that starts with WS_HOST_REPOS:
-
-----
-code ~/.config/workspaces-host/ws-host.env
-----
+.4️⃣  Keep going in VS Code
+Press Ctrl+Shift+P and run Workspaces Console: Learn a Topic; every page there has a button for each step. To work in another repository, run Workspaces Console: Add Repository and type its address; it is copied, joins the workspace and, when it comes from your own organization, needs no trust step. To get everything up to date later, run Workspaces Console: Update ws-host. You can do everything else from VS Code.
 
 .🎨 Your prompt is ready
 Setup already gave your terminal a colorful prompt that shows where you are and what git is doing. It lives in a few marked lines of your ~/.bashrc, which you can delete any time, and you will see it in a new terminal window, or right now if you type:
@@ -363,7 +344,7 @@ ws-host shell add bash --plain
 ----
 
 .🔄 Stay up to date
-ws-host improves often. A new terminal window tells you in one line when a newer version is waiting. To get it, and see what is new:
+ws-host improves often. A new terminal window tells you in one line when a newer version is waiting. One command brings everything current: ws-host, your repositories, the editor, and the programs they pin:
 
 ----
 ws-host update
@@ -375,10 +356,9 @@ Run ws-host doctor to see what is wrong in plain words, or Workspaces Console: G
 .Steps
 
 * Sign in to GitHub: `ws-host auth new github`
-* Copy your starter repositories: `ws-host workspace ensure`
-* Set VS Code up: `ws-host vscode ensure`
+* Set everything up: `ws-host workspace ensure`
 * Give your terminal the prompt again: `ws-host shell add bash` (setup already did this once)
-* Update ws-host: `ws-host update`
+* Update everything: `ws-host update`
 * See where things stand: `ws-host workspace status`
 * Check your machine: `ws-host doctor`
 

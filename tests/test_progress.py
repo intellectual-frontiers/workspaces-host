@@ -382,6 +382,7 @@ class AnnouncedStep(unittest.TestCase):
         import io
         from contextlib import redirect_stderr
         err = io.StringIO()
+        progress.ENABLED = True
         with redirect_stderr(err), progress.step("📥 Downloading x", announce=True):
             with progress.step("📦 Inner", announce=True):
                 pass

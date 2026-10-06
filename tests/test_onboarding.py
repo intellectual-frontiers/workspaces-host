@@ -133,12 +133,12 @@ class FirstSteps(Home):
     def test_the_start_page_walks_through_every_first_step_in_order(self):
         _, doc = self.run_json("help", "start")
         headings = [s["heading"] for s in doc["data"]["sections"]]
-        order = ["Sign in to GitHub", "starter repositories", "Open VS Code", "set VS Code up", "Keep going in VS Code", "which repositories", "prompt is ready", "Nerd Font", "Stuck"]
+        order = ["Sign in to GitHub", "Set everything up", "Open VS Code", "Keep going in VS Code", "prompt is ready", "Nerd Font", "Stuck"]
         positions = [next(i for i, h in enumerate(headings) if o.lower() in h.lower()) for o in order]
         self.assertEqual(positions, sorted(positions))
         text = " ".join(s["text"] for s in doc["data"]["sections"])
-        for needle in ("ws-host auth new github", "ws-host workspace ensure", "code .", "ws-host vscode ensure", "Workspaces Console: Learn a Topic", "ws-host repo add github.com/ORG/REPO",
-                       "WS_HOST_REPOS", "code ~/.config/workspaces-host/ws-host.env", "exec bash -l", "ws-host shell add bash --plain", "fish", "ws-host doctor", "intellectual-frontiers.github.io/workspaces-host"):
+        for needle in ("ws-host auth new github", "ws-host workspace ensure", "code ~/workspaces/workspaces.code-workspace", "Workspaces Console: Learn a Topic", "Workspaces Console: Add Repository",
+                       "Workspaces Console: Update ws-host", "exec bash -l", "ws-host shell add bash --plain", "fish", "ws-host doctor", "intellectual-frontiers.github.io/workspaces-host"):
             self.assertIn(needle, text, needle)
         self.assertIn(".github", text)
         self.assertIn("workspaces-host", text)
@@ -150,7 +150,7 @@ class FirstSteps(Home):
         _, plain = self.run_cmd("help", "start")
         self.assertEqual(ANSI.sub("", coloured).replace("👉 ", ""), plain)
         self.assertTrue(plain.splitlines()[0].startswith("🎉"))
-        for n in range(1, 6):
+        for n in range(1, 5):
             self.assertIn(f"{n}️⃣", plain)
         self.assertLess(max(len(l) for l in plain.splitlines() if not l.startswith("  ") or l.startswith("  ws")) , 140)
         self.assertTrue(all(len(l) <= 100 for l in plain.splitlines() if l.startswith("  ") and not l.strip().startswith(("ws-host", "cd ", "code", "fish"))))

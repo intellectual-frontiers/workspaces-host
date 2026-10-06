@@ -1,5 +1,6 @@
 """Keeping ws-host itself current, and telling a new window when an update waits (0006-onboarding FR-025)."""
 import os
+from .helpers import Home
 import subprocess
 import time
 
@@ -190,3 +191,41 @@ class NewWindow(Workspace):
         f = self.home.parent / "config.fish"
         f.write_text(shell.block("fish"))
         self.assertEqual(subprocess.run([fish, "-n", str(f)]).returncode, 0)
+
+
+class WholeUpgrade(Home):
+    """0006-onboarding FR-025: `update` brings everything current with the newest code, in one command."""
+
+    def setUp(self):
+        super().setUp()
+        os.environ.pop("WS_HOST_UPDATE_SELF_ONLY")
+        self.log = self.home / "calls.log"
+        stub = self.home / "ws-host-stub"
+        stub.write_text(f'#!/bin/sh\necho "$@" >> "{self.log}"\nexit ${{STUB_EXIT:-0}}\n')
+        stub.chmod(0o755)
+        os.environ["WS_HOST_LAUNCHER"] = str(stub)
+        import unittest.mock
+        self.patch = unittest.mock.patch("ws_host.lib.selfupdate.update", lambda offline=False: {
+            "outcome": "updated", "plain": "ws-host moved forward by 2 changes.", "path": "x", "branch": "main", "behind": 2, "ahead": 0, "news": []})
+        self.patch.start()
+        self.addCleanup(self.patch.stop)
+
+    def test_it_updates_ws_host_then_runs_the_rest_with_the_newest_code_and_cleans_up(self):
+        code, out = self.run_cmd("update")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.log.read_text().splitlines(), ["workspace ensure", "toolchain remove --unused"])
+        self.assertIn("ws-host moved forward by 2 changes", out)
+
+    def test_offline_is_passed_on_and_a_failed_setup_is_the_commands_status(self):
+        os.environ["STUB_EXIT"] = "3"
+        code, out = self.run_cmd("update", "--offline")
+        self.assertEqual(code, 3)
+        self.assertEqual(self.log.read_text().splitlines()[0], "workspace ensure --offline")
+
+    def test_a_dry_run_changes_nothing_and_runs_nothing(self):
+        code, out = self.run_cmd("update", "--dry-run")
+        self.assertFalse(self.log.exists())
+
+    def test_json_answers_with_one_document_naming_each_step(self):
+        code, doc = self.run_json("update")
+        self.assertEqual([s["command"] for s in doc["data"]["steps"]], ["ws-host workspace ensure", "ws-host toolchain remove --unused"])

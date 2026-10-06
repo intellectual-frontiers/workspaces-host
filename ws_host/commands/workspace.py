@@ -106,13 +106,22 @@ def workspace_ensure(ctx):
     yield _step("editor", "Checking VS Code...")
     editor_actions = []
     if shutil.which("code"):
-        if vscode_cmd.console_installed_here():
-            steps.append({"name": "editor", "status": "ok", "plain": "VS Code is here and the Workspaces Console is installed."})
+        # The editor is part of the setup, not a chore left to the person: the Workspaces Console is built from this clone, the providers in use are
+        # enabled and everything they pin is installed, and the managed files are current (0009-workspaces-console FR-052).
+        done = None
+        for res in vscode_cmd.vscode_ensure(ctx):
+            if res.kind == "progress":
+                yield res
+            else:
+                done = res
+        if done is None:
+            steps.append({"name": "editor", "status": "warn", "plain": "VS Code did not answer. Run `ws-host vscode ensure` to try again."})
         else:
-            steps.append({"name": "editor", "status": "warn", "plain": "VS Code is here. Set it up with the Workspaces Console, the helpful extensions and safe settings with `ws-host vscode ensure`."})
-            editor_actions.append(Action(("vscode", "ensure"), "Set up VS Code with the Workspaces Console, helpful extensions and safe settings"))
+            inner = {r["status"] for r in done.data.get("steps", [])}
+            steps.append({"name": "editor", "status": "fail" if done.status == FAILED or "fail" in inner else "warn" if inner - {"ok"} else "ok", "plain": done.data["plain"]})
+            editor_actions += list(done.actions)
     else:
-        steps.append({"name": "editor", "status": "warn", "plain": "VS Code is not reachable from this terminal yet. Install it on Windows, open it once from here with `code .`, then run `ws-host vscode ensure`."})
+        steps.append({"name": "editor", "status": "warn", "plain": "VS Code is not reachable from this terminal yet. Install it on Windows, open it once from here with `code .`, then run `ws-host update`."})
     yield _step("doctor", "Checking this machine's health...")
     d = doctor_cmd.report()
     bad = [c for c in d["checks"] if c["status"] == "fail"]
