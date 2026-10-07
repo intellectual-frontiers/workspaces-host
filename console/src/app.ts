@@ -28,6 +28,7 @@ import { ChecksProvider } from './views/checks-tree';
 import { CommandsProvider } from './views/commands-tree';
 import { FileDecorations } from './views/decorations';
 import { Services } from './services/services';
+import { Busy } from './services/busy';
 import { Updates } from './services/updates';
 import { ServicesProvider, type ServiceNode } from './views/services-tree';
 import { HomeProvider } from './views/home-tree';
@@ -76,6 +77,7 @@ export class App {
   readonly services: Services;
   readonly servicesView: ServicesProvider;
   readonly updates: Updates;
+  readonly working: Busy;
   private readonly updatesItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 48);
   private readonly servicesItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 49);
   readonly slots: ResourceProvider[] = [];
@@ -121,6 +123,10 @@ export class App {
       busy: (title, fn) => Promise.resolve(vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title }, fn)),
     });
     this.servicesView = new ServicesProvider(this.services);
+    this.working = new Busy({
+      later: (ms, fn) => { const h = setTimeout(fn, ms); h.unref?.(); return { dispose: () => clearTimeout(h) }; },
+      show: (label, done, onSay) => { this.showBusy(label, done, onSay); },
+    });
     this.updates = new Updates({
       look: () => this.lookForUpdates(),
       notify: async (message, buttons) => vscode.window.showInformationMessage(message, ...buttons),
@@ -166,6 +172,21 @@ export class App {
   }
 
   async refresh(): Promise<Repository[]> {
+    return this.working.track(t('Looking at your repositories…'), (say) => this.look(say));
+  }
+
+  /** Say that work is going on until it ends: a spinner in the status bar with the newest phrase, and a line in the views that are filling. */
+  private showBusy(label: string, done: Promise<void>, onSay: (say: (phrase: string) => void) => void): void {
+    const views = [VIEW_IDS.home, VIEW_IDS.checks].map((id) => this.treeViews.get(id)).filter((v): v is NonNullable<typeof v> => v !== undefined);
+    for (const v of views) v.message = label;
+    void vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: label }, async (progress) => {
+      onSay((phrase) => progress.report({ message: phrase }));
+      await done;
+    });
+    void done.then(() => { for (const v of views) if (v.message === label) v.message = undefined; });
+  }
+
+  private async look(say: (phrase: string) => void): Promise<Repository[]> {
     const folders = (vscode.workspace.workspaceFolders ?? []).map((f) => ({ name: f.name, root: f.uri.fsPath, raw: f }));
     const found = await discover({ folders, personLaunchers: this.personLaunchers(), fs: this.deps.fs ?? nodeFs });
     const repos: Repository[] = [];
@@ -176,6 +197,7 @@ export class App {
       if (c.status === 'rejected' || !c.file || !c.program) { this.log.info(`${c.folder.name}: ${c.reason ?? 'not a launcher'}`); continue; }
       const repo = new Repository({ folder: c.folder.raw, root: c.root, file: c.file, program: c.program, source: c.source, summary: c.summary,
         spawn: this.deps.spawn, log: (l) => this.log.info(l), trusted: () => this.trusted(), env: this.deps.env });
+      say(c.folder.name);
       await repo.load();
       if (repo.state === 'unavailable') { this.unavailable += 1; this.unavailableMissing = this.unavailableMissing || repo.missing; if (repo.needsProvider) this.unenabled.push(c.root); this.log.info(`${c.folder.name}: not shown as an orchestrator. ${repo.reason}`); continue; }
       repos.push(repo);
@@ -191,7 +213,8 @@ export class App {
     this.language.register(repos);
     await this.tests.rebuild();
     // The health the status bar states comes from `doctor`; it is cheap, and runs only for a trusted repository.
-    for (const repo of repos) if (repo.state === 'ready') { await repo.runDoctor(); await this.loadProposals(repo); }
+    for (const repo of repos) if (repo.state === 'ready') { say(t('Checking {0}', repo.name)); await repo.runDoctor(); await this.loadProposals(repo); }
+    say(t('Checking GitHub sign-in'));
     await this.lookAtSignIn();
     this.refreshViews();
     this.markReady();
@@ -212,6 +235,10 @@ export class App {
 
   /** The launcher or its declaration changed on disk: one repository is asked again, the others are left alone. */
   async reload(repo: Repository): Promise<void> {
+    await this.working.track(t('Refreshing {0}…', repo.name), () => this.reloadNow(repo));
+  }
+
+  private async reloadNow(repo: Repository): Promise<void> {
     this.sections.delete(repo.key);
     await repo.load();
     if (repo.state === 'ready') { await repo.runDoctor(); await this.loadProposals(repo); }
