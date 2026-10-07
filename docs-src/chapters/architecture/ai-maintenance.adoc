@@ -1,0 +1,128 @@
+[#ai-maintenance]
+== Maintaining ws-host with an AI
+
+An AI agent can do most maintenance here well, because the system is code, discovered by presence, and checked by tests. It does it badly when it is asked vaguely, when it is allowed to guess a checksum, or when nobody asks it to prove the result. This chapter turns the rest of Part III into a way of asking.
+
+=== What to tell the AI first
+
+Start every session with the same three things:
+
+. *Read `.claude/skills/ws-host/SKILL.md`.* It is generated from the code, lists every command and kit and says which commands an agent is not offered.
+. *Read the chapter for the layer you are changing,* from this part of the guide, and the spec in `spec-kit/specs/` that governs it.
+. *Say which proof you want.* Always the same four commands: `ws-host test`, `ws-host check`, `ws-host fresh` and `ws-host doctor`. Add `ws-host check console`, `check release` or `check reproducible` when the change touches the extension or the release.
+
+=== The shape of a good prompt
+
+.The shape of a good maintenance prompt
+image::figures/fig-10.1.png[Five steps: the outcome, the layer and files, the rule, the checks, and a request to say what was not verified,width=95%]
+
+[cols="2,5"]
+|===
+|Part |Example
+
+|Outcome
+|_Bump `glab` in the `base` kit to 1.121.0._
+
+|Layer and files
+|_`ws_host/kits/base.py`, its tests in `tests/test_kits.py`, and the generated `docs-src/chapters/reference/kits.adoc`._
+
+|Rule
+|_The SHA-256 per architecture must come from the real artifact. Never invent a hash._
+
+|Checks
+|_Run `ws-host test`, `check`, `fresh`, `doctor`. Run `docs generate` and commit the result._
+
+|Honesty
+|_List anything you did not verify, and anything you changed that I did not ask for._
+|===
+
+=== Where each kind of change goes
+
+[cols="3,4,3"]
+|===
+|If the change is about... |Start in... |Chapter
+
+|The installer, the launcher, the first run
+|`install.sh`, `ws-host`, `ws_host/bootstrap.env`
+|<<bootstrap>>
+
+|A tool version for ws-host or a provider
+|`.workspaces-host/toolchain.d/`, then regenerate
+|<<mise-toolchain>>
+
+|A tool a person installs by name
+|`ws_host/kits/`
+|<<kits-installers>>
+
+|A prompt, a shell block, a VS Code setting
+|`ws_host/lib/managed.py`, `commands/config.py`, `commands/vscode.py`
+|<<chezmoi-managed>>
+
+|A new command, a title, an icon, a field
+|`ws_host/commands/`, `commands/presentation.py`
+|<<registry-resources>>
+
+|Copying, updating, trusting, signing in
+|`ws_host/lib/repos.py`, `lib/trust.py`, `commands/auth.py`
+|<<repos-trust-auth>>
+
+|Anything on screen in VS Code
+|`console/src/`
+|<<vscode-console>>
+
+|A release, the guide or a check
+|`lib/release.py`, `commands/docs.py`, `commands/check.py`
+|<<release-docs-checks>>
+|===
+
+=== Rules to put in every prompt
+
+* *Never invent a version or a checksum.* Fetch the real artifact and hash it, and say where.
+* *Never edit a generated file.* Run its generator.
+* *Never weaken a safety rule to pass a test.* The sync, trust and decision rules are the product.
+* *Never add a package at module level in a command or kit.* A dependency goes in a group in `pyproject.toml` and is imported inside the function.
+* *Do not run what is a person's decision.* An agent does not run `release publish`, `provider add`, `repo set` or `kit add`.
+* *Keep the change small.* One layer, one purpose, and a test that fails without it.
+* *Say what you did not verify.* Several checks skip on a machine without a display, `agora` or a real VS Code.
+
+=== A review checklist for what comes back
+
+. Does the change sit in the layer the chapter says it should?
+. Is there a test that would fail without it, using a real temporary git repository or a throwaway home where the behavior touches files?
+. Did the generated files change, and are they committed?
+. Is any version or hash new, and is its source named?
+. Did a safety rule move? If so, why?
+. Were any checks skipped, and were they run somewhere that could?
+
+=== Known gaps worth a prompt of their own
+
+These came up while this part was written. Each is a good first task, and each should be checked against the code before it is trusted, because they are reading of the code, not tested facts.
+
+[cols="3,4"]
+|===
+|Gap |Where to look
+
+|The Console may not pass the surface and `--confirmed` that decisions need
+|`console/src/services/launcher.ts`, `executor.ts`; `ws_host/core/cli.py`
+
+|Backup file names have one-second resolution and could collide
+|`ws_host/lib/chezmoi.py:apply`
+
+|`config ensure --dry-run` runs `chezmoi cat`, which the spec says it should not
+|`commands/config.py`, 0010-managed-config FR-008
+
+|No `doctor` warning when your own chezmoi manages all of `.bashrc`
+|`commands/doctor.py`, `spikes/chezmoi/NOTES.md` finding 8
+
+|There is no kit uninstall, and links can dangle
+|`install/fetch.py`, `lib/kitrun.py`
+
+|The `mcp serve` command the Console looks for is not in the files I read
+|`console/src/services/mcp.ts`, `ws_host/commands/`
+
+|The Console's `homepage` points at a different repository path than its `repository`
+|`console/package.json`
+
+|The `shell` kit hard-codes `noble` for fish
+|`ws_host/kits/shell.py`
+|===

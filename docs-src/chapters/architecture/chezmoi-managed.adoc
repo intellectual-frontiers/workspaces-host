@@ -1,0 +1,92 @@
+[#chezmoi-managed]
+== chezmoi and the files `ws-host` manages
+
+`ws-host` writes to three files in your home folder, and only because you asked. chezmoi is the engine that does the writing, with a backup, and without ever reading a chezmoi setup of your own. This chapter explains why chezmoi is there, what it manages, and how it stays safe.
+
+=== What is managed
+
+.What ws-host writes, and what it leaves alone
+image::figures/fig-5.1.png[Three managed files and one box of things never read,width=95%]
+
+[cols="2,3,3"]
+|===
+|File |What `ws-host` writes |When
+
+|`~/.bashrc`
+|A prompt block: `~/.local/bin` on the path, the oh-my-posh prompt, an update-available banner, and a background update check at most every 360 minutes
+|After `ws-host shell add bash`
+
+|fish `config.fish`
+|The same block, wrapped for interactive fish
+|After `ws-host shell add fish`
+
+|VS Code settings
+|Baseline settings, only for keys that are missing
+|After `ws-host vscode ensure`
+|===
+
+A file counts as managed only when it already holds the `ws-host` block. `config show` lists nothing until you have asked for something.
+
+The block is wrapped in markers:
+
+----
+# >>> workspaces-host: prompt (ws-host shell add bash) >>>
+...
+# <<< workspaces-host <<<
+----
+
+Text outside the markers is never read or changed. If you delete the end marker, `ws-host` refuses to touch the file rather than guess.
+
+=== Why chezmoi
+
+Writing a block into a file you also edit is easy to get wrong: it must be idempotent, it must replace itself in place, it must survive a person's edits, and it must be undoable. chezmoi has a mature "modify script" mechanism for exactly this: a script that receives the current file on stdin and prints the new file. `ws-host` generates one script per target.
+
+* chezmoi is pinned (`VERSION = "2.73.0"`, also the minimum) and downloaded with a SHA-256 for each architecture, the way kits are, into `~/.local/bin/chezmoi`. It is copied there as a plain file and never replaced afterward, so `chezmoi upgrade` still works. A copy on your own path is used if it is new enough.
+* The source folder is `~/.local/share/workspaces-host/chezmoi/source`. It is a pure cache: it is deleted and rewritten on every run. A target is named in chezmoi's way, so `.bashrc` becomes `modify_dot_bashrc`.
+* Each script is `exec python -m ws_host.lib.managed KIND ARGS`. `managed.py` is standard-library Python that takes text in and gives text out, which is why the tests can cover it without chezmoi at all.
+* chezmoi runs isolated: its own `--source`, `--destination`, `--config`, persistent state and cache, no TTY, stdin closed, a two-minute timeout, and every `CHEZMOI*` variable removed from the environment. A chezmoi you set up yourself is never read.
+* Paths outside your home folder are refused.
+
+=== How `config ensure` changes a file
+
+.How config ensure changes a file
+image::figures/fig-5.2.png[Five steps from rendering a source folder to chezmoi apply, with a stop when the file is already current,width=95%]
+
+. Render the throwaway source.
+. `chezmoi cat <file>` says what the file would become. Compare it with the file.
+. Equal: stop. Nothing is written and no backup is made. That is what makes it safe to run often.
+. Different: copy the real file (following a symlink, so the link target is backed up) to `~/.local/state/workspaces-host/backups/<name>.<YYYYmmdd-HHMMSS>`.
+. `chezmoi apply <file>` writes it.
+
+`config check` is the same comparison with no write, and `doctor` reports a file that has gone stale. `WS_HOST_KEEP_BLOCK` lets `workspace ensure` keep a prompt theme you edited instead of resetting it.
+
+=== The VS Code settings merge
+
+`managed.with_settings` is a JSON merge that adds only keys that are missing. It leaves the file alone when it cannot parse it, for example when it contains comments, and the message lists the settings to add by hand. The baseline is in `commands/vscode.py:baseline_settings` and is documented in the generated VS Code setup reference. Under WSL the file is `~/.vscode-server/data/Machine/settings.json`.
+
+=== The prompt themes
+
+oh-my-posh renders the prompt. Two themes ship in `ws_host/data/themes/`: `ws-host-pretty.omp.json` needs a Nerd Font and is the default, and `ws-host-plain.omp.json` uses only emoji and box lines. The block points at the packaged file; nothing is copied into your home. `WS_HOST_PROMPT` is `pretty`, `plain` or `no`.
+
+=== Things I could not confirm, or that are open
+
+* The backup name has one-second resolution. Two applies of one file inside a second would collide. I did not find code that prevents it.
+* The spec says `config ensure --dry-run` runs no chezmoi, but the code calls `chezmoi cat` to compute the state. Whether that matters is a decision for you.
+* If you manage all of `.bashrc` with your own chezmoi, the two will fight. The design notes suggested `doctor` should say so; I did not find that check.
+* The spike also carried completions and a workspace file through chezmoi. Production does not; only the three files above are managed.
+
+=== Prompts for maintenance
+
+Change the prompt block::
+_In `ws_host/lib/managed.py`, change the background update check from every 360 minutes to every 720. Update the tests in `tests/test_config.py` and any help text that quotes it. Explain that existing users will show as stale until `config ensure` runs, and say whether `workspace ensure` or `update` already runs it._
+
+Add a baseline VS Code setting::
+_Add `editor.formatOnSave: true` to `baseline_settings` in `ws_host/commands/vscode.py`, with a test. Confirm it is added only when absent, and regenerate the reference with `ws-host docs generate`._
+
+Manage a new file::
+_Add a managed block for zsh. Follow the bash path: a new kind in `managed.py:main`, a target in `config.py:managed_targets`, the opt-in command, tests, and a requirement row in `spec-kit/specs/0010-managed-config` and `spec-kit/enforcement.tsv`. Paths must stay under the home folder._
+
+Bump chezmoi::
+_Update chezmoi in `ws_host/lib/chezmoi.py`: `VERSION` and both SHA-256 values, from the real release. Update the version named in 0010-managed-config FR-002. Run `tests/test_config.py`._
+
+Files these touch: `ws_host/lib/chezmoi.py`, `ws_host/lib/managed.py`, `ws_host/commands/config.py`, `ws_host/commands/shell.py`, `ws_host/commands/vscode.py`, `ws_host/data/themes/`, `ws_host/kits/shell.py`, `tests/test_config.py`, `spec-kit/specs/0010-managed-config/spec.md`.
