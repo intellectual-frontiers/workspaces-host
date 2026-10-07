@@ -55,6 +55,20 @@ export class Diagnostics implements vscode.Disposable {
     return unplaced;
   }
 
+  /** A problem that is not a check's finding (a command that failed, a repository that would not load, a service that would not start): one entry in the Problems
+   * panel at `uri`, replaced by the next report with the same key and cleared when the thing works. `source` says whose it is and `code` is the command line's own code. */
+  setProblem(folder: vscode.WorkspaceFolder, key: string, uri: vscode.Uri, message: string, level: 'error' | 'warning', source: string, code?: string): void {
+    const d = new vscode.Diagnostic(new vscode.Range(0, 0, 0, Number.MAX_SAFE_INTEGER), message, severityOf(level));
+    d.source = source;
+    if (code) d.code = code;
+    this.bySection.set(`${folder.uri.toString()}\n!${key}`, new Map([[uri.toString(), { uri, diagnostics: [d] }]]));
+    this.publish();
+  }
+
+  clearProblem(folder: vscode.WorkspaceFolder, key: string): void {
+    if (this.bySection.delete(`${folder.uri.toString()}\n!${key}`)) this.publish();
+  }
+
   clearSection(folder: vscode.WorkspaceFolder, section: string): void {
     this.bySection.delete(`${folder.uri.toString()}\n${section}`);
     this.publish();

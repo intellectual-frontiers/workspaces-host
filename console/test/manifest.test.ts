@@ -72,7 +72,7 @@ test('FR-038: a row\'s menus are in the groups inline, navigation, 1_run, 2_copy
 
 test('FR-024, FR-040: each setting has a markdownDescription and the scope application; the code reads no other', () => {
   const props = c.configuration.properties as Record<string, Loose>;
-  assert.deepEqual(Object.keys(props).sort(), ['workspaces-console.checkOnSave', 'workspaces-console.launchers', 'workspaces-console.rowLimit', 'workspaces-console.showAllCommands', 'workspaces-console.simpleViews']);
+  assert.deepEqual(Object.keys(props).sort(), ['workspaces-console.checkOnSave', 'workspaces-console.launchers', 'workspaces-console.rowLimit', 'workspaces-console.showAllCommands', 'workspaces-console.showWelcomeOnStart', 'workspaces-console.simpleViews']);
   for (const p of Object.values(props)) { assert.equal(p.scope, 'application'); assert.ok(p.markdownDescription.length > 20); }
   assert.equal(props['workspaces-console.showAllCommands'].default, false, 'All commands is hidden by default');
 });

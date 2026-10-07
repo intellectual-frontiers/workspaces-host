@@ -498,6 +498,12 @@
         "enablement": "workspaces-console.hasRepository"
       },
       {
+        "command": "workspaces-console.showWelcome",
+        "title": "%command.showWelcome.title%",
+        "category": "%category%",
+        "icon": "$(home)"
+      },
+      {
         "command": "workspaces-console.lookForUpdates",
         "title": "%command.lookForUpdates.title%",
         "category": "%category%",
@@ -662,6 +668,10 @@
         {
           "command": "workspaces-console.toggleSimpleViews",
           "when": "workspaces-console.hasRepository"
+        },
+        {
+          "command": "workspaces-console.showWelcome",
+          "when": "true"
         },
         {
           "command": "workspaces-console.lookForUpdates",
@@ -1036,6 +1046,13 @@
           "scope": "application",
           "order": 4,
           "markdownDescription": "%setting.simpleViews.description%"
+        },
+        "workspaces-console.showWelcomeOnStart": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "order": 5,
+          "markdownDescription": "%setting.showWelcomeOnStart.description%"
         }
       }
     },

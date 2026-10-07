@@ -55,6 +55,8 @@ export interface UiParts {
   review: (repo: Repository, detail: CommandDetail, changes: Change[]) => Promise<boolean>;
   /** What to do with a command's result once it has run. */
   showResult: (repo: Repository, detail: CommandDetail, argv: string[], real: RunResult) => Promise<void>;
+  /** Puts a problem in the Problems panel (words), or takes it out (null); `key` names it so that the next report replaces it (0009-workspaces-console FR-064). */
+  reportProblem?: (repo: Repository, key: string, words: string | null, code: string | undefined, source: string) => void;
 }
 
 /** Signing in shows a short code and an address in the stream (`auth-code`): the code goes on the clipboard, the address opens, and a notice says what to do, so nobody has to find
@@ -71,7 +73,7 @@ function signInCode(doc: Doc): void {
     .then((pick) => { if (pick === again) void vscode.env.openExternal(vscode.Uri.parse(url)); });
 }
 
-export function createUi({ log, showResult, where, running, review }: UiParts): Ui {
+export function createUi({ log, showResult, where, running, review, reportProblem }: UiParts): Ui {
   const ui: Ui = {
     async pick<V>({ title, placeholder, items, canPickMany }: { title?: string; placeholder?: string; items: Array<PickItem<V>>; canPickMany?: boolean }): Promise<V | V[] | undefined> {
       const shown = items.map((i) => ({ label: i.label, description: i.description, detail: i.detail, value: i.value, picked: false }));
@@ -125,9 +127,14 @@ export function createUi({ log, showResult, where, running, review }: UiParts): 
       else if (pick === show) void vscode.commands.executeCommand(first.dir ? 'revealInExplorer' : 'revealFileInOS', vscode.Uri.file(first.abs));
     },
 
+    problem(repo: Repository, detail: CommandDetail, words: string | null, code?: string): void {
+      reportProblem?.(repo, `command:${detail.id}`, words, code, `${repo.name} ${detail.id}`);
+    },
+
     async showFailure(repo: Repository, detail: CommandDetail, r: RunResult): Promise<void> {
       const words = r.error ? r.error.message : r.failed ? `${repo.program} could not run "${detail.id}": ${r.failed}` : `"${detail.id}" did not finish (exit ${String(r.exit)}).`;
       log.error(`${detail.id}: ${words}`);
+      ui.problem?.(repo, detail, words, r.error?.code);
       // A failure is never a dead end: a missing prerequisite (exit 3) offers the one button that installs it, and every failure can show the output or put a report for help on the clipboard.
       const install = t('Install everything');
       const output = t('Show Output');

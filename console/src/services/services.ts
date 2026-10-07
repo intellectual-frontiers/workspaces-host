@@ -26,6 +26,8 @@ export interface ServiceDeps {
   notify(message: string, buttons: string[], kind?: 'info' | 'error'): Promise<string | undefined>;
   openExternal(url: string): Promise<void>;
   changed(): void;
+  /** A service's trouble in the Problems panel (words), or gone (null) (0009-workspaces-console FR-064). */
+  problem?(repo: Repository, key: string, words: string | null): void;
   /** Show progress for something slow that cannot be cancelled by the person (the build before a first start). */
   busy<T>(title: string, fn: () => Promise<T>): Promise<T>;
 }
@@ -76,6 +78,7 @@ export class Services {
         const url = typeof d.data.url === 'string' ? d.data.url : '';
         if (!url) return;
         up = true;
+        this.deps.problem?.(found.repo, `service:${found.decl.id}`, null);
         this.set({ ...info, state: 'running', url, plain: t('Running at {0}', url) }, source);
         void this.deps.notify(t('{0} is running at {1}.', found.decl.title, url), [t('Open in Browser')]).then((pick) => { if (pick) void this.open(found.key); });
       },
@@ -96,6 +99,7 @@ export class Services {
 
   private fail(found: ServiceInfo, plain: string): void {
     this.deps.log(`${found.decl.title}: ${plain}`);
+    this.deps.problem?.(found.repo, `service:${found.decl.id}`, `${found.decl.title}: ${plain}`);
     this.set({ ...found, state: 'failed', url: null, plain }, null);
     void this.deps.notify(t('{0} did not start: {1}', found.decl.title, plain), [], 'error');
   }

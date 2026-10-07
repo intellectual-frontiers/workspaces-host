@@ -71,6 +71,7 @@ export function registerCommands(app: App): Handlers {
       cmd('trust', () => manageTrust());
       cmd('cancelRun', () => views.cancelRun());
       cmd('toggleAllCommands', () => views.toggleAllCommands());
+      cmd('showWelcome', () => app.welcome.show());
       cmd('lookForUpdates', async () => {
         await app.updates.look();
         if (!app.updates.current.waiting) void vscode.window.showInformationMessage(t('Everything is up to date.'));

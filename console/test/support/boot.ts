@@ -62,7 +62,7 @@ export async function boot({ docs, trusted = true, second = null, config, mcp, w
   const repos = [first];
   const folders = [folderOf('first', first.root)];
   if (second) { const r = makeRepo({ docs: second }); repos.push(r); folders.push(folderOf('second', r.root)); }
-  const stub = createStub({ folders, trusted, config, mcp, workspaceConfig });
+  const stub = createStub({ folders, trusted, config: { showWelcomeOnStart: false, ...config }, mcp, workspaceConfig });
   const restore = install(stub);
   // Loaded after the stand-in is installed, so that the extension's `vscode` is the stand-in.
   const extension = require('../../src/extension') as Loose;

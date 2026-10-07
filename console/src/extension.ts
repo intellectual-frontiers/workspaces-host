@@ -10,6 +10,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   app = new App(context);
   app.register();
   await app.refresh();
+  await app.showWelcomeAtStart();
   // Nothing is returned: the extension exports no API, so no other extension can run a command through it (FR-015).
 }
 

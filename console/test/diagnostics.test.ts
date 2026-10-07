@@ -53,3 +53,24 @@ test('FR-009: a section\'s diagnostics are cleared when that section runs again,
   assert.equal(stub.diagnostics.get(Uri.file('/clone/a.md').toString())[0].message, 'two');
   restore();
 });
+
+test('FR-064: a command that failed is one entry in the Problems panel at the file that is run, replaced by the next report and gone when it works', () => {
+  const { restore, d, folder, stub } = setup();
+  const file = Uri.file('/clone/tool');
+  d.setProblem(folder, 'command:build book', file, 'it broke', 'error', 'tool build book', 'missing-toolchain');
+  const first = stub.diagnostics.get(file.toString());
+  assert.equal(first.length, 1);
+  assert.equal(first[0].message, 'it broke');
+  assert.equal(first[0].source, 'tool build book');
+  assert.equal(first[0].code, 'missing-toolchain');
+  assert.equal(first[0].severity, 0, 'an error');
+  d.setProblem(folder, 'command:build book', file, 'it broke again', 'error', 'tool build book');
+  assert.equal(stub.diagnostics.get(file.toString()).length, 1, 'the same key replaces, it does not pile up');
+  d.setProblem(folder, 'load', file, 'newer reading needed', 'warning', 'tool');
+  assert.equal(stub.diagnostics.get(file.toString()).length, 2);
+  d.clearProblem(folder, 'command:build book');
+  assert.deepEqual(stub.diagnostics.get(file.toString()).map((x: Loose) => x.message), ['newer reading needed']);
+  d.clearProblem(folder, 'load');
+  assert.equal(stub.diagnostics.get(file.toString()), undefined);
+  restore();
+});
