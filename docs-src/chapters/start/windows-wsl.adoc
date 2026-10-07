@@ -1,8 +1,11 @@
 [#get-started]
 == Get started on Windows 11
 
-You will do four things: get Debian running inside Windows, paste one line, sign in to GitHub once, and open VS Code. Each step says
+You will do five things: get Debian running inside Windows, paste one line, sign in to GitHub once, open VS Code, and press Learn. Each step says
 where to type and what you will see. If anything differs, go to <<troubleshooting>>; every problem I know of is there.
+
+.The five steps
+image::figures/fig-g1.png[Five steps: get Debian, paste one line, sign in, open VS Code, press Learn,width=90%]
 
 You need a Windows 11 computer, an internet connection, a GitHub account, and about thirty minutes the first time. If you have no
 GitHub account, https://docs.github.com/en/get-started/start-your-journey/creating-an-account-on-github[make one first].
@@ -10,6 +13,9 @@ GitHub account, https://docs.github.com/en/get-started/start-your-journey/creati
 === Step 1: Put Debian on your computer
 
 Debian is a version of Linux. Windows can run it inside a window, and that is called WSL.
+
+.Where everything lives
+image::figures/fig-g2.png[Windows 11 holds VS Code; inside it WSL runs Debian, which holds ws-host and your workspaces folder,width=90%]
 
 . Open the *Microsoft Store* (press the Windows key, type `Store`, press Enter).
 . Search for *Debian*. Choose *Debian GNU/Linux* and press *Get*.
@@ -82,3 +88,8 @@ If you would rather not install a font, `ws-host shell add bash --plain` gives y
   examples and rules, and `workspaces-host`, this tool. You choose the rest; see <<typical-uses>>.
 
 I wrote the installer so you can run it again whenever you like. It never touches your work.
+
+From here on you work in VS Code, and the Workspaces Console does most of it for you with buttons. The next chapters get you there.
+
+TIP: The Console is a friendly window on the full `ws-host` command line. Every button runs a `ws-host` command, and *Show Command Line…* shows you which.
+

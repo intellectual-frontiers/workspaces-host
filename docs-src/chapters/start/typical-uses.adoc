@@ -1,10 +1,17 @@
 [#typical-uses]
 == Typical uses
 
-Everything here is a button in VS Code and a line you can paste in Debian. Learn teaches each one step by step: the page name is in
+Everything here is a button in the Workspaces Console, and the same thing is a line you can paste in Debian. Use the button; the line is there for when you prefer to type, or when an AI helps you. Learn teaches each one step by step: the page name is in
 brackets.
 
+TIP: The Console is a friendly window on the full `ws-host` command line. Every button runs a `ws-host` command, and *Show Command Line…* shows you which.
+
+
 === Start the day [start, repos]
+
+.What happens to your work when you sync
+image::figures/fig-g6.png[A gate: a repository that can catch up does, otherwise it is left exactly as it was,width=90%]
+
 
 Open VS Code from Debian with `code .` in a repository. Look at the line at the bottom. If it is green, you are ready. To bring every
 repository up to date, open the *Workspace* view and press *Sync Repositories* (or in Debian run `ws-host repo sync --all`). Any repository where you have
@@ -32,6 +39,10 @@ That means it has changes you have not saved to a commit, or yours and the share
 push your changes, then bring everything up to date again.
 
 === Install a kit [kits]
+
+.The kits
+image::figures/fig-g9.png[The kits you can add: base, shell, press and rust,width=90%]
+
 
 A kit is a set of tools for one kind of work. In Debian:
 

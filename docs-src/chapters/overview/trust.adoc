@@ -1,6 +1,9 @@
 [#trust]
 == Trust
 
+.Copying is not trusting
+image::figures/fig-g7.png[Copy, then you decide, then its tools may run,width=90%]
+
 Copying a repository never lets its code run. Trusting it is a separate act that only you take, and `ws-host` records it as
 one link in `~/.local/share/workspaces-host/enabled/`, pointing at the repository's `.workspaces-host` directory. That one
 link is the trust record, the place kits are searched for, and a configuration drop-in.

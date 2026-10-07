@@ -3,6 +3,11 @@
 
 VS Code is where you will work from now on. It runs on Windows and reaches into your Debian window. Everything below is done once.
 
+The point of the next few steps is the *Workspaces Console*, a panel inside VS Code that shows what needs you and gives you a button for each thing you do. After this chapter you can leave the Debian window closed most days.
+
+TIP: The Console is a friendly window on the full `ws-host` command line. Every button runs a `ws-host` command, and *Show Command Line…* shows you which.
+
+
 === Step 1: Install VS Code on Windows
 
 Download it from https://code.visualstudio.com/[code.visualstudio.com] and install it with the default choices. Leave *Add to PATH* ticked;
@@ -46,6 +51,9 @@ Now reload VS Code so everything starts: press `Ctrl+Shift+P`, type `Reload Wind
 Workspace from File*, and pick `workspaces.code-workspace` in your workspaces folder (`~/workspaces`). This is your default way in; <<workspace-file>> explains it and how to make your own.
 
 === Step 5: Look around, then press Learn
+
+.What you see in VS Code
+image::figures/fig-g5.png[A VS Code window: the Console's views on the left, results in the middle, the status bar along the bottom,width=90%]
 
 You now have:
 

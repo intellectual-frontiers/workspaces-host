@@ -124,6 +124,106 @@ def prompting(path):
         ("Ask it to say what it did not verify", True)], box_w=860)
 
 
+# ---- Part I and II: for people new to all of this. Plain words, the Console first ----
+import svgkit
+from svgkit import SVG
+
+
+def journey(path):
+    layouts.chain_vertical(path, "Five steps from nothing to ready", "About thirty minutes, once", [
+        "1. Get Debian from the Microsoft Store and open it",
+        "2. Paste one line. The installer sets up your machine",
+        "3. Sign in to GitHub with a short code in your browser",
+        "4. Open VS Code and let ws-host set it up",
+        ("5. Press Learn in the Workspaces Console, and work from there", True)], box_w=860)
+
+
+def where(path):
+    layouts.stack_layers(path, "Where everything lives", "VS Code is in Windows. Your work is in Debian, inside Windows", layers(
+        ("Windows 11: the Microsoft Store, your browser, and VS Code with the Workspaces Console", E),
+        ("WSL: the bridge that lets Windows run Debian in a window", N),
+        ("Debian, a version of Linux: ws-host and the black window where you paste commands", P),
+        ("Your folder ~/workspaces: every repository you work in", P)), box_w=900)
+
+
+def signin(path):
+    layouts.chain_vertical(path, "Signing in takes a code, not a password", "You never type your GitHub password into Debian", [
+        "Type ws-host auth new github, or press the button in VS Code",
+        "It shows a short code such as ABCD-1234 and a web address",
+        "In your browser, sign in to GitHub as usual and type the code",
+        ("The window says you are signed in. Run ws-host workspace ensure again", True)], box_w=860)
+
+
+def buttons(path):
+    layouts.stack_layers(path, "Every button is a command you could type", "The Console is a friendly window on the command line", layers(
+        ("Sync Repositories  =  ws-host repo sync --all", P),
+        ("Check Machine  =  ws-host doctor", P),
+        ("Install Kit...  =  ws-host kit add NAME", P),
+        ("Sign In...  =  ws-host auth new github", P),
+        ("Show Command Line... shows you the exact line behind any button", E)), box_w=900,
+        note="Use whichever you like. The result is the same, and so is the safety")
+
+
+def console_screen(path):
+    W, H = 1040, 640
+    s = SVG(W, H)
+    s.title("What you see in VS Code", "The Workspaces Console, in plain words")
+    s.rect(28, 110, W - 56, 470, fill="surface", stroke="strong", sw=2, rx=6)
+    # sidebar
+    s.rect(44, 126, 280, 380, fill="neutral-tint", stroke="line", rx=4)
+    s.text(184, 160, "Workspaces Console", size=20, bold=True, fill="ink")
+    for i, t in enumerate(("Home: what needs you", "Workspace: your repositories", "Kits: your tool sets", "Setup: first steps")):
+        s.box_with_text(58, 180 + i * 78, 252, 62, t, fill="primary-tint", stroke="primary", text_fill="ink", size=20, bold=False)
+    # result panel
+    s.rect(344, 126, 652, 380, fill="surface", stroke="line", rx=4)
+    s.box_with_text(364, 146, 612, 130, "Results open here, in plain words, with buttons for what to do next. A command that changes something shows you the change first",
+                    fill="emphasis-tint", stroke="emphasis", text_fill="emphasis", size=20)
+    s.box_with_text(364, 296, 612, 90, "Learn a Topic: the same pages as ws-host help, every step a button",
+                    fill="info-tint", stroke="info", text_fill="ink", size=20)
+    s.box_with_text(364, 406, 612, 80, "Problems panel: findings, with a click to go to the place",
+                    fill="neutral-tint", stroke="line", text_fill="body", size=20)
+    # status bar
+    s.box_with_text(44, 522, W - 88, 44, "Status bar: is your machine well, and how many things need you? Click it to open Home",
+                    fill="strong", stroke="strong", text_fill="surface", size=20)
+    s.save(path)
+
+
+def safe_sync(path):
+    layouts.gate(path, "What happens to your work when you sync?", "Nothing you wrote is ever overwritten",
+                 "Can the repository catch up without touching your own changes?",
+                 "It catches up to the shared copy.", "It is left exactly as it was, and the result says why. Your work is safe.")
+
+
+def trust_steps(path):
+    layouts.chain_vertical(path, "Copying is not trusting", "A repository can run code only after you say so", [
+        "ws-host copies the repository. Nothing in it can run yet",
+        ("You decide to trust it. A dialog asks, and only you can click it", True),
+        "Now ws-host can install the tools it lists. You can stop trusting it at any time"],
+        box_w=860, colors=[("neutral-tint", "line", "body"), ("emphasis-tint", "emphasis", "emphasis"), ("primary-tint", "primary", "ink")])
+
+
+def one_window(path):
+    layouts.converge(path, "One window for all your repositories", "That is what workspaces.code-workspace does", [
+        "github.com/org/tools", "github.com/org/site", "github.com/org/docs", "workspaces-host"],
+        "One VS Code window, one Explorer, every repository")
+
+
+def kits_menu(path):
+    layouts.tree(path, "A kit is a set of tools for one kind of work", "ws-host kit add NAME installs one", "ws-host kit add",
+                 ["base: the everyday tools, installed for you", "shell: a friendlier terminal and prompt, installed for you",
+                  "press: books and PDFs", "rust: builds Rust programs"])
+
+
+def stuck(path):
+    layouts.chain_vertical(path, "When something is wrong", "You do not have to work out what", [
+        "Look at the status bar or Home. Each row says what is wrong in plain words",
+        "Press Run on the row, or copy the line it shows",
+        "Still stuck? Run Get Help. It copies a report with no passwords in it",
+        ("Paste the report to a person or an AI", True)], box_w=860)
+
+
 FIGURES = {"fig-1.1": system_map, "fig-2.1": bootstrap, "fig-3.1": pins, "fig-3.2": toolchain, "fig-4.1": kit_life, "fig-5.1": managed,
            "fig-5.2": ensure_flow, "fig-6.1": registry, "fig-6.2": resource, "fig-7.1": sync_gate, "fig-8.1": console_run, "fig-9.1": release,
-           "fig-9.2": enforcement, "fig-10.1": prompting}
+           "fig-9.2": enforcement, "fig-10.1": prompting,
+           "fig-g1": journey, "fig-g2": where, "fig-g3": signin, "fig-g4": buttons, "fig-g5": console_screen, "fig-g6": safe_sync,
+           "fig-g7": trust_steps, "fig-g8": one_window, "fig-g9": kits_menu, "fig-g10": stuck}
