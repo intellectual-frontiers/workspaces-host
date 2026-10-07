@@ -544,6 +544,10 @@ knowledge (FR-003).
 - **FR-062**: Home's title bar MUST offer *Add Repository*, and MUST offer *Sign In to GitHub* while the command line's `auth status` (read) says a forge is not
   signed in, so that neither is found only through the Command Palette. A description of a command of several words MUST be asked of the command line one word
   at a time.
+- **FR-063**: Work the Console does that a person did not just ask for (looking at the repositories at start and when folders or declarations change, and refreshing
+  one) MUST be seen to be going on once it has lasted about half a second: a status bar line that says what is being done, newest phrase first (which
+  repository, which step), and a line in the views that are filling; both MUST end with the work, however it ends, and quick work MUST show neither. Work a person
+  started keeps its own notification or view progress (FR-017), and an hourly look for news (FR-061) is silent.
 
 ## Out of scope
 
