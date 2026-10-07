@@ -224,3 +224,5 @@ requirement	mechanism	by	note
 0009-workspaces-console FR-061	check	workspaces-host: ws-host release build	console unit tests (updates.test.ts) check the first look and the hourly one, telling once, the button, a failed look and a busy window
 0009-workspaces-console FR-062	check	workspaces-host: ws-host release build	console unit tests (manifest.test.ts, registry.test.ts) check the title bar's buttons and that a command's words are asked one by one
 0009-workspaces-console FR-063	check	workspaces-host: ws-host release build	console unit tests (busy.test.ts) check that quick work shows nothing, slow work shows its label and phrases and ends with the work, and a failure still ends it
+0009-workspaces-console FR-064	check	workspaces-host: ws-host release build	console unit tests (diagnostics.test.ts) check a problem's entry, its replacement and its removal
+0009-workspaces-console FR-065	check	workspaces-host: ws-host release build	console unit tests (welcome.test.ts, manifest.test.ts, never.test.ts) check the sections, the states, the notes, the escaping, opening at start, and the setting

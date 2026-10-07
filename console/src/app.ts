@@ -29,6 +29,7 @@ import { CommandsProvider } from './views/commands-tree';
 import { FileDecorations } from './views/decorations';
 import { Services } from './services/services';
 import { Busy } from './services/busy';
+import { WelcomePage } from './views/welcome';
 import { Updates } from './services/updates';
 import { ServicesProvider, type ServiceNode } from './views/services-tree';
 import { HomeProvider } from './views/home-tree';
@@ -78,6 +79,8 @@ export class App {
   readonly servicesView: ServicesProvider;
   readonly updates: Updates;
   readonly working: Busy;
+  readonly welcome: WelcomePage;
+  private signedOutNow = false;
   private readonly updatesItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 48);
   private readonly servicesItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 49);
   readonly slots: ResourceProvider[] = [];
@@ -110,7 +113,8 @@ export class App {
     this.status = new StatusBar(this.handles);
     this.ui = createUi({ log: this.log, where: () => this.origin, running: this.running,
       showResult: (repo, detail, argv, real) => this.commands.showResult(repo, detail, argv, real),
-      review: (repo, detail, changes) => this.panel.review(repo, detail, changes) });
+      review: (repo, detail, changes) => this.panel.review(repo, detail, changes),
+      reportProblem: (repo, key, words, code, source) => this.problem(repo.folder, repo.launcher.file, key, words, 'error', source, code) });
     this.diagnostics = new Diagnostics((folder, file) => this.resolveFile(folder, file));
     this.decorations = new FileDecorations(this.diagnostics);
     this.homeView = new HomeProvider(this);
@@ -118,11 +122,18 @@ export class App {
     this.checksView = new ChecksProvider(this);
     this.services = new Services({
       repos: () => this.repos, log: (l) => this.log.info(l), changed: () => this.servicesChanged(),
+      problem: (repo, key, words) => this.problem(repo.folder, repo.launcher.file, key, words, 'error', t('{0} service', repo.name)),
       notify: async (message, buttons, kind) => (kind === 'error' ? vscode.window.showErrorMessage(message, ...buttons) : vscode.window.showInformationMessage(message, ...buttons)),
       openExternal: async (url) => { await vscode.env.openExternal(await vscode.env.asExternalUri(vscode.Uri.parse(url))); },
       busy: (title, fn) => Promise.resolve(vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title }, fn)),
     });
     this.servicesView = new ServicesProvider(this.services);
+    this.welcome = new WelcomePage({
+      extensionUri: this.context.extensionUri as vscode.Uri,
+      repos: () => this.repos,
+      signedOut: () => this.signedOutNow, updates: () => this.updates.current, needs: (r) => countOf(deriveHome(r).needs),
+      openTopic: (repo, topic) => this.commands.learn.openTopic(repo, topic), learn: (repo) => this.commands.learn.learn(repo), fail: (e) => this.fail(e),
+    });
     this.working = new Busy({
       later: (ms, fn) => { const h = setTimeout(fn, ms); h.unref?.(); return { dispose: () => clearTimeout(h) }; },
       show: (label, done, onSay) => { this.showBusy(label, done, onSay); },
@@ -199,6 +210,7 @@ export class App {
         spawn: this.deps.spawn, log: (l) => this.log.info(l), trusted: () => this.trusted(), env: this.deps.env });
       say(c.folder.name);
       await repo.load();
+      this.reportLoad(repo, c.folder.raw, c.file);
       if (repo.state === 'unavailable') { this.unavailable += 1; this.unavailableMissing = this.unavailableMissing || repo.missing; if (repo.needsProvider) this.unenabled.push(c.root); this.log.info(`${c.folder.name}: not shown as an orchestrator. ${repo.reason}`); continue; }
       repos.push(repo);
     }
@@ -217,8 +229,16 @@ export class App {
     say(t('Checking GitHub sign-in'));
     await this.lookAtSignIn();
     this.refreshViews();
+    void this.welcome.refresh();
     this.markReady();
     return repos;
+  }
+
+  /** A repository that would not load, or that this extension is too old to read, is a problem in the Problems panel until it loads. */
+  private reportLoad(repo: Repository, folder: vscode.WorkspaceFolder, file: string): void {
+    const bad = repo.state === 'unavailable' || repo.state === 'update';
+    const words = !bad ? null : repo.said || repo.reason || t('{0} could not be read.', repo.program);
+    this.problem(folder, file, 'load', words, repo.state === 'update' ? 'warning' : 'error', t('Workspaces Console: {0}', repo.program));
   }
 
   /** Whether GitHub is signed in, from the command line's own read (`auth status`); the Sign In button shows only while it is not. Unknown counts as signed in. */
@@ -230,6 +250,7 @@ export class App {
       const forges = result.doc?.data.forges;
       signedOut = result.exit === 0 && Array.isArray(forges) && forges.some((f) => (f as { signed_in?: unknown }).signed_in === false);
     }
+    this.signedOutNow = signedOut;
     void vscode.commands.executeCommand('setContext', 'workspaces-console.signedOut', signedOut);
   }
 
@@ -303,6 +324,12 @@ export class App {
     void vscode.commands.executeCommand('setContext', 'workspaces-console.servicesRunning', running.length > 0);
   }
 
+  /** A trouble in the Problems panel, at the file that is run (words), or gone (null). */
+  problem(folder: vscode.WorkspaceFolder, file: string, key: string, words: string | null, level: 'error' | 'warning', source: string, code?: string): void {
+    if (words === null) this.diagnostics.clearProblem(folder, key);
+    else this.diagnostics.setProblem(folder, key, vscode.Uri.file(file), words, level, source, code);
+  }
+
   /** One quiet look through the command line that offers it (ws-host's), or null when there is none or it could not look. */
   private async lookForUpdates(): Promise<{ waiting: boolean; plain: string } | null> {
     const repo = this.repos.find((r) => r.has('updates status'));
@@ -322,6 +349,16 @@ export class App {
       this.updatesItem.command = 'workspaces-console.updateEverything';
       this.updatesItem.show();
     } else this.updatesItem.hide();
+    void this.welcome.refresh();
+  }
+
+  /** The welcome page opens by itself when the window has nothing else open, unless the person turned that off. */
+  async showWelcomeAtStart(): Promise<void> {
+    if (testMode.active() || this.repos.length === 0) return;
+    if (vscode.workspace.getConfiguration('workspaces-console').get<boolean>('showWelcomeOnStart') === false) return;
+    const groups = vscode.window.tabGroups?.all ?? [];
+    if (groups.some((g) => g.tabs.length > 0)) return;
+    await this.welcome.show();
   }
 
   private updateBadges(): void {
@@ -558,7 +595,7 @@ export class App {
     tree(VIEW_IDS.checks, this.checksView, true);
     { const view = vscode.window.createTreeView(VIEW_IDS.services, { treeDataProvider: this.servicesView }); this.treeViews.set(VIEW_IDS.services, view); sub(view); }
     sub(this.servicesItem); sub({ dispose: () => this.services.stopAll() });
-    sub(this.updatesItem); sub({ dispose: () => this.updates.stop() });
+    sub(this.updatesItem); sub({ dispose: () => this.updates.stop() }); sub(this.welcome);
     tree(VIEW_IDS.commands, this.commandsView, true);
     sub(vscode.window.registerWebviewPanelSerializer(PANEL_TYPE, { deserializeWebviewPanel: (panel, state) => this.panel.restore(panel, state) }));
     sub(vscode.tasks.registerTaskProvider('workspaces-console', this.tasks));

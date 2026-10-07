@@ -548,6 +548,14 @@ knowledge (FR-003).
   one) MUST be seen to be going on once it has lasted about half a second: a status bar line that says what is being done, newest phrase first (which
   repository, which step), and a line in the views that are filling; both MUST end with the work, however it ends, and quick work MUST show neither. Work a person
   started keeps its own notification or view progress (FR-017), and an hourly look for news (FR-061) is silent.
+- **FR-064**: Trouble MUST be reported where VS Code reports trouble, in the Problems panel, and not only in a message or the Output panel: a command that fails (with the
+  command line's own code), a repository that would not load or that this extension is too old to read, and a service that would not start, each as one entry
+  at the file that is run, sourced to what failed, replaced by the next report of the same thing and removed when it works, beside the findings of checks (FR-009).
+- **FR-065**: The Console MUST offer a welcome page (*Show Welcome Page*) that opens by itself when a window starts with nothing else open, unless the setting
+  `workspaces-console.showWelcomeOnStart` is off. It MUST have a section for each repository that declares a command line of its own, with what that declaration says
+  it is for, how it stands (ready, how many things need the person, not ready and why), its help topics, each opening that topic, and a button for all of them;
+  notes with the one button that helps when GitHub is not signed in or news waits; and *Add Repository* when there is none. It MUST draw in the theme's own
+  colors, escape every word it shows, and take its buttons as indexes into actions the extension built, so that nothing in the page can name a command.
 
 ## Out of scope
 

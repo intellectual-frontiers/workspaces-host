@@ -100,5 +100,7 @@
   "walkthrough.update.description": "One button brings Workspaces, your repositories and their programs up to date, never touching your own changes.\n[Update Everything](command:workspaces-console.updateEverything)",
   "command.toggleSimpleViews.title": "Show Every View",
   "command.lookForUpdates.title": "Look for Updates",
+  "command.showWelcome.title": "Show Welcome Page",
+  "setting.showWelcomeOnStart.description": "Open the welcome page, with a section for each repository and help on each, when a window starts with nothing else open. The *Show Welcome Page* command opens it any time.",
   "setting.simpleViews.description": "Show only the everyday views a command line marks (Books and Papers, say) instead of every view it declares. On by default so a newcomer is not shown twenty views; the *Show Every View* action in Home's `…` menu shows all of them for this session only."
 }

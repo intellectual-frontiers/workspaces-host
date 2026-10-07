@@ -12,8 +12,8 @@ import { chooseRepo } from './pick';
 export class LearnCommands {
   constructor(private readonly app: App) {}
 
-  async learn(): Promise<unknown> {
-    const repo = await chooseRepo(this.app, t('Which repository do you want to learn about?'), (r) => r.has('help'));
+  async learn(given?: Repository): Promise<unknown> {
+    const repo = given ?? await chooseRepo(this.app, t('Which repository do you want to learn about?'), (r) => r.has('help'));
     if (!repo) return null;
     const listed = await repo.launcher.run(['help']);
     const doc = this.readable(repo, listed.doc, listed.error?.message, 'help topics');

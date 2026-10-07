@@ -17,6 +17,8 @@ export interface Ui extends FormUi {
   copy(text: string): Promise<void>;
   progress<T>(title: string, fn: (token: Cancellation, report: (doc: Doc) => void) => Promise<T>): Promise<T>;
   showFailure(repo: Repository, detail: CommandDetail, r: RunResult): Promise<void>;
+  /** A command's trouble in the Problems panel: the words when it failed, null when it worked (0009-workspaces-console FR-064). */
+  problem?(repo: Repository, detail: CommandDetail, words: string | null, code?: string): void;
   reviewChanges(o: { repo: Repository; detail: CommandDetail; changes: Change[] }): Promise<boolean>;
   reviewWithoutFiles(o: { repo: Repository; detail: CommandDetail; doc: Doc }): Promise<boolean>;
   confirmDecision(o: { repo: Repository; detail: CommandDetail; argv: string[]; changes: Change[]; line: string }): Promise<boolean>;
@@ -62,6 +64,7 @@ async function settle(ui: Ui, repo: Repository, detail: CommandDetail, real: Run
   const refused = refusedValue(detail, real.error);
   if (refused) return { ran: false, real, refused, reason: 'value refused' };
   if (real.error || real.failed || !real.doc) { await ui.showFailure(repo, detail, real); return { ran: false, real, reason: 'failed' }; }
+  ui.problem?.(repo, detail, null);
   return { ran: true, real };
 }
 
