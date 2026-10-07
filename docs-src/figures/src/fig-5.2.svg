@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 636" width="1040" height="636">
+  <defs><marker id="arrD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-line"/></marker></defs>
+  <rect width="1040" height="636" class="f-surface"/>
+  <text x="28" y="50" text-anchor="start" class="f-ink" font-size="34" font-weight="bold">How config ensure changes a file</text>
+  <text x="28" y="84" text-anchor="start" class="f-muted" font-size="20" font-weight="normal" font-style="italic">Idempotent: a current file is not touched</text>
+  <rect x="90.0" y="120" width="860" height="70" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="162.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">Render one modify script per target into a throwaway chezmoi source folder</text>
+  <line x1="520.0" y1="190" x2="520.0" y2="223" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="90.0" y="224" width="860" height="70" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="266.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">chezmoi cat says what the file would become; compare it with the file</text>
+  <line x1="520.0" y1="294" x2="520.0" y2="327" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="90.0" y="328" width="860" height="70" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="370.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">Same text: stop. Nothing is written and no backup is made</text>
+  <line x1="520.0" y1="398" x2="520.0" y2="431" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="90.0" y="432" width="860" height="70" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="474.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">Different text: copy the file to ~/.local/state/workspaces-host/backups with a timestamp</text>
+  <line x1="520.0" y1="502" x2="520.0" y2="535" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="90.0" y="536" width="860" height="70" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="578.7" text-anchor="middle" class="f-ink" font-size="22" font-weight="bold">chezmoi apply writes it</text>
+</svg>

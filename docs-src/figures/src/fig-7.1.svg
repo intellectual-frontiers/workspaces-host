@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 473" width="1040" height="473">
+  <defs><marker id="arrD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-line"/></marker></defs>
+  <rect width="1040" height="473" class="f-surface"/>
+  <text x="28" y="50" text-anchor="start" class="f-ink" font-size="34" font-weight="bold">Will repo sync touch this repository?</text>
+  <text x="28" y="84" text-anchor="start" class="f-muted" font-size="20" font-weight="normal" font-style="italic">It only ever fast-forwards</text>
+  <rect x="240.0" y="130" width="560" height="93.2" rx="4" class="f-neutral-tint s-strong" stroke-width="1.5"/>
+  <text x="520.0" y="169.99999999999997" text-anchor="middle" class="f-ink" font-size="22" font-weight="bold">Is the copy clean, attached, on a branch, and strictly</text>
+  <text x="520.0" y="198.59999999999997" text-anchor="middle" class="f-ink" font-size="22" font-weight="bold">behind?</text>
+  <line x1="396.8" y1="223.2" x2="275.0" y2="322.2" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <line x1="643.2" y1="223.2" x2="765.0" y2="322.2" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <text x="235.0" y="279.2" text-anchor="middle" class="f-muted" font-size="20" font-weight="bold">YES</text>
+  <text x="805.0" y="279.2" text-anchor="middle" class="f-muted" font-size="20" font-weight="bold">NO</text>
+  <rect x="60.0" y="323.2" width="430" height="110" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="275.0" y="385.55" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">git merge --ff-only. The copy catches up.</text>
+  <rect x="550.0" y="323.2" width="430" height="110" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="765.0" y="371.90000000000003" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">Left exactly as it was. The reason is said in</text>
+  <text x="765.0" y="399.20000000000005" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">plain words.</text>
+</svg>

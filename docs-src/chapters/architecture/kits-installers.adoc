@@ -1,0 +1,79 @@
+[#kits-installers]
+== Kits and the two installers
+
+A kit is a named set of tools for one kind of work. `base` is the everyday userland, `shell` is the fish shell and the prompt, `press` is the book toolchain, and `rust` is the Rust compiler. A kit is a Python class, so what it installs is code a test can run, not a list a person edits.
+
+=== Declaring a kit
+
+Create `ws_host/kits/<name>.py` containing a subclass of `Kit` (from `ws_host/core/kit.py`). Importing nothing but the standard library and `..core.kit` at module level is a rule `doctor` enforces. The class has a `name`, a `summary`, a `plain` description, and four methods that take the machine's distribution:
+
+[cols="1,4"]
+|===
+|Method |Returns
+
+|`apt(distro)`
+|Package names. `a\|b` means the first alternative that has a candidate. A package the distribution lacks is reported and skipped.
+
+|`downloads(distro)`
+|`Download` objects: name, version, a URL template using `{version}` and `{arch}`, a SHA-256 for each architecture, the kind (`tar`, `zip`, `file` or `deb`), and optional steps with `{src}` and `{dest}`.
+
+|`links(distro)`
+|Programs to link into `~/.local/bin`, such as `fd` pointing at `fdfind`.
+
+|`checks(distro)`
+|`Check` objects: the program, how to ask its version, and a small function that does a real job with it.
+|===
+
+Nothing registers the class. `registry.discover()` imports every module in `ws_host/kits/`, so the file is the declaration.
+
+.A kit from declaration to proof
+image::figures/fig-4.1.png[Four steps: declare, plan, install, check,width=95%]
+
+=== Plan, install, verify
+
+`lib/kitrun.py` is the engine. `plan` is read-only: it asks `dpkg-query` and `apt-cache policy` what is missing and reports packages, downloads, links and what is unavailable. `kit add --dry-run` prints it.
+
+`install` is a generator that yields a step, a status and a plain sentence as it goes, so the editor can show progress. It runs the package step first, then each download, then the links.
+
+`kit_report` in `core/kits_state.py` is the proof. A kit counts as installed when none of its programs is missing. Then each functional check runs in a temporary folder: for example, `base` converts a small image to WebP, `press` typesets a one-line document with `lualatex`, `rust` compiles a program. A check that throws becomes a `fail` result and never crashes the command.
+
+=== The two installers
+
+[cols="1,4"]
+|===
+|Installer |Behavior
+
+|`install/apt.py`
+|Runs `apt-get` through `sudo`. It says so before it asks for a password. As root it uses no prefix; with `sudo` but no terminal it tries `sudo -n` and, if that needs a password, reports `needs-password` and points at `ws-host kit add <name>` instead of failing. It resolves `a|b` alternatives and skips what the distribution lacks.
+
+|`install/fetch.py`
+|Downloads with a `.part` file while hashing, compares the SHA-256 with the one in the code, and only then unpacks. It guards against path traversal in archive members, unpacks beside the target and moves into `~/.local/share/workspaces-host/tools/<name>/<version>`, repoints `current` atomically, and links binaries into `~/.local/bin` without overwriting a file that is not its own.
+|===
+
+There is no third installer. A failed download leaves nothing installed. Errors carry a code: `offline`, `unreachable`, `checksum`, `unsupported-arch`, `unsafe-archive`, `install-step`.
+
+=== Who installs what, and when
+
+* `workspace ensure` installs your kits, which default to `base` and `shell` (`DEFAULT_KITS` in `core/config.py`, overridden by `WS_HOST_KIT`).
+* A repository can ask for kits with `WS_HOST_KIT` in its own `.workspaces-host/ws-host.env`; those install after the repository is copied.
+* `kit add NAME` is the explicit command and is the one that needs `sudo`. It is a `setup` command, so an agent is not offered it.
+* `kitrun.ensure` skips a kit when every check program is already on the path. I read this from the code and did not test it: a kit with an out-of-date version is not reinstalled by `workspace ensure`.
+
+=== Limits to know about
+
+* A version bump is by hand: edit the version constant and each architecture's hash, using the real artifact. No tool computes the hash for you.
+* There is no uninstall. Links in `~/.local/bin` point into `current/`, so removing a tool folder leaves a dangling link.
+* `shell` fetches fish as a `.deb` for Ubuntu with the release name `noble` written into the code, so another Ubuntu release needs a code change.
+
+=== Prompts for maintenance
+
+Bump a download::
+_Update Rust in `ws_host/kits/rust.py` to 1.N.0. Fetch the real tarball for each architecture, compute the SHA-256, update the constants, and run `ws-host test` and `ws-host check`. Report the hashes and the URLs you hashed. Run `ws-host docs generate` and show the diff in the kit reference._
+
+Add a kit::
+_Add a `go` kit. Copy `ws_host/kits/rust.py` as the pattern: the official tarball with SHA-256 per architecture, a version check, and a check that compiles a hello-world. Do not add it to `DEFAULT_KITS`. Add tests in `tests/test_kits.py`, run `ws-host docs generate`, and run the four checks._
+
+Support a new distribution release::
+_The `shell` kit hard-codes `noble` for fish. Make it follow `machine.distro`, keep Debian on apt, and add tests for Debian 13 and Ubuntu 24.04 in `tests/test_kits.py`._
+
+Files these touch: `ws_host/kits/*.py`, `ws_host/core/kit.py`, `ws_host/core/config.py`, `ws_host/lib/kitrun.py`, `ws_host/install/apt.py`, `ws_host/install/fetch.py`, `ws_host/help/kits.py`, `tests/test_kits.py`, `tests/test_apt.py`, and the generated `docs-src/chapters/reference/kits.adoc`.

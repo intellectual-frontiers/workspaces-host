@@ -1,0 +1,151 @@
+[#system-map]
+== The system on one page
+
+This part is for a person who has to keep `ws-host` running and change it, usually with an AI doing the typing. It explains each moving part well enough that you can say which part a problem lives in, name the files an AI should read first, and know what proof to ask for. It describes what the code does today; where I could not confirm something from the code, the text says so.
+
+=== The five layers
+
+.The system in five layers
+image::figures/fig-1.1.png[A stack of five boxes: a person or agent, the Workspaces Console, ws-host with its registry, the lib folder, and the machine,width=95%]
+
+Each layer talks only to the one below it.
+
+* *The person* uses VS Code, a terminal, or an AI agent. All three run the same commands and read the same answers.
+* *The Workspaces Console* is a VS Code extension written in TypeScript. It holds no knowledge of `ws-host`. It asks a repository's launcher what commands exist, runs them with `--json`, and draws the result.
+* *`ws-host`* is a Python program. Its `core/` finds commands, kits and help topics by presence, and every command returns one `Resource`.
+* *`lib/`* is plain Python with no command line in it: git, repositories, trust, kits, mise, chezmoi, downloads, release building. Commands call it; tests call it directly.
+* *The machine* is apt, your home folder, a private store under `~/.local/share/workspaces-host`, and your clones under `~/workspaces`.
+
+=== The parts, and which chapter explains each
+
+[cols="2,3,3"]
+|===
+|Part |What it does |Chapter
+
+|`install.sh` and the `ws-host` launcher
+|Get a clone, then a pinned Python, from nothing but `curl`
+|<<bootstrap>>
+
+|mise and provider toolchains
+|Install exact, checksummed tool versions into a private store
+|<<mise-toolchain>>
+
+|Kits and the two installers
+|Install a named set of tools, then prove they work
+|<<kits-installers>>
+
+|chezmoi and managed files
+|Write a few marked blocks in your own files, with a backup
+|<<chezmoi-managed>>
+
+|Registry, resources and the wire shape
+|Find every command by presence; answer in one shape
+|<<registry-resources>>
+
+|Repositories, trust and sign-in
+|Copy and update repositories without touching your work
+|<<repos-trust-auth>>
+
+|The Workspaces Console
+|Draw the answers in VS Code and ask before writing
+|<<vscode-console>>
+
+|Releases, docs and the checks
+|Build the same bytes twice; keep the guide and the code in step
+|<<release-docs-checks>>
+
+|Maintaining it with AI
+|What to ask, what to point at, and what proof to require
+|<<ai-maintenance>>
+|===
+
+=== Four rules that explain most of the design
+
+Learn these four and most files in the repository become predictable.
+
+Behavior is code, information is a small file::
+Commands, kits, package lists, versions and fingerprints are Python, because an AI changes code easily and a test can run the result. Names, places and identities live in small `KEY=value` files in the syntax of `os-release`. The only TOML in the repository is what `uv` and mise own.
+
+Presence beats lists::
+A module in `ws_host/commands/`, `ws_host/kits/` or `ws_host/help/` is the command, kit or topic. Nothing else lists it, so there is nothing to forget and deleting the file removes it.
+
+One resource, many views::
+Every command returns one `Resource`. Text, `--json` and `--html` are views of it, so a person, a program and the editor are never told different things.
+
+Nothing is trusted or installed on faith::
+Every download is checked against a SHA-256 written in the code before it is unpacked. A repository's code runs only after you trust that repository. A command that decides something only a person may decide is never offered to an agent.
+
+=== Where things live on a machine
+
+[cols="3,4"]
+|===
+|Place |What is there
+
+|`~/workspaces/<host>/<org>/<repo>`
+|Every clone, including the `ws-host` clone itself
+
+|`~/.local/bin/ws-host`
+|A symlink to the launcher in the clone; also links to fetched programs
+
+|`~/.config/workspaces-host/`
+|`ws-host.env` (your configuration), `secrets.env` (refused unless mode 600), `providers.d/` (links to providers you added)
+
+|`~/.local/share/workspaces-host/tools/<name>/<version>`
+|Downloaded programs, with a `current` link to the installed version; mise itself sits here
+
+|`~/.local/share/workspaces-host/mise/data/installs/`
+|The mise store: ws-host's own Python and uv, and every provider's pinned programs
+
+|`~/.local/share/workspaces-host/enabled/`
+|One link per trusted repository: the record of trust
+
+|`~/.local/share/workspaces-host/chezmoi/source`
+|A throwaway chezmoi source folder, rewritten on every run
+
+|`~/.local/state/workspaces-host/`
+|Logs, trust records, `backups/`, mise's state, and the update notices
+
+|`~/.cache/workspaces-host/downloads/<sha256>`
+|Verified downloads, keyed by fingerprint
+|===
+
+All paths follow the XDG conventions and are honored only when absolute. `ws_host/core/paths.py` is the one place that decides them, so an AI asked to move a folder starts there.
+
+=== A vocabulary for prompts
+
+Use these words exactly. An AI that knows them can find the right file without a long explanation.
+
+[cols="2,5"]
+|===
+|Term |Meaning
+
+|Orchestrator
+|A repository's single command line. This repository's is `ws-host`; the public root's is `agora`.
+
+|Provider
+|A repository that declares an orchestrator and its tools in `.workspaces-host/`. This repository is one.
+
+|Kit
+|A Python class naming apt packages, downloads, links and checks for one kind of work: `base`, `shell`, `press`, `rust`.
+
+|Resource
+|The one answer shape: kind, id, data, links and actions, with `data.plain` first.
+
+|Category
+|`read`, `check`, `record`, `build`, `generate`, `decision` or `setup`. It decides who may run a command and where.
+
+|Surface
+|Where a command may run: terminal, editor or MCP.
+
+|Trust
+|A link in `enabled/` saying a repository's code may run. Only a person adds it.
+
+|Pin
+|An exact version with a SHA-256, never a range.
+
+|Generator
+|Code that writes a file, such as the reference chapters. `ws-host fresh` proves the file matches.
+
+|Managed block
+|Text between `# >>> workspaces-host` markers that `ws-host` may rewrite.
+|===

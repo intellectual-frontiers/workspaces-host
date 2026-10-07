@@ -1,0 +1,55 @@
+[#repos-trust-auth]
+== Repositories, trust and sign-in
+
+`ws-host` copies repositories to your machine and keeps them current. The hard promise is that it never touches your work. That promise is a short list of rules in code, and each rule is a test.
+
+=== Where repositories come from
+
+`repo add` clones into `~/workspaces/<host>/<org>/<repo>`. After cloning it reads the repository's `.workspaces-host/ws-host.env`: `WS_HOST_REPOS` names repositories worked beside it (information, needing no trust), and `WS_HOST_KIT` names kits it needs. `workspace ensure` repeats this until nothing new appears, because a cloned repository may name more.
+
+=== Safe updating
+
+.Will repo sync touch this repository?
+image::figures/fig-7.1.png[A yes-or-no gate: a clean attached behind copy is fast-forwarded; anything else is left exactly as it was,width=95%]
+
+`lib/repos.py:sync` runs `git fetch`, then `git merge --ff-only @{upstream}`. It never pulls, rebases, resets, stashes or merges in any other way. It leaves a repository exactly as it was, and says why in plain words, when:
+
+* the fetch fails (an authentication failure is flagged so a sign-in action can be offered);
+* a rebase, merge, cherry-pick, revert or bisect is in progress;
+* HEAD is detached, or the branch has no upstream;
+* there are uncommitted changes to tracked files (untracked files do not count);
+* the copy has commits of its own and the remote has others (diverged);
+* the fast-forward itself fails.
+
+A skipped repository is not an error. Only an actual failure makes the resource fail. `git.snapshot()` records HEAD, branch, status, index, stash and any operation in progress, and the tests compare snapshots before and after: a test that rebased someone's unpushed work, or reported a failed clone as done, fails. Git runs with `GIT_TERMINAL_PROMPT=0`, so it can never hang on a password prompt.
+
+`ws-host` updates itself with the same rule: `lib/selfupdate.py` fetches the clone, and fast-forwards it only when it is clean, attached and strictly behind. `ws-host update` and `workspace ensure` refresh two notices under `~/.local/state/workspaces-host/` (`update-available` and `update-looked.json`, cached for five minutes) which the prompt block and `doctor` read.
+
+=== Trust
+
+Cloning is not trusting. A repository's code can run only after you trust it.
+
+* Trust is a symlink at `~/.local/share/workspaces-host/enabled/<repo>` pointing at the clone's `.workspaces-host/`, plus a record of the commit it was given at.
+* `repo set --trusted` and `--untrusted` are `decision` commands: a person confirms them.
+* The trusted organizations come only from your own configuration (`WS_HOST_TRUSTED`, default `intellectual-frontiers`). A repository cannot name itself trusted, and `--trust` on `repo add` applies only to repositories you named, never to ones another repository's file named.
+* `kits_changed_since_trust` compares the repository's kits against the recorded commit so a later change is visible.
+* In the editor, nothing runs at all until VS Code's own Workspace Trust is granted.
+
+=== Sign-in
+
+`auth status` runs `gh auth status` (or `glab`) for `github.com` and any hosts in `WS_HOST_GITLAB_HOSTS`. If the CLI is missing it offers `kit add base`. `auth new github` is a generator command: it starts `gh auth login --web`, watches the output, presses Enter when asked, and yields an `auth-code` resource with the code and URL so the editor can show them. On success it runs `gh auth setup-git`, so `git` uses the same sign-in. Tokens live in `gh`'s own storage, not in `ws-host`'s files.
+
+=== Prompts for maintenance
+
+Add a reason to skip a sync::
+_`repo sync` should also leave a repository alone when a `.git/ws-host-hold` file exists. Add the rule in `lib/repos.py:sync` with a plain-words reason, a test with a real temporary git repository that proves the snapshot is unchanged, and no other behavior change. Run the tests._
+
+Change who is trusted by default::
+_Do not do this without me. Describe what changing `WS_HOST_TRUSTED`'s default would do to existing machines, and which tests would need to change._
+
+Support another host::
+_Add a self-hosted GitLab host. Read `WS_HOST_GITLAB_HOSTS` handling in `commands/auth.py` and `lib/repos.py`, make the smallest change, and test sign-in detection with a fake `glab`._
+
+Files these touch: `ws_host/lib/repos.py`, `lib/git.py`, `lib/trust.py`, `lib/selfupdate.py`, `lib/updates.py`, `ws_host/commands/repo.py`, `commands/auth.py`, `commands/workspace.py`, `commands/update.py`, `tests/test_repos.py`, `tests/test_update.py`, `tests/test_onboarding.py`.
+
+IMPORTANT: Any prompt that touches sync, trust or sign-in should say _never weaken a safety rule to make a test pass_, and should ask for a before-and-after `git.snapshot()` test.
