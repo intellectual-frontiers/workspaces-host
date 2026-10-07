@@ -37,7 +37,7 @@ export function statusModel(repo: Statused | null, needs: Suggestion[] = []): St
 }
 
 export class StatusBar implements vscode.Disposable {
-  private readonly item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);
+  private readonly item = vscode.window.createStatusBarItem('workspaces-console.status', vscode.StatusBarAlignment.Left, 50);
   /** What the item showed last, for the test hook's snapshot. */
   last: { text: string; tooltip: string; visible: boolean } = { text: '', tooltip: '', visible: false };
 

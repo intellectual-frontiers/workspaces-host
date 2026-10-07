@@ -282,3 +282,27 @@ test('FR-018: Copy Context removes secrets and sends nothing anywhere; the resul
   assert.match(b.stub.calls.clipboard[0], /\[removed\]/);
   b.cleanup();
 });
+
+test('FR-068: a build that needs nothing asked is a task that goes through the one path every build takes, and one that needs an argument is not offered', async () => {
+  const doc = JSON.parse(JSON.stringify(defaultDocs()['command list'].doc));
+  doc.data.commands.push({ id: 'site build', category: 'build', group: 'g', surfaces: ['terminal', 'editor'], help: 'builds' }, { id: 'book build', category: 'build', group: 'g', surfaces: ['terminal', 'editor'], help: 'builds a book' });
+  const b = await boot({ docs: defaultDocs({ 'command list': { doc }, 'command show site build': { doc: k.detail('site build', 'build', []) }, 'command show book build': { doc: k.detail('book build', 'build', [k.arg('book', 'BOOK', { required: true })]) } }) });
+  const { provider } = b.stub.calls.tasks;
+  const tasks = await provider.provideTasks();
+  const build = tasks.find((x: Loose) => x.name === 'other site build');
+  assert.ok(build, 'the argument-free build is a task');
+  assert.equal(tasks.some((x: Loose) => x.name === 'other book build'), false, 'one that needs an argument is not');
+  assert.equal(build.definition.type, 'workspaces-console.build');
+  assert.equal(build.group, 'build');
+  assert.equal(provider.resolveTask(build)?.name, 'other site build');
+  b.cleanup();
+});
+
+test('FR-067: every status bar item the Console adds has its own id and name, so that VS Code\'s own status bar menu can hide it', async () => {
+  const b = await boot();
+  const items = b.stub.calls.statusBar as Loose[];
+  assert.ok(items.length >= 3);
+  for (const i of items) { assert.match(i.id ?? '', /^workspaces-console\./); assert.ok(i.name, `${i.id} has a name`); }
+  assert.equal(new Set(items.map((i) => i.id)).size, items.length, 'each its own');
+  b.cleanup();
+});

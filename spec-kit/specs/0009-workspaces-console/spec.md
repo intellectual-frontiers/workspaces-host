@@ -556,6 +556,15 @@ knowledge (FR-003).
   it is for, how it stands (ready, how many things need the person, not ready and why), its help topics, each opening that topic, and a button for all of them;
   notes with the one button that helps when GitHub is not signed in or news waits; and *Add Repository* when there is none. It MUST draw in the theme's own
   colors, escape every word it shows, and take its buttons as indexes into actions the extension built, so that nothing in the page can name a command.
+- **FR-066**: A problem the Console reports in the Problems panel (FR-064) MUST offer quick fixes on its lightbulb: *Show Output* and *Copy a Report for Help* for every one,
+  *Install Everything* (preferred) when the command line's exit status says a prerequisite is missing or a repository's program is, *Set Repository Trust…* when a repository
+  needs enabling, and *Check for Extension Updates* when this extension is too old to read a command line. Each is a command of this extension.
+- **FR-067**: A confirmation that needs no choice (copied, nothing is running, everything is up to date, which views show) MUST be said in the status bar for a few seconds, as VS Code says
+  "Copied", and not as a message that has to be closed; a message is for what needs a choice or a next step. Each status bar item the Console adds MUST have its own id and name, so that
+  VS Code's own status bar menu can hide it, and a service that fails MUST show as an error in the status bar until it is started again.
+- **FR-068**: Each build of a command line that needs no argument MUST be a task (type `workspaces-console.build`) under Run Task and Run Build Task, going through the one path every build takes
+  (previewed and accepted first, FR-014); a build that needs an argument is not offered as one. The walkthrough's steps MUST complete when the person does them (`completionEvents`), and
+  the welcome page and looking for updates have keys like Home (0009 FR-039), and the page offers the Console's settings.
 
 ## Out of scope
 

@@ -47,7 +47,6 @@
   "command.openView.title": "Open Page…",
   "command.findResource.title": "Find Resource…",
   "command.refresh.title": "Refresh Views",
-  "command.showOutput.title": "Show Output",
   "command.enableProvider.title": "Enable This Repository for ws-host",
   "command.trust.title": "Trust This Workspace…",
   "command.cancelRun.title": "Stop Running Command",
@@ -62,6 +61,7 @@
   "command.copyId.title": "Copy Identifier",
   "command.followLink.title": "Follow Link",
   "task.command.description": "A repository-wide command of the repository's command line.",
+  "task.build.command.description": "A build of the repository's command line that needs nothing asked, such as building the site. It shows what it would change first, and asks.",
   "task.section.description": "For check: one section.",
   "task.suite.description": "For check: one named suite of sections.",
   "task.changed.description": "For check: only what changed.",
@@ -101,6 +101,8 @@
   "command.toggleSimpleViews.title": "Show Every View",
   "command.lookForUpdates.title": "Look for Updates",
   "command.showWelcome.title": "Show Welcome Page",
+  "command.openSettings.title": "Open Settings",
+  "command.showOutput.title": "Show Output",
   "setting.showWelcomeOnStart.description": "Open the welcome page, with a section for each repository and help on each, when a window starts with nothing else open. The *Show Welcome Page* command opens it any time.",
   "setting.simpleViews.description": "Show only the everyday views a command line marks (Books and Papers, say) instead of every view it declares. On by default so a newcomer is not shown twenty views; the *Show Every View* action in Home's `…` menu shows all of them for this session only."
 }

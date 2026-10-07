@@ -11,6 +11,7 @@ import { CATEGORY_ICON, Node } from '../views/node';
 import type { ContextCommands } from './context';
 import type { RunCommands } from './run';
 import { t } from '../l10n';
+import { say } from '../views/say';
 
 export class ViewCommands {
   constructor(private readonly app: App, private readonly run: RunCommands, private readonly context: ContextCommands) {}
@@ -176,7 +177,7 @@ export class ViewCommands {
 
   cancelRun(): void {
     const n = this.app.running.cancelAll();
-    if (!n) void vscode.window.showInformationMessage(t('Nothing is running.'));
+    if (!n) say(t('Nothing is running.'));
   }
 
   toggleAllCommands(): void {

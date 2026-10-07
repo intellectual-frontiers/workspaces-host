@@ -3,7 +3,7 @@
 // to its terminal; the findings of a check go straight to the Problems panel (direct diagnostics), so no problem matcher is needed.
 import * as vscode from 'vscode';
 import { asString } from '../model/json';
-import { checkResult, checkSchema, exposed, type Doc } from '../model/wire';
+import { checkResult, checkSchema, exposed, type Doc, type CommandDetail } from '../model/wire';
 import { CancelSource } from '../services/cancellation';
 import type { Repository } from '../services/repository';
 import { t } from '../l10n';
@@ -18,6 +18,42 @@ export interface TaskHost {
   trusted(): boolean;
   handleCheck(repo: Repository, doc: Doc): Promise<unknown>;
   refreshViews(): void;
+  /** Run a command the way every command runs: a write is previewed and accepted first (0009-workspaces-console FR-014). */
+  runWords(repo: Repository, words: string[]): Promise<{ ran: boolean; reason?: string } | null>;
+}
+
+export const BUILD_TYPE = 'workspaces-console.build';
+
+/** A build a task can start without asking for anything: the command line's own builds that need no argument. */
+export function startable(c: Pick<CommandDetail, 'category' | 'arguments'>): boolean {
+  return c.category === 'build' && c.arguments.every((a) => !a.required);
+}
+
+/** What a build task's terminal does: the same path a build takes from anywhere (the preview, the accepting, the progress), with its outcome written here so that Run Task has an end. */
+export class BuildTerminal implements vscode.Pseudoterminal {
+  private readonly writeEmitter = new vscode.EventEmitter<string>();
+  private readonly closeEmitter = new vscode.EventEmitter<number | void>();
+  readonly onDidWrite = this.writeEmitter.event;
+  readonly onDidClose = this.closeEmitter.event;
+
+  constructor(private readonly host: TaskHost, private readonly repo: Repository, private readonly command: string) {}
+
+  private write(line: string): void { this.writeEmitter.fire(`${line}\r\n`); }
+
+  open(): void { void this.start(); }
+
+  private async start(): Promise<void> {
+    const words = this.command.split(/\s+/).filter(Boolean);
+    this.write(`$ ${this.repo.launcher.line(words)}`);
+    if (!this.host.trusted()) { this.write(t('Workspaces Console runs nothing in a workspace that is not trusted.')); this.closeEmitter.fire(1); return; }
+    this.write(t('It shows what it would change first, and asks.'));
+    const outcome = await this.host.runWords(this.repo, words);
+    if (outcome?.ran) { this.write(t('Done.')); this.closeEmitter.fire(0); return; }
+    this.write(outcome?.reason === 'cancelled' || outcome === null ? t('Nothing was changed.') : t('It did not finish. The Problems panel and the Output panel say why.'));
+    this.closeEmitter.fire(1);
+  }
+
+  close(): void { /* a preview or a running build is ended by its own Cancel */ }
 }
 
 export function argvOf(def: TaskDef): string[] {
@@ -95,6 +131,22 @@ export class TaskProvider implements vscode.TaskProvider {
     return task;
   }
 
+  private makeBuild(repo: Repository, command: string): vscode.Task {
+    const task = new vscode.Task({ type: BUILD_TYPE, command, folder: repo.folder.name }, repo.folder, `${repo.name} ${command}`, 'workspaces-console',
+      new vscode.CustomExecution(() => Promise.resolve(new BuildTerminal(this.host, repo, command))));
+    task.detail = repo.launcher.line(command.split(/\s+/));
+    task.group = vscode.TaskGroup.Build;
+    return task;
+  }
+
+  /** The builds of a repository that need nothing asked: each is a task, so that Run Task and Run Build Task find them like any build. */
+  private async builds(repo: Repository): Promise<vscode.Task[]> {
+    const found = await Promise.all(repo.editorCommands().filter((c) => c.category === 'build').map(async (c) => {
+      try { return startable(await repo.detail(c.id)) ? this.makeBuild(repo, c.id) : null; } catch { return null; }
+    }));
+    return found.filter((x): x is vscode.Task => x !== null);
+  }
+
   async provideTasks(): Promise<vscode.Task[]> {
     const tasks: vscode.Task[] = [];
     for (const repo of this.host.repos) {
@@ -111,11 +163,18 @@ export class TaskProvider implements vscode.TaskProvider {
           } catch { /* the plain check task is still there */ }
         }
       }
+      tasks.push(...await this.builds(repo));
     }
     return tasks;
   }
 
   resolveTask(task: vscode.Task): vscode.Task | undefined {
+    const built = task.definition as Partial<TaskDef>;
+    if (built.type === BUILD_TYPE && built.command) {
+      const id = built.command;
+      const owner = this.host.repos.find((r) => (built.folder ? r.folder.name === built.folder : true) && r.state === 'ready' && r.command(id)?.category === 'build');
+      return owner ? this.makeBuild(owner, id) : undefined;
+    }
     const def = task.definition as Partial<TaskDef>;   // a task's definition is what package.json's taskDefinitions describes; VS Code types it as an open record
     if (def.type !== 'workspaces-console' || !def.command || !COMMANDS.includes(def.command)) return undefined;
     const command = def.command;

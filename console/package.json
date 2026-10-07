@@ -498,6 +498,12 @@
         "enablement": "workspaces-console.hasRepository"
       },
       {
+        "command": "workspaces-console.openSettings",
+        "title": "%command.openSettings.title%",
+        "category": "%category%",
+        "icon": "$(gear)"
+      },
+      {
         "command": "workspaces-console.showWelcome",
         "title": "%command.showWelcome.title%",
         "category": "%category%",
@@ -671,6 +677,10 @@
         },
         {
           "command": "workspaces-console.showWelcome",
+          "when": "true"
+        },
+        {
+          "command": "workspaces-console.openSettings",
           "when": "true"
         },
         {
@@ -1002,6 +1012,22 @@
             "description": "%task.folder.description%"
           }
         }
+      },
+      {
+        "type": "workspaces-console.build",
+        "required": [
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "%task.build.command.description%"
+          },
+          "folder": {
+            "type": "string",
+            "description": "%task.folder.description%"
+          }
+        }
       }
     ],
     "configuration": {
@@ -1082,6 +1108,16 @@
         "command": "workspaces-console.copyContext",
         "key": "ctrl+alt+i x",
         "when": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.showWelcome",
+        "key": "ctrl+alt+i w",
+        "when": "workspaces-console.hasRepository"
+      },
+      {
+        "command": "workspaces-console.lookForUpdates",
+        "key": "ctrl+alt+i u",
+        "when": "workspaces-console.hasRepository"
       }
     ],
     "walkthroughs": [
@@ -1102,6 +1138,9 @@
             "id": "signIn",
             "title": "%walkthrough.signIn.title%",
             "description": "%walkthrough.signIn.description%",
+            "completionEvents": [
+              "onCommand:workspaces-console.signIn"
+            ],
             "media": {
               "markdown": "media/walkthrough/signIn.md"
             }
@@ -1110,6 +1149,9 @@
             "id": "setUp",
             "title": "%walkthrough.setUp.title%",
             "description": "%walkthrough.setUp.description%",
+            "completionEvents": [
+              "onCommand:workspaces-console.setUpEverything"
+            ],
             "media": {
               "markdown": "media/walkthrough/setUp.md"
             }
@@ -1118,6 +1160,9 @@
             "id": "addRepo",
             "title": "%walkthrough.addRepo.title%",
             "description": "%walkthrough.addRepo.description%",
+            "completionEvents": [
+              "onCommand:workspaces-console.addRepository"
+            ],
             "media": {
               "markdown": "media/walkthrough/addRepo.md"
             }
@@ -1126,6 +1171,9 @@
             "id": "check",
             "title": "%walkthrough.check.title%",
             "description": "%walkthrough.check.description%",
+            "completionEvents": [
+              "onCommand:workspaces-console.check"
+            ],
             "media": {
               "markdown": "media/walkthrough/check.md"
             }
@@ -1134,6 +1182,9 @@
             "id": "website",
             "title": "%walkthrough.website.title%",
             "description": "%walkthrough.website.description%",
+            "completionEvents": [
+              "onCommand:workspaces-console.startService"
+            ],
             "media": {
               "markdown": "media/walkthrough/website.md"
             }
