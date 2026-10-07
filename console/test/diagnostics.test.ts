@@ -74,3 +74,23 @@ test('FR-064: a command that failed is one entry in the Problems panel at the fi
   assert.equal(stub.diagnostics.get(file.toString()), undefined);
   restore();
 });
+
+test('FR-066: a problem\'s fixes are found by its source and words, and the provider offers each as a quick fix on that diagnostic', () => {
+  const { restore, d, folder, stub } = setup();
+  const { ProblemFixes } = require('../src/views/fixes') as Loose;
+  const { fixesForFailure, fixesForLoad } = require('../src/model/fixes') as Loose;
+  const file = Uri.file('/clone/tool');
+  d.setProblem(folder, 'command:build', file, 'a program is missing', 'error', 'tool build', 'missing', fixesForFailure(3));
+  d.setProblem(folder, 'other', file, 'unrelated', 'error', 'tool other', undefined, []);
+  const shown = stub.diagnostics.get(file.toString());
+  const mine = shown.find((x: Loose) => x.message === 'a program is missing');
+  const actions = new ProblemFixes(d).provideCodeActions({}, {}, { diagnostics: [mine, shown.find((x: Loose) => x.message === 'unrelated')] });
+  assert.deepEqual(actions.map((a: Loose) => a.title), ['Install Everything', 'Show Output', 'Copy a Report for Help']);
+  assert.equal(actions[0].isPreferred, true);
+  assert.equal(actions[0].command.command, 'workspaces-console.setUpEverything');
+  assert.equal(actions[1].isPreferred, false);
+  assert.deepEqual(fixesForFailure(1).map((f: Loose) => f.title), ['Show Output', 'Copy a Report for Help'], 'only a missing prerequisite offers the install');
+  assert.deepEqual(fixesForLoad({ missing: false, needsProvider: true, state: 'unavailable' }).map((f: Loose) => f.command)[0], 'workspaces-console.trust');
+  assert.equal(fixesForLoad({ missing: false, needsProvider: false, state: 'update' })[0].command, 'workbench.extensions.action.checkForUpdates');
+  restore();
+});

@@ -47,11 +47,11 @@ test('FR-039: every command has the category Workspaces Console, a title that is
   for (const want of ['Show Home', 'Run Command…', 'Run Check…', 'Learn a Topic…', 'Copy Context…']) assert.ok(titles.includes(want), want);
 });
 
-test('FR-039, FR-015: the keys are for Home, Run Check, Learn and Copy Context only, and no key runs a decision or a write', () => {
+test('FR-039, FR-015: the keys are for Home, Run Check, Learn, Copy Context, the welcome page and looking for updates only, and no key runs a decision or a write', () => {
   const keys = c.keybindings as Loose[];
-  assert.deepEqual(keys.map((k) => k.command).sort(), ['workspaces-console.check', 'workspaces-console.copyContext', 'workspaces-console.learn', 'workspaces-console.showHome']);
+  assert.deepEqual(keys.map((k) => k.command).sort(), ['workspaces-console.check', 'workspaces-console.copyContext', 'workspaces-console.learn', 'workspaces-console.lookForUpdates', 'workspaces-console.showHome', 'workspaces-console.showWelcome']);
   for (const k of keys) assert.match(k.when, /hasRepository/);
-  const reads = new Set(['workspaces-console.showHome', 'workspaces-console.check', 'workspaces-console.learn', 'workspaces-console.copyContext', 'workspaces-console.doctor', 'workspaces-console.checkOnChanges']);
+  const reads = new Set(['workspaces-console.showHome', 'workspaces-console.check', 'workspaces-console.learn', 'workspaces-console.copyContext', 'workspaces-console.doctor', 'workspaces-console.checkOnChanges', 'workspaces-console.showWelcome', 'workspaces-console.lookForUpdates']);
   for (const k of keys) assert.ok(reads.has(k.command));
   assert.ok(!keys.some((k) => /runCommand|runSuggestion|followLink|activateNode|runRowAction/.test(k.command)));
 });
@@ -96,4 +96,13 @@ test('FR-062: Home\'s title bar offers Add Repository, and Sign In only while Gi
   assert.ok(mine('addRepository'));
   assert.match(mine('signIn')?.when ?? '', /workspaces-console\.signedOut/);
   assert.doesNotMatch(mine('addRepository')?.when ?? '', /signedOut/);
+});
+
+test('FR-068: the walkthrough\'s doing-steps complete when the person does them, and each names a command this extension contributes', () => {
+  const steps = c.walkthroughs[0].steps as Loose[];
+  const done = steps.filter((s) => s.completionEvents);
+  assert.deepEqual(done.map((s) => s.id), ['signIn', 'setUp', 'addRepo', 'check', 'website']);
+  const ids = new Set(COMMANDS.map((x) => x.command));
+  for (const s of done) for (const e of s.completionEvents as string[]) assert.ok(ids.has(e.replace('onCommand:', '')), e);
+  assert.ok((c.taskDefinitions as Loose[]).some((d) => d.type === 'workspaces-console.build'));
 });

@@ -11,6 +11,7 @@ import { LearnCommands } from './learn';
 import { RunCommands } from './run';
 import { StartCommands } from './start';
 import { ViewCommands } from './views';
+import { say } from '../views/say';
 
 export interface Handlers {
   showResult: RunCommands['showResult'];
@@ -72,11 +73,12 @@ export function registerCommands(app: App): Handlers {
       cmd('cancelRun', () => views.cancelRun());
       cmd('toggleAllCommands', () => views.toggleAllCommands());
       cmd('showWelcome', () => app.welcome.show());
+      cmd('openSettings', () => vscode.commands.executeCommand('workbench.action.openSettings', '@ext:intellectual-frontiers.workspaces-console'));
       cmd('lookForUpdates', async () => {
         await app.updates.look();
-        if (!app.updates.current.waiting) void vscode.window.showInformationMessage(t('Everything is up to date.'));
+        if (!app.updates.current.waiting) say(t('Everything is up to date.'));
       });
-      cmd('toggleSimpleViews', () => { const simple = app.toggleSimpleViews(); void vscode.window.showInformationMessage(simple ? t('Showing the everyday views only.') : t('Showing every view.')); });
+      cmd('toggleSimpleViews', () => { const simple = app.toggleSimpleViews(); say(simple ? t('Showing the everyday views only.') : t('Showing every view.')); });
       cmd('activateNode', (node) => run.activateNode(node));
       cmd('runSection', (node) => (node instanceof Node && node.kind === 'section' && node.data.name ? app.fromView(node.data.view, () => app.runSectionsShown(node.repo, [node.data.name ?? ''])) : null));
       cmd('runSuggestion', (node) => views.runSuggestion(node));

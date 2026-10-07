@@ -31,6 +31,8 @@ class Range {
 }
 class Location { constructor(public uri: Uri, public range: Loose) {} }
 class Diagnostic { source?: string; constructor(public range: Range, public message: string, public severity: number) {} }
+class CodeAction { command?: Loose; diagnostics?: Loose[]; isPreferred?: boolean; constructor(public title: string, public kind: string) {} }
+const CodeActionKind = { QuickFix: 'quickfix' };
 const DiagnosticSeverity = { Error: 0, Warning: 1, Information: 2, Hint: 3 };
 class ThemeIcon { constructor(public id: string, public color?: Loose) {} }
 class ThemeColor { constructor(public id: string) {} }
@@ -72,7 +74,7 @@ export function createStub(options: StubOptions = {}): Stub {
   const folders = options.folders ?? [];
   const config = options.config ?? {};
   const vscode: Loose = {
-    EventEmitter, Uri, Position, Range, Location, Diagnostic, DiagnosticSeverity, ThemeIcon, TreeItem, TreeItemCollapsibleState, Task, CustomExecution, RelativePattern,
+    EventEmitter, Uri, Position, Range, Location, Diagnostic, DiagnosticSeverity, CodeAction, CodeActionKind, ThemeIcon, TreeItem, TreeItemCollapsibleState, Task, CustomExecution, RelativePattern,
     TestMessage, ThemeColor, MarkdownString, FileDecoration, CodeLens, Hover, DocumentLink, TaskGroup: { Build: 'build', Test: 'test' }, StatusBarAlignment: { Left: 1, Right: 2 }, ProgressLocation: { Notification: 15, Window: 10 },
     QuickPickItemKind: { Separator: -1, Default: 0 }, ExtensionMode: { Production: 1, Development: 2, Test: 3 }, ViewColumn: { Active: -1, Beside: -2 }, TestRunProfileKind: { Run: 1, Debug: 2, Coverage: 3 },
     window: {
@@ -80,7 +82,8 @@ export function createStub(options: StubOptions = {}): Stub {
         const add = (l: string): void => { calls.output.push(l); };
         return { name, appendLine: add, info: add, warn: add, error: add, show() { /* nothing to show */ }, dispose() { /* nothing to free */ } };
       },
-      createStatusBarItem: () => { const item = { text: '', tooltip: '' as Loose, command: '' as Loose, backgroundColor: undefined as Loose, visible: false, show() { this.visible = true; }, hide() { this.visible = false; }, dispose() { /* none */ } }; calls.statusBar.push(item); return item; },
+      setStatusBarMessage: (text: string) => { (calls.statusMessages ??= []).push(text); return { dispose() { /* none */ } }; },
+      createStatusBarItem: (...a: Loose[]) => { const item = { id: typeof a[0] === 'string' ? a[0] : undefined, name: '' as Loose, text: '', tooltip: '' as Loose, command: '' as Loose, backgroundColor: undefined as Loose, visible: false, show() { this.visible = true; }, hide() { this.visible = false; }, dispose() { /* none */ } }; calls.statusBar.push(item); return item; },
       showQuickPick: (items: Loose[], opts: Loose) => {
         calls.messages.push({ kind: 'quickpick', title: opts?.title, items });
         let a = answer(script.quickPicks, undefined);
@@ -155,6 +158,7 @@ export function createStub(options: StubOptions = {}): Stub {
       executeCommand: (id: string, ...args: Loose[]) => { calls.commands.push({ id, args }); if (id === 'vscode.diff') calls.diffs.push(args); if (id === 'setContext') calls.contexts.set(args[0], args[1]); return Promise.resolve(undefined); },
     },
     languages: {
+      registerCodeActionsProvider: (selector: Loose, p: Loose, meta: Loose) => { calls.languages.push({ kind: 'codeactions', selector, p, meta }); return { dispose() { /* none */ } }; },
       registerHoverProvider: (selector: Loose, p: Loose) => { calls.languages.push({ kind: 'hover', selector, p }); return { dispose() { /* none */ } }; },
       registerDefinitionProvider: (selector: Loose, p: Loose) => { calls.languages.push({ kind: 'definition', selector, p }); return { dispose() { /* none */ } }; },
       registerCodeLensProvider: (selector: Loose, p: Loose) => { calls.languages.push({ kind: 'codelens', selector, p }); return { dispose() { /* none */ } }; },

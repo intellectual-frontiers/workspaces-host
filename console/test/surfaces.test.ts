@@ -71,7 +71,7 @@ test('FR-038: a forged node runs no suggestion', async () => {
 test('Stop with nothing running says so', async () => {
   const b = await boot();
   await b.command('cancelRun');
-  assert.ok(b.stub.calls.messages.some((m: Loose) => m.kind === 'info' && m.text === 'Nothing is running.'));
+  assert.ok((b.stub.calls.statusMessages ?? []).includes('Nothing is running.'));
   b.cleanup();
 });
 

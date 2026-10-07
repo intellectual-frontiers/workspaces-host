@@ -2,6 +2,7 @@
 // and line, with its severity, its message and the section that reported it as the source; a section's diagnostics are cleared when that
 // section runs again. A finding with no location is never placed at a file it does not name.
 import * as vscode from 'vscode';
+import type { Fix } from '../model/fixes';
 import type { Finding } from '../model/wire';
 
 export interface Location { file: string; line: number; column: number }
@@ -22,7 +23,7 @@ const severityOf = (level: string): vscode.DiagnosticSeverity =>
 /** Returns the Uri when the file exists in the clone, else null. */
 export type ResolveFile = (folder: vscode.WorkspaceFolder, file: string) => Promise<vscode.Uri | null>;
 
-interface Placed { uri: vscode.Uri; diagnostics: vscode.Diagnostic[] }
+interface Placed { uri: vscode.Uri; diagnostics: vscode.Diagnostic[]; fixes?: Fix[] }
 
 export class Diagnostics implements vscode.Disposable {
   private readonly collection = vscode.languages.createDiagnosticCollection('workspaces-console');
@@ -57,12 +58,20 @@ export class Diagnostics implements vscode.Disposable {
 
   /** A problem that is not a check's finding (a command that failed, a repository that would not load, a service that would not start): one entry in the Problems
    * panel at `uri`, replaced by the next report with the same key and cleared when the thing works. `source` says whose it is and `code` is the command line's own code. */
-  setProblem(folder: vscode.WorkspaceFolder, key: string, uri: vscode.Uri, message: string, level: 'error' | 'warning', source: string, code?: string): void {
+  setProblem(folder: vscode.WorkspaceFolder, key: string, uri: vscode.Uri, message: string, level: 'error' | 'warning', source: string, code?: string, fixes: Fix[] = []): void {
     const d = new vscode.Diagnostic(new vscode.Range(0, 0, 0, Number.MAX_SAFE_INTEGER), message, severityOf(level));
     d.source = source;
     if (code) d.code = code;
-    this.bySection.set(`${folder.uri.toString()}\n!${key}`, new Map([[uri.toString(), { uri, diagnostics: [d] }]]));
+    this.bySection.set(`${folder.uri.toString()}\n!${key}`, new Map([[uri.toString(), { uri, diagnostics: [d], fixes }]]));
     this.publish();
+  }
+
+  /** What can be done about a problem the Problems panel shows, found by its source and its words (VS Code hands a quick-fix provider copies of the diagnostics). */
+  fixesFor(d: { source?: string; message: string }): Fix[] {
+    for (const byUri of this.bySection.values()) for (const placed of byUri.values()) {
+      if (placed.fixes?.length && placed.diagnostics.some((x) => x.source === d.source && x.message === d.message)) return placed.fixes;
+    }
+    return [];
   }
 
   clearProblem(folder: vscode.WorkspaceFolder, key: string): void {

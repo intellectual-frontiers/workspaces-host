@@ -9,6 +9,7 @@ import type { Repository } from '../services/repository';
 import { Node } from '../views/node';
 import { chooseRepo } from './pick';
 import { t } from '../l10n';
+import { say } from '../views/say';
 
 export class ContextCommands {
   constructor(private readonly app: App) {}
@@ -53,7 +54,7 @@ export class ContextCommands {
     const where = await vscode.window.showQuickPick([{ label: t('Copy to the clipboard'), value: 'clip' }, { label: t('Open in an untitled editor'), value: 'editor' }],
       { placeHolder: t('Where should it go? Nothing is sent anywhere.'), ignoreFocusOut: true });
     if (!where) return;
-    if (where.value === 'clip') { await vscode.env.clipboard.writeText(text); void vscode.window.showInformationMessage(t('It is on the clipboard.')); return; }
+    if (where.value === 'clip') { await vscode.env.clipboard.writeText(text); say(t('It is on the clipboard.')); return; }
     const doc = await vscode.workspace.openTextDocument({ language, content: text });
     await vscode.window.showTextDocument(doc);
   }

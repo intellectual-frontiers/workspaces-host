@@ -18,7 +18,7 @@ export interface Ui extends FormUi {
   progress<T>(title: string, fn: (token: Cancellation, report: (doc: Doc) => void) => Promise<T>): Promise<T>;
   showFailure(repo: Repository, detail: CommandDetail, r: RunResult): Promise<void>;
   /** A command's trouble in the Problems panel: the words when it failed, null when it worked (0009-workspaces-console FR-064). */
-  problem?(repo: Repository, detail: CommandDetail, words: string | null, code?: string): void;
+  problem?(repo: Repository, detail: CommandDetail, words: string | null, code?: string, exit?: number | null): void;
   reviewChanges(o: { repo: Repository; detail: CommandDetail; changes: Change[] }): Promise<boolean>;
   reviewWithoutFiles(o: { repo: Repository; detail: CommandDetail; doc: Doc }): Promise<boolean>;
   confirmDecision(o: { repo: Repository; detail: CommandDetail; argv: string[]; changes: Change[]; line: string }): Promise<boolean>;

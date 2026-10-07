@@ -226,3 +226,6 @@ requirement	mechanism	by	note
 0009-workspaces-console FR-063	check	workspaces-host: ws-host release build	console unit tests (busy.test.ts) check that quick work shows nothing, slow work shows its label and phrases and ends with the work, and a failure still ends it
 0009-workspaces-console FR-064	check	workspaces-host: ws-host release build	console unit tests (diagnostics.test.ts) check a problem's entry, its replacement and its removal
 0009-workspaces-console FR-065	check	workspaces-host: ws-host release build	console unit tests (welcome.test.ts, manifest.test.ts, never.test.ts) check the sections, the states, the notes, the escaping, opening at start, and the setting
+0009-workspaces-console FR-066	check	workspaces-host: ws-host release build	console unit tests (diagnostics.test.ts) check each fix by problem and the provider's actions
+0009-workspaces-console FR-067	check	workspaces-host: ws-host release build	console unit tests (surfaces.test.ts, manifest.test.ts) check the status bar messages and the items' ids
+0009-workspaces-console FR-068	check	workspaces-host: ws-host release build	console unit tests (app.test.ts, manifest.test.ts) check the build tasks, the keys and the walkthrough's completion events
