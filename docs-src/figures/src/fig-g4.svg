@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 721" width="1040" height="721">
+  <defs><marker id="arrD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-line"/></marker></defs>
+  <rect width="1040" height="721" class="f-surface"/>
+  <text x="28" y="50" text-anchor="start" class="f-ink" font-size="34" font-weight="bold">Every button is a command you could type</text>
+  <text x="28" y="84" text-anchor="start" class="f-muted" font-size="20" font-weight="normal" font-style="italic">The Console is a friendly window on the command line</text>
+  <rect x="70.0" y="120" width="900" height="80" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="167.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">Sync Repositories = ws-host repo sync --all</text>
+  <rect x="70.0" y="218" width="900" height="80" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="265.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">Check Machine = ws-host doctor</text>
+  <rect x="70.0" y="316" width="900" height="80" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="363.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">Install Kit... = ws-host kit add NAME</text>
+  <rect x="70.0" y="414" width="900" height="80" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="461.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">Sign In... = ws-host auth new github</text>
+  <rect x="70.0" y="512" width="900" height="80" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="520.0" y="559.35" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">Show Command Line... shows you the exact line behind any button</text>
+  <rect x="28" y="616" width="984" height="76.6" rx="3" class="f-neutral-tint s-line" stroke-width="1.2"/>
+  <text x="520.0" y="662.0" text-anchor="middle" class="f-ink" font-size="22" font-weight="bold">Use whichever you like. The result is the same, and so is the safety</text>
+</svg>

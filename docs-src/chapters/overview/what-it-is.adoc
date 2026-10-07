@@ -9,6 +9,11 @@ which prepares your machine. The names are examples of a rule, not part of it.
 work. It installs kits, the sets of tools a kind of work needs. It checks that your machine is healthy and says so in
 plain words. And it sets VS Code up with the Workspaces Console, the one extension that is the graphical interface for every orchestrator, not just its own.
 
+[TIP]
+====
+If you are new here, you do not need this chapter yet. Work from the Workspaces Console, which is a friendly window on the same command line described below. Come back when you want to know how it fits together.
+====
+
 === Commands look the same everywhere
 
 A command is `ws-host <noun> <verb> [ID] [--options]`. The nouns are the things it manages, such as `repo` and `kit`. The

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 532" width="1040" height="532">
+  <defs><marker id="arrD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-line"/></marker></defs>
+  <rect width="1040" height="532" class="f-surface"/>
+  <text x="28" y="50" text-anchor="start" class="f-ink" font-size="34" font-weight="bold">Signing in takes a code, not a password</text>
+  <text x="28" y="84" text-anchor="start" class="f-muted" font-size="20" font-weight="normal" font-style="italic">You never type your GitHub password into Debian</text>
+  <rect x="90.0" y="120" width="860" height="70" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="162.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">Type ws-host auth new github, or press the button in VS Code</text>
+  <line x1="520.0" y1="190" x2="520.0" y2="223" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="90.0" y="224" width="860" height="70" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="266.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">It shows a short code such as ABCD-1234 and a web address</text>
+  <line x1="520.0" y1="294" x2="520.0" y2="327" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="90.0" y="328" width="860" height="70" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="370.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">In your browser, sign in to GitHub as usual and type the code</text>
+  <line x1="520.0" y1="398" x2="520.0" y2="431" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="90.0" y="432" width="860" height="70" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="474.7" text-anchor="middle" class="f-ink" font-size="22" font-weight="bold">The window says you are signed in. Run ws-host workspace ensure again</text>
+</svg>
