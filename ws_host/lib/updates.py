@@ -80,11 +80,21 @@ def look(cfg, offline: bool = False, max_age: float = 0) -> dict:
             items.append({"name": name, "path": str(p), "behind": n})
     out = {"waiting": bool(items), "items": items, "unreachable": unreachable, "plain": sentence(items), "looked": int(time.time()), "cached": False}
     paths.state_dir().mkdir(parents=True, exist_ok=True)
-    if fetch and len(unreachable) < len(targets):
-        selfupdate.checked_file().touch()
+    if len(unreachable) < len(targets):                 # a look from local refs alone (offline) is as true as the refs, and clears what has since been settled
+        if fetch:
+            selfupdate.checked_file().touch()
         if items:
             selfupdate.notice_file().write_text(out["plain"] + "\n", encoding="utf-8")
         elif not unreachable:                    # a note is cleared only when everything was seen
             selfupdate.notice_file().unlink(missing_ok=True)
         looked_file().write_text(json.dumps(out), encoding="utf-8")
     return out
+
+
+def settle(cfg) -> None:
+    """A command has just changed what a repository holds (a refresh, a sync, an update): make the note and the remembered answer true of it now, from local history,
+    so that nothing goes on saying news waits that has since been brought in or put aside."""
+    try:
+        look(cfg, offline=True)
+    except Exception:                    # the note is a convenience; it must never make the command that called it fail
+        pass

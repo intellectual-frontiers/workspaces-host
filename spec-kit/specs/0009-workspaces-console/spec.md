@@ -124,18 +124,12 @@ the extension is `ws-host`'s, and the providers that plug into it hold no code o
   shown on a value the launcher refuses, and a last step that shows the whole
   command line (FR-017) before anything runs. It MUST NOT offer a printed
   command with a placeholder (0041-command-line FR-013, FR-055).
-- **FR-014**: Before any command that writes (every category but `read` and
-  `check`) runs, the extension MUST run it with `--dry-run --json` and show
-  each file the change would touch as a diff in VS Code's diff editor, taken
-  from the dry run's resource (0041-command-line FR-015), and MUST run the
-  command for real only after the person accepts that diff, in the resource
-  panel (FR-042), which shows the change summary (each file, its lines added
-  and removed) with Open Diff for each file, Apply and Discard. A command whose
-  dry run fails MUST NOT be run for real, and the dry run's error MUST be
-  shown.
-- **FR-015**: A `decision` command MUST run only after a modal confirmation
-  that names the command, the resource and what it changes, shown after its
-  dry run (FR-014), and that only a person can give. The extension MUST expose
+- **FR-014**: A command that writes and is not a `decision` (setup, build, generate, record) harms nothing that anyone else sees, so the extension MUST run it at once, with its
+  progress (FR-038, FR-063), and MUST NOT ask first, run it with `--dry-run`, or open its dry run as a file: its result says what it did, with the files it made (FR-058). A value
+  the command line refuses MUST put the person back at that step (FR-013); a failure MUST be shown (FR-059).
+- **FR-015**: A `decision` command MUST run only after a modal confirmation that says, in the command line's own plain words from its dry run (run quietly: never opened as a file),
+  what it would do, that nothing has changed yet and that Cancel leaves everything as it is, with the command line below for the curious and, when the dry run lists files, a button
+  *Look at the Changes* that shows them as diffs in the resource panel (FR-042) before the person decides; and that only a person can give. The extension MUST expose
   no setting, command, keybinding, task or API that runs a `decision` command
   without that confirmation (the one answer a test gives in place of a person is
   FR-033's, which exists only in VS Code's test mode), MUST NOT export an API to other extensions, and

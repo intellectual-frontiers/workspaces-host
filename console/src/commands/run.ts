@@ -61,7 +61,9 @@ export class RunCommands {
     try {
       const detail = await repo.detail(action.command);
       if (action.needs.length) return await executor.runForm(this.app.ui, repo, detail, action.fields, action.needs);
-      return await executor.runArgv(this.app.ui, repo, detail, argvFromFields(detail, action.fields));
+      const outcome = await executor.runArgv(this.app.ui, repo, detail, argvFromFields(detail, action.fields));
+      if (outcome.ran) void this.app.updates.look();
+      return outcome;
     } catch (e) { this.app.fail(e); return null; }
   }
 
@@ -130,7 +132,9 @@ export class RunCommands {
     const c = repo.editorCommands().sort((a, b) => b.words.length - a.words.length).find((x) => x.words.every((w, i) => words[i] === w));
     if (!c) { this.app.log.info(`A link named "${words.join(' ')}", which is not a command this repository exposes to the editor.`); return null; }
     const detail = await repo.detail(c.id);
-    return executor.runArgv(this.app.ui, repo, detail, words);
+    const outcome = await executor.runArgv(this.app.ui, repo, detail, words);
+    if (outcome.ran) void this.app.updates.look();         // what it did may have settled the news that waited
+    return outcome;
   }
 
   async showCommandLine(): Promise<void> {

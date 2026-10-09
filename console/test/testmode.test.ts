@@ -19,13 +19,13 @@ function load(extensionMode: Loose) {
   const ui = createUi({ docs: new DiffDocuments(), output: { appendLine() {} } });
   return { stub, hook, testmode, ui, done: () => { testmode.uninstall(); restore(); } };
 }
-const modalArgs = { repo: { name: 'other' }, detail: { id: 'widget approve', words: ['widget', 'approve'], help: 'Approve a widget' }, argv: ['widget', 'approve', 'w1'], changes: [], line: './other widget approve w1' };
+const modalArgs = { repo: { name: 'other' }, detail: { id: 'widget approve', words: ['widget', 'approve'], help: 'Approve a widget' }, argv: ['widget', 'approve', 'w1'], changes: [], line: './other widget approve w1', plain: 'Nothing was changed. I would approve widget w1.' };
 
 test('FR-033: outside test mode there is no hook and the modal is VS Code\'s own', async () => {
   const t = load(1);   // ExtensionMode.Production
   assert.equal(t.hook, null);
   assert.equal(g[KEY], undefined);
-  t.stub.script.warnings.push('Make this decision');
+  t.stub.script.warnings.push('Yes, Do It');
   assert.equal(await t.ui.confirmDecision(modalArgs), true);
   const shown = t.stub.calls.messages.find((m: Loose) => m.kind === 'warning');
   assert.ok(shown, 'VS Code was asked for the modal');
@@ -46,9 +46,9 @@ test('FR-033: in test mode a queued answer gives the modal\'s one button, once, 
   const modals = t.hook.shown.filter((s: Loose) => s.kind === 'modal');
   assert.equal(modals.length, 3);
   assert.equal(modals[0].modal, true);
-  assert.match(modals[0].message, /widget approve is a decision only you can make/);
-  assert.match(modals[0].detail, /Command: .\/other widget approve w1/);
-  assert.deepEqual(modals[0].buttons, ['Make this decision']);
+  assert.match(modals[0].message, /widget approve: I would approve widget w1\./, 'the command line\'s own words, without "nothing was changed"');
+  assert.match(modals[0].detail, /\.\/other widget approve w1/);
+  assert.deepEqual(modals[0].buttons, ['Yes, Do It']);
   t.done();
   assert.equal(g[KEY], undefined, 'the hook goes when the extension does');
 });

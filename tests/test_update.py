@@ -271,3 +271,38 @@ class WholeUpgrade(Home):
     def test_json_answers_with_one_document_naming_each_step(self):
         code, doc = self.run_json("update")
         self.assertEqual([s["command"] for s in doc["data"]["steps"]], ["ws-host workspace ensure", "ws-host toolchain remove --unused"])
+
+
+class SettledNews(Workspace):
+    """The note and the remembered answer follow what a command just did, so nothing goes on saying news waits that has been brought in or put aside."""
+
+    def setUp(self):
+        super().setUp()
+        self.up = self.remote("acme", "site")
+        self.config(WS_HOST_REPOS=self.rid("acme", "site"))
+        self.run_json("repo", "add", "--all")
+        self.path = self.clone_path("acme", "site")
+
+    def test_a_clean_refresh_clears_the_note_that_news_waits(self):
+        import os
+        (self.path / "mine.txt").write_text("m\n")
+        git(self.path, "add", "-A")
+        git(self.path, "commit", "-m", "Mine")
+        self.upstream_commit(self.up, "t.txt", "t\n", msg="Theirs")
+        code, doc = self.run_json("updates", "status", "--fresh")
+        self.assertTrue(doc["data"]["waiting"])
+        self.assertTrue(selfupdate.notice_file().exists())
+        os.environ["WS_HOST_SURFACE"] = "editor"
+        self.addCleanup(lambda: os.environ.pop("WS_HOST_SURFACE", None))
+        code, doc = self.run_json("repo", "advance", "site", "--clean", "--confirmed")
+        self.assertEqual(code, 0, doc)
+        self.assertFalse(selfupdate.notice_file().exists(), "the note was cleared")
+        code, doc = self.run_json("updates", "status")           # the remembered answer, a few minutes old, is the new one
+        self.assertFalse(doc["data"]["waiting"])
+
+    def test_bringing_news_in_clears_it_too(self):
+        self.upstream_commit(self.up, "t.txt", "t\n")
+        self.run_json("updates", "status", "--fresh")
+        self.assertTrue(selfupdate.notice_file().exists())
+        self.run_json("repo", "sync", "--all")
+        self.assertFalse(selfupdate.notice_file().exists())

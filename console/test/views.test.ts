@@ -229,8 +229,7 @@ test('after a command has written, the rows and resources the views hold are ask
   assert.equal(repo.registry.rows.size, 1, 'the rows were read');
   const lists = () => b.first.invocations().filter((i: Loose) => i.argv.join(' ') === 'widget list --json').length;
   assert.equal(lists(), 1);
-  b.stub.script.reviews.push('apply');   // apply the changes
-  b.stub.script.warnings.push('Make this decision');
+  b.stub.script.warnings.push('Yes, Do It');
   const detail = await repo.detail('widget approve');
   const executor = require('../src/services/executor') as Loose;
   await executor.runArgv(view.host.ui, repo, detail, ['widget', 'approve', 'w1']);

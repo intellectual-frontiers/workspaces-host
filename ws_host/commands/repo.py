@@ -4,7 +4,7 @@ from __future__ import annotations
 from ..core import config, paths, progress, registry as reg, types
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
-from ..lib import git, repos, trust as trust_mod
+from ..lib import git, repos, trust as trust_mod, updates
 
 REPO_ARG = Arg("repo", "REPO", positional=True, help="a repository: host/org/repo, org/repo or repo")
 
@@ -101,6 +101,7 @@ def repo_advance(ctx, repo, clean=False):
         r = repos.fresh(rid, cfg, ctx.offline)
     except repos.FreshError as e:
         raise WsError(f"refresh-{e.code}", e.plain, e.plain, exit_code=1)
+    updates.settle(cfg)
     kept = (f" What was only here is kept in the branch {r['backup']}; to look at it: git switch {r['backup']}." if r["backup"] else "")
     return Resource("repo", str(rid), {"plain": f"{rid.name} is now exactly {r['upstream']}." + kept, **r}, status=OK)
 
@@ -183,6 +184,7 @@ def repo_sync(ctx, repo, all):
         rows = [repos.state(r, cfg) | {"outcome": "would-check", "status": "ok"} for r in chosen]
         return Resource("repo-sync", "dry-run", {"plain": "Nothing was changed. This is where each repository stands now.", "repositories": rows})
     results = [repos.sync(r, cfg) for r in chosen]
+    updates.settle(cfg)
     bad = any(r["outcome"] == "failed" for r in results)
     return Resource("repo-sync", repo or "all", {"plain": repos.summarize(results), "repositories": results},
                     actions=_actions_for(results, cfg), status=FAILED if bad else OK)

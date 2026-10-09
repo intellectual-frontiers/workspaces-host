@@ -133,27 +133,14 @@ async function throughForm(command) {
 
 // The change summary is in the resource panel: the page draws it (the page itself says what it drew), a file opens as a diff, and Apply is the
 // person's choice, which a test makes through the hook as the click it cannot make inside a webview.
-async function reviewThenApply(command, mark) {
-  const previews = () => hook().shown.slice(mark).filter((s) => s.kind === 'webview' && s.model.built.mode === 'preview');
-  const first = await waitFor(() => previews()[0], 'the changes in the panel');
-  assert.ok(first.model.built.sections[0].changes.some((c) => c.path === 'site/index.txt'), 'the change names its file');
-  assert.ok(first.model.built.header.title.length > 0 && first.model.built.preview.apply);
-  const drawn = await waitFor(() => hook().shown.slice(mark).find((s) => s.kind === 'rendered' && s.summary && s.summary.mode === 'preview'), 'the page drawing the summary');
-  assert.ok(drawn.summary.changes >= 1 && drawn.summary.icons > 0, 'the real page drew a row for the changed file, with its icons');
-  await hook().send({ type: 'diff', index: 0 });
-  await waitFor(() => vscode.window.tabGroups.all.flatMap((g) => g.tabs).some((t) => t.input instanceof vscode.TabInputTextDiff
-    && t.input.original.scheme === 'workspaces-console-diff' && t.input.modified.scheme === 'workspaces-console-diff'), 'the diff editor');
-  await hook().send({ type: 'apply' });
-}
-
 const calls = (command) => fixtureLog().filter((l) => l.argv.slice(0, command.split(' ').length).join(' ') === command);
 
-test('a dry-run write opens a diff, then applies', async () => {
+test('a write that harms nothing anyone else sees runs at once, with no dry run and no question', async () => {
   const before = calls('site generate').length;
   const { mark } = await throughForm('site generate');
-  await reviewThenApply('site generate', mark);
-  const made = await waitFor(() => { const c = calls('site generate').slice(before); return c.some((l) => !l.dry) ? c : null; }, 'the real run');
-  assert.deepStrictEqual(made.map((l) => l.dry), [true, false], 'the dry run came first and the real run after it was accepted');
+  const made = await waitFor(() => { const c = calls('site generate').slice(before); return c.length ? c : null; }, 'the real run');
+  assert.deepStrictEqual(made.map((l) => l.dry), [false], 'no dry run first');
+  assert.ok(!hook().shown.slice(mark).some((s) => s.kind === 'modal' || (s.kind === 'webview' && s.model.built.mode === 'preview')), 'nothing was asked');
   assert.ok(made.every((l) => l.IF_CONSOLE === '1'));
 });
 
@@ -161,12 +148,11 @@ test('a decision shows a modal, and runs only when it is given', async () => {
   const before = calls('period advance').length;
   hook().answers.push(true);
   const { mark } = await throughForm('period advance');
-  await reviewThenApply('period advance', mark);
   const modal = await waitFor(() => hook().shown.slice(mark).find((s) => s.kind === 'modal'), 'the modal');
   assert.strictEqual(modal.modal, true, 'the dialog is modal');
-  assert.ok(modal.message.includes('period advance') && modal.message.includes('only you can make'));
-  assert.ok(modal.detail.includes('Command:') && modal.detail.includes('period advance'));
-  assert.deepStrictEqual(modal.buttons, ['Make this decision']);
+  assert.ok(modal.message.length > 0 && !modal.message.includes('{0}'), 'it says in words what it would do');
+  assert.ok(modal.detail.includes('period advance') && modal.detail.includes('Cancel leaves everything as it is'));
+  assert.deepStrictEqual(modal.buttons, ['Yes, Do It']);
   const made = await waitFor(() => { const c = calls('period advance').slice(before); return c.some((l) => !l.dry) ? c : null; }, 'the real run after the answer');
   assert.deepStrictEqual(made.map((l) => l.dry), [true, false]);
 });
@@ -174,7 +160,6 @@ test('a decision shows a modal, and runs only when it is given', async () => {
 test('a decision whose modal is not given does not run', async () => {
   const before = calls('period advance').length;
   const { mark } = await throughForm('period advance');
-  await reviewThenApply('period advance', mark);
   await waitFor(() => hook().shown.slice(mark).find((s) => s.kind === 'modal'), 'the modal');
   await sleep(2500);
   const made = calls('period advance').slice(before);

@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import { outputsOf } from '../model/outputs';
 import type { PickItem } from '../model/forms';
 import { asString } from '../model/json';
-import { sides, summaryOf, type Change } from '../model/preview';
+import { sides, type Change } from '../model/preview';
 import type { CommandDetail, Doc } from '../model/wire';
 import type { Ui } from '../services/executor';
 import type { Cancellation, RunResult } from '../services/launcher';
@@ -146,29 +146,20 @@ export function createUi({ log, showResult, where, running, review, reportProble
       else if (pick === install) void vscode.commands.executeCommand('workspaces-console.setUpEverything');
     },
 
-    /** The change summary in the resource panel, with Apply and Discard, and each file as a diff on request (FR-014, FR-042). */
-    reviewChanges: ({ repo, detail, changes }): Promise<boolean> => review(repo, detail, changes),
-
-    /** A write whose dry run lists no files (a fetch, for example): show what it said and ask. */
-    async reviewWithoutFiles({ detail, doc }): Promise<boolean> {
-      const shown = await vscode.workspace.openTextDocument({ language: 'json', content: JSON.stringify(doc.data, null, 2) });
-      await vscode.window.showTextDocument(shown, { preview: true, preserveFocus: true });
-      const pick = await vscode.window.showInformationMessage(
-        `The dry run of "${detail.id}" lists no files. Its result is open beside this message. Run it for real?`, { modal: true }, 'Run it');
-      return pick === 'Run it';
-    },
-
-    /** A decision: a modal that names the command, the resource and what it changes, shown after the dry run (FR-015). */
-    async confirmDecision({ repo, detail, argv, changes, line }): Promise<boolean> {
-      const what = changes.length ? summaryOf(changes) : 'The dry run lists no files.';
-      const resource = argv.slice(detail.words.length).filter((a) => !a.startsWith('-')).join(' ') || '(none)';
-      const message = `${repo.name}: ${detail.id} is a decision only you can make.`;
-      const options = { modal: true, detail: t('Command: {0}\nResource: {1}\nWhat it changes: {2}\n\n{3}', line, resource, what, detail.help) };
-      const button = 'Make this decision';
+    /** A decision, asked in the command line's own plain words, with its changes to look at first if the person wants (0009-workspaces-console FR-015). */
+    async confirmDecision({ repo, detail, changes, line, plain }): Promise<boolean> {
+      const said = plain.replace(/^Nothing was changed\.\s*/, '');
+      const message = `${detail.title ?? detail.id}: ${said || t('{0} is a decision only you can make.', detail.id)}`;
+      const look = t('Look at the Changes');
+      const go = t('Yes, Do It');
+      const options = { modal: true, detail: t('Nothing has changed yet; Cancel leaves everything as it is.\n\nWhat it is: {0}\nThe command line, for the curious: {1}', detail.help, line) };
       // In VS Code's test mode only, a test answers the modal through the hook (0043 FR-033); otherwise VS Code shows it.
-      if (testMode.active()) return testMode.answerModal({ message, modal: options.modal, detail: options.detail, buttons: [button] }, button) === button;
-      const pick = await vscode.window.showWarningMessage(message, options, button);
-      return pick === button;
+      if (testMode.active()) return testMode.answerModal({ message, modal: options.modal, detail: options.detail, buttons: [go] }, go) === go;
+      for (;;) {
+        const pick = await vscode.window.showWarningMessage(message, options, ...(changes.length ? [go, look] : [go]));
+        if (pick === look) { await review(repo, detail, changes); continue; }
+        return pick === go;
+      }
     },
 
     showResult,
