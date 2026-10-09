@@ -3,6 +3,7 @@
 //   for a decision, a modal confirmation that only a person can give -> the real run.
 // There is no other path that runs a write, and none that runs a decision without the modal: this module exports no function that skips
 // either, and the extension exports no API (FR-015).
+import { asString } from '../model/json';
 import { argvFromFields, collect, dest, type Fields, type FormUi, type Retry } from '../model/forms';
 import { changesOf, type Change } from '../model/preview';
 import { DECISION, WRITES, type CommandDetail, type Doc, type ErrorInfo } from '../model/wire';
@@ -19,9 +20,8 @@ export interface Ui extends FormUi {
   showFailure(repo: Repository, detail: CommandDetail, r: RunResult): Promise<void>;
   /** A command's trouble in the Problems panel: the words when it failed, null when it worked (0009-workspaces-console FR-064). */
   problem?(repo: Repository, detail: CommandDetail, words: string | null, code?: string, exit?: number | null): void;
-  reviewChanges(o: { repo: Repository; detail: CommandDetail; changes: Change[] }): Promise<boolean>;
-  reviewWithoutFiles(o: { repo: Repository; detail: CommandDetail; doc: Doc }): Promise<boolean>;
-  confirmDecision(o: { repo: Repository; detail: CommandDetail; argv: string[]; changes: Change[]; line: string }): Promise<boolean>;
+  /** A decision, asked in plain words: what it will do, from the command line's own dry run, with the changes to look at first if the person wants. */
+  confirmDecision(o: { repo: Repository; detail: CommandDetail; argv: string[]; changes: Change[]; line: string; plain: string }): Promise<boolean>;
   showResult(repo: Repository, detail: CommandDetail, argv: string[], real: RunResult): Promise<void>;
   /** What a build made, offered as buttons that open it (0009-workspaces-console FR-058). */
   offerOutputs?(repo: Repository, real: RunResult): Promise<void>;
@@ -37,8 +37,13 @@ export interface Outcome {
   refused?: Refused;
 }
 
-/** A command whose category writes is always run with --dry-run first; its changes are previewed and accepted. */
+/** A command that writes runs, with its progress, and its result says what it did: nothing here can harm what anyone else sees, so no preview is asked for (0009-workspaces-console FR-014).
+ * A decision (trust, publishing, throwing work away) is the one thing a person must choose: the command line's own dry run says in words what it would do, and a modal asks. */
 export async function runWrite(ui: Ui, repo: Repository, detail: CommandDetail, argv: string[], { token }: { token?: Cancellation } = {}): Promise<Outcome> {
+  if (detail.category !== DECISION) {
+    const real = await ui.progress(`${repo.name} ${detail.id}`, (tok, report) => repo.launcher.run(argv, { token: tok, onDocument: report }));
+    return settle(ui, repo, detail, real);
+  }
   const dry = await repo.launcher.run([...argv, '--dry-run'], { token });
   if (dry.cancelled) return { ran: false, reason: 'cancelled' };
   const refused = refusedValue(detail, dry.error);
@@ -48,13 +53,9 @@ export async function runWrite(ui: Ui, repo: Repository, detail: CommandDetail, 
     return { ran: false, dry, reason: 'dry-run failed' };
   }
   const changes = changesOf(dry.doc);
-  const accepted = changes.length ? await ui.reviewChanges({ repo, detail, changes }) : await ui.reviewWithoutFiles({ repo, detail, doc: dry.doc });
-  if (!accepted) return { ran: false, dry, reason: 'not accepted' };
-  if (detail.category === DECISION) {
-    const confirmed = await ui.confirmDecision({ repo, detail, argv, changes, line: repo.launcher.line(argv) });
-    if (confirmed !== true) return { ran: false, dry, reason: 'decision not confirmed' };   // exactly true: nothing else confirms
-  }
-  const real = await ui.progress(`${repo.name} ${detail.id}`, (token, report) => repo.launcher.run(argv, { token, onDocument: report }));
+  const confirmed = await ui.confirmDecision({ repo, detail, argv, changes, line: repo.launcher.line(argv), plain: asString(dry.doc.data.plain) });
+  if (confirmed !== true) return { ran: false, dry, reason: 'decision not confirmed' };   // exactly true: nothing else confirms
+  const real = await ui.progress(`${repo.name} ${detail.id}`, (tok, report) => repo.launcher.run(argv, { token: tok, onDocument: report }));
   return { ...(await settle(ui, repo, detail, real)), dry };
 }
 

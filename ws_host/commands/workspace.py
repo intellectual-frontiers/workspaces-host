@@ -110,6 +110,7 @@ def workspace_ensure(ctx):
     yield _step("kits", "Checking the kits your repositories ask for...")
     declared = {k: v for k, v in declared_kits(cfg).items() if k not in mine}
     kit_result = kitrun.ensure(ctx, declared)
+    updates.settle(cfg)
     steps.append({"name": "kits", "status": kit_result["status"], "plain": kit_result["plain"]})
     yield _step("editor", "Checking VS Code...")
     editor_actions = []

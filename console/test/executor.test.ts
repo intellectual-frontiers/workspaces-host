@@ -26,12 +26,10 @@ const docs = {
   'command show widget show': { doc: k.detail('widget show', 'read', [k.arg('widget', 'WIDGET')]) },
   'widget approve w1 --dry-run': { doc: dryDoc },
   'widget approve w1': { doc: realDoc },
-  'widget new w9 --dry-run': { doc: dryDoc },
   'widget new w9': { doc: realDoc },
-  'widget new bad --dry-run': { doc: invalid, exit: 2 },
-  'widget new fixed --dry-run': { doc: dryDoc },
+  'widget new bad': { doc: invalid, exit: 2 },
   'widget new fixed': { doc: realDoc },
-  'widget new boom --dry-run': { doc: k.doc('error', 'boom', { code: 'internal', message: 'it broke' }, { kind: 'error' }), exit: 1 },
+  'widget new boom': { doc: k.doc('error', 'boom', { code: 'internal', message: 'it broke' }, { kind: 'error' }), exit: 1 },
   'widget show w1': { doc: k.doc('widget', 'w1', { name: 'w1' }) },
 };
 
@@ -42,9 +40,7 @@ async function fixture(answers: Loose) {
   const events: Loose[] = [];
   const ui: Loose = {
     events,
-    reviewChanges: async (o: Loose) => { events.push(['review', o.changes.length]); return answers.accept !== false; },
-    reviewWithoutFiles: async () => { events.push(['review-nofiles']); return answers.accept !== false; },
-    confirmDecision: async (o: Loose) => { events.push(['confirm', o.detail.id, o.line]); return answers.confirm === true; },
+    confirmDecision: async (o: Loose) => { events.push(['confirm', o.detail.id, o.line, o.plain]); return answers.confirm === true; },
     showFailure: async (_r: Loose, _d: Loose, res: Loose) => { events.push(['failure', res.error ? res.error.message : res.failed]); },
     showResult: async (_r: Loose, d: Loose) => { events.push(['result', d.id]); },
     progress: (_title: Loose, fn: Loose) => fn(new CancelSource().token, () => undefined),
@@ -54,30 +50,21 @@ async function fixture(answers: Loose) {
 }
 const runs = (fake: Loose) => fake.invocations().map((i: Loose) => i.argv.filter((a: Loose) => a !== '--json').join(' '));
 
-test('FR-014: a write is run with --dry-run first, its changes are shown, and it runs for real only after they are accepted', async () => {
-  const { fake, repo, ui, events } = await fixture({ accept: true });
+test('FR-014: a write that harms nothing anyone else sees runs at once, with its progress, and asks nothing', async () => {
+  const { fake, repo, ui, events } = await fixture({});
   const detail = await repo.detail('widget new');
   const out = await executor.runArgv(ui, repo, detail, ['widget', 'new', 'w9']);
   assert.equal(out.ran, true);
-  const calls = runs(fake).filter((c: Loose) => c.startsWith('widget new'));
-  assert.deepEqual(calls, ['widget new w9 --dry-run', 'widget new w9']);
-  assert.deepEqual(events.slice(0, 1), [['review', 1]]);
+  assert.deepEqual(runs(fake).filter((c: Loose) => c.startsWith('widget new')), ['widget new w9'], 'no dry run, no preview');
+  assert.deepEqual(events.map((e) => e[0]), ['result'], 'nothing was asked, and the result says what it did');
   fake.cleanup();
 });
 
-test('FR-014: a person who does not accept the diff leaves the write unrun', async () => {
-  const { fake, repo, ui } = await fixture({ accept: false });
-  const out = await executor.runArgv(ui, repo, await repo.detail('widget new'), ['widget', 'new', 'w9']);
-  assert.equal(out.ran, false);
-  assert.deepEqual(runs(fake).filter((c: Loose) => c.startsWith('widget new')), ['widget new w9 --dry-run']);
-  fake.cleanup();
-});
-
-test('FR-014: a dry run that fails stops the write, and its error is shown', async () => {
-  const { fake, repo, ui, events } = await fixture({ accept: true });
+test('FR-014: a write that fails shows its error', async () => {
+  const { fake, repo, ui, events } = await fixture({});
   const out = await executor.runArgv(ui, repo, await repo.detail('widget new'), ['widget', 'new', 'boom']);
   assert.equal(out.ran, false);
-  assert.deepEqual(runs(fake).filter((c: Loose) => c.startsWith('widget new')), ['widget new boom --dry-run']);
+  assert.deepEqual(runs(fake).filter((c: Loose) => c.startsWith('widget new')), ['widget new boom']);
   assert.deepEqual(events.find((e) => e[0] === 'failure'), ['failure', 'it broke']);
   fake.cleanup();
 });
@@ -89,17 +76,17 @@ test('FR-014: a read or a check runs without a dry run', async () => {
   fake.cleanup();
 });
 
-test('FR-015: a decision runs only after the dry run, the diff and a modal confirmation; refused, it is never run for real', async () => {
-  const refused = await fixture({ accept: true, confirm: false });
+test('FR-015: a decision runs only after the dry run has said in words what it would do and a modal confirmation; refused, it is never run for real', async () => {
+  const refused = await fixture({ confirm: false });
   const out = await executor.runArgv(refused.ui, refused.repo, await refused.repo.detail('widget approve'), ['widget', 'approve', 'w1']);
   assert.equal(out.ran, false);
   assert.equal(out.reason, 'decision not confirmed');
   assert.deepEqual(runs(refused.fake).filter((c: Loose) => c.startsWith('widget approve')), ['widget approve w1 --dry-run']);
-  assert.deepEqual(refused.events.map((e) => e[0]).slice(0, 2), ['review', 'confirm']);
+  assert.deepEqual(refused.events.map((e) => e[0]), ['confirm']);
   assert.equal(refused.events.find((e) => e[0] === 'confirm')[2], './other widget approve w1');
   refused.fake.cleanup();
 
-  const given = await fixture({ accept: true, confirm: true });
+  const given = await fixture({ confirm: true });
   const ran = await executor.runArgv(given.ui, given.repo, await given.repo.detail('widget approve'), ['widget', 'approve', 'w1']);
   assert.equal(ran.ran, true);
   assert.deepEqual(runs(given.fake).filter((c: Loose) => c.startsWith('widget approve')), ['widget approve w1 --dry-run', 'widget approve w1']);
@@ -108,7 +95,7 @@ test('FR-015: a decision runs only after the dry run, the diff and a modal confi
 
 test('FR-015: confirmation must be exactly true; nothing else a caller passes confirms', async () => {
   for (const wrong of ['yes', 1, {}, null]) {
-    const f = await fixture({ accept: true });
+    const f = await fixture({});
     f.ui.confirmDecision = async () => wrong;
     const out = await executor.runArgv(f.ui, f.repo, await f.repo.detail('widget approve'), ['widget', 'approve', 'w1']);
     assert.equal(out.ran, false, `${JSON.stringify(wrong)} must not confirm`);
@@ -118,20 +105,19 @@ test('FR-015: confirmation must be exactly true; nothing else a caller passes co
 
 test('FR-015: the module exports no way to run a write or a decision without that path', () => {
   assert.deepEqual(Object.keys(executor).sort(), ['refusedValue', 'runArgv', 'runForm', 'runRead', 'runWrite']);
-  // runRead is for reads and checks: a write category routed to it is still not run for real without a dry run, because
-  // runArgv chooses by category; the exported runRead is not reachable from any command handler (see never.test.js).
+  // runRead is for reads and checks; runArgv chooses by category, so a decision is never run without its question; the exported runRead is not reachable from any command handler (see never.test.js).
 });
 
 test('FR-013: a value the launcher refuses puts the person back at that step with the type\'s message and examples', async () => {
   const prompts: Loose[] = [];
   const picks = [async () => 'run', async () => 'run'];
   const inputs = [async () => 'bad', async (o: Loose) => { prompts.push(o.prompt); return 'fixed'; }];
-  const { fake, repo, ui } = await fixture({ accept: true, picks, inputs });
+  const { fake, repo, ui } = await fixture({ picks, inputs });
   const out = await executor.runForm(ui, repo, 'widget new');
   assert.equal(out.ran, true);
   assert.match(prompts[0], /not a valid name/);
   assert.match(prompts[0], /For example: w1, w2/);
-  assert.deepEqual(runs(fake).filter((c: Loose) => c.startsWith('widget new')), ['widget new bad --dry-run', 'widget new fixed --dry-run', 'widget new fixed']);
+  assert.deepEqual(runs(fake).filter((c: Loose) => c.startsWith('widget new')), ['widget new bad', 'widget new fixed']);
   fake.cleanup();
 });
 

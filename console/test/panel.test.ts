@@ -148,6 +148,7 @@ test('FR-014, FR-042: a dry run is shown in the panel as a change summary with A
   fs.writeFileSync(path.join(b.first.root, 'widgets', 'w1.txt'), 'old\n');
   const panel = await openRow(b);
   const approve = last(panel).built.actions.findIndex((a: Loose) => a.decision);
+  b.stub.script.warnings.push('Look at the Changes', undefined);       // the modal offers the changes; look, then decide not to
   b.stub.script.reviews.push([{ type: 'diff', index: 0 }, { type: 'diff', index: 5 }, 'discard']);
   await panel.onMessage({ type: 'run', action: approve });
   const model = panel.posted.map((m: Loose) => m.view).filter((v: Loose) => v?.built.mode === 'preview');
@@ -171,6 +172,7 @@ test('FR-014: a closed panel resolves a waiting preview as discarded', async () 
   const b = await boot();
   const panel = await openRow(b);
   const approve = last(panel).built.actions.findIndex((a: Loose) => a.decision);
+  b.stub.script.warnings.push('Look at the Changes', undefined);
   const run = panel.onMessage({ type: 'run', action: approve });
   for (let i = 0; i < 250 && !panel.posted.some((m: Loose) => m.view?.built.mode === 'preview'); i += 1) await new Promise((r) => setTimeout(r, 20));
   assert.ok(panel.posted.some((m: Loose) => m.view?.built.mode === 'preview'), 'the preview is waiting');
@@ -321,6 +323,7 @@ test('FR-014: opening another resource while a dry run waits is Discard, so that
   const b = await boot();
   const panel = await openRow(b);
   const approve = last(panel).built.actions.findIndex((a: Loose) => a.decision);
+  b.stub.script.warnings.push('Look at the Changes', undefined);
   const run = panel.onMessage({ type: 'run', action: approve });
   for (let i = 0; i < 250 && !panel.posted.some((m: Loose) => m.view?.built.mode === 'preview'); i += 1) await new Promise((r) => setTimeout(r, 20));
   const tree = b.context.subscriptions.find((s: Loose) => s.id === 'workspaces-console.commands').o.treeDataProvider;

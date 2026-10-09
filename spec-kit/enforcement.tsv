@@ -163,8 +163,8 @@ requirement	mechanism	by	note
 0009-workspaces-console FR-011	check	workspaces-host: ws-host test	webview tests: policy, link classification, one own script, local resources only, no --html asked for
 0009-workspaces-console FR-012	check	workspaces-host: ws-host test	palette tests: only editor commands, grouped by repository and noun, each with the command line's own title and icon; the manifest test reads the palette titles; the real VS Code run lists the manifest's palette entries
 0009-workspaces-console FR-013	check	workspaces-host: ws-host test	form tests: choices from the type or the noun's list, retry on a refused value, the whole line before running
-0009-workspaces-console FR-014	check	workspaces-host: ws-host test	executor and diff tests: dry run first, diff from a virtual document, apply only on acceptance, failed dry run stops
-0009-workspaces-console FR-015	check	workspaces-host: ws-host test	tests: modal required, exactly true, forged nodes ignored, no API export, no decision in the manifest's tasks or keys
+0009-workspaces-console FR-014	check	workspaces-host: ws-host test	executor tests: a write that is not a decision runs at once with no dry run and no question, and a failure is shown; app and panel tests: the changes of a decision open as a diff from a virtual document on request
+0009-workspaces-console FR-015	check	workspaces-host: ws-host test	tests: the dry run's own words in the modal, its two buttons, exactly true, forged nodes ignored, no API export, no decision in the manifest's tasks or keys
 0009-workspaces-console FR-016	check	workspaces-host: ws-host test	status bar tests: orchestrator and the count of what needs a person, audience as stated, the health from doctor, a tooltip with each suggestion's command line, a click that opens Home focused on the suggestions
 0009-workspaces-console FR-017	check	workspaces-host: ws-host test	launcher tests: the one-line command, exit status, stderr, stream lines, IF_CONSOLE=1, no stdout contents
 0009-workspaces-console FR-018	check	workspaces-host: ws-host test	tests: Copy Context and the help report remove secrets and send nothing

@@ -44,7 +44,7 @@ image::figures/fig-8.1.png[Five steps from the handshake to the real run,width=9
 
 === Writes are previewed, decisions are confirmed
 
-`services/executor.ts` is the only place a command runs. For a category that writes, it runs `--dry-run` first, opens the changes as a VS Code diff, and only then runs for real. A `decision` also needs `ui.confirmDecision`, a modal that must return exactly `true`. A bad value comes back as an `invalid-argument` error with the type and examples, and the form retries up to five times.
+`services/executor.ts` is the only place a command runs. A command that writes but is not a `decision` runs at once, with its progress: it harms nothing anyone else sees, so nothing is asked and no dry run is opened. A `decision` runs `--dry-run` quietly to get the command line's own words for what it would do, then needs `ui.confirmDecision`, a modal in those words, with the changes to look at on request, that must return exactly `true`. A bad value comes back as an `invalid-argument` error with the type and examples, and the form retries up to five times.
 
 WARNING: *A gap to check before relying on it.* On the Python side, `Ctx.confirm` accepts the editor only when `WS_HOST_SURFACE` is `editor` _and_ `--confirmed` is on the command line. Reading `console/src`, I found the extension setting `IF_CONSOLE=1` (which nothing in `ws_host/` reads) and never passing `--confirmed`. If that is right, a decision such as `repo set` or `release publish` run from the Console ends in `needs-person`. Tests pass those two things by hand, so they would not notice. Ask an AI to confirm this in a real VS Code session with `ws-host check console` before depending on it.
 

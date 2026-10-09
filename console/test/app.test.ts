@@ -199,27 +199,26 @@ test('FR-015: only what the views hand over runs from a tree command; a caller c
   b.cleanup();
 });
 
-test('FR-015: a decision from the tree runs only after the dry run, the diff and the modal; "cancel" leaves the clone as it was', async () => {
+test('FR-015: a decision from the tree runs only after the dry run has said what it would do and the modal; "cancel" leaves the clone as it was', async () => {
   const b = await boot();
   const tree = b.context.subscriptions.find((s) => s.id === 'workspaces-console.commands').o.treeDataProvider;
   const roots = await tree.getChildren();
   const noun = (await tree.getChildren(roots[0])).find((n: Loose) => n.kind === 'noun');
   const w1 = (await tree.getChildren(noun)).find((n: Loose) => n.kind === 'resource' && n.data.label === 'w1');
   const approve = (await tree.getChildren(w1)).find((n: Loose) => n.kind === 'action' && n.data.action.command === 'widget approve');
-  // the review in the panel: Apply; the modal: dismiss it (undefined), as closing the dialog does
-  b.stub.script.reviews.push('apply');
+  // the modal: dismiss it (undefined), as closing the dialog does
   b.stub.script.warnings.push(undefined);
   await b.command('activateNode', approve);
   const ran = b.first.invocations().filter((i) => i.argv[0] === 'widget' && i.argv[1] === 'approve').map((i) => i.argv.join(' '));
   assert.deepEqual(ran, ['widget approve w1 --dry-run --json']);
   const modal = b.stub.calls.messages.find((m: Loose) => m.kind === 'warning');
   assert.match(modal.text, /decision only you can make/);
-  assert.match(modal.rest[0].detail, /Command: \.\/other widget approve w1/);
-  assert.match(modal.rest[0].detail, /Resource: w1/);
+  assert.match(modal.rest[0].detail, /\.\/other widget approve w1/);
+  assert.match(modal.rest[0].detail, /Nothing has changed yet; Cancel leaves everything as it is\./);
+  assert.deepEqual(modal.rest.slice(1), ['Yes, Do It', 'Look at the Changes'], 'the changes are there to look at, not in the way');
   assert.equal(modal.rest[0].modal, true);
   // now confirm
-  b.stub.script.reviews.push('apply');
-  b.stub.script.warnings.push('Make this decision');
+  b.stub.script.warnings.push('Yes, Do It');
   await b.command('activateNode', approve);
   const ran2 = b.first.invocations().filter((i) => i.argv[1] === 'approve').map((i) => i.argv.join(' '));
   assert.equal(ran2.at(-1), 'widget approve w1 --json');
@@ -235,6 +234,7 @@ test('FR-014: the dry run\'s change opens in the diff editor, from a virtual doc
   const approve = (await tree.getChildren(w1)).find((n: Loose) => n.kind === 'action' && n.data.action.command === 'widget approve');
   fs.mkdirSync(path.join(b.first.root, 'widgets'));
   fs.writeFileSync(path.join(b.first.root, 'widgets', 'w1.txt'), 'old\n');
+  b.stub.script.warnings.push('Look at the Changes', undefined);       // open the changes, then decide not to
   b.stub.script.reviews.push([{ type: 'diff', index: 0 }, 'discard']);   // open the file's diff in the panel, then leave it
   await b.command('activateNode', approve);
   const [left, right, title] = b.stub.calls.diffs[0];
