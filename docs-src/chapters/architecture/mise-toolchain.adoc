@@ -64,7 +64,7 @@ image::figures/fig-3.2.png[Four steps from a toolchain.d file to toolchain ensur
 * `MISE_CEILING_PATHS` set to the folder's parent, so mise never reads configuration above the provider;
 * safe mode on, and its data, cache, state and config under `ws-host`'s own directories.
 
-A provider's program runs through `ws-host provider run NAME -- argv`, which builds its environment from the same locked files. That is how other repositories' orchestrators, such as `eid`, get the exact tools they were tested with.
+A provider's program runs through `ws-host provider run NAME -- argv`, which builds its environment from the same locked files. That is how other repositories' orchestrators, such as a private repository's, get the exact tools they were tested with.
 
 === What mise does not do here
 
