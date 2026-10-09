@@ -5,6 +5,7 @@ finishes at once shows nothing. A step that took a while leaves one line behind,
 JSON, HTML, a pipe or a file, so a script's output stays clean. Standard library only."""
 from __future__ import annotations
 
+import contextlib
 import os
 import sys
 import threading
@@ -45,6 +46,7 @@ class Working:
         self.shown = False
         self.started = 0.0
         self._stop = threading.Event()
+        self._pause = threading.Event()
         self._thread: threading.Thread | None = None
         self._style = Style(use_color(self.stream))
 
@@ -65,7 +67,7 @@ class Working:
         i = 0
         while not self._stop.wait(0.1):
             elapsed = time.monotonic() - self.started
-            if elapsed < DELAY:
+            if elapsed < DELAY or self._pause.is_set():
                 continue
             self.shown = True
             if self.probe:
@@ -94,6 +96,26 @@ class Working:
                 self.stream.write(f"{'✅' if _utf8() else 'ok'} {self.label}\n")
             self.stream.flush()
         return False
+
+
+@contextlib.contextmanager
+def paused():
+    """Stop the spinner drawing while something else needs the line: a question the person must see and answer (sudo's password), or text that is its own progress.
+    The line is cleared first, so nothing is drawn over what the person is asked, and the spinner goes on afterwards."""
+    w = _current if isinstance(_current, Working) and _current._thread else None
+    if w is not None:
+        w._pause.set()
+        time.sleep(0.15)                  # a frame being drawn finishes first
+        try:
+            w.stream.write("\r\033[K")
+            w.stream.flush()
+        except (OSError, ValueError):
+            pass
+    try:
+        yield
+    finally:
+        if w is not None:
+            w._pause.clear()
 
 
 def working(label: str, probe=None) -> Working:

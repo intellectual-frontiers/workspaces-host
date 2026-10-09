@@ -46,7 +46,8 @@ def kit_add(ctx, kit):
     steps, status = [], OK
     for step, st, plain in kitrun.install(ctx, obj, kit):
         yield Resource("progress", step, {"plain": plain, "step": step, "status": st})
-        steps.append({"name": step, "status": st, "plain": plain})
+        if st != "log":                 # what apt said is shown as it happens, not kept as a step
+            steps.append({"name": step, "status": st, "plain": plain})
     results = kits_state.kit_report(functional=True)
     me = [r for r in results if r["name"] == kit][0]
     bad = [s for s in steps if s["status"] == "fail"]
