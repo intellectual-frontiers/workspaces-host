@@ -1,10 +1,10 @@
 """`repo list|status|add|sync|set` (0002-repositories-and-trust)."""
 from __future__ import annotations
 
-from ..core import config, paths, registry as reg, types
+from ..core import config, paths, progress, registry as reg, types
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
-from ..lib import repos, trust as trust_mod
+from ..lib import git, repos, trust as trust_mod
 
 REPO_ARG = Arg("repo", "REPO", positional=True, help="a repository: host/org/repo, org/repo or repo")
 
@@ -41,17 +41,35 @@ def repo_list(ctx):
     return Resource("repo-list", "repositories", {"plain": plain, "repositories": rows, "ignored": invalid}, actions=actions)
 
 
-@command("repo", "status", category="read", summary="Show the state of one or all repositories", args=(REPO_ARG,))
-def repo_status(ctx, repo):
+@command("repo", "status", category="read", summary="Show the state of one or all repositories; --details says what is incoming and what is only here, and why",
+         args=(REPO_ARG,
+               Arg("details", flag=True, help="list the commits on each side, who made them, when, what they touched and what each says about why"),
+               Arg("limit", "STRING", help="with --details: how many commits to list on each side (default 20)"),
+               Arg("fetch", flag=True, help="with --details: ask GitHub for news first, so that what is listed is current")))
+def repo_status(ctx, repo, details=False, limit=None, fetch=False):
     cfg = config.load()
-    rows = [repos.state(r, cfg) for r in _selected(cfg, repo)]
-    for r in rows:
+    chosen = _selected(cfg, repo)
+    if details and fetch and not ctx.offline:
+        for r in chosen:
+            p = r.path(cfg)
+            if (p / ".git").exists():
+                with progress.working(f"🔄 Asking GitHub about {r.name}"):
+                    git.run(p, "fetch", "--quiet")
+    rows = [repos.state(r, cfg) for r in chosen]
+    for r, rid in zip(rows, chosen):
         r["status"] = "ok" if r["cloned"] and not (r.get("dirty") or r.get("ahead") or r.get("behind")) else "warn"
+        if details:
+            r.update(repos.explain(rid, cfg, max(1, int(limit or 20))))
     dirty = sum(bool(r.get("dirty")) for r in rows)
     plain = ("Everything is in order." if all(r["status"] == "ok" for r in rows) else
              f"{sum(r['status'] != 'ok' for r in rows)} of {len(rows)} repositories have something to look at.") if rows else "I do not know any repositories yet."
-    return Resource("repo-status", repo or "all", {"plain": plain, "repositories": rows},
-                    actions=[Action(("repo", "sync"), "Bring them up to date", {"all": True})] if rows else [])
+    if details and any(r.get("explain") and r["status"] != "ok" for r in rows):
+        plain += " Each one says below what is incoming, what is only here, and why."
+    behind = any(r.get("behind") or r.get("ahead") for r in rows)
+    acts = [Action(("repo", "sync"), "Bring them up to date", {"all": True})] if rows else []
+    if behind and not details:
+        acts.insert(0, Action(("repo", "status"), "Explain what changed and why", {"details": True}))
+    return Resource("repo-status", repo or "all", {"plain": plain, "repositories": rows}, actions=acts)
 
 
 def _actions_for(results, cfg) -> list[Action]:

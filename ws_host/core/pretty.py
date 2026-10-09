@@ -21,7 +21,7 @@ SECTION_TITLE = {"checks": "Health checks", "kits": "Kits", "steps": "What happe
 NAME_KEYS = ("name", "id", "title", "heading", "label")
 TEXT_KEYS = ("detail", "plain", "message", "reason", "why", "summary", "help", "path")
 CATEGORY_EMOJI = {"read": "📖", "check": "🩺", "setup": "🔧", "build": "🏗️", "generate": "🧬", "record": "📝", "decision": "⚖️"}
-HIDDEN = {"plain", "status", "audience", "schema", "name", "id", "title", "heading", "label", "text", "cli", "todo", "action"} | set(TEXT_KEYS)
+HIDDEN = {"plain", "status", "audience", "schema", "name", "id", "title", "heading", "label", "text", "cli", "todo", "action", "incoming", "outgoing", "explain", "same_change_outgoing", "same_change_incoming"} | set(TEXT_KEYS)
 FIX_KEYS = ("next", "fix")
 
 
@@ -127,6 +127,31 @@ class Page:
                     self.lines += [self.st.cyan("→ " + ln.strip()) if i == 0 else ln for i, ln in enumerate(_wrap(str(item[k]), pad, pad + "  ", self.w))] if False else \
                                   [pad + self.st.cyan("→ " + (str(item[k]) if str(item[k]).startswith(("ws-host", "run ", "edit ")) else "ws-host " + str(item[k])))]
 
+    def history(self, rows: list[dict]):
+        """`repo status --details`: for each repository that differs, what is incoming, what is only here, and the commits with who, when and why."""
+        st = self.st
+        for row in rows:
+            if not row.get("explain") or (not row["incoming"]["count"] and not row["outgoing"]["count"]):
+                continue
+            self.heading("🔍", "What changed in " + str(row["id"]).rsplit("/", 1)[-1])
+            self.lines += _wrap(row["explain"], "   ", "   ", self.w)
+            for key, arrow, title in (("incoming", "⬇️", "Incoming: on the shared branch, not here yet"), ("outgoing", "⬆️", "Only here: not on the shared branch yet")):
+                side = row[key]
+                if not side["count"]:
+                    continue
+                self.blank()
+                self.lines.append(f"   {arrow}  {st.bold(title)}  {st.dim(str(side['count']))}")
+                who = ", ".join(f"{a['name']} ({a['commits']})" for a in side["authors"])
+                self.lines += [st.dim(ln) for ln in _wrap(f"by {who} · {side['first']} to {side['last']}", "      ", "      ", self.w)]
+                if side["areas"]:
+                    self.lines += [st.dim(ln) for ln in _wrap("touching " + ", ".join(f"{a['name']} ({a['files']})" for a in side["areas"]), "      ", "      ", self.w)]
+                for c in side["commits"]:
+                    h, _, subject = c["id"].partition("  ")
+                    self.lines.append(f"      {st.cyan(h)} {st.dim(c['date'])} {st.bold(subject)}")
+                    self.lines += [st.dim(ln) for ln in _wrap(f"{c['author']}, {c['files']} file{'s' if c['files'] != 1 else ''}: {c['text']}", "         ", "         ", self.w)]
+                if side["more"]:
+                    self.lines.append(st.dim(f"      … and {side['more']} more; --limit {side['count']} lists them all"))
+
     def bullets(self, items: list, indent: str = "   "):
         for x in items:
             self.lines += _wrap(str(x), f"{indent}• ", indent + "  ", self.w)
@@ -175,6 +200,8 @@ def render(r, d: dict, st, version: str, audience: str) -> str:
         elif _is_status_row(v):
             page.heading(emoji_k, _title(k), _summary(v) if any("status" in i or "installed" in i for i in v) else f"{len(v)}")
             page.rows(v)
+            if r.kind == "repo-status" and k == "repositories":
+                page.history(v)
         elif k == "lines":
             page.heading(emoji_k, _title(k))
             page.lines += [st.dim("   │ ") + str(x) for x in v]

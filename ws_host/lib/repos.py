@@ -134,6 +134,88 @@ def state(rid: RepoId, cfg: config.Config) -> dict:
             "plain": f"{rid.name}: " + ("; ".join(parts) if parts else "nothing to do.")}
 
 
+_TRAILERS = ("co-authored-by:", "claude-session:", "signed-off-by:", "reviewed-by:", "https://claude.ai/")
+
+
+def _why(body: str) -> str:
+    """What a commit says about why it was made: the first paragraph of its message after the subject, without the trailers tools append."""
+    paras, cur = [], []
+    for line in body.splitlines():
+        if line.strip().lower().startswith(_TRAILERS):
+            continue
+        if line.strip():
+            cur.append(line.strip())
+        elif cur:
+            paras.append(" ".join(cur))
+            cur = []
+    if cur:
+        paras.append(" ".join(cur))
+    text = paras[0] if paras else ""
+    return text if len(text) <= 400 else text[:397].rstrip() + "..."
+
+
+def _area(path: str) -> str:
+    parts = path.split("/")
+    return "/".join(parts[:2]) if len(parts) >= 3 else parts[0]
+
+
+def _side(path, rng: str, diff: str, limit: int) -> dict:
+    """One side of a repository's history: how many commits, who made them and when, what part of the repository they touched, and the newest `limit` of them
+    with what each says about why it was made."""
+    from collections import Counter
+    import time
+    total = int(git.out(path, "rev-list", "--count", rng) or 0)
+    if not total:
+        return {"count": 0, "authors": [], "areas": [], "commits": [], "more": 0}
+    meta = git.out(path, "log", rng, "--format=%an\x1f%ct").splitlines()
+    names = Counter(m.split("\x1f")[0] for m in meta)
+    times = sorted(int(m.split("\x1f")[1]) for m in meta if "\x1f" in m)
+    areas = Counter(_area(f) for f in git.out(path, "diff", "--name-only", diff).splitlines() if f)
+    raw = git.run(path, "log", rng, f"--max-count={limit}", "--name-only", "--format=\x1e%h\x1f%an\x1f%aI\x1f%P\x1f%s\x1f%b\x1d").stdout
+    commits = []
+    for chunk in raw.split("\x1e")[1:]:
+        head, _, files = chunk.partition("\x1d")
+        h, an, date, parents, subject, body = (head.split("\x1f") + [""] * 6)[:6]
+        names_in = [f for f in files.splitlines() if f.strip()]
+        merge = len(parents.split()) > 1
+        commits.append({"id": f"{h}  {subject}", "author": an, "date": date[:10], "files": len(names_in),
+                        "text": _why(body) or ("A merge of two lines of work; it adds no change of its own." if merge else "No reason is given in its message.")})
+    day = lambda t: time.strftime("%Y-%m-%d", time.localtime(t))
+    return {"count": total, "authors": [{"name": n, "commits": c} for n, c in names.most_common(5)], "first": day(times[0]) if times else "", "last": day(times[-1]) if times else "",
+            "areas": [{"name": a, "files": c} for a, c in areas.most_common(6)], "commits": commits, "more": max(0, total - len(commits))}
+
+
+def explain(rid: RepoId, cfg: config.Config, limit: int = 20) -> dict:
+    """What `repo status --details` adds: what is incoming from the shared branch, what is only here, and why those are not the same thing, in plain words.
+    Reads local history only (the person's last fetch), changes nothing."""
+    path = rid.path(cfg)
+    if not (path / ".git").exists() or not git.out(path, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"):
+        return {}
+    inc = _side(path, "HEAD..@{u}", "HEAD...@{u}", limit)
+    out = _side(path, "@{u}..HEAD", "@{u}...HEAD", limit)
+    # A commit with the same change under a different name (a rebase, a squash, a copy of it) is not news: git cherry marks those with a minus.
+    same_out = sum(1 for l in git.out(path, "cherry", "@{u}", "HEAD").splitlines() if l.startswith("-"))
+    same_in = sum(1 for l in git.out(path, "cherry", "HEAD", "@{u}").splitlines() if l.startswith("-"))
+    plural = lambda n: f"{n} commit{'s' if n != 1 else ''}"
+    are = lambda n: "is" if n == 1 else "are"
+    who = lambda side: ", ".join(f"{a['name']} ({a['commits']})" for a in side["authors"][:3])
+    parts = []
+    if inc["count"]:
+        parts.append(f"{plural(inc['count'])} {are(inc['count'])} on the shared branch and not here yet, made by {who(inc)} between {inc['first']} and {inc['last']}.")
+    if out["count"]:
+        parts.append(f"{plural(out['count'])} {are(out['count'])} here and not on the shared branch yet, made by {who(out)} between {out['first']} and {out['last']}.")
+    if inc["count"] and out["count"]:
+        parts.append("Both sides moved on, so git cannot just move forward and ws-host will not join them without your say-so.")
+        if same_out or same_in:
+            parts.append(f"{same_out} of the commits here and {same_in} of the incoming ones carry changes the other side already has under a different commit name, which usually means history was "
+                         "rewritten (a rebase or a squash) somewhere; those are not new work.")
+    elif not parts:
+        parts.append("Nothing differs from the shared branch as of the last time it was fetched.")
+    elif inc["count"]:
+        parts.append("`ws-host repo sync` brings them in; nothing of yours is touched.")
+    return {"incoming": inc, "outgoing": out, "same_change_outgoing": same_out, "same_change_incoming": same_in, "explain": " ".join(parts)}
+
+
 def _skip(rid: RepoId, why: str, detail: str | None = None) -> dict:
     r = {"id": str(rid), "outcome": "skipped", "status": "skip",
          "plain": f"Your changes in {rid.name} are safe. It was not updated because {why}."}
