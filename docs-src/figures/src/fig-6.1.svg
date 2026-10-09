@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 465" width="1040" height="465">
+  <defs><marker id="arrD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-line"/></marker></defs>
+  <rect width="1040" height="465" class="f-surface"/>
+  <text x="28" y="50" text-anchor="start" class="f-ink" font-size="34" font-weight="bold">Discovery by presence</text>
+  <text x="28" y="84" text-anchor="start" class="f-muted" font-size="20" font-weight="normal" font-style="italic">registry.discover imports every module in three packages</text>
+  <rect x="320.0" y="120" width="400" height="70" rx="4" class="f-ink s-ink" stroke-width="1.5"/>
+  <text x="520.0" y="162.7" text-anchor="middle" class="f-surface" font-size="22" font-weight="bold">ws_host.core.registry.discover</text>
+  <line x1="520.0" y1="190" x2="142.0" y2="279" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="28.0" y="280" width="228.0" height="145.2" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="142.0" y="332.65000000000003" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">commands/: one</text>
+  <text x="142.0" y="359.95000000000005" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">module per noun</text>
+  <text x="142.0" y="387.25000000000006" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">group</text>
+  <line x1="520.0" y1="190" x2="394.0" y2="279" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="280.0" y="280" width="228.0" height="145.2" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="394.0" y="346.30000000000007" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">kits/: one module per</text>
+  <text x="394.0" y="373.6000000000001" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">kit</text>
+  <line x1="520.0" y1="190" x2="646.0" y2="279" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="532.0" y="280" width="228.0" height="145.2" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="646.0" y="346.30000000000007" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">help/: one module</text>
+  <text x="646.0" y="373.6000000000001" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">per topic</text>
+  <line x1="520.0" y1="190" x2="898.0" y2="279" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="784.0" y="280" width="228.0" height="145.2" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="898.0" y="319.00000000000006" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">Generators and</text>
+  <text x="898.0" y="346.30000000000007" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">check sections</text>
+  <text x="898.0" y="373.6000000000001" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">declared by the</text>
+  <text x="898.0" y="400.9000000000001" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">modules</text>
+</svg>

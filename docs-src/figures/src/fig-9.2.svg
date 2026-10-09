@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 465" width="1040" height="465">
+  <defs><marker id="arrD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-line"/></marker></defs>
+  <rect width="1040" height="465" class="f-surface"/>
+  <text x="28" y="50" text-anchor="start" class="f-ink" font-size="34" font-weight="bold">What says a change is sound</text>
+  <text x="28" y="84" text-anchor="start" class="f-muted" font-size="20" font-weight="normal" font-style="italic">Run these before you hand work back</text>
+  <rect x="28.0" y="120.0" width="234.0" height="145.2" rx="4" class="f-neutral-tint s-line" stroke-width="1.5"/>
+  <text x="145.0" y="172.64999999999998" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">ws-host test: unittest</text>
+  <text x="145.0" y="199.95" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">over real temporary</text>
+  <text x="145.0" y="227.24999999999997" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">git repositories</text>
+  <line x1="145.0" y1="265.2" x2="520.0" y2="344.2" class="s-line" stroke-width="1.3" marker-end="url(#arrD)"/>
+  <rect x="278.0" y="120.0" width="234.0" height="145.2" rx="4" class="f-neutral-tint s-line" stroke-width="1.5"/>
+  <text x="395.0" y="159.0" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">ws-host check:</text>
+  <text x="395.0" y="186.3" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">registry, launcher,</text>
+  <text x="395.0" y="213.6" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">specs, fresh, help,</text>
+  <text x="395.0" y="240.9" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">providers</text>
+  <line x1="395.0" y1="265.2" x2="520.0" y2="344.2" class="s-line" stroke-width="1.3" marker-end="url(#arrD)"/>
+  <rect x="528.0" y="120.0" width="234.0" height="145.2" rx="4" class="f-neutral-tint s-line" stroke-width="1.5"/>
+  <text x="645.0" y="159.0" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">ws-host fresh:</text>
+  <text x="645.0" y="186.3" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">generated reference</text>
+  <text x="645.0" y="213.6" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">and skill match the</text>
+  <text x="645.0" y="240.9" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">code</text>
+  <line x1="645.0" y1="265.2" x2="520.0" y2="344.2" class="s-line" stroke-width="1.3" marker-end="url(#arrD)"/>
+  <rect x="778.0" y="120.0" width="234.0" height="145.2" rx="4" class="f-neutral-tint s-line" stroke-width="1.5"/>
+  <text x="895.0" y="159.0" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">ws-host doctor: the</text>
+  <text x="895.0" y="186.3" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">registry has no</text>
+  <text x="895.0" y="213.6" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">conflict, this machine</text>
+  <text x="895.0" y="240.9" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">is healthy</text>
+  <line x1="895.0" y1="265.2" x2="520.0" y2="344.2" class="s-line" stroke-width="1.3" marker-end="url(#arrD)"/>
+  <rect x="260.0" y="345.2" width="520" height="80" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="520.0" y="392.9" text-anchor="middle" class="f-emphasis" font-size="22" font-weight="bold">Green on all four</text>
+</svg>

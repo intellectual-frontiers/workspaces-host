@@ -1,0 +1,109 @@
+[#registry-resources]
+== The registry, resources and the wire shape
+
+This is the spine of `ws-host`. Learn it and you can predict where any change goes.
+
+=== Discovery by presence
+
+.Discovery by presence
+image::figures/fig-6.1.png[One box, the discover function, over four boxes: commands, kits, help topics, and generators and check sections,width=95%]
+
+`ws_host/core/registry.py:discover()` imports every module in `ws_host.commands`, `ws_host.kits` and `ws_host.help` and records what the modules declare through decorators:
+
+[cols="2,4"]
+|===
+|Declaration |Effect
+
+|`@command(noun, verb, category=..., summary=..., args=...)`
+|A command, such as `repo sync`
+
+|`@section(name, suites=...)`
+|A section of `ws-host check`
+
+|`@topic(...)`
+|A help topic, taught in the terminal and in the editor
+
+|`@generator(name, command, ...)`
+|A generated file and the command that rewrites it
+
+|a `Kit` subclass
+|A kit, found by its `name`
+
+|`view()`, `noun()`, `present()`
+|How the editor shows a command, a noun or a view
+|===
+
+Duplicates are recorded as conflicts, never raised, and `ws-host check registry` reports them. `module_level_imports()` is a static rule: commands and kits import only the standard library at module level, so `help`, `command list` and `doctor` work on a machine with nothing installed. A command that needs a package declares a dependency group; `core/cli.py` then re-runs itself under `uv run --frozen --no-dev --group <name>`.
+
+=== Commands, categories and surfaces
+
+A command is `ws-host <noun> <verb> [ID] [--options]`. The verbs are a closed set. Every command has one category, and the category decides where it may run:
+
+[cols="1,3,2"]
+|===
+|Category |Meaning |Offered on
+
+|`read`, `check`
+|Change nothing tracked
+|terminal, editor, MCP
+
+|`record`, `build`, `generate`
+|Write what their names say
+|terminal, editor, MCP
+
+|`setup`
+|Change the machine
+|terminal only, unless a command says otherwise (`auth new` and `repo add` also appear in the editor)
+
+|`decision`
+|Change what only a person decides, such as trust or a release
+|terminal and editor; never MCP
+|===
+
+Every command that writes accepts `--dry-run`. A `decision` needs a person: a typed `yes` at a terminal, or the editor's modal. Without either it stops with `needs-person`.
+
+=== One resource, three views
+
+.One Resource, three views
+image::figures/fig-6.2.png[A Resource box over three boxes: text, JSON and HTML,width=95%]
+
+`core/resource.py` defines `Resource(kind, id, data, links, actions, status, version)`. Its wire form is:
+
+----
+{ "schema": "ws-host/<kind>@<version>", "audience": "...",
+  "kind": "...", "id": "...", "data": { "plain": "..." },
+  "links": [...], "actions": [...] }
+----
+
+`data.plain` is always the first thing to read. An `action` is a next step: a command, its fields, the category, the surfaces it may run on, whether it is enabled and why not, and a pasteable `cli` line (omitted when it needs a value or contains anything unsafe to paste).
+
+Exit codes are 0 for ok, 1 for failed, 2 for a usage error and 3 for missing. A command may be a generator that yields several resources; under `--json` each is one line, which is how progress reaches the editor.
+
+`core/render.py` draws the three views. Text puts `data.plain` first, then a generic walk of `data`, then "What you can do next". `--json` is a single `json.dumps`. `--html` is script-free markup with a strict content-security policy. A spinner is only for a person reading text.
+
+=== The editor declares nothing; ws-host does
+
+`commands/presentation.py` declares, for the editor, the views (Workspace, Kits, Setup), the nouns with an icon and the row recipe of their list command, and a palette title and icon for each command. `ws-host command list` returns all of it in `data.presentation`. `core/presentation.py:problems()` validates it, and `ws-host check registry` fails when:
+
+* an icon is not in `core/codicons.txt`;
+* a title is not capitalized, is longer than 40 characters, or has or lacks the trailing `…` against whether the command needs a value;
+* a command on the editor surface has no title;
+* a noun's list command is not a `read` command that needs no value;
+* a status is outside `ok`, `warning`, `error`, `pending`, `skipped`, `info`, `muted`.
+
+=== Providers and the wire contract
+
+Every orchestrator answers `command list`, `command show` and its resources in this shape. That is the entire contract with the editor. A provider's `.workspaces-host/provider.toml` names its launcher and `protocol = 1`. A provider is _enabled_ either by a link in `~/.config/workspaces-host/providers.d/` (made by `provider add`, a decision) or implicitly: this clone, and any clone of a trusted repository that carries one.
+
+=== Prompts for maintenance
+
+Add a command::
+_Add `repo remove NAME`. Pick the right category (it deletes a clone, so say whether it is a `decision`), copy the structure of `repo add` in `ws_host/commands/repo.py`, add a palette title and icon in `commands/presentation.py`, support `--dry-run`, and add tests with real temporary git repositories in `tests/test_repos.py`. Then run `ws-host docs generate`, `ws-host skill generate`, `ws-host check registry`, `ws-host test` and `ws-host fresh`._
+
+Change a resource field::
+_Add a `behind` count to the `repo list` rows. Change the resource in `commands/repo.py`, the row recipe in `commands/presentation.py`, and the Console reader if it needs it. Keep the schema version unless a field is removed or changes meaning; if it does, say so before bumping `SCHEMA_VERSION`._
+
+Fix a title or icon failure::
+_`ws-host check registry` fails on an icon. Find which command, choose a name from `core/codicons.txt`, and fix `commands/presentation.py` only._
+
+Files these touch: `ws_host/core/registry.py`, `core/cli.py`, `core/resource.py`, `core/render.py`, `core/presentation.py`, `core/types.py`, `ws_host/commands/*.py`, `ws_host/commands/presentation.py`, `tests/test_registry.py`, `tests/test_cli.py`, and the generated reference and skill.

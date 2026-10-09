@@ -10,7 +10,7 @@ ws-host help repos      # one topic
 ----
 
 In VS Code, use Learn. It lists the same topics and shows each as a page whose steps are buttons, so you learn by doing.
-Part II reproduces every topic from the same code (<<reference-help>>), which is the only reason that copy can be trusted:
+Part IV reproduces every topic from the same code (<<reference-help>>), which is the only reason that copy can be trusted:
 it is generated, and `ws-host fresh` fails if it is out of date.
 
 == Keeping `ws-host` current

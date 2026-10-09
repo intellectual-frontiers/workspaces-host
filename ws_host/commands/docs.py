@@ -283,6 +283,8 @@ def docs_build(ctx, output):
             _have("asciidoctor-epub3"), "the asciidoctor-epub3 converter is not on this machine")
     for f in ("index.html", "mascot.jpg", "mascot-workflows.jpg", "logo.png", "social-preview.jpg", ".nojekyll"):
         shutil.copy(root / "docs" / f, out / f)
+    if (root / "docs" / "figures").is_dir():          # the figures sit beside index.html, where imagesdir=.. reads them
+        shutil.copytree(root / "docs" / "figures", out / "figures")
     built = [r["name"] for r in results if r["status"] == "built"]
     failed = [r for r in results if r["status"] == "failed"]
     skipped = [r for r in results if r["status"] == "skipped"]

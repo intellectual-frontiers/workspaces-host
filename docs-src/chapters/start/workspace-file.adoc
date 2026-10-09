@@ -4,6 +4,10 @@
 You work in more than one repository, and VS Code can show them together in one window. It does this with a *workspace file*, a small file named
 `workspaces.code-workspace`. This page says what I suggest, and you stay free to do it your own way.
 
+
+.One window, many repositories
+image::figures/fig-g8.png[Several repositories feeding one VS Code window,width=90%]
+
 === The default
 
 Start from `~/workspaces/workspaces.code-workspace`. `ws-host vscode ensure` writes it and keeps its list of repositories current, so it

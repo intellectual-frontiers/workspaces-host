@@ -43,7 +43,29 @@ include::chapters/overview/architecture.adoc[]
 
 include::chapters/overview/moving-over.adoc[]
 
-= Part III: Reference
+= Part III: How it works
+
+include::chapters/architecture/system-map.adoc[]
+
+include::chapters/architecture/bootstrap.adoc[]
+
+include::chapters/architecture/mise-toolchain.adoc[]
+
+include::chapters/architecture/kits-installers.adoc[]
+
+include::chapters/architecture/chezmoi-managed.adoc[]
+
+include::chapters/architecture/registry-resources.adoc[]
+
+include::chapters/architecture/repos-trust-auth.adoc[]
+
+include::chapters/architecture/vscode-console.adoc[]
+
+include::chapters/architecture/release-docs-checks.adoc[]
+
+include::chapters/architecture/ai-maintenance.adoc[]
+
+= Part IV: Reference
 
 include::chapters/reference/commands.adoc[]
 
@@ -55,7 +77,7 @@ include::chapters/reference/vscode-setup.adoc[]
 
 include::chapters/reference/help-topics.adoc[]
 
-= Part IV: Questions and troubleshooting
+= Part V: Questions and troubleshooting
 
 include::chapters/overview/faq.adoc[]
 

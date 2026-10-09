@@ -6,6 +6,14 @@ I built this so every person, every CI job and every AI agent that works on Inte
 thing under their hands: one command per repository, the same place for repositories, the same answer to "is my machine
 well?", and the same way to bring everything up to date. The command for the machine itself is `ws-host`.
 
+If you are new to all of this, you only need Part I. It takes you from a bare Windows 11 computer to VS Code with the Workspaces Console, which is where you will work from then on.
+
+[TIP]
+.The Console is a friendly window on the command line
+====
+Everything you press in the Workspaces Console runs a `ws-host` command underneath, exactly as if you had typed it. The command line is the whole program; the Console is a friendlier way to use it, so you do not have to remember anything. To see the line behind any button, press `Ctrl+Shift+P` and run *Workspaces Console: Show Command Line…*. You can always type the line yourself in the Debian window, in a script, or when an AI helps you. The result is the same either way.
+====
+
 This book is a reference and an overview. It tells you how the pieces fit and why they are built the way they are, and
 its second part lists every command, kit and file. It does not teach you the daily work. That lives in one place, in the
 program: run `ws-host help`, or use Learn in VS Code, where every step is a button. I did that on purpose. A guide that

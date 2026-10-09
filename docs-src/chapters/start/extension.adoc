@@ -1,6 +1,11 @@
 [#extension]
 == How the Workspaces Console works
 
+[TIP]
+====
+The Console is the friendly way in, not the only way. It adds nothing that `ws-host` cannot do on its own: every button runs a `ws-host` command, and the command line is the complete program. If you ever prefer to type, work over SSH or with an AI, or write a script, you lose nothing.
+====
+
 `ws-host` ships one editor extension, the Workspaces Console. It is VS Code's window onto `ws-host`, and onto every other repository's command line. It is built
 in the `workspaces-host` repository and released together with `ws-host`. It is not on the VS Code Marketplace, and that is on purpose: `ws-host vscode
 ensure` downloads the package from the latest release, checks its SHA-256 fingerprint against the one GitHub reports for it, and installs it with VS Code's
@@ -16,6 +21,10 @@ fingerprint, it says so and installs nothing. Nothing is built on your computer,
 `.workspaces-host/provider.toml`; `ws-host` has one.
 
 === What you see
+
+.Every button is a command you could type
+image::figures/fig-g4.png[Four buttons beside the ws-host line each one runs,width=90%]
+
 
 * The *Home* view says what needs you. Each row says what is wrong in plain words, shows the exact line that fixes it, and has a *Run* button where
   a command can do it for you and a *Copy* button. Where no command can, it says what you do yourself. The count is on the status bar, and a click

@@ -1,6 +1,9 @@
 [#troubleshooting]
 == Troubleshooting
 
+.When something is wrong
+image::figures/fig-g10.png[Look at Home, press Run, and if still stuck run Get Help and paste the report,width=90%]
+
 Each entry gives what you see, why it happens, and what to do. They are in the order you will meet them. If yours is not here, press
 `Ctrl+Shift+P` in VS Code and run *Workspaces Console: Get Help*, or in Debian run `ws-host context` and `ws-host doctor`, and paste what they print
 to a person or an AI. They contain no passwords.

@@ -1,0 +1,92 @@
+[#bootstrap]
+== Bootstrap: from `curl` to a working machine
+
+A new machine has nothing: no `ws-host`, no Python, no `uv`. Bootstrap is the two scripts that get from there to a running Python program using only `sh`, `curl` and the distribution's packages. Everything after bootstrap is ordinary Python.
+
+.From curl to a working machine
+image::figures/fig-2.1.png[Five steps from install.sh to workspace ensure,width=95%]
+
+=== `install.sh`
+
+`install.sh` is POSIX `sh` with `set -eu`. You run it as `curl -fsSL <raw url> | sh`. It does this, in order:
+
+. Reads its settings from the environment: `WS_HOST_URL` (the repository), `WS_HOST_HOME` (default `~/workspaces`). The clone goes to `$WS_HOST_HOME/github.com/intellectual-frontiers/workspaces-host`.
+. Checks for `git`, the CA bundle, `curl`, `wget`, `tar` and `xz`. When any is missing and `apt-get` exists it asks for `sudo` once and installs them quietly; with `WS_HOST_NO_APT=1` or no `apt-get` it stops with exit 3 and a line that starts `Fix:`.
+. Clones the repository, or, if the clone exists, runs `git fetch` and `git merge --ff-only @{upstream}`. A failed update only prints that the copy was left as it was.
+. Links `~/.local/bin/ws-host` to the launcher.
+. Runs `WS_HOST_BOOTSTRAP_ONLY=1 ws-host`, which prepares the runtime and exits.
+. Runs `ws-host workspace ensure` and then `ws-host help start`. Neither can fail the script. With `WS_HOST_NO_ADVANCE=1` it runs `doctor` instead.
+
+Every long step runs quietly with a spinner, and its log is shown only if it fails. Failures exit 3 with two lines: what failed and what to do.
+
+=== The launcher
+
+`ws-host` at the repository root is also POSIX `sh`. It is the only entry point; the symlink in `~/.local/bin` points at it and it resolves the link to find the clone.
+
+. It reads five pins from `ws_host/bootstrap.env`: `MISE_VERSION`, `MISE_SHA256_X86_64`, `MISE_SHA256_AARCH64`, `PYTHON_VERSION` and `UV_VERSION`.
+. If `python` and `uv` are already in the private store it skips to the last step. Otherwise it bootstraps. Offline, that is an error.
+. It downloads mise from `mise.jdx.dev` into `~/.cache/workspaces-host/downloads/<sha256>.part`, checks the SHA-256 *before* unpacking, and only then moves it into place. A mismatch deletes the file and stops. The download cache is keyed by fingerprint and re-verified when reused.
+. It unpacks mise into `~/.local/share/workspaces-host/tools/mise/<version>/bin/mise`.
+. It unsets every inherited `MISE_*` variable, then sets its own data, cache, state and config directories, plus `MISE_SAFE=1` and `MISE_YES=1`, so a person's own mise settings cannot change the result.
+. It runs `mise install python@<version> uv@<version>`.
+. It runs `python -m ws_host "$@"` with `PYTHONPATH` set to the clone and bytecode writing off. This is the plain standard-library interpreter, not a host Python and not a virtual environment.
+
+`--offline` and `WS_HOST_OFFLINE=1` forbid every download. `WS_HOST_MISE_URL` can point the download elsewhere, but the checksum stays pinned. `WS_HOST_PYTHON` replaces the interpreter and exists for tests.
+
+=== The first command: `workspace ensure`
+
+`ws-host workspace ensure` is the orchestration that brings a machine to the state the guide describes. It reads your configuration and runs these steps, each reporting as it goes:
+
+. Install your kits: the default is `base` and `shell`, or what `WS_HOST_KIT` in your configuration names.
+. Add the shell prompt, and the completions.
+. Check you are signed in to GitHub. If not it stops early, says so, and offers `auth new github`.
+. Copy the repositories you have named and any they name, then update them.
+. Install the kits the cloned repositories declare.
+. Set up VS Code, if `code` is on the path.
+. Run `doctor`.
+
+It is safe to run again at any time. That is how an update reaches an existing machine.
+
+=== The three pin tables must agree
+
+The bootstrap pins are repeated in two other places, and a test fails when they disagree: `ws_host/bootstrap.env`, the mise entry in `ws_host/lib/mise.py`, and `.workspaces-host/toolchain.d/python.toml` and `uv.toml`. The test is `tests/test_launcher.py`. This is why bumping Python is a four-file change, not a one-line one (see <<mise-toolchain>>).
+
+=== Failure behavior
+
+[cols="3,4"]
+|===
+|What goes wrong |What you see
+
+|Offline with no runtime
+|Exit 3 and a plain line; nothing is half-installed
+
+|Checksum mismatch
+|The partial file is deleted, exit 3
+
+|`xz` missing
+|The unpack fails with a message naming `xz-utils`; `install.sh` installs it first when it can
+
+|Unsupported architecture
+|Only `x86_64` and `aarch64` are accepted
+
+|`mise install` fails
+|Exit 3 with mise's last lines
+|===
+
+=== Prompts for maintenance
+
+NOTE: Start every prompt below with: _Read `.claude/skills/ws-host/SKILL.md` and this chapter first._
+
+Bump mise::
+_Bump mise to version X in the bootstrap. Update `MISE_VERSION` and both `MISE_SHA256_*` values in `ws_host/bootstrap.env` from the real release artifacts, keep `ws_host/lib/mise.py` in agreement, and run `ws-host test`. Show me the checksums and where you got them._
+
+Bump Python or uv::
+_Move the bootstrap Python to 3.13.N. Change `ws_host/bootstrap.env` and `.workspaces-host/toolchain.d/python.toml` together, run `ws-host toolchain generate`, commit the regenerated mise files and `mise.lock`, then run `ws-host test`, `ws-host check` and `ws-host fresh`._
+
+Change what the installer needs::
+_`install.sh` should also require `unzip`. Edit the prerequisite scan and its error text, keep it POSIX `sh`, run `sh -n install.sh`, and add a case to `tests/test_install.py`._
+
+Make a failure kinder::
+_When the mise download fails offline the launcher message is unclear. Rewrite it in the same two-line style (what failed, what to do), without changing the exit code, and test it._
+
+Files these touch: `install.sh`, `ws-host`, `ws_host/bootstrap.env`, `ws_host/lib/mise.py`, `ws_host/commands/workspace.py`, `tests/test_launcher.py`, `tests/test_install.py`.

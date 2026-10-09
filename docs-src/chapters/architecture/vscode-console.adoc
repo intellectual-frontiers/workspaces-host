@@ -1,0 +1,77 @@
+[#vscode-console]
+== The Workspaces Console and VS Code setup
+
+The Workspaces Console is a VS Code extension in `console/`, written in TypeScript. Its id is `intellectual-frontiers.workspaces-console`. It is a thin client by design: it reimplements nothing of `ws-host`, and it draws whatever a repository's launcher says.
+
+=== How it finds and runs a command line
+
+.How the Console runs a command
+image::figures/fig-8.1.png[Five steps from the handshake to the real run,width=95%]
+
+* *Activation.* It activates when a folder contains `.workspaces-host/provider.toml`, and at startup. It declares that it does not support untrusted or virtual workspaces.
+* *Discovery.* `services/discovery.ts` reads each folder's `provider.toml` with a small top-level parse (not full TOML). `launcher` must be a file at the root of that folder and executable. If a folder names none, the launchers in your own user settings are used; a workspace can never choose what runs.
+* *Running.* `services/launcher.ts` spawns `<root>/<launcher> ARGS --json` in the folder, with input closed. It parses one document or one document per line, and the last is the result. Exit code 3 means `missing`.
+* *Handshake.* `Repository.load()` runs `command list` and checks the schema `orchestrator/kind@N`. A newer version than it knows puts the repository in an `update` state with the quick fix "Check for Extension Updates". Nothing runs until Workspace Trust is granted.
+* *After the handshake* it runs `doctor` (for the status bar) and `auth status`, and reads each noun's list command for its rows.
+
+=== What is on screen
+
+[cols="2,5"]
+|===
+|Thing |Where it comes from
+
+|Home, Services, Checks, Commands
+|Fixed views declared in the extension's `package.json`
+
+|Workspace, Kits, Setup
+|Declared by `ws-host`'s `presentation.py` and poured into a fixed pool of 16 view slots by `model/viewplan.ts`. Do not exceed 16.
+
+|Row icons and colors
+|The status vocabulary in `model/status.ts` mapped to theme codicons
+
+|The status bar
+|One item per active folder with a count of what needs you; a click opens Home. Separate items show updates and services.
+
+|Problems panel and quick fixes
+|`services/diagnostics.ts` parses a finding's `where` of the form `file:line:col`; `model/fixes.ts` chooses fixes such as Install Everything, Set Repository Trust and Copy a Report
+
+|Walkthrough and Welcome
+|Seven markdown steps in `media/walkthrough/`, and a Welcome page with a section for each repository
+
+|Learn
+|The same help topics as `ws-host help`, each step a button
+|===
+
+=== Writes are previewed, decisions are confirmed
+
+`services/executor.ts` is the only place a command runs. For a category that writes, it runs `--dry-run` first, opens the changes as a VS Code diff, and only then runs for real. A `decision` also needs `ui.confirmDecision`, a modal that must return exactly `true`. A bad value comes back as an `invalid-argument` error with the type and examples, and the form retries up to five times.
+
+WARNING: *A gap to check before relying on it.* On the Python side, `Ctx.confirm` accepts the editor only when `WS_HOST_SURFACE` is `editor` _and_ `--confirmed` is on the command line. Reading `console/src`, I found the extension setting `IF_CONSOLE=1` (which nothing in `ws_host/` reads) and never passing `--confirmed`. If that is right, a decision such as `repo set` or `release publish` run from the Console ends in `needs-person`. Tests pass those two things by hand, so they would not notice. Ask an AI to confirm this in a real VS Code session with `ws-host check console` before depending on it.
+
+=== Installing the Console from WSL
+
+`ws-host vscode ensure` is a generator command. It uses the `code` command on your path (under WSL this is Windows' VS Code, which fetches its Linux helper into `~/.vscode-server` the first time; that can take minutes and shows progress).
+
+. If the clone holds `console/package.json`, it fingerprints the Console source (`release.source_hash`, sha256 over the sources excluding build output), compares it with the stamp in `~/.local/state/workspaces-host/workspaces-console`, and when it differs builds the package with the pinned Node and runs `code --install-extension ... --force`.
+. Otherwise (a wheel with no source, or `WS_HOST_CONSOLE=release`) it asks GitHub for the latest release's `workspaces-console-*.vsix` and its `digest: sha256:`, downloads, verifies, and installs. Offline, or without a digest, it skips and says so.
+. It installs five recommended extensions (the GitHub pull-request extension, GitLens, Python, AsciiDoc and ShellCheck).
+. It writes `workspaces.code-workspace`, offers to trust candidate clones, and merges the baseline settings (see <<chezmoi-managed>>).
+
+=== Building and testing the extension
+
+`console/esbuild.mjs bundle` produces `dist/extension.js` (CommonJS, Node 22, `vscode` external) and `dist/webview.js`, plus the stylesheet and codicon font. `vsce package --no-dependencies` makes the `.vsix`. `l10n/bundle.l10n.json` is generated from the `t('...')` calls by `lib/release.py:write_l10n`. The package has no `scripts` section on purpose: the build is run by `ws-host`, never by hand, so it matches the release build.
+
+Tests are layered. About forty TypeScript unit tests in `console/test/` run on `node --test` against a stub of the `vscode` module and a fake launcher. `console/test/vscode/` runs the extension inside a real VS Code under `xvfb-run`, trusted and untrusted. `ws-host check console` runs that suite. It is in the `slow` group, needs a pinned VS Code, a display server and a built `dist/`, and exits as skipped when any is missing, which is never a pass.
+
+=== Prompts for maintenance
+
+Add a view::
+_Add a "Hosts" view. Declare it with `reg.view` and `reg.noun` in `ws_host/commands/presentation.py` with a `read` list command, run `ws-host check registry`, and confirm the Console shows it without TypeScript changes. If it does not, say why. Keep to the 16-slot pool._
+
+Add a quick fix::
+_When `doctor` reports a missing kit, offer a quick fix "Install Kit". Change `console/src/model/fixes.ts` and `views/fixes.ts`, add every user-visible string through `t()`, add a key to `package.nls.json` where needed, add a unit test, update `console/CHANGELOG.md`, and run `ws-host check console`._
+
+Check the decision gap::
+_Verify whether `repo set --trusted` works from the Console. Read `console/src/services/launcher.ts` and `executor.ts` and `ws_host/core/cli.py`. If it fails, propose the smallest fix (a surface variable and `--confirmed` after the modal) and a unit test that does not set them by hand._
+
+Files these touch: `console/src/**`, `console/package.json`, `console/package.nls.json`, `console/CHANGELOG.md`, `ws_host/commands/vscode.py`, `ws_host/commands/presentation.py`, `ws_host/lib/release.py`, `tests/test_extension.py`, `tests/if_console/vscode/`.

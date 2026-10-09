@@ -1,0 +1,112 @@
+[#release-docs-checks]
+== Releases, this guide and the checks
+
+Three mechanisms keep `ws-host` honest: a release that can be rebuilt byte for byte, generated documentation that cannot drift from the code, and a set of checks that say whether a change is sound.
+
+=== A release is four files
+
+.A release is four files
+image::figures/fig-9.1.png[Five steps from the wheel to release publish,width=95%]
+
+`lib/release.py` names them: `ws-host-<version>.tar.gz` (the program), `ws_host-<version>-py3-none-any.whl` (the same code as a wheel), `workspaces-console-<version>.vsix` (the extension) and `SHA256SUMS`. One version must appear in `ws_host/__init__.py` and `console/package.json`.
+
+It is reproducible because every input that varies is fixed:
+
+* the wheel is built with `uv build --wheel` and `SOURCE_DATE_EPOCH=1580601600`;
+* the tarball is rebuilt from the wheel's files only, with sorted entries and fixed times, owner and mode, and gzip's time set to zero;
+* the extension is built from `npm ci --ignore-scripts`, strict `tsc`, ESLint with no warnings allowed, the unit tests, the bundle and `vsce package`, and then its zip is rewritten with fixed timestamps;
+* the tools are pinned by `mise install --locked`.
+
+`ws-host check release` verifies one version, all four files, matching checksums, a wheel with no runtime dependencies, an extension with the right files and none of its sources or maps, and that the unpacked program runs `--version` and `command list --json`. `ws-host check reproducible` builds a second time and compares the bytes. Both are in the `slow` group.
+
+`release publish` is a `decision`. It requires a clean tree, a pushed HEAD, a new tag `v<version>` and a passing check, asks you, then runs `gh release create` with notes containing a mise pin with the URL and SHA-256. No hosted service takes part: it is your machine and your `gh` sign-in. The target repository is written into the code.
+
+=== This guide is partly generated
+
+`docs generate` rewrites four reference chapters (commands, kits, files and settings, VS Code setup, help topics) from the registry, and `skill generate` rewrites `.claude/skills/ws-host/SKILL.md`. Each is a *generator*: a function returning `{path: text}`. The `fresh` command compares each with the file on disk and fails when one is stale. CI runs it.
+
+This means two things for maintenance. First, never hand-edit a generated chapter; it begins with a header saying so. Second, a change to a command, a summary, a kit or a help topic changes the guide, so the change is not finished until `ws-host docs generate` and `ws-host skill generate` have run and the result is committed.
+
+This part of the guide, Part III, is written by hand. The figures in it are drawn by `docs-src/figures/build-figures.py` with the house figure kit; see <<maintainers>>.
+
+`docs build` makes the single-page HTML, the multi-page site, the PDF and the EPUB from `docs-src/manuscript.adoc` and `docs-src/theme/`. A missing converter is reported as skipped, with an action to install the `press` kit. `.github/workflows/pages.yml` runs the tests and `fresh` and then publishes the site on every push to `main`.
+
+=== What says a change is sound
+
+.What says a change is sound
+image::figures/fig-9.2.png[Four checks feeding one result: green on all four,width=95%]
+
+[cols="2,4"]
+|===
+|Command |What it proves
+
+|`ws-host test`
+|The standard-library `unittest` suite in `tests/`, using real temporary git repositories and a throwaway home folder. A run of zero tests is a failure.
+
+|`ws-host check`
+|Every quick section: `registry` (no duplicates, closed verb and category sets, valid presentation), `launcher` (executable and `sh -n`), `specs`, `fresh`, `help`, `providers`. Slow sections are `console`, `release` and `reproducible`.
+
+|`ws-host fresh`
+|Generated files match their generators.
+
+|`ws-host doctor`
+|The registry has no conflict, and the machine is healthy, in plain words.
+|===
+
+A skipped section is never a pass. If a program a check needs is missing, the check reports skipped and the whole run exits non-zero with status `missing`. In this environment the `specs` section skips because `agora`, the public root's checker, is not installed; run it where it is.
+
+=== Specs and enforcement
+
+`spec-kit/specs/` holds ten specs, one folder each:
+
+[cols="2,5"]
+|===
+|Spec |Purpose
+
+|`0001-ws-host`
+|The orchestrator, built to the public root's command-line spec
+
+|`0002-repositories-and-trust`
+|Finding, cloning and updating repositories; sign-in; whose code may run
+
+|`0003-kits`
+|The four kits, two installers and the `kit` commands
+
+|`0004-editor-extension`
+|The editor surface
+
+|`0005-help-and-docs`
+|`help` as the single source of daily-work documentation
+
+|`0006-onboarding`
+|The Windows 11 and WSL path, and the Pages site
+
+|`0007-releases`
+|One version, four files, reproducible builds
+
+|`0008-providers`
+|`.workspaces-host/` declarations and the pinned toolchain
+
+|`0009-workspaces-console`
+|The Console in detail
+
+|`0010-managed-config`
+|The chezmoi-written files
+|===
+
+`spec-kit/enforcement.tsv` maps each requirement to what enforces it. Its columns are the requirement (such as `0010-managed-config FR-004`), a mechanism (`check`, `gate`, `review` or `none`), what runs it (`workspaces-host: ws-host test`, `ws-host release build`, and so on) and a note. Most rows name `ws-host test`; a few name a specific check. A row with mechanism `none` is a requirement nothing yet enforces, which makes the file also a list of known gaps.
+
+The working order the whole house follows is: a rule is written in a spec, then recorded in the ontology where one applies, and only then implemented. For this repository, an AI asked to add behavior should first add or change the requirement and its row in `enforcement.tsv`, then the code and test. The validation of the specs themselves lives in the public root's `agora`, not here.
+
+=== Prompts for maintenance
+
+Cut a release::
+_Prepare release 0.2.0. Set one version in `ws_host/__init__.py` and `console/package.json`, update `console/CHANGELOG.md`, run `ws-host release build`, `ws-host check release` and `ws-host check reproducible`, and show me the checksums. Do not run `release publish`: that is mine._
+
+Fix a stale generated file::
+_`ws-host fresh` fails. Find out which command, summary or topic changed, run `ws-host docs generate` and `ws-host skill generate`, and tell me what changed in the reference._
+
+Add a requirement with enforcement::
+_Add FR-011 to `0007-releases`: a release must name its Node version in the notes. Write the requirement, add its row to `spec-kit/enforcement.tsv` with mechanism `check`, implement it in `lib/release.py`, and add a test that fails without it._
+
+Files these touch: `ws_host/lib/release.py`, `ws_host/commands/release.py`, `ws_host/commands/docs.py`, `ws_host/commands/check.py`, `ws_host/commands/test.py`, `spec-kit/`, `docs-src/`, `.github/workflows/`, `tests/`.

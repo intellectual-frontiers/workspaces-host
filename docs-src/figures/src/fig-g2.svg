@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 524" width="1040" height="524">
+  <defs><marker id="arrD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-line"/></marker></defs>
+  <rect width="1040" height="524" class="f-surface"/>
+  <text x="28" y="50" text-anchor="start" class="f-ink" font-size="34" font-weight="bold">Where everything lives</text>
+  <text x="28" y="84" text-anchor="start" class="f-muted" font-size="20" font-weight="normal" font-style="italic">VS Code is in Windows. Your work is in Debian, inside Windows</text>
+  <rect x="70.0" y="120" width="900" height="80" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="520.0" y="167.35" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">Windows 11: the Microsoft Store, your browser, and VS Code with the Workspaces Console</text>
+  <rect x="70.0" y="218" width="900" height="80" rx="4" class="f-neutral-tint s-line" stroke-width="1.5"/>
+  <text x="520.0" y="265.35" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">WSL: the bridge that lets Windows run Debian in a window</text>
+  <rect x="70.0" y="316" width="900" height="80" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="363.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">Debian, a version of Linux: ws-host and the black window where you paste commands</text>
+  <rect x="70.0" y="414" width="900" height="80" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="461.35" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">Your folder ~/workspaces: every repository you work in</text>
+</svg>

@@ -20,6 +20,13 @@ ws-host docs build
 The result is in `_site/`: a home page, one page per chapter with a navigation beside it, the whole guide on a single page, and a PDF where
 `asciidoctor-pdf` is installed.
 
+=== The figures
+
+The figures in Part III are drawn with the house figure kit, `frontiers-figures`, and themed with `frontiers-brand`, both from the public root's `design-systems` folder. They are
+data in `docs-src/figures/figures_def.py`; edit that, never the SVG. Run `python3 docs-src/figures/build-figures.py --kit PATH` (PATH is the public root's `design-systems`
+folder; add `--only fig-3` to draw one). It writes the semantic source to `docs-src/figures/src/`, and the themed SVG with the sans embedded and a PNG to `docs/figures/`. The kit
+refuses a figure with a label that overflows its box, a straight quote or an em dash. The guide reads the PNG so that the PDF and EPUB match the web. Install `cairosvg` for the PNG.
+
 === Where to change what
 
 * The first steps for new people are in `docs-src/chapters/start/`.
