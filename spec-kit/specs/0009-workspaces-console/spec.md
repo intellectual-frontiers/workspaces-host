@@ -562,7 +562,7 @@ knowledge (FR-003).
 - **FR-067**: A confirmation that needs no choice (copied, nothing is running, everything is up to date, which views show) MUST be said in the status bar for a few seconds, as VS Code says
   "Copied", and not as a message that has to be closed; a message is for what needs a choice or a next step. Each status bar item the Console adds MUST have its own id and name, so that
   VS Code's own status bar menu can hide it, and a service that fails MUST show as an error in the status bar until it is started again.
-- **FR-068**: Each build of a command line that needs no argument MUST be a task (type `workspaces-console.build`) under Run Task and Run Build Task, going through the one path every build takes
+- **FR-068**: Each build of a command line that needs no argument MUST be a task (type `workspaces-console`, command `build`) under Run Task and Run Build Task, going through the one path every build takes
   (previewed and accepted first, FR-014); a build that needs an argument is not offered as one. The walkthrough's steps MUST complete when the person does them (`completionEvents`), and
   the welcome page and looking for updates have keys like Home (0009 FR-039), and the page offers the Console's settings.
 

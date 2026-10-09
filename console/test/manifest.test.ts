@@ -104,5 +104,6 @@ test('FR-068: the walkthrough\'s doing-steps complete when the person does them,
   assert.deepEqual(done.map((s) => s.id), ['signIn', 'setUp', 'addRepo', 'check', 'website']);
   const ids = new Set(COMMANDS.map((x) => x.command));
   for (const s of done) for (const e of s.completionEvents as string[]) assert.ok(ids.has(e.replace('onCommand:', '')), e);
-  assert.ok((c.taskDefinitions as Loose[]).some((d) => d.type === 'workspaces-console.build'));
+  assert.deepEqual((c.taskDefinitions as Loose[]).map((d) => d.type), ['workspaces-console'], 'one task type, which the provider is registered for');
+  assert.ok(c.taskDefinitions[0].properties.build);
 });

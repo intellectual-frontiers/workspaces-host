@@ -77,7 +77,7 @@ test('FR-012, FR-015: the palette offers the repository-wide commands and Run Co
   const titles = manifest.contributes.commands.map((c: Loose) => c.title);
   for (const want of ['Run Command\u2026', 'Run Check\u2026', 'Prove Generated Files', 'Run Tests', 'Check Health', 'Show Command Line\u2026', 'Get Help\u2026', 'Copy Context\u2026', 'Open Page\u2026']) assert.ok(titles.includes(want), want);
   const defs = manifest.contributes.taskDefinitions[0].properties.command.enum;
-  assert.deepEqual(defs, ['check', 'test', 'fresh', 'doctor']);
+  assert.deepEqual(defs, ['check', 'test', 'fresh', 'doctor', 'build']);
   const hidden = manifest.contributes.menus.commandPalette.filter((m: Loose) => m.when === 'false').map((m: Loose) => m.command).sort();
   assert.deepEqual(hidden, ['workspaces-console.activateNode', 'workspaces-console.copyCommandLine', 'workspaces-console.copyId', 'workspaces-console.followLink', 'workspaces-console.openRow', 'workspaces-console.runNounCommand',
     'workspaces-console.runRowAction', 'workspaces-console.runSection', 'workspaces-console.runSuggestion', 'workspaces-console.searchView']);
