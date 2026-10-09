@@ -50,7 +50,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `repo add` | setup | terminal, editor | Copy missing repositories to this machine |
 | `repo list` | read | terminal, editor, mcp | List the repositories I know |
 | `repo set` | decision | terminal, editor | Trust or stop trusting a repository's code |
-| `repo status` | read | terminal, editor, mcp | Show the state of one or all repositories |
+| `repo status` | read | terminal, editor, mcp | Show the state of one or all repositories; --details says what is incoming and what is only here, and why |
 | `repo sync` | setup | terminal, editor | Bring repositories up to date, never touching your work |
 | `shell add` | setup | terminal, editor | Give bash or fish the ws-host oh-my-posh prompt (again, or the plain one) |
 | `skill generate` | generate | terminal, editor, mcp | Rewrite the skill that tells an AI agent how to use ws-host |

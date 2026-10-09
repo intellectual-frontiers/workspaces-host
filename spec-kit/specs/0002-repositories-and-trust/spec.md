@@ -126,6 +126,12 @@ work, and a failed clone reported as done. Each is a test here.
   configuration.
 - **FR-018**: `ws-host` MUST write nothing into a clone's working tree, MUST
   NOT edit a clone's ignore rules or `.vscode/`, and MUST NOT commit or push.
+- **FR-019**: `repo status --details` MUST say, for each repository that differs from its shared branch, what is incoming and what is only here, and why, from local history
+  alone (with `--fetch` it asks the network first): how many commits on each side, who made them and between which dates, what part of the repository they touched, the newest
+  `--limit` of them (default 20) each with its short name, date, author, number of files and the first paragraph of its message as the reason (or that none is given), and, where
+  both sides moved on, that git cannot join them and ws-host will not, and how many commits carry a change the other side already has under a different commit name (history
+  that was rewritten or squashed). It MUST change nothing, and the plain `repo status` MUST offer it whenever something differs. Every command MUST answer `-h` and `--help` with
+  its description and not an error.
 
 ## Out of scope
 

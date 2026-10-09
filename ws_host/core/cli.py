@@ -172,6 +172,8 @@ def run(argv: list[str], surface: str = "cli", out=None, err=None) -> int:
                 raise usage_error(f"no command '{' '.join(argv[:2])}'",
                                   f"I do not know a command called '{' '.join(argv[:2])}'.",
                                   [Action(("command", "list"), "See every command")])
+            if any(a in ("-h", "--help") for a in rest):       # `ws-host fresh -h` is the way many people ask what a command does
+                cmd, rest = registry.get(("command", "show")), list(cmd.words)
         ns = build_parser(cmd).parse_args(rest)
         ctx.dry_run, ctx.debug = bool(getattr(ns, "dry_run", False)), ns.debug
         ctx.confirmed = bool(getattr(ns, "confirmed", False))

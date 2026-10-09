@@ -294,3 +294,86 @@ class Advancing(Workspace):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Details(Workspace):
+    """`repo status --details`: what is incoming and what is only here, and why, from local history alone."""
+
+    def setUp(self):
+        super().setUp()
+        self.up = self.remote("acme", "site")
+        self.config(WS_HOST_REPOS=self.rid("acme", "site"))
+        self.run_json("repo", "add", "--all")
+        self.path = self.clone_path("acme", "site")
+
+    def details(self, *extra):
+        code, doc = self.run_json("repo", "status", "--details", *extra)
+        return doc["data"]["repositories"][0], doc
+
+    def test_incoming_commits_are_listed_with_who_when_and_why_and_what_they_touched(self):
+        self.upstream_commit(self.up, "specs/0050/spec.md", "x\n", msg="Accept 0050\n\nThe participation rules were agreed in review, so the spec now says so.\n\nCo-Authored-By: A Tool <t@x>")
+        self.upstream_commit(self.up, "docs/guide.md", "y\n", msg="Fix the guide")
+        git(self.path, "fetch", "-q")
+        row, doc = self.details()
+        inc = row["incoming"]
+        self.assertEqual(inc["count"], 2)
+        self.assertEqual({c["id"].split("  ", 1)[1] for c in inc["commits"]}, {"Accept 0050", "Fix the guide"})
+        accept = next(c for c in inc["commits"] if "Accept" in c["id"])
+        self.assertEqual(accept["text"], "The participation rules were agreed in review, so the spec now says so.", "the reason, without the tool's trailer")
+        fix = next(c for c in inc["commits"] if "Fix" in c["id"])
+        self.assertEqual(fix["text"], "No reason is given in its message.")
+        self.assertEqual({a["name"] for a in inc["areas"]}, {"specs/0050", "docs"})
+        self.assertEqual(row["outgoing"]["count"], 0)
+        self.assertIn("2 commits are on the shared branch and not here yet", row["explain"])
+        self.assertIn("ws-host repo sync", row["explain"])
+
+    def test_diverged_history_says_so_and_names_the_commits_that_are_only_here(self):
+        (self.path / "mine.txt").write_text("m\n")
+        git(self.path, "add", "-A")
+        git(self.path, "commit", "-m", "My own change\n\nBecause I needed it.")
+        self.upstream_commit(self.up, "theirs.txt", "t\n", msg="Their change")
+        git(self.path, "fetch", "-q")
+        row, doc = self.details()
+        self.assertEqual((row["incoming"]["count"], row["outgoing"]["count"]), (1, 1))
+        self.assertEqual(row["outgoing"]["commits"][0]["text"], "Because I needed it.")
+        self.assertIn("both sides moved on", row["explain"].lower())
+        self.assertIn("will not join them without your say-so", row["explain"])
+
+    def test_the_same_change_under_another_commit_name_is_noticed(self):
+        (self.path / "same.txt").write_text("s\n")
+        git(self.path, "add", "-A")
+        git(self.path, "commit", "-m", "Add same")
+        self.upstream_commit(self.up, "same.txt", "s\n", msg="Add same, squashed")      # the same change, made again upstream: a different commit
+        git(self.path, "fetch", "-q")
+        row, _ = self.details()
+        self.assertEqual((row["same_change_outgoing"], row["same_change_incoming"]), (1, 1))
+        self.assertIn("different commit name", row["explain"])
+
+    def test_the_limit_and_the_count_of_the_rest(self):
+        for i in range(5):
+            self.upstream_commit(self.up, f"f{i}.txt", "x\n", msg=f"Change {i}")
+        git(self.path, "fetch", "-q")
+        row, _ = self.details("--limit", "2")
+        self.assertEqual((len(row["incoming"]["commits"]), row["incoming"]["more"], row["incoming"]["count"]), (2, 3, 5))
+
+    def test_it_changes_nothing_and_fetch_asks_for_news_first(self):
+        self.upstream_commit(self.up, "n.txt", "x\n")
+        before = wgit.snapshot(self.path)
+        row, _ = self.details()
+        self.assertEqual(row["incoming"]["count"], 0, "without --fetch it reads only what was last fetched")
+        row, _ = self.details("--fetch")
+        self.assertEqual(row["incoming"]["count"], 1)
+        self.assertFalse((self.path / "n.txt").exists(), "nothing was merged")
+
+    def test_the_plain_status_offers_the_explaining_command_when_something_differs(self):
+        self.upstream_commit(self.up, "n.txt", "x\n")
+        git(self.path, "fetch", "-q")
+        code, doc = self.run_json("repo", "status")
+        self.assertIn("ws-host repo status --details", [a["cli"] for a in doc["actions"]])
+
+    def test_dash_h_and_help_describe_the_command_instead_of_failing(self):
+        for flag in ("-h", "--help"):
+            code, doc = self.run_json("fresh", flag) if False else self.run_json("repo", "status", flag)
+            self.assertEqual(code, 0)
+            self.assertEqual(doc["kind"], "command")
+            self.assertEqual(doc["data"]["id"], "repo status")

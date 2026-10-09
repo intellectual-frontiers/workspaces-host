@@ -195,10 +195,10 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |terminal, editor
 |Trust or stop trusting a repository's code
 
-|`ws-host repo status [REPO]`
+|`ws-host repo status [REPO] [--details] [--limit STRING] [--fetch]`
 |read
 |terminal, editor, mcp
-|Show the state of one or all repositories
+|Show the state of one or all repositories; --details says what is incoming and what is only here, and why
 
 |`ws-host repo sync [REPO] [--all]`
 |setup
