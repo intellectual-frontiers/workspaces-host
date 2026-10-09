@@ -103,6 +103,11 @@ a kit installs what the distribution ships, so two machines may differ, and
   edit a file whose start marker has no end marker. It MUST download
   `oh-my-posh` (FR-006) when it is missing, MUST ask for `fish` to be installed
   first when it is missing, and MUST NOT change the login shell.
+- **FR-016**: Installing packages MUST never be silent and MUST never hide a question. When sudo needs a password and there is a terminal, it MUST be asked for before any
+  spinner or progress line is drawn, with a line that says why and that nothing shows as you type, and a refused password MUST stop before anything is installed. What the package
+  manager says (the lists it fetches, each package it unpacks and sets up) MUST be shown as it says it, on standard error, and in the command's own progress lines
+  for a program reading JSON; a step that says nothing for ten seconds MUST say that it is still working, for how long, and what it last said; and another package manager holding the lock MUST be
+  waited for with apt saying who holds it, not left as silence. The end MUST say how many packages and how long.
 
 ## Declared kits
 

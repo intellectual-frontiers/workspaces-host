@@ -41,12 +41,14 @@ def install(ctx, kit, name: str):
             if prefix:
                 yield ("packages", "info", "This needs administrator rights, so I will use sudo to install: " + ", ".join(p["to_install"]) + ".")
             try:
-                with progress.working("📦 Installing " + (f"{len(p['to_install'])} packages" if len(p["to_install"]) > 1 else p["to_install"][0])):
-                    apt.install(p["to_install"])
+                for kind, line in apt.install_events(p["to_install"]):
+                    yield ("packages", "log", line)         # everything apt says, as it says it, so that a long install is never silent
                 yield ("packages", "ok", f"Installed {len(p['to_install'])} packages.")
             except apt.AptError as e:
                 if e.code == "needs-password":
                     yield ("packages", "warn", f"Installing packages needs your password, and there is no terminal to ask it in. In a terminal, run: ws-host kit add {name}")
+                elif e.code == "sudo-denied":
+                    yield ("packages", "fail", "sudo did not accept the password, so nothing was installed. Run the command again and type your password when asked.")
                 else:
                     yield ("packages", "fail", f"Installing packages failed: {e.message}")
     else:
@@ -79,7 +81,12 @@ def ensure(ctx, declared: dict[str, list[str]]) -> dict:
         if all(kits_state.program_present(c.program) for c in kit.checks(machine.distro()) if c.program):
             notes.append(f"{name} is already installed")
             continue
-        results = list(install(ctx, kit, name))
+        results = []
+        for r in install(ctx, kit, name):
+            if r[1] == "log":
+                apt._say(r[2])                          # a person at a terminal sees it as it happens; the Console's Output panel logs it too
+            else:
+                results.append(r)
         worst = [r for r in results if r[1] in ("fail",)]
         todo = [r for r in results if r[1] in ("warn", "missing")]
         if worst:
