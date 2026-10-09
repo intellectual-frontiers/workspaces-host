@@ -504,6 +504,13 @@
         "icon": "$(gear)"
       },
       {
+        "command": "workspaces-console.showChanges",
+        "title": "%command.showChanges.title%",
+        "category": "%category%",
+        "icon": "$(git-compare)",
+        "enablement": "workspaces-console.hasRepository"
+      },
+      {
         "command": "workspaces-console.showWelcome",
         "title": "%command.showWelcome.title%",
         "category": "%category%",
@@ -678,6 +685,10 @@
         {
           "command": "workspaces-console.showWelcome",
           "when": "true"
+        },
+        {
+          "command": "workspaces-console.showChanges",
+          "when": "workspaces-console.hasRepository"
         },
         {
           "command": "workspaces-console.openSettings",

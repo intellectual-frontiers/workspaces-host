@@ -48,7 +48,7 @@ for _id, _title, _icon in (
     ("toolchain ensure", "Install Programs", "cloud-download"), ("toolchain generate", "Generate Toolchain Lock", None), ("toolchain list", "List Programs", None),
     ("toolchain remove", "Remove Unused Programs", "trash"), ("toolchain show", "Show Program…", None),
     ("release build", "Build Release", "package"), ("release publish", "Publish Release", "cloud-upload"),
-    ("repo add", "Add Repository", "add"), ("repo list", "List Repositories", None), ("repo set", "Set Repository Trust…", "shield"),
+    ("repo add", "Add Repository", "add"), ("repo advance", "Start Repository Fresh…", "discard"), ("repo list", "List Repositories", None), ("repo set", "Set Repository Trust…", "shield"),
     ("repo status", "Show Repository Status", None), ("repo sync", "Sync Repositories", "sync"),
     ("shell add", "Set Up Prompt…", "terminal"), ("skill generate", "Generate Agent Skill", None), ("test", "Run Tests", "beaker"),
     ("update", "Update ws-host", "versions"), ("vscode ensure", "Set Up VS Code", None), ("vscode check", "Test Console With VS Code…", "beaker"),

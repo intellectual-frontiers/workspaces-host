@@ -48,6 +48,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `release build` | build | terminal, editor, mcp | Build a release: the wheel, the app tarball, the Workspaces Console and their checksums |
 | `release publish` | decision | terminal, editor | Tag this commit and publish the release to GitHub Releases, with your own gh sign-in |
 | `repo add` | setup | terminal, editor | Copy missing repositories to this machine |
+| `repo advance` | decision | terminal, editor | Clean refresh: make a repository exactly what is on its shared branch, keeping what was only here in a backup branch |
 | `repo list` | read | terminal, editor, mcp | List the repositories I know |
 | `repo set` | decision | terminal, editor | Trust or stop trusting a repository's code |
 | `repo status` | read | terminal, editor, mcp | Show the state of one or all repositories; --details says what is incoming and what is only here, and why |

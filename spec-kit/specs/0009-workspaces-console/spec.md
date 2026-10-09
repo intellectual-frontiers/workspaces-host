@@ -565,6 +565,12 @@ knowledge (FR-003).
 - **FR-068**: Each build of a command line that needs no argument MUST be a task (type `workspaces-console`, command `build`) under Run Task and Run Build Task, going through the one path every build takes
   (previewed and accepted first, FR-014); a build that needs an argument is not offered as one. The walkthrough's steps MUST complete when the person does them (`completionEvents`), and
   the welcome page and looking for updates have keys like Home (0009 FR-039), and the page offers the Console's settings.
+- **FR-069**: *Show What Changed* (and the button Home offers for `repo status --details`, and the welcome page's footer) MUST open a page that says, for each repository that differs from its
+  shared branch, what is incoming and what is only here and why, from the command line's own details and no words of the Console's own: a chip and the explanation, who made the commits and
+  when, what they touched, each commit with its short name, subject, date, author, file count and the reason from its message (the first five, the rest behind a disclosure), a note when
+  commits carry changes the other side already has, and why nothing is moved when both sides moved on or something is uncommitted. *Update Now* MUST be offered only where it is a plain
+  forward move (something incoming, nothing only here, nothing uncommitted) and MUST go through the one path every write takes; *Ask GitHub Again*, *Open Source Control* and *Copy a Report*
+  MUST be offered. Every word MUST be escaped and every button an index into actions the Console built.
 
 ## Out of scope
 

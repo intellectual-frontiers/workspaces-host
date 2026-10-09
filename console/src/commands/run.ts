@@ -53,6 +53,7 @@ export class RunCommands {
   }
 
   async runAction(repo: Repository, action: Action): Promise<executor.Outcome | null> {
+    if (action.command === 'repo status' && action.fields.details === true) { await this.app.changes.show(); return null; }
     if (!action.enabled) {
       void vscode.window.showInformationMessage(t('{0} cannot run now: {1}.', action.label, action.reason || 'the command line says it is unavailable'));
       return null;
