@@ -987,13 +987,14 @@
         "properties": {
           "command": {
             "type": "string",
+            "description": "%task.command.description%",
             "enum": [
               "check",
               "test",
               "fresh",
-              "doctor"
-            ],
-            "description": "%task.command.description%"
+              "doctor",
+              "build"
+            ]
           },
           "section": {
             "type": "string",
@@ -1010,22 +1011,10 @@
           "folder": {
             "type": "string",
             "description": "%task.folder.description%"
-          }
-        }
-      },
-      {
-        "type": "workspaces-console.build",
-        "required": [
-          "command"
-        ],
-        "properties": {
-          "command": {
-            "type": "string",
-            "description": "%task.build.command.description%"
           },
-          "folder": {
+          "build": {
             "type": "string",
-            "description": "%task.folder.description%"
+            "description": "%task.build.description%"
           }
         }
       }

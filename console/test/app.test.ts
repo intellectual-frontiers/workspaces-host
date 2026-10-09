@@ -287,12 +287,15 @@ test('FR-068: a build that needs nothing asked is a task that goes through the o
   const doc = JSON.parse(JSON.stringify(defaultDocs()['command list'].doc));
   doc.data.commands.push({ id: 'site build', category: 'build', group: 'g', surfaces: ['terminal', 'editor'], help: 'builds' }, { id: 'book build', category: 'build', group: 'g', surfaces: ['terminal', 'editor'], help: 'builds a book' });
   const b = await boot({ docs: defaultDocs({ 'command list': { doc }, 'command show site build': { doc: k.detail('site build', 'build', []) }, 'command show book build': { doc: k.detail('book build', 'build', [k.arg('book', 'BOOK', { required: true })]) } }) });
-  const { provider } = b.stub.calls.tasks;
+  const { provider, type } = b.stub.calls.tasks;
   const tasks = await provider.provideTasks();
   const build = tasks.find((x: Loose) => x.name === 'other site build');
   assert.ok(build, 'the argument-free build is a task');
   assert.equal(tasks.some((x: Loose) => x.name === 'other book build'), false, 'one that needs an argument is not');
-  assert.equal(build.definition.type, 'workspaces-console.build');
+  assert.equal(build.definition.type, 'workspaces-console', 'the provider is for one type, and VS Code refuses a task of any other');
+  assert.equal(build.definition.command, 'build');
+  assert.equal(build.definition.build, 'site build');
+  assert.ok(tasks.every((x: Loose) => x.definition.type === type), 'every task is of the type the provider is registered for');
   assert.equal(build.group, 'build');
   assert.equal(provider.resolveTask(build)?.name, 'other site build');
   b.cleanup();

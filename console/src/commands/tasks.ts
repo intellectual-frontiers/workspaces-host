@@ -10,7 +10,7 @@ import { t } from '../l10n';
 
 export const COMMANDS = ['check', 'test', 'fresh', 'doctor'];
 
-export interface TaskDef extends vscode.TaskDefinition { command: string; section?: string; suite?: string; changed?: boolean; folder?: string }
+export interface TaskDef extends vscode.TaskDefinition { command: string; build?: string; section?: string; suite?: string; changed?: boolean; folder?: string }
 
 /** What a task needs of the extension: the repositories, whether the workspace is trusted, and where a result goes. */
 export interface TaskHost {
@@ -22,7 +22,6 @@ export interface TaskHost {
   runWords(repo: Repository, words: string[]): Promise<{ ran: boolean; reason?: string } | null>;
 }
 
-export const BUILD_TYPE = 'workspaces-console.build';
 
 /** A build a task can start without asking for anything: the command line's own builds that need no argument. */
 export function startable(c: Pick<CommandDetail, 'category' | 'arguments'>): boolean {
@@ -132,7 +131,7 @@ export class TaskProvider implements vscode.TaskProvider {
   }
 
   private makeBuild(repo: Repository, command: string): vscode.Task {
-    const task = new vscode.Task({ type: BUILD_TYPE, command, folder: repo.folder.name }, repo.folder, `${repo.name} ${command}`, 'workspaces-console',
+    const task = new vscode.Task({ type: 'workspaces-console', command: 'build', build: command, folder: repo.folder.name }, repo.folder, `${repo.name} ${command}`, 'workspaces-console',
       new vscode.CustomExecution(() => Promise.resolve(new BuildTerminal(this.host, repo, command))));
     task.detail = repo.launcher.line(command.split(/\s+/));
     task.group = vscode.TaskGroup.Build;
@@ -170,8 +169,8 @@ export class TaskProvider implements vscode.TaskProvider {
 
   resolveTask(task: vscode.Task): vscode.Task | undefined {
     const built = task.definition as Partial<TaskDef>;
-    if (built.type === BUILD_TYPE && built.command) {
-      const id = built.command;
+    if (built.type === 'workspaces-console' && built.command === 'build' && built.build) {
+      const id = built.build;
       const owner = this.host.repos.find((r) => (built.folder ? r.folder.name === built.folder : true) && r.state === 'ready' && r.command(id)?.category === 'build');
       return owner ? this.makeBuild(owner, id) : undefined;
     }
