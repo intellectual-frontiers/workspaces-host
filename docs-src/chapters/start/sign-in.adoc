@@ -4,6 +4,10 @@
 There is one way to sign in, and it is the only way I support. It uses a short code and your web browser. You never type a password into
 the Debian window, and you never create a token or an SSH key.
 
+
+.How signing in works
+image::figures/fig-g3.png[Four steps: ask for a code, read it, type it in your browser, run setup again,width=90%]
+
 === Step 1: Ask for a code
 
 In the Debian window, type:
@@ -41,4 +45,4 @@ exactly as it was and tells you your work is safe.
 If it says it could not copy a repository and mentions `Username`, you are not signed in yet or you cannot see that repository. See
 <<troubleshooting>>.
 
-NOTE: In VS Code the same sign-in is a notification with a button, *Copy code and open browser*. You will meet it in the next chapter.
+TIP: In VS Code the same sign-in is a notification with a button, *Copy code and open browser*, or the command *Workspaces Console: Sign In…*. It runs `ws-host auth new github` for you. You will meet it in the next chapter.

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 430" width="1040" height="430">
+  <defs><marker id="arrD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-line"/></marker></defs>
+  <rect width="1040" height="430" class="f-surface"/>
+  <text x="28" y="50" text-anchor="start" class="f-ink" font-size="34" font-weight="bold">One Resource, three views</text>
+  <text x="28" y="84" text-anchor="start" class="f-muted" font-size="20" font-weight="normal" font-style="italic">The same data, drawn for whoever asks</text>
+  <rect x="320.0" y="120" width="400" height="70" rx="4" class="f-ink s-ink" stroke-width="1.5"/>
+  <text x="520.0" y="162.7" text-anchor="middle" class="f-surface" font-size="22" font-weight="bold">Resource: kind, id, data, links, actions</text>
+  <line x1="520.0" y1="190" x2="196.0" y2="279" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="46.0" y="280" width="300" height="110" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="196.0" y="328.70000000000005" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">text: first line is data.plain,</text>
+  <text x="196.0" y="356.00000000000006" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">then what you can do next</text>
+  <line x1="520.0" y1="190" x2="520.0" y2="279" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="370.0" y="280" width="300" height="110" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="520.0" y="328.70000000000005" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">--json: the wire document,</text>
+  <text x="520.0" y="356.00000000000006" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">schema ws-host/kind@N</text>
+  <line x1="520.0" y1="190" x2="844.0" y2="279" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="694.0" y="280" width="300" height="110" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="844.0" y="328.70000000000005" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">--html: script-free markup for</text>
+  <text x="844.0" y="356.00000000000006" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">a page</text>
+</svg>
