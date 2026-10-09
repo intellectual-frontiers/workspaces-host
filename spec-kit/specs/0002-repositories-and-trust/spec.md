@@ -132,6 +132,11 @@ work, and a failed clone reported as done. Each is a test here.
   both sides moved on, that git cannot join them and ws-host will not, and how many commits carry a change the other side already has under a different commit name (history
   that was rewritten or squashed). It MUST change nothing, and the plain `repo status` MUST offer it whenever something differs. Every command MUST answer `-h` and `--help` with
   its description and not an error.
+- **FR-020**: `repo advance REPO --clean` (a decision, so only a person confirms it: a typed yes at a terminal, or the editor's modal) MUST make a repository exactly what its shared branch
+  has, for the person who knows they changed nothing here worth keeping. Without `--clean` it MUST change nothing and say what to add. It MUST say first what it would put aside (the commits only
+  here, the changes not committed), MUST put those aside in a branch `ws-host-backup/<date-time>` (one branch holds both) before it moves anything, and MUST NOT delete a backup. It MUST leave files
+  git does not track where they are, MUST make no backup when nothing is only here, and MUST refuse, saying why and what to do, in the middle of a merge or a rebase, off a branch, or
+  with no shared branch. `repo status --details` MUST offer it for a repository with something only here, and the what-changed page (0009-workspaces-console FR-069) MUST too.
 
 ## Out of scope
 

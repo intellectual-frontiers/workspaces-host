@@ -185,6 +185,11 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |terminal, editor
 |Copy missing repositories to this machine
 
+|`ws-host repo advance REPO [--clean]`
+|decision
+|terminal, editor
+|Clean refresh: make a repository exactly what is on its shared branch, keeping what was only here in a backup branch
+
 |`ws-host repo list`
 |read
 |terminal, editor, mcp

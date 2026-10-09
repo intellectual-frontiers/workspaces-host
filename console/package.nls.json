@@ -100,6 +100,7 @@
   "command.toggleSimpleViews.title": "Show Every View",
   "command.lookForUpdates.title": "Look for Updates",
   "command.showWelcome.title": "Show Welcome Page",
+  "command.showChanges.title": "Show What Changed",
   "command.openSettings.title": "Open Settings",
   "command.showOutput.title": "Show Output",
   "setting.showWelcomeOnStart.description": "Open the welcome page, with a section for each repository and help on each, when a window starts with nothing else open. The *Show Welcome Page* command opens it any time.",

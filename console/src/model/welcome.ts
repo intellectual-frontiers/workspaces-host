@@ -19,7 +19,7 @@ export interface WelcomeInput { repos: WelcomeRepo[]; signedOut: boolean; update
 
 /** What a button does. Only these commands of this extension can be named, and only by this module. */
 export type WelcomeAction =
-  | { kind: 'ext'; command: 'signIn' | 'updateEverything' | 'addRepository' | 'openWalkthrough' | 'showHome' | 'setUpEverything' | 'lookForUpdates' | 'openSettings' }
+  | { kind: 'ext'; command: 'signIn' | 'updateEverything' | 'addRepository' | 'openWalkthrough' | 'showHome' | 'setUpEverything' | 'lookForUpdates' | 'openSettings' | 'showChanges' }
   | { kind: 'learn'; repo: string }
   | { kind: 'topic'; repo: string; topic: string };
 
@@ -69,7 +69,7 @@ export function buildWelcome(input: WelcomeInput): { model: Welcome; actions: We
       title: t('Welcome to Workspaces'),
       intro: t('Everything for your work, set up and kept up to date. Each section below is a repository with its own tools: see what it is for, how it stands, and ask for help on any part of it.'),
       notes, cards, empty,
-      footer: [ext('addRepository', t('Add Repository'), 'repo-clone'), ext('openWalkthrough', t('Getting Started'), 'rocket'), ext('lookForUpdates', t('Look for Updates'), 'cloud-download'), ext('openSettings', t('Settings'), 'gear')],
+      footer: [ext('addRepository', t('Add Repository'), 'repo-clone'), ext('openWalkthrough', t('Getting Started'), 'rocket'), ext('showChanges', t('What Changed'), 'git-compare'), ext('lookForUpdates', t('Look for Updates'), 'cloud-download'), ext('openSettings', t('Settings'), 'gear')],
     },
   };
 }

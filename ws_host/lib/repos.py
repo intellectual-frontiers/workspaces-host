@@ -216,6 +216,61 @@ def explain(rid: RepoId, cfg: config.Config, limit: int = 20) -> dict:
     return {"incoming": inc, "outgoing": out, "same_change_outgoing": same_out, "same_change_incoming": same_in, "explain": " ".join(parts)}
 
 
+class FreshError(Exception):
+    def __init__(self, code: str, plain: str):
+        super().__init__(plain)
+        self.code, self.plain = code, plain
+
+
+def fresh_plan(rid: RepoId, cfg: config.Config) -> dict:
+    """What a clean refresh would drop, from local history: the commits only here and the changes not committed. Raises FreshError when it must not go ahead."""
+    path = rid.path(cfg)
+    if not (path / ".git").exists():
+        raise FreshError("not-cloned", f"{rid.name} is not on this machine yet, so there is nothing to refresh. Copy it first.")
+    op = git.operation_in_progress(path)
+    if op:
+        raise FreshError("operation", f"{op} is in progress in {rid.name}. Finish it or cancel it first (for example `git {op.split()[0]} --abort`), then try again.")
+    branch = git.out(path, "symbolic-ref", "--short", "-q", "HEAD")
+    if not branch:
+        raise FreshError("no-branch", f"{rid.name} is not on a branch, so I do not know which shared branch to make it match.")
+    upstream = git.out(path, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}")
+    if not upstream:
+        raise FreshError("no-upstream", f"{rid.name}'s branch {branch} is not connected to a shared branch, so there is nothing to match it to.")
+    counts = git.out(path, "rev-list", "--left-right", "--count", "HEAD...@{u}").split()
+    ahead, behind = (int(counts[0]), int(counts[1])) if len(counts) == 2 else (0, 0)
+    changed = [l[3:] for l in git.out(path, "status", "--porcelain=v1", "--untracked-files=no").splitlines() if l.strip()]
+    return {"path": path, "branch": branch, "upstream": upstream, "ahead": ahead, "behind": behind, "uncommitted": changed}
+
+
+def fresh(rid: RepoId, cfg: config.Config, offline: bool = False) -> dict:
+    """The clean refresh: make the repository exactly what is on its shared branch, and keep what was only here in a backup branch that is never deleted for you.
+    Files that git does not track are left where they are. The caller has already had the person's yes."""
+    import time
+    plan = fresh_plan(rid, cfg)
+    path = plan["path"]
+    if not offline:
+        f = git.run(path, "fetch", "--quiet")
+        if f.returncode != 0:
+            raise FreshError("unreachable", f"I could not reach GitHub to ask what is fresh: {git.reason(f)}. Nothing was changed.")
+        plan = fresh_plan(rid, cfg)
+    backup = ""
+    if plan["ahead"] or plan["uncommitted"]:
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        target = "HEAD"
+        if plan["uncommitted"]:
+            made = git.out(path, "stash", "create", "ws-host: changes not committed before a clean refresh")
+            target = made or "HEAD"           # a stash commit's first parent is HEAD, so one branch keeps both the commits and the changes
+        backup = f"ws-host-backup/{stamp}"
+        b = git.run(path, "branch", backup, target)
+        if b.returncode != 0:
+            raise FreshError("backup-failed", f"I could not make the backup branch, so I changed nothing: {git.reason(b)}")
+    r = git.run(path, "reset", "--hard", plan["upstream"])
+    if r.returncode != 0:
+        raise FreshError("reset-failed", f"git could not make {rid.name} match {plan['upstream']}: {git.reason(r)}. The backup branch {backup or '(none was needed)'} is intact.")
+    return {"id": str(rid), "path": str(path), "branch": plan["branch"], "upstream": plan["upstream"], "dropped_commits": plan["ahead"], "dropped_changes": len(plan["uncommitted"]),
+            "moved_forward": plan["behind"], "backup": backup}
+
+
 def _skip(rid: RepoId, why: str, detail: str | None = None) -> dict:
     r = {"id": str(rid), "outcome": "skipped", "status": "skip",
          "plain": f"Your changes in {rid.name} are safe. It was not updated because {why}."}

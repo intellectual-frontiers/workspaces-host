@@ -73,6 +73,7 @@ export function registerCommands(app: App): Handlers {
       cmd('cancelRun', () => views.cancelRun());
       cmd('toggleAllCommands', () => views.toggleAllCommands());
       cmd('showWelcome', () => app.welcome.show());
+      cmd('showChanges', () => app.changes.show());
       cmd('openSettings', () => vscode.commands.executeCommand('workbench.action.openSettings', '@ext:intellectual-frontiers.workspaces-console'));
       cmd('lookForUpdates', async () => {
         await app.updates.look();

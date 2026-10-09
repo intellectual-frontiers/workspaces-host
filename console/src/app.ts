@@ -30,6 +30,7 @@ import { FileDecorations } from './views/decorations';
 import { Services } from './services/services';
 import { Busy } from './services/busy';
 import { WelcomePage } from './views/welcome';
+import { ChangesPage } from './views/changes';
 import { ProblemFixes } from './views/fixes';
 import { fixesForFailure, fixesForLoad, fixesForService, type Fix } from './model/fixes';
 import { Updates } from './services/updates';
@@ -82,6 +83,7 @@ export class App {
   readonly updates: Updates;
   readonly working: Busy;
   readonly welcome: WelcomePage;
+  readonly changes: ChangesPage;
   private signedOutNow = false;
   private readonly updatesItem = vscode.window.createStatusBarItem('workspaces-console.updates', vscode.StatusBarAlignment.Left, 48);
   private readonly servicesItem = vscode.window.createStatusBarItem('workspaces-console.services', vscode.StatusBarAlignment.Left, 49);
@@ -130,6 +132,10 @@ export class App {
       busy: (title, fn) => Promise.resolve(vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title }, fn)),
     });
     this.servicesView = new ServicesProvider(this.services);
+    this.changes = new ChangesPage({
+      extensionUri: this.context.extensionUri as vscode.Uri, repos: () => this.repos,
+      runWords: (repo, words) => this.runWords(repo, words), copy: (text) => this.ui.copy(text), fail: (e) => this.fail(e),
+    });
     this.welcome = new WelcomePage({
       extensionUri: this.context.extensionUri as vscode.Uri,
       repos: () => this.repos,
@@ -611,7 +617,7 @@ export class App {
     sub(this.servicesItem); sub({ dispose: () => this.services.stopAll() });
     sub(vscode.languages.registerCodeActionsProvider({ scheme: 'file' }, new ProblemFixes(this.diagnostics), { providedCodeActionKinds: ProblemFixes.kinds }));
     this.servicesItem.name = t('Workspaces Console: Services'); this.updatesItem.name = t('Workspaces Console: Updates');
-    sub(this.updatesItem); sub({ dispose: () => this.updates.stop() }); sub(this.welcome);
+    sub(this.updatesItem); sub({ dispose: () => this.updates.stop() }); sub(this.welcome); sub(this.changes);
     tree(VIEW_IDS.commands, this.commandsView, true);
     sub(vscode.window.registerWebviewPanelSerializer(PANEL_TYPE, { deserializeWebviewPanel: (panel, state) => this.panel.restore(panel, state) }));
     sub(vscode.tasks.registerTaskProvider('workspaces-console', this.tasks));

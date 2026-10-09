@@ -66,10 +66,43 @@ def repo_status(ctx, repo, details=False, limit=None, fetch=False):
     if details and any(r.get("explain") and r["status"] != "ok" for r in rows):
         plain += " Each one says below what is incoming, what is only here, and why."
     behind = any(r.get("behind") or r.get("ahead") for r in rows)
+    fresh_acts = [Action(("repo", "advance"), f"Start {r['id'].rsplit('/', 1)[-1]} fresh from GitHub (keeps a backup)", {"repo": r["id"], "clean": True})
+                  for r in rows if r.get("cloned") and r.get("upstream") and (r.get("ahead") or r.get("dirty"))]
     acts = [Action(("repo", "sync"), "Bring them up to date", {"all": True})] if rows else []
     if behind and not details:
         acts.insert(0, Action(("repo", "status"), "Explain what changed and why", {"details": True}))
-    return Resource("repo-status", repo or "all", {"plain": plain, "repositories": rows}, actions=acts)
+    return Resource("repo-status", repo or "all", {"plain": plain, "repositories": rows}, actions=acts + (fresh_acts if details else []))
+
+
+@command("repo", "advance", category="decision", summary="Clean refresh: make a repository exactly what is on its shared branch, keeping what was only here in a backup branch",
+         args=(Arg("repo", "REPO", positional=True, required=True),
+               Arg("clean", flag=True, help="say that you mean it: what is only here is put aside in a backup branch and the repository becomes what GitHub has")))
+def repo_advance(ctx, repo, clean=False):
+    if not clean:
+        raise WsError("usage", "give --clean to make it match the shared branch", "To throw away what is only here and start from what is on GitHub, add --clean. A backup branch keeps what was here.", exit_code=2)
+    cfg = config.load()
+    rid = repos.resolve(cfg, repo)
+    try:
+        plan = repos.fresh_plan(rid, cfg)
+    except repos.FreshError as e:
+        raise WsError(f"refresh-{e.code}", e.plain, e.plain, exit_code=1)
+    lose = []
+    if plan["ahead"]:
+        lose.append(f"{plan['ahead']} commit{'s' if plan['ahead'] != 1 else ''} that {plan['upstream']} does not have")
+    if plan["uncommitted"]:
+        lose.append(f"{len(plan['uncommitted'])} change{'s' if len(plan['uncommitted']) != 1 else ''} you have not committed")
+    saved = " Both are kept in a backup branch, so nothing is lost." if lose else ""
+    if ctx.dry_run:
+        return Resource("repo", str(rid), {"plain": f"Nothing was changed. I would make {rid.name} exactly {plan['upstream']}" + (", putting aside " + " and ".join(lose) + "." + saved if lose else "; it has nothing only here to put aside."),
+                                           "would_drop_commits": plan["ahead"], "would_drop_changes": plan["uncommitted"], "would_move_forward": plan["behind"], "backup": bool(lose),
+                                           "untracked_files": "left where they are"})
+    ctx.confirm(f"This makes {rid.name} exactly what is on {plan['upstream']}" + (" and puts aside " + " and ".join(lose) + "." + saved if lose else "."))
+    try:
+        r = repos.fresh(rid, cfg, ctx.offline)
+    except repos.FreshError as e:
+        raise WsError(f"refresh-{e.code}", e.plain, e.plain, exit_code=1)
+    kept = (f" What was only here is kept in the branch {r['backup']}; to look at it: git switch {r['backup']}." if r["backup"] else "")
+    return Resource("repo", str(rid), {"plain": f"{rid.name} is now exactly {r['upstream']}." + kept, **r}, status=OK)
 
 
 def _actions_for(results, cfg) -> list[Action]:

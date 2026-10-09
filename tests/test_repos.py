@@ -377,3 +377,89 @@ class Details(Workspace):
             self.assertEqual(code, 0)
             self.assertEqual(doc["kind"], "command")
             self.assertEqual(doc["data"]["id"], "repo status")
+
+
+class CleanRefresh(Workspace):
+    """`repo advance --clean`: make a repository exactly what its shared branch has, keeping what was only here in a backup branch."""
+
+    def setUp(self):
+        super().setUp()
+        self.up = self.remote("acme", "site")
+        self.config(WS_HOST_REPOS=self.rid("acme", "site"))
+        self.run_json("repo", "add", "--all")
+        self.path = self.clone_path("acme", "site")
+        os.environ["WS_HOST_SURFACE"] = "editor"
+        self.addCleanup(lambda: os.environ.pop("WS_HOST_SURFACE", None))
+
+    def go(self, *extra):
+        return self.run_json("repo", "advance", "site", "--clean", "--confirmed", *extra)
+
+    def diverge(self):
+        (self.path / "mine.txt").write_text("m\n")
+        git(self.path, "add", "-A")
+        git(self.path, "commit", "-m", "My work")
+        self.upstream_commit(self.up, "theirs.txt", "t\n", msg="Their work")
+        git(self.path, "fetch", "-q")
+
+    def test_without_clean_it_says_what_to_add_and_changes_nothing(self):
+        code, doc = self.run_json("repo", "advance", "site", "--confirmed")
+        self.assertEqual((code, doc["data"]["code"]), (2, "usage"))
+
+    def test_a_dry_run_says_what_would_be_put_aside_and_changes_nothing(self):
+        self.diverge()
+        before = wgit.snapshot(self.path)
+        code, doc = self.go("--dry-run")
+        self.assertEqual(code, 0)
+        self.assertEqual((doc["data"]["would_drop_commits"], doc["data"]["would_move_forward"], doc["data"]["backup"]), (1, 1, True))
+        self.assertIn("kept in a backup branch", doc["data"]["plain"])
+        self.assertEqual(wgit.snapshot(self.path), before)
+
+    def test_it_needs_the_person_and_does_nothing_without_them(self):
+        self.diverge()
+        os.environ["WS_HOST_SURFACE"] = "cli"
+        code, doc = self.go()
+        self.assertEqual((code, doc["data"]["code"]), (1, "needs-person"))
+        self.assertTrue((self.path / "mine.txt").exists())
+
+    def test_diverged_history_becomes_the_shared_branch_and_what_was_only_here_is_kept(self):
+        self.diverge()
+        code, doc = self.go()
+        self.assertEqual(code, 0, doc)
+        d = doc["data"]
+        self.assertEqual((d["dropped_commits"], d["moved_forward"]), (1, 1))
+        self.assertTrue(d["backup"].startswith("ws-host-backup/"))
+        self.assertTrue((self.path / "theirs.txt").exists())
+        self.assertFalse((self.path / "mine.txt").exists())
+        self.assertEqual(git(self.path, "rev-parse", "HEAD"), git(self.path, "rev-parse", "origin/main"))
+        self.assertIn("My work", git(self.path, "log", "--format=%s", d["backup"]))
+        self.assertIn(d["backup"], doc["data"]["plain"])
+
+    def test_changes_not_committed_are_kept_too_and_untracked_files_are_left_alone(self):
+        (self.path / "README.md").write_text("edited\n")
+        (self.path / "scratch.txt").write_text("keep me\n")
+        code, doc = self.go()
+        self.assertEqual((code, doc["data"]["dropped_changes"]), (0, 1))
+        self.assertNotEqual((self.path / "README.md").read_text(), "edited\n")
+        self.assertEqual((self.path / "scratch.txt").read_text(), "keep me\n")
+        saved = git(self.path, "show", f"{doc['data']['backup']}:README.md")
+        self.assertEqual(saved.strip(), "edited")
+
+    def test_a_repository_with_nothing_only_here_makes_no_backup(self):
+        self.upstream_commit(self.up, "n.txt", "x\n")
+        code, doc = self.go()
+        self.assertEqual((code, doc["data"]["backup"], doc["data"]["moved_forward"]), (0, "", 1))
+        self.assertEqual(git(self.path, "branch", "--list", "ws-host-backup/*"), "")
+
+    def test_it_refuses_in_the_middle_of_something_and_without_a_shared_branch(self):
+        git(self.path, "checkout", "-q", "--detach")
+        code, doc = self.go()
+        self.assertEqual((code, doc["data"]["code"]), (1, "refresh-no-branch"))
+        git(self.path, "checkout", "-q", "main")
+        git(self.path, "branch", "--unset-upstream")
+        code, doc = self.go()
+        self.assertEqual((code, doc["data"]["code"]), (1, "refresh-no-upstream"))
+
+    def test_the_details_offer_it_when_something_is_only_here(self):
+        self.diverge()
+        code, doc = self.run_json("repo", "status", "--details")
+        self.assertIn("ws-host repo advance github.com/acme/site --clean", [a["cli"] for a in doc["actions"]])
