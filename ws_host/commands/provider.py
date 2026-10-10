@@ -119,14 +119,28 @@ def provider_run(ctx, provider, argv, ensure):
     except tc.ToolchainError as e:
         raise _wrap(e)
     try:
-        done = subprocess.run(list(argv), env=env)
+        proc = subprocess.Popen(list(argv), env=env)
     except OSError as e:
         raise WsError("run-failed", f"{argv[0]}: {e.strerror}", f"I could not start {argv[0]} for {p.name}: {e.strerror}. Is it installed? Try: ws-host toolchain list", exit_code=127 if isinstance(e, FileNotFoundError) else 126)
+    status = _wait(proc)
     if ctx.mode == "text":      # the program's own output is the output; only its status is ours
-        ctx.exit_code = done.returncode
+        ctx.exit_code = status
         return None
-    return Resource("provider-run", p.name, {"plain": f"{argv[0]} finished with status {done.returncode}.", "argv": list(argv), "exit": done.returncode},
-                    status=OK if done.returncode == 0 else FAILED)
+    return Resource("provider-run", p.name, {"plain": f"{argv[0]} finished with status {status}.", "argv": list(argv), "exit": status},
+                    status=OK if status == 0 else FAILED)
+
+
+def _wait(proc: subprocess.Popen) -> int:
+    """The command's status once it ends (0008 FR-013). A Ctrl+C at the terminal reaches the command too, and the command answers it
+    (a server stops and says so); this process only waits, and says nothing of its own. A signal that ended the command is its
+    status as a shell gives it, 128 plus the signal's number."""
+    while True:
+        try:
+            code = proc.wait()
+            break
+        except KeyboardInterrupt:
+            continue
+    return code if code >= 0 else 128 - code
 
 
 # ---- toolchain ---------------------------------------------------------------------------------------------------------
