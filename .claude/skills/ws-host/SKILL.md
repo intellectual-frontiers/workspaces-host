@@ -38,8 +38,10 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `fresh` | check | terminal, editor, mcp | Prove the generated files are current |
 | `help` | read | terminal, editor, mcp | Learn how to do the daily work, one topic at a time |
 | `kit add` | setup | terminal | Install a kit (uses sudo for packages, and says so first) |
+| `kit check` | check | terminal, editor, mcp | Ask the publishers of the tools that float what their newest releases are and how each would be checked; installs nothing |
 | `kit list` | read | terminal, editor, mcp | List the kits and which are installed |
 | `kit show` | read | terminal, editor, mcp | Show what a kit installs on this machine |
+| `kit sync` | setup | terminal | Bring the tools that float with their newest release up to date, for every kit or for one |
 | `provider add` | decision | terminal, editor | Enable a repository as a provider, so ws-host installs and runs what it declares |
 | `provider list` | read | terminal, editor, mcp | List the providers you have enabled |
 | `provider remove` | decision | terminal, editor | Stop using a provider (its programs stay until you prune them) |
@@ -77,6 +79,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - `base`: Standard userland, git, gh, glab, jq, ripgrep, fd, curl, wget, python3, uv, Node.js, ImageMagick with WebP, sqlite3, DuckDB, shellcheck, Chromium
 - `cloud`: the aws, azure, cloudflare and railway kits together
 - `cloudflare`: Wrangler (Workers, Pages) and cloudflared (tunnels), always the newest release
+- `modern-cli`: bash, fish and git use eza, bat, btop, zoxide, fzf and delta, with the common aliases
 - `press`: TeX Live (LuaLaTeX, XeTeX), latexmk, poppler, qpdf, rsvg, Java, epubcheck, asciidoctor, potrace
 - `railway`: the Railway CLI, always the newest release
 - `rust`: Rust stable (official tarball, no rustup), build-essential, cmake, pkg-config, perl

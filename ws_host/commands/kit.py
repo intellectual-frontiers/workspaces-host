@@ -64,3 +64,29 @@ def kit_add(ctx, kit):
     yield Resource("kit-add", kit, {"plain": plain, "steps": steps, "programs": me["programs"], "missing": me["missing"],
                                     "functional": me.get("functional", [])},
                    actions=[] if status == OK else [Action(("kit", "add"), f"Try {kit} again", {"kit": kit})], status=status)
+
+
+@command("kit", "sync", category="setup", summary="Bring the tools that float with their newest release up to date, for every kit or for one",
+         args=(Arg("kit", "KIT", positional=True, help="only this kit's tools; all of them when left out"),))
+def kit_sync(ctx, kit=None):
+    """0003-kits FR-017: what an ordinary `update` leaves alone. Only what is installed is looked at; nothing new is added."""
+    if kit:
+        kitrun.get(kit)
+    r = kitrun.refresh_installed(ctx, kit)
+    return Resource("kit-sync", kit or "all", {"plain": r["plain"], "tools": r["tools"], "updated": r.get("updated", []), "failed": r.get("failed", [])},
+                    status=OK if r["status"] == "ok" else FAILED)
+
+
+@command("kit", "check", category="check", summary="Ask the publishers of the tools that float what their newest releases are and how each would be checked; installs nothing",
+         args=(Arg("kit", "KIT", positional=True, help="only this kit's tools; all of them when left out"),))
+def kit_check(ctx, kit=None):
+    """0003-kits FR-018: for a person to run once on a machine that can reach GitHub, npm, PyPI and AWS, to see that every tool can be found and checked."""
+    if kit:
+        kitrun.get(kit)
+    if ctx.offline:
+        raise WsError("offline", "kit check needs the network", "This asks each publisher, so it needs the network.", exit_code=3)
+    rows = kitrun.verify(kit)
+    bad = [r for r in rows if r["status"] != "ok"]
+    plain = (f"All {len(rows)} tools that float can be found and checked." if not bad else
+             f"{len(bad)} of {len(rows)} tools that float could not be found or checked: " + ", ".join(r["name"] for r in bad) + ".") if rows else "No kit has a tool that floats."
+    return Resource("kit-check", kit or "all", {"plain": plain, "tools": rows}, status=OK if not bad else FAILED)

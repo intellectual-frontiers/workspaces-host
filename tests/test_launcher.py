@@ -107,3 +107,25 @@ printf '#!/bin/sh\nexit 0\n' > "{store}/uv/{pins['UV_VERSION']}/.mise-bins/uv"; 
         d = tomllib.loads((REPO / "pyproject.toml").read_text())
         self.assertEqual(d["project"]["dependencies"], [])
         self.assertTrue((REPO / "uv.lock").is_file())
+
+
+class PythonPin(unittest.TestCase):
+    """The newest Python is the one everything runs on: ws-host's own pin, its package floor, and the pin in every sibling repository that is here (0001-ws-host FR-003)."""
+
+    def pin(self, root, rel=".workspaces-host/toolchain.d/python.toml"):
+        import re
+        m = re.search(r'^version = "([^"]+)"', (root / rel).read_text(), re.M)
+        return m.group(1)
+
+    def test_the_floor_in_pyproject_is_the_pinned_minor_version(self):
+        import re
+        pinned = self.pin(REPO)
+        floor = re.search(r'requires-python = ">=([0-9.]+)"', (REPO / "pyproject.toml").read_text()).group(1)
+        self.assertEqual(floor, ".".join(pinned.split(".")[:2]))
+        self.assertIn(f"PYTHON_VERSION={pinned}", (REPO / "ws_host" / "bootstrap.env").read_text())
+
+    def test_every_sibling_repository_that_is_here_pins_the_same_python(self):
+        pinned = self.pin(REPO)
+        for root in sorted(REPO.parent.iterdir()):
+            if root != REPO and (root / ".workspaces-host" / "toolchain.d" / "python.toml").is_file():
+                self.assertEqual(self.pin(root), pinned, f"{root.name} pins another Python than ws-host does")

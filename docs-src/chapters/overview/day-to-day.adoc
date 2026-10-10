@@ -26,6 +26,15 @@ ready, the window says so in one line, and `ws-host update --check` shows what i
 brings `ws-host` up to date along with your repositories, so running it is enough. The check lives in the marked lines of your `~/.bashrc` (or
 fish's `config.fish`) that `ws-host shell add` writes, so deleting the lines that mention `update` turns the reminder off.
 
+The cloud command lines (`aws`, `az`, `wrangler`, `railway` and the rest) and the modern terminal tools (`eza`, `bat`, `delta` and the rest) always float with their newest
+release, and they change often. `ws-host update` leaves them alone so that it stays quick. When you want them current, run:
+
+----
+ws-host update --tools
+----
+
+`ws-host kit check` first tells you which are behind without changing anything, and `ws-host kit sync` is the same update for one kit's tools.
+
 == How the terminal looks
 
 At a terminal, `ws-host` shows sections with a heading, rows with a mark you read at a glance (✅ fine, ⚠️ look at this, ❌ failed, ⏭️ skipped,

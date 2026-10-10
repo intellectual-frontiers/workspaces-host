@@ -113,9 +113,18 @@ a kit installs what the distribution ships, so two machines may differ, and
   checksum file beside it), or the publisher's detached signature checked with `gpg` against a key that ships with ws-host and has the fingerprint the publisher publishes, or, for an npm or
   PyPI package, the registry's own integrity for the version, which its manager checks; with none of these it MUST refuse. A package MUST be installed with ws-host's own Node or uv into a folder of its
   own, and the program a person runs MUST find that Node by asking ws-host. A newer version MUST be installed beside the one in use and made current only when complete, the one before it kept
-  and older ones removed. `ws-host update` MUST look for a newer release of every floating tool that is installed, whichever kit put it there, `kit add` MUST look for those of the kit it installs, and `workspace ensure` MAY look
-  at most every six hours; a look that cannot be made MUST leave what is installed alone and not fail, and `--offline` MUST install nothing new. The `cloud` kit MUST be exactly the `aws`
+  and older ones removed. What is installed MUST NOT be looked into by an ordinary `ws-host update`, `workspace ensure` or install, so that they stay quick; `kit sync [KIT]` and `ws-host update --tools` MUST look for a newer release of every floating tool that is installed (or of one kit's), whichever kit put it there, and `kit add` MUST look for those of the kit it installs;
+  a look that cannot be made MUST leave what is installed alone and not fail, and `--offline` MUST install nothing new. The `cloud` kit MUST be exactly the `aws`
   (aws, sam, cdk), `azure` (az, azd), `cloudflare` (wrangler, cloudflared) and `railway` kits together. This replaces FR-006's pinned checksum for these tools alone.
+- **FR-018**: The `base` kit MUST install these modern command-line tools as floating tools (FR-017): eza, zoxide, fzf, yazi, bat, delta, sd, yq, glow, btop, dust, duf, procs, just,
+  watchexec, hyperfine, tokei, lazygit, tealdeer, xh, shfmt and actionlint; `tree` and `ncdu` come from the distribution's own packages. Each is found by the name of its release file for
+  the machine's architecture, and refused unless it matches the checksum GitHub states for that file. `kit check` MUST ask each publisher for the newest release and say which
+  installed tools are behind, and MUST change nothing.
+- **FR-019**: The `modern-cli` kit MUST make `bash`, `fish` (where installed) and `git` use those tools, through chezmoi (0010-managed-config), in marked lines that never touch
+  anything outside them: `ls`, `ll`, `la`, `lt` and `tree` by eza (with icons, which need a Nerd Font), `cat` by bat in plain form without a pager, `top` by btop, `..` and `...`, zoxide's
+  `z` and fzf's keys; and in `~/.gitconfig`, placed first so a person's own settings win, delta as git's pager and diff filter and `zdiff3` conflicts. Every shell line MUST be used only
+  when its program is installed, and `grep`, `find`, `sed`, `ps`, `du` and `df` MUST NOT be replaced. `workspace ensure` MUST apply it by default when the tools are installed, and
+  `WS_HOST_MODERN=no` MUST opt out; `WS_HOST_PROMPT=plain` MUST leave the icons out. After a kit installs, ws-host MUST suggest `ws-host kit add modern-cli` until it is applied.
 
 ## Declared kits
 

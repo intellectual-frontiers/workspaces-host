@@ -3,7 +3,9 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
+from pathlib import Path
 
 from ws_host.lib import chezmoi, managed
 
@@ -149,3 +151,64 @@ class Config(Home):
         (self.home / ".bashrc").write_text(managed.with_block("", "bash", "t"))
         code, doc = self.run_json("config", "show")
         self.assertEqual(code, 3, doc)
+
+
+class Modern(Home):
+    """0003-kits FR-019: the modern-cli lines in bash, fish and git, from pure text functions, checked by the shells and by git themselves."""
+
+    def test_each_file_gets_the_lines_once_and_a_second_run_changes_nothing(self):
+        for kind in ("bash", "fish", "git"):
+            a = managed.with_modern("mine\n", kind)
+            self.assertTrue(a.startswith("mine\n") if kind != "git" else a.endswith("mine\n"), kind)
+            self.assertEqual(managed.with_modern(a, kind), a)
+            self.assertEqual(managed.with_modern(a, kind, icons=False).count(managed.MODERN_BEGIN), 1)
+
+    def test_icons_are_on_unless_the_plain_prompt_was_chosen(self):
+        self.assertIn("--icons=auto", managed.modern_block("bash"))
+        self.assertNotIn("--icons", managed.modern_block("bash", icons=False))
+        self.assertIn("alias ll", managed.modern_block("fish"))
+
+    def test_bash_accepts_the_lines_and_the_old_commands_stay_when_a_tool_is_missing(self):
+        text = managed.with_modern("", "bash")
+        self.assertEqual(subprocess.run(["bash", "-n"], input=text, text=True, capture_output=True).returncode, 0)
+        out = subprocess.run(["bash", "--norc", "-i", "-c", text + '\nalias ll'], text=True, capture_output=True, env={"PATH": "/usr/bin:/bin", "HOME": "/nonexistent"})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertIn("ls -lh", out.stdout)
+
+    def test_git_reads_the_lines_and_a_value_set_below_them_wins(self):
+        text = managed.with_modern("[core]\n\tpager = less\n", "git")
+        f = Path(tempfile.mkdtemp()) / "gitconfig"
+        f.write_text(text)
+        out = subprocess.run(["git", "config", "--file", str(f), "--get-all", "core.pager"], capture_output=True, text=True)
+        self.assertEqual(out.stdout.split(), ["delta", "less"])
+        self.assertEqual(subprocess.run(["git", "config", "--file", str(f), "core.pager"], capture_output=True, text=True).stdout.strip(), "less")
+
+    def test_a_block_without_its_end_line_is_refused(self):
+        with self.assertRaises(managed.MarkersLost):
+            managed.with_modern(managed.MODERN_BEGIN + "\nx\n", "bash")
+
+    def test_one_script_can_run_the_prompt_and_the_modern_lines_in_turn(self):
+        both = managed.run("chain", [json.dumps([["bash", "$HOME/t.json"], ["modern-bash", "icons"]])], "keep\n")
+        self.assertIn("oh-my-posh", both)
+        self.assertIn("zoxide", both)
+        self.assertTrue(both.startswith("keep\n"))
+
+
+@unittest.skipUnless(chezmoi_for_tests(), "chezmoi could not be had")
+class ModernApplied(Home):
+    def test_apply_writes_bash_and_git_through_chezmoi_keeps_the_prompt_and_is_current_the_second_time(self):
+        from ws_host.lib import modern
+        (self.home / ".bashrc").write_text("alias a=b\n")
+        self.run_json("shell", "add", "bash")
+        with_prompt = (self.home / ".bashrc").read_text()
+        r = modern.apply()
+        self.assertIn("bash modern tools", r["changed"])
+        text = (self.home / ".bashrc").read_text()
+        self.assertTrue(text.startswith(with_prompt.rstrip("\n")))
+        self.assertIn("oh-my-posh", text)
+        self.assertIn("zoxide init bash", text)
+        self.assertTrue((self.home / ".gitconfig").read_text().startswith(managed.MODERN_BEGIN))
+        self.assertEqual(modern.apply()["changed"], [])
+        self.assertTrue(modern.configured())
+        code, doc = self.run_json("config", "check")
+        self.assertEqual(code, 0, doc)

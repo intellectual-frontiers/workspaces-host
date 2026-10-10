@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 
 from ..core.kit import Check, Download, Kit
+from . import _tools
 
 
 def _run(argv, cwd=None, input=None, timeout=120, env=None):
@@ -132,7 +133,7 @@ class Base(Kit):
             out.append(GLAB)
         if distro["id"] != "debian":
             out.append(CHROME)
-        return out
+        return out + list(_tools.TOOLS)
 
     def links(self, distro):
         return {"fd": ("fdfind",)}
@@ -143,6 +144,7 @@ class Base(Kit):
               Check("curl", "curl"), Check("wget", "wget"), Check("python3", "python3"), Check("uv", "uv"), Check("node", "node"),
               Check("ImageMagick", "magick", or_programs=("convert",)), Check("cwebp", "cwebp", ("-version",)), Check("dwebp", "dwebp", ("-version",)),
               Check("sqlite3", "sqlite3"), Check("duckdb", "duckdb"), Check("shellcheck", "shellcheck"), Check("chromium", "chromium")]
+        c += _tools.checks()
         c += [Check("userland works", run=userland, needs=("sed", "find", "xargs", "diff", "cmp", "patch", "tar", "gzip", "bzip2", "xz", "zip", "unzip", "file", "which", "ps", "hostname", "tput", "rsync", "bc", "grep", "awk", "less")),
               Check("ImageMagick reads and writes WebP", run=webp, needs=("cwebp", "dwebp", "magick|identify")),
               Check("Chromium prints a page", run=chromium, needs=("chromium",))]

@@ -7,6 +7,7 @@ and writing it only when it differs (`apply`). A person's own chezmoi, if they h
 configuration, state and source on every call, and the `chezmoi` it runs is the one pinned here, fetched and verified like `mise`."""
 from __future__ import annotations
 
+import json
 import os
 import re
 import shlex
@@ -117,9 +118,13 @@ def _source_name(rel: Path) -> Path:
     return Path(*parts)
 
 
-def _script(t: Target) -> str:
+def _script(t: Target, also: tuple[Target, ...] = ()) -> str:
+    """The modify script for a file; when several managed things share it (the prompt and the modern tools share a shell's startup file), one script runs them in turn."""
     root = Path(__file__).resolve().parents[2]
-    argv = [sys.executable, "-m", "ws_host.lib.managed", t.kind, *t.args]
+    if also:
+        argv = [sys.executable, "-m", "ws_host.lib.managed", "chain", json.dumps([[x.kind, *x.args] for x in (t, *also)])]
+    else:
+        argv = [sys.executable, "-m", "ws_host.lib.managed", t.kind, *t.args]
     return ("#!/bin/sh\n# Written by `ws-host config ensure`; chezmoi runs it on the file's text. Do not edit: the next run rewrites it.\n"
             f"PYTHONPATH={shlex.quote(str(root))} PYTHONDONTWRITEBYTECODE=1 exec {' '.join(shlex.quote(a) for a in argv)}\n")
 
@@ -129,14 +134,18 @@ def render(targets: list[Target]) -> Path:
     src = source_dir()
     shutil.rmtree(src, ignore_errors=True)
     src.mkdir(parents=True)
+    by_path: dict[Path, list[Target]] = {}
     for t in targets:
+        by_path.setdefault(t.path, []).append(t)
+    for group in by_path.values():
+        t = group[0]
         try:
             rel = t.path.relative_to(paths.home())
         except ValueError:
             raise OutsideHome(str(t.path))
         f = src / _source_name(rel)
         f.parent.mkdir(parents=True, exist_ok=True)
-        f.write_text(_script(t), encoding="utf-8")
+        f.write_text(_script(t, tuple(group[1:])), encoding="utf-8")
         f.chmod(0o755)
     return src
 

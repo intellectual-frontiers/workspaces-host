@@ -41,7 +41,7 @@ for _id, _title, _icon in (
     ("config show", "List Managed Files", None), ("completion list", "List Completion Values…", None),
     ("context", "Show Context", None), ("docs build", "Build Guide", "book"), ("docs generate", "Generate Guide Reference", None),
     ("doctor", "Check Machine", "pulse"), ("fresh", "Check Generated Files", None), ("help", "Learn Daily Work", "book"),
-    ("kit add", "Install Kit…", "cloud-download"), ("kit list", "List Kits", None), ("kit show", "Show Kit…", None),
+    ("kit add", "Install Kit…", "cloud-download"), ("kit sync", "Update Floating Tools", "sync"), ("kit check", "Check Floating Tools", None), ("kit list", "List Kits", None), ("kit show", "Show Kit…", None),
     ("provider add", "Enable Provider…", "plug"), ("provider list", "List Providers", None), ("provider remove", "Disable Provider…", "trash"),
     ("provider run", "Run With Provider…", "play"), ("provider show", "Show Provider…", None),
     ("system ensure", "Install System Libraries", "server"),

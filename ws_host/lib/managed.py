@@ -58,6 +58,74 @@ def block(shell: str, theme: str) -> str:
     return f"{BEGIN.format(shell=shell)}\n{body}\n{END}\n"
 
 
+MODERN_BEGIN = "# >>> workspaces-host: modern-cli (ws-host kit add modern-cli) >>>"
+MODERN_COMMENT = ("# Delete these lines to go back to the old commands, or put WS_HOST_MODERN=no in ~/.config/workspaces-host/ws-host.env so setup does not add them again.\n"
+                  "# Each line is used only when its program is installed. Icons need a Nerd Font in your terminal: put WS_HOST_PROMPT=plain in the same file to leave them out.")
+
+
+def modern_block(kind: str, icons: bool = True) -> str:
+    """The marked lines that make bash, fish or git use the modern tools (0003-kits FR-019): aliases for the commands people type, the shell hooks of zoxide and fzf,
+    and git's pager. Every line checks that its program is there, so removing a tool never breaks a terminal."""
+    i = " --icons=auto" if icons else ""
+    if kind == "bash":
+        body = ('if [[ $- == *i* ]]; then\n'
+                '  if command -v eza >/dev/null 2>&1; then\n'
+                f"    alias ls='eza --group-directories-first{i}'\n"
+                f"    alias ll='eza -l --group-directories-first --git{i}'\n"
+                f"    alias la='eza -la --group-directories-first --git{i}'\n"
+                f"    alias lt='eza --tree --level=2{i}'\n"
+                f"    alias tree='eza --tree{i}'\n"
+                '  else\n'
+                "    alias ll='ls -lh'\n"
+                "    alias la='ls -lAh'\n"
+                '  fi\n'
+                "  command -v bat >/dev/null 2>&1 && alias cat='bat --plain --paging=never'\n"
+                "  command -v btop >/dev/null 2>&1 && alias top='btop'\n"
+                "  alias ..='cd ..'\n"
+                "  alias ...='cd ../..'\n"
+                '  command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init bash)"\n'
+                '  command -v fzf >/dev/null 2>&1 && fzf --bash >/dev/null 2>&1 && eval "$(fzf --bash)"\n'
+                'fi')
+    elif kind == "fish":
+        body = ('if status is-interactive\n'
+                '  if command -q eza\n'
+                f"    alias ls 'eza --group-directories-first{i}'\n"
+                f"    alias ll 'eza -l --group-directories-first --git{i}'\n"
+                f"    alias la 'eza -la --group-directories-first --git{i}'\n"
+                f"    alias lt 'eza --tree --level=2{i}'\n"
+                f"    alias tree 'eza --tree{i}'\n"
+                '  else\n'
+                "    alias ll 'ls -lh'\n"
+                "    alias la 'ls -lAh'\n"
+                '  end\n'
+                "  command -q bat; and alias cat 'bat --plain --paging=never'\n"
+                "  command -q btop; and alias top btop\n"
+                "  alias .. 'cd ..'\n"
+                "  alias ... 'cd ../..'\n"
+                '  command -q zoxide; and zoxide init fish | source\n'
+                '  command -q fzf; and fzf --fish 2>/dev/null | source\n'
+                'end')
+    else:
+        return (f"{MODERN_BEGIN}\n# Delete these lines to go back to git's own look. They sit first in the file, so anything you set yourself below wins.\n"
+                '[core]\n\tpager = delta\n[interactive]\n\tdiffFilter = delta --color-only\n[delta]\n\tnavigate = true\n\tline-numbers = true\n'
+                '[merge]\n\tconflictstyle = zdiff3\n' + END + "\n")
+    return f"{MODERN_BEGIN}\n{MODERN_COMMENT}\n{body}\n{END}\n"
+
+
+def with_modern(text: str, kind: str, icons: bool = True) -> str:
+    """The file's text with the modern-cli lines added, or replaced where they already are. git's go first, so a person's own settings win; the shells' go last."""
+    new = modern_block(kind, icons)
+    if MODERN_BEGIN in text:
+        head, _, rest = text.partition(MODERN_BEGIN)
+        if END not in rest:
+            raise MarkersLost(kind)
+        _, _, tail = rest.partition(END + "\n")
+        return head + new + tail
+    if kind == "git":
+        return new + ("\n" if text else "") + text
+    return text + ("" if not text or text.endswith("\n") else "\n") + ("\n" if text else "") + new
+
+
 def with_block(text: str, shell: str, theme: str, keep_existing: bool = False) -> str:
     """The file's text with the block added, or the existing block replaced (kept as it is when `keep_existing`, so a theme a person
     edited into it is never put back); nothing outside the markers is touched."""
@@ -89,21 +157,32 @@ def with_settings(text: str, wanted: dict) -> str | None:
     return json.dumps({**current, **added}, indent=2) + "\n"
 
 
-def main(argv: list[str]) -> int:
-    kind, args = argv[0], argv[1:]
-    text = sys.stdin.read()
+def run(kind: str, args: list[str], text: str) -> str:
+    if kind == "chain":
+        for k, *a in json.loads(args[0]):
+            text = run(k, a, text)
+        return text
     try:
         if kind in ("bash", "fish"):
             out = with_block(text, kind, args[0], keep_existing=os.environ.get("WS_HOST_KEEP_BLOCK") == "1")
+        elif kind.startswith("modern-"):
+            out = with_modern(text, kind[len("modern-"):], args[0] != "plain")
         elif kind == "vscode-settings":
             out = with_settings(text, json.loads(args[0]))
             out = text if out is None else out
         else:
-            print(f"unknown kind {kind}", file=sys.stderr)
-            return 2
+            raise ValueError(f"unknown kind {kind}")
     except MarkersLost:
         out = text           # a block that lost its end line is left alone; `config check` says so
-    sys.stdout.write(out)
+    return out
+
+
+def main(argv: list[str]) -> int:
+    try:
+        sys.stdout.write(run(argv[0], argv[1:], sys.stdin.read()))
+    except ValueError as e:
+        print(e, file=sys.stderr)
+        return 2
     return 0
 
 

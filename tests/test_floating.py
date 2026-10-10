@@ -123,16 +123,18 @@ class Floats(Home):
         self.pub.release("acme/fake", "azure-dev-cli_1.23.0", {"fake-linux.tar.gz": tarball("fake", "#!/bin/sh\necho 1.23.0\n")})
         self.assertEqual(floating.install(self.tool(), False, True)["version"], "1.23.0")
 
-    def test_a_quiet_look_is_not_made_again_for_a_few_hours_and_an_update_looks_anyway(self):
+    def test_what_is_installed_is_not_looked_into_unless_a_look_is_asked_for(self):
         self.pub.release("acme/fake", "v1.0.0", {"fake-linux.tar.gz": tarball("fake", "#!/bin/sh\necho 1.0.0\n")})
         f = self.tool()
         floating.install(f, False, True)
         asked = len(self.pub.hits)
-        self.assertEqual(floating.install(f, False, False)["outcome"], "present")
-        self.assertEqual(len(self.pub.hits), asked, "no second look so soon")
+        self.pub.release("acme/fake", "v1.1.0", {"fake-linux.tar.gz": tarball("fake", "#!/bin/sh\necho 1.1.0\n")})
+        self.assertEqual(floating.install(f, False)["outcome"], "present", "an ordinary install or update leaves it alone, so that it stays quick")
+        self.assertEqual(self.version_of(), "1.0.0")
+        self.assertEqual(len(self.pub.hits), asked, "and asks nobody")
         with floating.looking_fresh():
-            floating.install(f, False)
-        self.assertGreater(len(self.pub.hits), asked, "but an update looks")
+            self.assertEqual(floating.install(f, False)["outcome"], "updated")
+        self.assertEqual(self.version_of(), "1.1.0")
 
     def test_when_the_publisher_cannot_be_reached_what_is_installed_is_kept_and_nothing_fails(self):
         self.pub.release("acme/fake", "v1.0.0", {"fake-linux.tar.gz": tarball("fake", "#!/bin/sh\necho 1.0.0\n")})
@@ -257,7 +259,7 @@ class CloudKits(Home):
     def test_the_four_kits_and_the_cloud_kit_are_there_and_the_cloud_kit_is_exactly_their_programs(self):
         from ws_host.core import registry as reg
         kits = reg.discover().kits
-        for n in ("aws", "azure", "cloudflare", "railway", "cloud"):
+        for n in ("aws", "azure", "cloudflare", "railway", "cloud", "modern-cli"):
             self.assertIn(n, kits)
         names = lambda k: [d.name for d in kits[k]().downloads({})]
         self.assertEqual(names("aws"), ["aws-cli", "aws-sam-cli", "aws-cdk"])
@@ -288,30 +290,144 @@ class CloudKits(Home):
 
 
 class Refresh(Home):
-    """`ws-host update` keeps what floats current, whichever kit put it there."""
+    """`kit sync` and `ws-host update --tools` keep what floats current, whichever kit put it there; an ordinary update does not."""
 
-    def test_an_installed_floating_tool_is_looked_at_and_one_never_installed_is_not(self):
-        from unittest import mock
-        from ws_host.core import registry as reg
-        from ws_host.lib import kitrun
-        from ws_host.core.kit import Floating
-        seen = []
-
-        def fake_install(d, offline=False):
-            seen.append(d.name)
-            return {"outcome": "updated", "version": "2", "previous": "1"}
+    def setUp(self):
+        super().setUp()
         root = paths.tools_dir() / "wrangler"
         (root / "1").mkdir(parents=True)
         os.symlink("1", root / "current")
+
+    def test_an_installed_floating_tool_is_looked_at_and_one_never_installed_is_not(self):
+        from unittest import mock
+        from ws_host.lib import kitrun
+        seen = []
+
+        def fake_install(d, offline=False):
+            seen.append((d.name, floating._FRESH))
+            return {"outcome": "updated", "version": "2", "previous": "1"}
         ctx = type("C", (), {"offline": False})()
         with mock.patch.object(fetch, "install", fake_install):
             r = kitrun.refresh_installed(ctx)
-        self.assertEqual(seen, ["wrangler"])
+        self.assertEqual(seen, [("wrangler", True)], "asked to look, and only about what is installed")
         self.assertEqual(r["tools"], 1)
         self.assertIn("updated wrangler 1 to 2", r["plain"])
 
     def test_with_nothing_floating_installed_it_says_so_and_asks_nobody(self):
+        shutil.rmtree(paths.tools_dir() / "wrangler")
         from ws_host.lib import kitrun
-        ctx = type("C", (), {"offline": False})()
-        r = kitrun.refresh_installed(ctx)
+        r = kitrun.refresh_installed(type("C", (), {"offline": False})())
         self.assertEqual(r["tools"], 0)
+
+    def test_kit_sync_can_be_for_one_kit(self):
+        from unittest import mock
+        from ws_host.lib import kitrun
+        seen = []
+        with mock.patch.object(fetch, "install", lambda d, offline=False: seen.append(d.name) or {"outcome": "present", "version": "1", "previous": ""}):
+            kitrun.refresh_installed(type("C", (), {"offline": False})(), "aws")
+            self.assertEqual(seen, [], "wrangler belongs to the cloudflare kit, not aws")
+            kitrun.refresh_installed(type("C", (), {"offline": False})(), "cloud")
+        self.assertEqual(seen, ["wrangler"])
+
+    def test_the_command_exists_and_names_an_unknown_kit(self):
+        code, doc = self.run_json("kit", "sync", "nope")
+        self.assertEqual(code, 2)
+        code, doc = self.run_json("kit", "sync", "--offline")
+        self.assertEqual(code, 0, doc)
+
+
+def zipball(files: dict[str, str]) -> bytes:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        for name, body in files.items():
+            info = zipfile.ZipInfo(name)
+            info.external_attr = 0o755 << 16
+            z.writestr(info, body)
+    return buf.getvalue()
+
+
+class Chosen(Home):
+    """A release file chosen by its name, and its programs found wherever the archive put them."""
+
+    def setUp(self):
+        super().setUp()
+        self.pub = Publisher()
+        self.addCleanup(self.pub.stop)
+        os.environ["WS_HOST_GITHUB_API"] = self.pub.url
+        os.environ["GH_TOKEN"] = "not-a-real-token"
+
+    def test_the_file_for_linux_on_this_machine_is_chosen_by_its_name_from_what_real_projects_publish(self):
+        pick = floating.pick_asset
+        bat = ["bat-v0.25.0-x86_64-unknown-linux-gnu.tar.gz", "bat-v0.25.0-x86_64-unknown-linux-musl.tar.gz", "bat-v0.25.0-aarch64-unknown-linux-gnu.tar.gz", "bat_0.25.0_amd64.deb",
+               "bat-v0.25.0-x86_64-apple-darwin.tar.gz", "bat-v0.25.0-x86_64-pc-windows-msvc.zip", "sha256sums.txt", "bat-v0.25.0-arm-unknown-linux-gnueabihf.tar.gz"]
+        self.assertEqual(pick(bat, "x86_64"), "bat-v0.25.0-x86_64-unknown-linux-musl.tar.gz", "a static build is preferred")
+        self.assertEqual(pick(bat, "aarch64"), "bat-v0.25.0-aarch64-unknown-linux-gnu.tar.gz")
+        self.assertEqual(pick(["tealdeer-linux-x86_64-musl", "tealdeer-linux-x86_64-musl.sha256", "tealdeer-macos-x86_64"], "x86_64"), "tealdeer-linux-x86_64-musl", "a plain program")
+        self.assertEqual(pick(["btop-x86_64-linux-musl.tbz", "btop-aarch64-linux-musl.tbz", "btop-x86_64-linux-musl.tbz.sha256"], "x86_64"), "btop-x86_64-linux-musl.tbz")
+        self.assertEqual(pick(["procs-v0.14.10-x86_64-linux.zip", "procs-v0.14.10-aarch64-linux.zip", "procs-v0.14.10-x86_64-mac.zip"], "aarch64"), "procs-v0.14.10-aarch64-linux.zip")
+        self.assertEqual(pick(["cloudflared-linux-amd64", "cloudflared-linux-amd64.deb", "cloudflared-linux-amd64.rpm", "cloudflared-linux-arm64"], "x86_64"), "cloudflared-linux-amd64")
+        self.assertIsNone(pick(["tool-darwin-amd64.tar.gz", "tool-windows-amd64.zip"], "x86_64"), "nothing fits: it refuses rather than guess")
+
+    def tool(self, binaries):
+        return Floating("chosen", floating.github_auto("acme/chosen"), binaries=binaries, auto=True)
+
+    def arch_words(self):
+        return "x86_64" if fetch.arch() == "x86_64" else "aarch64"
+
+    def test_a_program_in_a_folder_of_an_archive_is_found_and_linked(self):
+        a = self.arch_words()
+        data = tarball(f"chosen-1.2.3-{a}-unknown-linux-musl/chosen", "#!/bin/sh\necho chosen 1.2.3\n")
+        self.pub.release("acme/chosen", "v1.2.3", {f"chosen-1.2.3-{a}-unknown-linux-musl.tar.gz": data, "chosen-1.2.3-x86_64-apple-darwin.tar.gz": b"no"})
+        r = floating.install(self.tool({"chosen": "chosen"}), False, True)
+        self.assertEqual((r["outcome"], r["version"]), ("installed", "1.2.3"))
+        self.assertEqual(subprocess.run([str(paths.bin_dir() / "chosen")], capture_output=True, text=True).stdout.strip(), "chosen 1.2.3")
+
+    def test_a_single_downloaded_program_is_kept_under_the_name_it_is_linked_by(self):
+        a = "amd64" if fetch.arch() == "x86_64" else "arm64"
+        self.pub.release("acme/chosen", "v2.0.0", {f"chosen-linux-{a}": b"#!/bin/sh\necho chosen 2\n"})
+        floating.install(self.tool({"chosen": "chosen"}), False, True)
+        self.assertEqual(subprocess.run([str(paths.bin_dir() / "chosen")], capture_output=True, text=True).stdout.strip(), "chosen 2")
+
+    def test_a_program_that_has_another_name_in_the_release_is_found_by_the_names_it_may_have(self):
+        a = "amd64" if fetch.arch() == "x86_64" else "arm64"
+        data = zipball({f"yq_linux_{a}": "#!/bin/sh\necho yq\n", "yq.1": "man page"})
+        self.pub.release("acme/chosen", "v4.0.0", {f"yq_linux_{a}.zip": data})
+        floating.install(self.tool({"yq": "yq_linux_amd64|yq_linux_arm64|yq"}), False, True)
+        self.assertEqual(subprocess.run([str(paths.bin_dir() / "yq")], capture_output=True, text=True).stdout.strip(), "yq")
+
+    def test_a_release_without_the_program_installs_nothing(self):
+        a = self.arch_words()
+        self.pub.release("acme/chosen", "v1.0.0", {f"chosen-{a}-linux.tar.gz": tarball("other", "#!/bin/sh\n")})
+        with self.assertRaises(fetch.FetchError) as c:
+            floating.install(self.tool({"chosen": "chosen"}), False, True)
+        self.assertEqual(c.exception.code, "no-program")
+        self.assertFalse((paths.bin_dir() / "chosen").exists())
+        self.assertFalse((paths.tools_dir() / "chosen" / "1.0.0").exists())
+
+    def test_a_release_with_no_file_for_this_machine_is_refused_in_words(self):
+        self.pub.release("acme/chosen", "v1.0.0", {"chosen-windows-amd64.zip": b"x"})
+        with self.assertRaises(fetch.FetchError) as c:
+            floating.install(self.tool({"chosen": "chosen"}), False, True)
+        self.assertEqual(c.exception.code, "no-asset")
+
+    def test_kit_check_asks_each_publisher_and_installs_nothing(self):
+        from ws_host.lib import kitrun
+        os.environ["WS_HOST_NPM_REGISTRY"] = os.environ["WS_HOST_PYPI"] = self.pub.url
+        rows = kitrun.verify("railway")
+        self.assertEqual([r["name"] for r in rows], ["railway"])
+        self.assertEqual(rows[0]["status"], "fail", "the stand-in has no such release, and that is said, not hidden")
+        self.assertFalse((paths.tools_dir() / "railway").exists())
+
+
+class BaseTools(Home):
+    def test_base_has_the_modern_tools_as_floating_binaries_and_checks_each(self):
+        from ws_host.core import registry as reg
+        base = reg.discover().kits["base"]()
+        d = {"id": "debian", "codename": "trixie", "id_like": ""}
+        floats = [x.name for x in base.downloads(d) if isinstance(x, Floating)]
+        want = ["eza", "zoxide", "fzf", "yazi", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "tokei", "lazygit", "tealdeer", "xh", "shfmt", "actionlint"]
+        self.assertEqual(floats, want)
+        programs = {c.program for c in base.checks(d) if c.program}
+        for p in ("eza", "zoxide", "fzf", "yazi", "ya", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "tokei", "lazygit", "tldr", "xh", "shfmt", "actionlint"):
+            self.assertIn(p, programs, p)
+        self.assertNotIn("tree", programs, "eza --tree stands in for it")
