@@ -72,8 +72,13 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 
 ## Kits
 
+- `aws`: the AWS CLI v2, the SAM CLI and the CDK, always the newest release
+- `azure`: the Azure CLI (az) and the Azure Developer CLI (azd), always the newest release
 - `base`: Standard userland, git, gh, glab, jq, ripgrep, fd, curl, wget, python3, uv, Node.js, ImageMagick with WebP, sqlite3, DuckDB, shellcheck, Chromium
+- `cloud`: the aws, azure, cloudflare and railway kits together
+- `cloudflare`: Wrangler (Workers, Pages) and cloudflared (tunnels), always the newest release
 - `press`: TeX Live (LuaLaTeX, XeTeX), latexmk, poppler, qpdf, rsvg, Java, epubcheck, asciidoctor, potrace
+- `railway`: the Railway CLI, always the newest release
 - `rust`: Rust stable (official tarball, no rustup), build-essential, cmake, pkg-config, perl
 - `shell`: fish 4 and oh-my-posh, with the ws-host-pretty and ws-host-plain prompt themes; bash works as well
 

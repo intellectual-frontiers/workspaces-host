@@ -1,10 +1,12 @@
 """`kit list|show|add` (0003-kits FR-001 to FR-004)."""
 from __future__ import annotations
 
+import os
+
 from ..core import kits_state, machine, registry as reg, types
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, MISSING, OK, Resource, WsError
-from ..install import apt, fetch
+from ..install import apt, fetch, floating
 from ..lib import kitrun
 
 types.KIT.validate = lambda v, ctx: None if v in reg.discover().kits else f"{v!r} is not a kit I have ({', '.join(sorted(reg.discover().kits))})"
@@ -44,10 +46,11 @@ def kit_add(ctx, kit):
                                         "packages_to_install": p["to_install"], "unavailable": p["unavailable"], "downloads": p["downloads"]})
         return
     steps, status = [], OK
-    for step, st, plain in kitrun.install(ctx, obj, kit):
-        yield Resource("progress", step, {"plain": plain, "step": step, "status": st})
-        if st != "log":                 # what apt said is shown as it happens, not kept as a step
-            steps.append({"name": step, "status": st, "plain": plain})
+    with floating.looking_fresh():          # asked for by name: look for the newest, whatever the last look found
+        for step, st, plain in kitrun.install(ctx, obj, kit):
+            yield Resource("progress", step, {"plain": plain, "step": step, "status": st})
+            if st != "log":                 # what apt said is shown as it happens, not kept as a step
+                steps.append({"name": step, "status": st, "plain": plain})
     results = kits_state.kit_report(functional=True)
     me = [r for r in results if r["name"] == kit][0]
     bad = [s for s in steps if s["status"] == "fail"]

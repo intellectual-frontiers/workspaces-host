@@ -150,7 +150,7 @@ class Fetch(Home):
 class Contract(Home):
     def test_kits_are_found_by_presence_with_unique_names(self):
         r = reg.discover()
-        self.assertEqual(sorted(r.kits), ["base", "press", "rust", "shell"])
+        self.assertEqual(sorted(r.kits), ["aws", "azure", "base", "cloud", "cloudflare", "press", "railway", "rust", "shell"])
         self.assertEqual(r.conflicts, [])
         for name, cls in r.kits.items():
             self.assertTrue(issubclass(cls, Kit))
@@ -162,6 +162,8 @@ class Contract(Home):
         for name, cls in reg.discover().kits.items():
             for distro in ({"id": "debian", "codename": "trixie", "id_like": ""}, {"id": "ubuntu", "codename": "noble", "id_like": "debian"}):
                 for dl in cls().downloads(distro):
+                    if dl.__class__.__name__ == "Floating":          # these float with the newest release and are checked against the publisher's own word (0003 FR-017)
+                        continue
                     self.assertTrue(dl.sha256, dl.name)
                     for arch, h in dl.sha256.items():
                         self.assertRegex(h, r"^[0-9a-f]{64}$", f"{dl.name} {arch}")
@@ -209,7 +211,7 @@ class Commands(Home):
     def test_list_show_and_an_unknown_kit(self):
         code, doc = self.run_json("kit", "list")
         self.assertEqual(code, 0)
-        self.assertEqual({k["name"] for k in doc["data"]["kits"]}, {"base", "press", "rust", "shell"})
+        self.assertEqual({k["name"] for k in doc["data"]["kits"]}, {"aws", "azure", "base", "cloud", "cloudflare", "press", "railway", "rust", "shell"})
         code, doc = self.run_json("kit", "show", "rust")
         self.assertEqual(code, 0)
         self.assertEqual(doc["data"]["downloads"][0]["name"], "rust")

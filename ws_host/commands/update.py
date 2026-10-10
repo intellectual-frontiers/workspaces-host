@@ -49,9 +49,10 @@ def _child(ctx, words: list[str]) -> tuple[int, list[dict]]:
     """Run another ws-host command with the newest code. At a person's terminal it shares the terminal, so its spinners, its progress and the questions it asks
     (enabling a repository is the person's own yes) work as ever; for a program reading JSON it answers as JSON."""
     argv = [_launcher(), *words] + (["--offline"] if ctx.offline else [])
+    env = {**os.environ, "WS_HOST_KITS_FRESH": "1"}       # an update looks for newer releases of the tools that float (0003-kits FR-017); a throttled look is not enough
     if ctx.mode == "text":
-        return subprocess.run(argv).returncode, []
-    p = subprocess.run([*argv, "--json"], capture_output=True, text=True, env={**os.environ, "WS_HOST_PROGRESS": "always"})
+        return subprocess.run(argv, env=env).returncode, []
+    p = subprocess.run([*argv, "--json"], capture_output=True, text=True, env={**env, "WS_HOST_PROGRESS": "always"})
     docs = []
     for line in p.stdout.splitlines():
         try:

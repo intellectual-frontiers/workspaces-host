@@ -108,6 +108,14 @@ a kit installs what the distribution ships, so two machines may differ, and
   manager says (the lists it fetches, each package it unpacks and sets up) MUST be shown as it says it, on standard error, and in the command's own progress lines
   for a program reading JSON; a step that says nothing for ten seconds MUST say that it is still working, for how long, and what it last said; and another package manager holding the lock MUST be
   waited for with apt saying who holds it, not left as silence. The end MUST say how many packages and how long.
+- **FR-017**: A tool that the publisher changes often MAY float: a kit then names it with no version and no checksum of its own, and ws-host MUST find the newest release from the
+  publisher when it installs, and MUST install nothing that does not match what that publisher publishes for that release: the checksum GitHub states for each release file (or one in a
+  checksum file beside it), or the publisher's detached signature checked with `gpg` against a key that ships with ws-host and has the fingerprint the publisher publishes, or, for an npm or
+  PyPI package, the registry's own integrity for the version, which its manager checks; with none of these it MUST refuse. A package MUST be installed with ws-host's own Node or uv into a folder of its
+  own, and the program a person runs MUST find that Node by asking ws-host. A newer version MUST be installed beside the one in use and made current only when complete, the one before it kept
+  and older ones removed. `ws-host update` MUST look for a newer release of every floating tool that is installed, whichever kit put it there, `kit add` MUST look for those of the kit it installs, and `workspace ensure` MAY look
+  at most every six hours; a look that cannot be made MUST leave what is installed alone and not fail, and `--offline` MUST install nothing new. The `cloud` kit MUST be exactly the `aws`
+  (aws, sam, cdk), `azure` (az, azd), `cloudflare` (wrangler, cloudflared) and `railway` kits together. This replaces FR-006's pinned checksum for these tools alone.
 
 ## Declared kits
 

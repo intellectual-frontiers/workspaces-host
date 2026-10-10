@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from ..core import kits_state, machine, progress, registry as reg
 from ..core.resource import Action, WsError
+from ..core.kit import Floating
 from ..install import apt, fetch
 
 
@@ -55,9 +56,14 @@ def install(ctx, kit, name: str):
         yield ("packages", "ok", "All the packages are already installed." if p["packages"] else "This kit needs no packages.")
     for dl in kit.downloads(d):
         try:
-            with progress.working(f"📥 Downloading {dl.name}"):
+            with progress.working(f"📥 Downloading {dl.name}" if not isinstance(dl, Floating) else f"🔎 {dl.name}: looking for the newest release"):
                 r = fetch.install(dl, offline=ctx.offline)
-            yield (f"download {dl.name}", "ok", f"{dl.name} {dl.version} was already installed." if r["outcome"] == "present" else f"Installed {dl.name} {dl.version}.")
+            if r["outcome"] == "present":
+                yield (f"download {dl.name}", "ok", r.get("note") or (f"{dl.name} {r['version']} is the newest I know of." if isinstance(dl, Floating) else f"{dl.name} {dl.version} was already installed."))
+            elif r["outcome"] == "updated":
+                yield (f"download {dl.name}", "ok", f"Updated {dl.name} from {r['previous']} to {r['version']}.")
+            else:
+                yield (f"download {dl.name}", "ok", f"Installed {dl.name} {r.get('version', dl.version)}.")
         except fetch.FetchError as e:
             yield (f"download {dl.name}", "missing" if e.code in ("offline",) else "fail", e.message)
     for link, programs in kit.links(d).items():
@@ -78,7 +84,8 @@ def ensure(ctx, declared: dict[str, list[str]]) -> dict:
             bad = True
             continue
         kit = kits[name]()
-        if all(kits_state.program_present(c.program) for c in kit.checks(machine.distro()) if c.program):
+        floats = any(isinstance(x, Floating) for x in kit.downloads(machine.distro()))
+        if not floats and all(kits_state.program_present(c.program) for c in kit.checks(machine.distro()) if c.program):
             notes.append(f"{name} is already installed")
             continue
         results = []
@@ -98,3 +105,26 @@ def ensure(ctx, declared: dict[str, list[str]]) -> dict:
         else:
             notes.append(f"{name} is installed")
     return {"status": "fail" if bad else "ok", "plain": "; ".join(notes) + ".", "actions": actions}
+
+
+def refresh_installed(ctx) -> dict:
+    """`ws-host update` keeps the tools that float current wherever they came from (0003-kits FR-017): every floating tool that is installed, whichever kit put it there, is looked at for
+    a newer release, and one that cannot be looked at is left alone. Returns what was done, in words."""
+    from ..install import floating
+    updated, kept, failed = [], [], []
+    seen: set[str] = set()
+    for kit_class in reg.discover().kits.values():
+        for dl in kit_class().downloads(machine.distro()):
+            if not isinstance(dl, Floating) or dl.name in seen or not floating.installed_version(dl):
+                continue
+            seen.add(dl.name)
+            try:
+                r = fetch.install(dl, offline=ctx.offline)
+            except fetch.FetchError as e:
+                failed.append(f"{dl.name}: {e.message}")
+                continue
+            (updated if r["outcome"] == "updated" else kept).append(f"{dl.name} {r['previous']} to {r['version']}" if r["outcome"] == "updated" else dl.name)
+    if not seen:
+        return {"status": "ok", "plain": "No tool that floats with its newest release is installed.", "tools": 0}
+    parts = ([f"updated {', '.join(updated)}"] if updated else []) + ([f"{len(kept)} already the newest"] if kept else []) + ([f"could not look at {'; '.join(failed)}"] if failed else [])
+    return {"status": "ok" if not failed else "warn", "plain": "Tools that float: " + "; ".join(parts) + ".", "tools": len(seen)}

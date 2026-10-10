@@ -112,6 +112,11 @@ def workspace_ensure(ctx):
     kit_result = kitrun.ensure(ctx, declared)
     updates.settle(cfg)
     steps.append({"name": "kits", "status": kit_result["status"], "plain": kit_result["plain"]})
+    if not ctx.dry_run:
+        yield _step("tools", "Looking for newer releases of the tools that float...")
+        tools = kitrun.refresh_installed(ctx)
+        if tools["tools"]:
+            steps.append({"name": "tools", "status": tools["status"], "plain": tools["plain"]})
     yield _step("editor", "Checking VS Code...")
     editor_actions = []
     if shutil.which("code"):

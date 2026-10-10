@@ -5,6 +5,55 @@
 
 Each kit as it installs on Debian 13 and on Ubuntu 24.04, taken from the kits' own code. Packages come from the distribution; downloads are checked against the fingerprint in the code before anything is unpacked.
 
+=== aws
+
+Deploy to Amazon Web Services: the aws, sam and cdk commands.
+
+*Packages on Debian 13:* `ca-certificates`, `gnupg`, `less`
+
+*Downloads on Debian 13:*
+
+* `aws-cli` latest, for 
+* `aws-sam-cli` latest, for 
+* `aws-cdk` latest, for 
+
+*Packages on Ubuntu 24.04:* `ca-certificates`, `gnupg`, `less`
+
+*Downloads on Ubuntu 24.04:*
+
+* `aws-cli` latest, for 
+* `aws-sam-cli` latest, for 
+* `aws-cdk` latest, for 
+
+*Checks:*
+
+* aws (`aws`)
+* sam (`sam`)
+* cdk (`cdk`)
+
+=== azure
+
+Deploy to Microsoft Azure: the az and azd commands.
+
+*Packages on Debian 13:* `ca-certificates`
+
+*Downloads on Debian 13:*
+
+* `azure-cli` latest, for 
+* `azure-dev` latest, for 
+
+*Packages on Ubuntu 24.04:* `ca-certificates`
+
+*Downloads on Ubuntu 24.04:*
+
+* `azure-cli` latest, for 
+* `azure-dev` latest, for 
+
+*Checks:*
+
+* az (`az`)
+* azd (`azd`)
+
 === base
 
 The everyday tools every repository assumes: git, GitHub and GitLab sign-in, search, images, a browser.
@@ -69,6 +118,70 @@ The everyday tools every repository assumes: git, GitHub and GitLab sign-in, sea
 * ImageMagick reads and writes WebP
 * Chromium prints a page
 
+=== cloud
+
+Deploy to AWS, Azure, Cloudflare or Railway: aws, sam, cdk, az, azd, wrangler, cloudflared and railway.
+
+*Packages on Debian 13:* `ca-certificates`, `gnupg`, `less`
+
+*Downloads on Debian 13:*
+
+* `aws-cli` latest, for 
+* `aws-sam-cli` latest, for 
+* `aws-cdk` latest, for 
+* `azure-cli` latest, for 
+* `azure-dev` latest, for 
+* `wrangler` latest, for 
+* `cloudflared` latest, for 
+* `railway` latest, for 
+
+*Packages on Ubuntu 24.04:* `ca-certificates`, `gnupg`, `less`
+
+*Downloads on Ubuntu 24.04:*
+
+* `aws-cli` latest, for 
+* `aws-sam-cli` latest, for 
+* `aws-cdk` latest, for 
+* `azure-cli` latest, for 
+* `azure-dev` latest, for 
+* `wrangler` latest, for 
+* `cloudflared` latest, for 
+* `railway` latest, for 
+
+*Checks:*
+
+* aws (`aws`)
+* sam (`sam`)
+* cdk (`cdk`)
+* az (`az`)
+* azd (`azd`)
+* wrangler (`wrangler`)
+* cloudflared (`cloudflared`)
+* railway (`railway`)
+
+=== cloudflare
+
+Deploy to Cloudflare: the wrangler and cloudflared commands.
+
+*Packages on Debian 13:* `ca-certificates`
+
+*Downloads on Debian 13:*
+
+* `wrangler` latest, for 
+* `cloudflared` latest, for 
+
+*Packages on Ubuntu 24.04:* `ca-certificates`
+
+*Downloads on Ubuntu 24.04:*
+
+* `wrangler` latest, for 
+* `cloudflared` latest, for 
+
+*Checks:*
+
+* wrangler (`wrangler`)
+* cloudflared (`cloudflared`)
+
 === press
 
 Everything needed to typeset and check books, PDFs and EPUBs.
@@ -90,6 +203,26 @@ Everything needed to typeset and check books, PDFs and EPUBs.
 * asciidoctor-pdf (`asciidoctor-pdf`)
 * potrace (`potrace`)
 * lualatex compiles fontspec, unicode-math and lualatex-math
+
+=== railway
+
+Deploy to Railway: the railway command.
+
+*Packages on Debian 13:* `ca-certificates`
+
+*Downloads on Debian 13:*
+
+* `railway` latest, for 
+
+*Packages on Ubuntu 24.04:* `ca-certificates`
+
+*Downloads on Ubuntu 24.04:*
+
+* `railway` latest, for 
+
+*Checks:*
+
+* railway (`railway`)
 
 === rust
 
