@@ -65,7 +65,10 @@ def install(ctx, kit, name: str):
             else:
                 yield (f"download {dl.name}", "ok", f"Installed {dl.name} {r.get('version', dl.version)}.")
         except fetch.FetchError as e:
-            yield (f"download {dl.name}", "missing" if e.code in ("offline",) else "fail", e.message)
+            if e.code == "unsupported-arch":
+                yield (f"download {dl.name}", "ok", f"{e.message}; I skipped it, and the distribution's own {dl.name} is used if it has one.")
+            else:
+                yield (f"download {dl.name}", "missing" if e.code in ("offline",) else "fail", e.message)
     for link, programs in kit.links(d).items():
         for prog in programs:
             if fetch.link_program(link, prog):

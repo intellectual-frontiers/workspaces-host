@@ -425,9 +425,111 @@ class BaseTools(Home):
         base = reg.discover().kits["base"]()
         d = {"id": "debian", "codename": "trixie", "id_like": ""}
         floats = [x.name for x in base.downloads(d) if isinstance(x, Floating)]
-        want = ["eza", "zoxide", "fzf", "yazi", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "tokei", "lazygit", "tealdeer", "xh", "shfmt", "actionlint"]
+        want = ["duckdb", "sqlite", "eza", "zoxide", "fzf", "yazi", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "tokei", "lazygit", "tealdeer", "xh", "shfmt", "actionlint"]
         self.assertEqual(floats, want)
         programs = {c.program for c in base.checks(d) if c.program}
         for p in ("eza", "zoxide", "fzf", "yazi", "ya", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "tokei", "lazygit", "tldr", "xh", "shfmt", "actionlint"):
             self.assertIn(p, programs, p)
         self.assertNotIn("tree", programs, "eza --tree stands in for it")
+
+
+class SqlTools(Home):
+    """0003-kits FR-020: SQLite and DuckDB float in base, and the embedded-sql kit holds the tools around them."""
+
+    def setUp(self):
+        super().setUp()
+        self.pub = Publisher()
+        self.addCleanup(self.pub.stop)
+        os.environ["WS_HOST_SQLITE_URL"] = self.pub.url
+        os.environ["WS_HOST_GITHUB_API"] = self.pub.url
+        os.environ["GH_TOKEN"] = "not-a-real-token"
+
+    def zip_of(self, body=b"#!/bin/sh\necho 3.99.0\n"):
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as z:
+            for n in ("sqlite3", "sqldiff", "sqlite3_analyzer"):
+                info = zipfile.ZipInfo(f"sqlite-tools-linux-x64-3990000/{n}")
+                info.external_attr = 0o755 << 16
+                z.writestr(info, body)
+        return buf.getvalue()
+
+    def page(self, data, sha=None):
+        sha = sha or hashlib.sha3_256(data).hexdigest()
+        self.pub.routes["/download.html"] = (f"<html><!--\nPRODUCT,3.99.0,2026/sqlite-amalgamation-3990000.zip,100,{'0' * 64}\n"
+                                             f"PRODUCT,3.99.0,2026/sqlite-tools-linux-x64-3990000.zip,{len(data)},{sha}\n-->").encode()
+        self.pub.routes["/2026/sqlite-tools-linux-x64-3990000.zip"] = data
+
+    def test_sqlite_org_is_asked_for_the_newest_tools_and_their_sha3(self):
+        data = self.zip_of()
+        self.page(data)
+        r = floating.sqlite_org("x86_64")
+        self.assertEqual((r.version, r.sha3, r.kind), ("3.99.0", hashlib.sha3_256(data).hexdigest(), "zip"))
+        self.assertTrue(r.url.endswith("/2026/sqlite-tools-linux-x64-3990000.zip"))
+
+    def test_sqlite_org_has_nothing_for_arm_and_that_is_said_in_words(self):
+        self.page(self.zip_of())
+        with self.assertRaises(fetch.FetchError) as e:
+            floating.sqlite_org("aarch64")
+        self.assertEqual(e.exception.code, "unsupported-arch")
+
+    def test_the_tools_install_when_the_sha3_matches_and_nothing_does_when_it_does_not(self):
+        if fetch.arch() != "x86_64":
+            self.skipTest("sqlite.org builds the tools for x86-64 only")
+        from ws_host.kits import base
+        self.page(self.zip_of())
+        self.assertEqual(fetch.install(base.SQLITE)["outcome"], "installed")
+        self.assertEqual(subprocess.run([str(paths.bin_dir() / "sqlite3")], capture_output=True, text=True).stdout.strip(), "3.99.0")
+        self.assertTrue((paths.bin_dir() / "sqldiff").exists())
+        shutil.rmtree(paths.tools_dir() / "sqlite")
+        for n in ("sqlite3", "sqldiff", "sqlite3_analyzer"):
+            (paths.bin_dir() / n).unlink()
+        self.page(self.zip_of(), sha="1" * 64)
+        with self.assertRaises(fetch.FetchError) as e:
+            fetch.install(base.SQLITE)
+        self.assertEqual(e.exception.code, "checksum")
+        self.assertFalse((paths.bin_dir() / "sqlite3").exists())
+
+    def test_an_architecture_the_publisher_does_not_build_for_is_skipped_not_failed(self):
+        from ws_host.core import registry as reg
+        from ws_host.lib import kitrun
+        from ws_host.core import cli  # noqa: F401
+        from ws_host.core.kit import Floating as F
+
+        class Arm(reg.discover().kits["base"]):
+            def apt(self, d):
+                return []
+
+            def downloads(self, d):
+                return [F("nothing-here", lambda a: None, binaries={"x": "x"}, archs=("riscv",))]
+
+            def links(self, d):
+                return {}
+
+            def configure(self, ctx):
+                return []
+
+        class Ctx:
+            offline, dry_run = False, False
+
+        steps = list(kitrun.install(Ctx(), Arm(), "base"))
+        row = [s for s in steps if s[0] == "download nothing-here"][0]
+        self.assertEqual(row[1], "ok", row)
+        self.assertIn("skipped", row[2])
+
+    def test_duckdb_is_chosen_by_its_cli_zip_and_not_by_the_library_zip(self):
+        from ws_host.kits import base
+        a = fetch.arch()
+        word = "amd64" if a == "x86_64" else "arm64"
+        cli = f"duckdb_cli-linux-{word}.zip"
+        self.pub.release("duckdb/duckdb", "v9.9.9", {f"libduckdb-linux-{word}.zip": b"lib", cli: b"cli", "duckdb_cli-osx-universal.zip": b"mac"})
+        r = base.DUCKDB.resolve(a)
+        self.assertEqual((r.version, r.url.rsplit("/", 1)[1]), ("9.9.9", cli))
+
+    def test_the_embedded_sql_kit_holds_the_tools_and_checks_each(self):
+        from ws_host.core import registry as reg
+        kit = reg.discover().kits["embedded-sql"]()
+        d = {"id": "debian", "codename": "trixie", "id_like": ""}
+        self.assertEqual([x.name for x in kit.downloads(d)], ["turso", "usql", "litestream", "sqruff", "dbmate", "sqlite-utils", "datasette", "harlequin", "visidata"])
+        self.assertTrue(all(isinstance(x, Floating) for x in kit.downloads(d)))
+        self.assertEqual({x.name for x in kit.downloads(d) if x.manager == "pip"}, {"sqlite-utils", "datasette", "harlequin", "visidata"})
+        self.assertEqual({c.program for c in kit.checks(d)}, {"turso", "usql", "litestream", "sqruff", "dbmate", "sqlite-utils", "datasette", "harlequin", "vd", "visidata"})

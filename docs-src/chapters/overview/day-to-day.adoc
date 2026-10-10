@@ -35,6 +35,25 @@ ws-host update --tools
 
 `ws-host kit check` first tells you which are behind without changing anything, and `ws-host kit sync` is the same update for one kit's tools.
 
+== Small databases: SQLite, DuckDB, Turso and MotherDuck
+
+`base` installs `sqlite3` (with `sqldiff` and `sqlite3_analyzer`) and `duckdb`, always the newest release. On a machine that is not x86-64, sqlite.org has no build of its tools, so the
+`sqlite3` of your distribution is the one you get, and setup says so. The `embedded-sql` kit, installed for you by default, adds what goes around them:
+
+[cols="1,3"]
+|===
+|`turso` |the Turso command line, for hosted libSQL databases
+|`usql` |one SQL client for SQLite, DuckDB, libSQL, Postgres and more
+|`litestream` |continuous backup and restore of SQLite files
+|`sqruff` |a SQL formatter and linter
+|`dbmate` |database migrations
+|`sqlite-utils`, `datasette` |load CSV and JSON into SQLite, and explore a file in your browser
+|`harlequin` |a SQL editor in the terminal for SQLite and DuckDB
+|`visidata` |explore any table-shaped file
+|===
+
+MotherDuck needs no program of its own: it is DuckDB. Put your token in `MOTHERDUCK_TOKEN` and run `duckdb`, then `ATTACH 'md:';`. ClickHouse is not part of the kit on purpose.
+
 == How the terminal looks
 
 At a terminal, `ws-host` shows sections with a heading, rows with a mark you read at a glance (✅ fine, ⚠️ look at this, ❌ failed, ⏭️ skipped,

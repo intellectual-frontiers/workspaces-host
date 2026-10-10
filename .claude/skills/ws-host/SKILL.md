@@ -79,6 +79,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - `base`: Standard userland, git, gh, glab, jq, ripgrep, fd, curl, wget, python3, uv, Node.js, ImageMagick with WebP, sqlite3, DuckDB, shellcheck, Chromium
 - `cloud`: the aws, azure, cloudflare and railway kits together
 - `cloudflare`: Wrangler (Workers, Pages) and cloudflared (tunnels), always the newest release
+- `embedded-sql`: tools for SQLite, DuckDB, Turso and MotherDuck: turso, usql, litestream, sqruff, dbmate, sqlite-utils, datasette, harlequin and visidata
 - `modern-cli`: bash, fish and git use eza, bat, btop, zoxide, fzf and delta, with the common aliases
 - `press`: TeX Live (LuaLaTeX, XeTeX), latexmk, poppler, qpdf, rsvg, Java, epubcheck, asciidoctor, potrace
 - `railway`: the Railway CLI, always the newest release

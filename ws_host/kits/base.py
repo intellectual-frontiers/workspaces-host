@@ -6,7 +6,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from ..core.kit import Check, Download, Kit
+from ..core.kit import Check, Download, Floating, Kit
+from ..install import floating
 from . import _tools
 
 
@@ -94,11 +95,10 @@ GLAB = Download("glab", GLAB_VERSION, "https://gitlab.com/gitlab-org/cli/-/relea
                 {"x86_64": "4e6c59de9f7ed2f304bf93aad01ea8f8a69584f0450ce90ad696ef81f69c69aa",
                  "aarch64": "c60ebb4cb36f276714847a118845b9b4e69f46a8080c68b21ca63f158722cdea"},
                 binaries={"glab": "bin/glab"}, strip=0)
-DUCKDB_VERSION = "1.5.6"
-DUCKDB = Download("duckdb", DUCKDB_VERSION, "https://install.duckdb.org/v{version}/duckdb_cli-linux-{goarch}.zip",
-                  {"x86_64": "6e89deac1ebbc36eed0291caf8b567b030c7b86ac35998f71854e22b3c5d5e2f",
-                   "aarch64": "c544e92c9b7c31fc53c2139802cabd8e2d1b2b3e3f933117f31611239c1402db"},
+DUCKDB = Floating("duckdb", floating.github("duckdb/duckdb", {"x86_64": r"^duckdb_cli-linux-amd64\.zip$", "aarch64": r"^duckdb_cli-linux-(arm64|aarch64)\.zip$"}),
                   binaries={"duckdb": "duckdb"}, kind="zip")
+# sqlite.org builds the command-line tools for x86-64 only; elsewhere the distribution's sqlite3 (installed above) is the one used
+SQLITE = Floating("sqlite", floating.sqlite_org, binaries={"sqlite3": "sqlite3", "sqldiff": "sqldiff", "sqlite3_analyzer": "sqlite3_analyzer"}, kind="zip", auto=True, archs=("x86_64",))
 
 USERLAND = [("sed", ("--version",)), ("find", ("--version",)), ("xargs", ("--version",)), ("diff", ("--version",)), ("cmp", ("--version",)),
             ("patch", ("--version",)), ("tar", ("--version",)), ("gzip", ("--version",)), ("unzip", ("-v",)), ("zip", ("-v",)),
@@ -128,7 +128,7 @@ class Base(Kit):
         return pkgs
 
     def downloads(self, distro):
-        out = [DUCKDB]
+        out = [DUCKDB, SQLITE]
         if not (distro["id"] == "debian" and distro.get("codename") not in ("bookworm", "bullseye")):
             out.append(GLAB)
         if distro["id"] != "debian":

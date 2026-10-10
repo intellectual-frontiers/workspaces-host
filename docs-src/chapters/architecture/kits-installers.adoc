@@ -54,7 +54,7 @@ There is no third installer. A failed download leaves nothing installed. Errors 
 
 === Who installs what, and when
 
-* `workspace ensure` installs your kits, which default to `base` and `shell` (`DEFAULT_KITS` in `core/config.py`, overridden by `WS_HOST_KIT`).
+* `workspace ensure` installs your kits, which default to `base`, `shell` and `embedded-sql` (`DEFAULT_KITS` in `core/config.py`, overridden by `WS_HOST_KIT`).
 * A repository can ask for kits with `WS_HOST_KIT` in its own `.workspaces-host/ws-host.env`; those install after the repository is copied.
 * `kit add NAME` is the explicit command and is the one that needs `sudo`. It is a `setup` command, so an agent is not offered it.
 * `kitrun.ensure` skips a kit when every check program is already on the path. I read this from the code and did not test it: a kit with an out-of-date version is not reinstalled by `workspace ensure`.

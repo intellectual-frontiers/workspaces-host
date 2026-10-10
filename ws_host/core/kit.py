@@ -37,6 +37,7 @@ class Resolved:
     version: str
     url: str = ""                         # an archive or one program; empty for a package
     sha256: str = ""                      # the publisher's own checksum of that file, when it publishes one
+    sha3: str = ""                        # or its SHA3-256, for a publisher that states that one (sqlite.org)
     signature_url: str = ""               # or a detached signature of it, checked against `key` and `fingerprint`
     key: str = ""                         # a path to the publisher's public key, shipped with ws-host
     fingerprint: str = ""
@@ -62,12 +63,13 @@ class Floating:
     package: str = ""
     version: str = "latest"
     sha256: dict[str, str] = field(default_factory=dict)   # empty: duck-types the pinned kind for the plan
+    archs: tuple[str, ...] = ARCHS        # the architectures the publisher builds for; the others keep what the distribution has
 
     def url_for(self, arch: str) -> str:
         return "the publisher's newest release, found when it is installed"
 
     def supports(self, arch: str) -> bool:
-        return arch in ARCHS
+        return arch in self.archs
 
 
 @dataclass

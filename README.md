@@ -25,6 +25,9 @@ something stops you.
 `cd` and `git diff` use them in bash and fish. The icons need a [Nerd Font](https://www.nerdfonts.com/font-downloads) in Windows Terminal (the guide has the steps);
 `WS_HOST_PROMPT=plain` leaves them out, and `WS_HOST_MODERN=no` keeps your old commands.
 
+**Small databases.** `base` has SQLite and DuckDB, and the `embedded-sql` kit (installed by default) adds Turso's CLI, usql, litestream, sqruff, dbmate, sqlite-utils, datasette, harlequin
+and visidata. MotherDuck is DuckDB with `ATTACH 'md:'`. `ws-host update --tools` brings them all to their newest release.
+
 ## For contributors
 
 Everything is Python, found by presence: a module in `ws_host/commands/`, `ws_host/kits/` or `ws_host/help/` adds a command, a kit or a help
