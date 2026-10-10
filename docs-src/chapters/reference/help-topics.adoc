@@ -126,6 +126,9 @@ ws-host onedrive list shows a folder, onedrive sync REMOTE LOCAL copies a file o
 .Work accounts
 Many organizations make an administrator approve the app that signs you in. If sign-in stops with that message, register an app of your own once: in the Microsoft Entra admin center choose App registrations, New registration, accept work accounts and Microsoft accounts for home use, add the platform Mobile and desktop with the redirect https://login.microsoftonline.com/common/oauth2/nativeclient, turn on Allow public client flows, and add the delegated Microsoft Graph permissions Files.ReadWrite.All and User.Read. Put its Application (client) ID in WS_HOST_MICROSOFT_CLIENT_ID in ~/.config/workspaces-host/ws-host.env.
 
+.If Microsoft says you do not have access
+After you pick your account, a page that says 'You don't have access to this' means your organization has not allowed the shared sign-in app. It is not a problem with your account. Register your own app as described above, then set WS_HOST_MICROSOFT_CLIENT_ID to its Application (client) ID and, if you made it for your organization only, WS_HOST_MICROSOFT_TENANT to its Directory (tenant) ID. An administrator can also grant consent for the app under Enterprise applications.
+
 .Where the sign-in is kept
 In your system keyring when there is one. On a machine without one, such as most WSL setups, in a file only you can read under ~/.IdentityService, and ws-host says so.
 
