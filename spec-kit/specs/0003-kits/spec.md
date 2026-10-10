@@ -118,7 +118,7 @@ a kit installs what the distribution ships, so two machines may differ, and
   (aws, sam, cdk), `azure` (az, azd), `cloudflare` (wrangler, cloudflared) and `railway` kits together. This replaces FR-006's pinned checksum for these tools alone.
 - **FR-018**: The `base` kit MUST install `duckdb` and SQLite's own command-line tools (`sqlite3`, `sqldiff`, `sqlite3_analyzer`) as floating tools (FR-017), where sqlite.org builds them
   (x86-64; elsewhere the distribution's `sqlite3` is the one used and ws-host MUST say so and not fail), and these modern command-line tools as floating tools (FR-017): eza, zoxide, fzf, yazi, bat, delta, sd, yq, glow, btop, dust, duf, procs, just,
-  watchexec, hyperfine, lazygit, tealdeer, xh, shfmt and actionlint; `tree` and `ncdu` come from the distribution's own packages. Each is found by the name of its release file for
+  watchexec, hyperfine, scc, lazygit, tealdeer, xh, shfmt and actionlint; `tree` and `ncdu` come from the distribution's own packages. Each is found by the name of its release file for
   the machine's architecture, and refused unless it matches the checksum GitHub states for that file. When the newest release was made without its programs, or without a checksum from its publisher for them, the newest release before it that has both MUST be used, and the version installed MUST be named. `kit check` MUST ask each publisher for the newest release and say which
   installed tools are behind, and MUST change nothing.
 - **FR-019**: The `modern-cli` kit MUST make `bash`, `fish` (where installed) and `git` use those tools, through chezmoi (0010-managed-config), in marked lines that never touch

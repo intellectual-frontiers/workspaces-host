@@ -442,10 +442,10 @@ class BaseTools(Home):
         base = reg.discover().kits["base"]()
         d = {"id": "debian", "codename": "trixie", "id_like": ""}
         floats = [x.name for x in base.downloads(d) if isinstance(x, Floating)]
-        want = ["duckdb", "sqlite", "eza", "zoxide", "fzf", "yazi", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "lazygit", "tealdeer", "xh", "shfmt", "actionlint"]
+        want = ["duckdb", "sqlite", "eza", "zoxide", "fzf", "yazi", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "scc", "lazygit", "tealdeer", "xh", "shfmt", "actionlint"]
         self.assertEqual(floats, want)
         programs = {c.program for c in base.checks(d) if c.program}
-        for p in ("eza", "zoxide", "fzf", "yazi", "ya", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "lazygit", "tldr", "xh", "shfmt", "actionlint"):
+        for p in ("eza", "zoxide", "fzf", "yazi", "ya", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "scc", "lazygit", "tldr", "xh", "shfmt", "actionlint"):
             self.assertIn(p, programs, p)
         self.assertNotIn("tree", programs, "eza --tree stands in for it")
 

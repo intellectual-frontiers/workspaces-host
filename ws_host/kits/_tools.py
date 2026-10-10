@@ -23,6 +23,7 @@ _TOOLS = (
     ("just", "casey/just", {"just": "just"}),
     ("watchexec", "watchexec/watchexec", {"watchexec": "watchexec"}),
     ("hyperfine", "sharkdp/hyperfine", {"hyperfine": "hyperfine"}),
+    ("scc", "boyter/scc", {"scc": "scc"}),
     ("lazygit", "jesseduffield/lazygit", {"lazygit": "lazygit"}),
     ("tealdeer", "tealdeer-rs/tealdeer", {"tldr": "tldr"}),
     ("xh", "ducaale/xh", {"xh": "xh"}),
