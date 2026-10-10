@@ -32,6 +32,42 @@ class Download:
 
 
 @dataclass
+class Resolved:
+    """What the newest version of a floating tool is and how to fetch it, found when it is installed (0003-kits FR-017)."""
+    version: str
+    url: str = ""                         # an archive or one program; empty for a package
+    sha256: str = ""                      # the publisher's own checksum of that file, when it publishes one
+    signature_url: str = ""               # or a detached signature of it, checked against `key` and `fingerprint`
+    key: str = ""                         # a path to the publisher's public key, shipped with ws-host
+    fingerprint: str = ""
+    integrity: str = ""                   # for a package: the registry's own integrity string for the version, which is checked after the install
+
+
+@dataclass
+class Floating:
+    """A tool that floats with its newest release (0003-kits FR-017): no version or checksum is written here. What the newest version is, and the publisher's own checksum
+    or signature for it, are found from the publisher when it is installed; nothing is unpacked or run that did not match. `manager` is empty for an archive or a program, `npm`
+    or `pip` for a package, installed with ws-host's own Node or uv into a folder of its own."""
+    name: str
+    resolve: Callable[[str], Resolved]                  # (architecture) -> the newest version
+    binaries: dict[str, str] = field(default_factory=dict)   # link name -> path inside the installed directory; {arch} and {goarch} are filled in
+    kind: str = "tar"                     # as Download.kind
+    strip: int = 1
+    steps: tuple[tuple[str, ...], ...] = ()   # install steps; {src} and {dest} are filled in. With `in_place` the steps run in the unpacked source and install into {dest}
+    in_place: bool = False                # the tool's own installer writes absolute paths, so it installs where it will stay
+    manager: str = ""
+    package: str = ""
+    version: str = "latest"
+    sha256: dict[str, str] = field(default_factory=dict)   # empty: duck-types the pinned kind for the plan
+
+    def url_for(self, arch: str) -> str:
+        return "the publisher's newest release, found when it is installed"
+
+    def supports(self, arch: str) -> bool:
+        return arch in ARCHS
+
+
+@dataclass
 class Check:
     """A program the kit provides, or a functional check that proves it works."""
     name: str

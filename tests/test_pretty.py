@@ -44,7 +44,7 @@ class Pretty(Home):
         self.assertNotIn("─", text)
         self.assertEqual(text.splitlines()[1], "audience: private")
         out = self.plain("completion", "list", "KIT")
-        self.assertEqual([l[4:] for l in out.splitlines() if l.startswith("  - ")], ["base", "press", "rust", "shell"])
+        self.assertEqual([l[4:] for l in out.splitlines() if l.startswith("  - ")], ["aws", "azure", "base", "cloud", "cloudflare", "press", "railway", "rust", "shell"])
 
     def test_json_and_html_are_never_decorated(self):
         os.environ["WS_HOST_COLOR"] = "always"

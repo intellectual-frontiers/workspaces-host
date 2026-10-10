@@ -14,7 +14,7 @@ import zipfile
 from pathlib import Path
 
 from ..core import paths, progress
-from ..core.kit import ARCHS, Download
+from ..core.kit import ARCHS, GOARCH, Download, Floating
 
 
 class FetchError(Exception):
@@ -36,19 +36,23 @@ def current_link(d: Download) -> Path:
     return paths.tools_dir() / d.name / "current"
 
 
-def is_installed(d: Download) -> bool:
+def is_installed(d) -> bool:
+    if isinstance(d, Floating):
+        from . import floating
+        return floating.is_installed(d)
     cur = current_link(d)
     return cur.is_symlink() and os.readlink(cur) == d.version and version_dir(d).is_dir()
 
 
-def download(url: str, expected: str, offline: bool = False) -> Path:
-    """Fetch url into the cache and return the file only if its SHA-256 equals `expected`."""
+def download(url: str, expected: str | None, offline: bool = False) -> Path:
+    """Fetch url into the cache and return the file only if its SHA-256 equals `expected`. With none given, the file is kept under its own SHA-256 for the caller to
+    check some other way (a signature), and what installs it then names that SHA-256 so that nothing else can be unpacked in its place."""
     if offline:
         raise FetchError("offline", f"{url} is needed and you are offline")
     cache = paths.cache_dir() / "downloads"
     cache.mkdir(parents=True, exist_ok=True)
-    final = cache / expected
-    if final.is_file() and _sha(final) == expected:
+    final = cache / expected if expected else None
+    if final is not None and final.is_file() and _sha(final) == expected:
         return final
     tmp = Path(tempfile.mkstemp(dir=cache, suffix=".part")[1])
     h = hashlib.sha256()
@@ -65,9 +69,10 @@ def download(url: str, expected: str, offline: bool = False) -> Path:
     except OSError as e:
         tmp.unlink(missing_ok=True)
         raise FetchError("unreachable", f"could not fetch {url}: {e}") from e
-    if h.hexdigest() != expected:
+    if expected and h.hexdigest() != expected:
         tmp.unlink(missing_ok=True)
         raise FetchError("checksum", f"the file at {url} is not the one this kit expects (its SHA-256 is {h.hexdigest()}, expected {expected}); nothing was installed")
+    final = cache / h.hexdigest()
     os.replace(tmp, final)
     return final
 
@@ -127,6 +132,9 @@ def _unpack(archive: Path, d: Download, dest: Path) -> None:
 
 def install(d: Download, offline: bool = False) -> dict:
     """Install one download for this machine. Returns what was done; raises FetchError and leaves nothing half-installed."""
+    if isinstance(d, Floating):
+        from . import floating
+        return floating.install(d, offline)
     a = arch()
     if not d.supports(a):
         raise FetchError("unsupported-arch", f"{d.name} {d.version} is not available for {a} in this kit")
