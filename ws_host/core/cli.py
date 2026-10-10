@@ -32,7 +32,7 @@ class Ctx:
     confirmed: bool = False     # the Workspaces Console passes --confirmed only after its modal (0041 FR-051)
 
     def interactive(self) -> bool:
-        """True where a person can be asked a question: the terminal, in text mode. The editor, MCP and a pipeline cannot be (0041 FR-082)."""
+        """True where a person can be asked a question: the terminal, in text mode. The editor, MCP and a pipeline cannot be (0041 FR-077)."""
         return self.surface == "cli" and self.mode == "text" and sys.stdin.isatty() and sys.stdout.isatty()
 
     def confirm(self, question: str) -> None:
