@@ -153,7 +153,7 @@ class Advance(Workspace):
         self.assertEqual({d["kind"] for d in docs[:-1]}, {"progress"})   # one streamed line per step, and the editor's own
         final = docs[-1]
         self.assertEqual(final["kind"], "workspace-ensure")
-        self.assertEqual([s["name"] for s in final["data"]["steps"]], ["your-kits", "completions", "sign-in", "copy", "update", "kits", "editor", "doctor"])
+        self.assertEqual([s["name"] for s in final["data"]["steps"]], ["your-kits", "modern-cli", "completions", "sign-in", "copy", "update", "kits", "editor", "doctor"])
         for n in ("site", "lib"):
             self.assertTrue((self.clone_path("acme", n) / ".git").is_dir())
 

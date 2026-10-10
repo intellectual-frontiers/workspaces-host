@@ -63,6 +63,28 @@ The everyday tools every repository assumes: git, GitHub and GitLab sign-in, sea
 *Downloads on Debian 13:*
 
 * `duckdb` 1.5.6, for aarch64, x86_64
+* `eza` latest, for 
+* `zoxide` latest, for 
+* `fzf` latest, for 
+* `yazi` latest, for 
+* `bat` latest, for 
+* `delta` latest, for 
+* `sd` latest, for 
+* `yq` latest, for 
+* `glow` latest, for 
+* `btop` latest, for 
+* `dust` latest, for 
+* `duf` latest, for 
+* `procs` latest, for 
+* `just` latest, for 
+* `watchexec` latest, for 
+* `hyperfine` latest, for 
+* `tokei` latest, for 
+* `lazygit` latest, for 
+* `tealdeer` latest, for 
+* `xh` latest, for 
+* `shfmt` latest, for 
+* `actionlint` latest, for 
 
 *Packages on Ubuntu 24.04:* `coreutils`, `sed`, `findutils`, `diffutils`, `patch`, `tar`, `gzip`, `unzip`, `zip`, `bzip2`, `xz-utils`, `file`, `less`, `debianutils`, `procps`, `hostname`, `ncurses-bin`, `rsync`, `bc`, `grep`, `gawk`, `git`, `gh`, `jq`, `ripgrep`, `fd-find`, `curl`, `wget`, `bash-completion`, `ca-certificates`, `python3`, `nodejs`, `npm`, `imagemagick`, `webp`, `libmagickcore-7.q16-10-extra|libmagickcore-6.q16-7-extra|libmagickcore-6.q16-6-extra`, `sqlite3`, `shellcheck`, `libnss3`, `libatk1.0-0t64|libatk1.0-0`, `libatk-bridge2.0-0t64|libatk-bridge2.0-0`, `libcups2t64|libcups2`, `libdrm2`, `libxkbcommon0`, `libxcomposite1`, `libxdamage1`, `libxfixes3`, `libxrandr2`, `libgbm1`, `libasound2t64|libasound2`, `libpango-1.0-0`, `libcairo2`, `libx11-6`, `libxcb1`, `libxext6`, `fonts-liberation`
 
@@ -71,6 +93,28 @@ The everyday tools every repository assumes: git, GitHub and GitLab sign-in, sea
 * `duckdb` 1.5.6, for aarch64, x86_64
 * `glab` 1.120.0, for aarch64, x86_64
 * `chrome-for-testing` 154.0.8037.92, for x86_64
+* `eza` latest, for 
+* `zoxide` latest, for 
+* `fzf` latest, for 
+* `yazi` latest, for 
+* `bat` latest, for 
+* `delta` latest, for 
+* `sd` latest, for 
+* `yq` latest, for 
+* `glow` latest, for 
+* `btop` latest, for 
+* `dust` latest, for 
+* `duf` latest, for 
+* `procs` latest, for 
+* `just` latest, for 
+* `watchexec` latest, for 
+* `hyperfine` latest, for 
+* `tokei` latest, for 
+* `lazygit` latest, for 
+* `tealdeer` latest, for 
+* `xh` latest, for 
+* `shfmt` latest, for 
+* `actionlint` latest, for 
 
 *Checks:*
 
@@ -114,6 +158,29 @@ The everyday tools every repository assumes: git, GitHub and GitLab sign-in, sea
 * duckdb (`duckdb`)
 * shellcheck (`shellcheck`)
 * chromium (`chromium`)
+* eza (`eza`)
+* zoxide (`zoxide`)
+* fzf (`fzf`)
+* yazi (`yazi`)
+* ya (`ya`)
+* bat (`bat`)
+* delta (`delta`)
+* sd (`sd`)
+* yq (`yq`)
+* glow (`glow`)
+* btop (`btop`)
+* dust (`dust`)
+* duf (`duf`)
+* procs (`procs`)
+* just (`just`)
+* watchexec (`watchexec`)
+* hyperfine (`hyperfine`)
+* tokei (`tokei`)
+* lazygit (`lazygit`)
+* tldr (`tldr`)
+* xh (`xh`)
+* shfmt (`shfmt`)
+* actionlint (`actionlint`)
 * userland works
 * ImageMagick reads and writes WebP
 * Chromium prints a page
@@ -181,6 +248,41 @@ Deploy to Cloudflare: the wrangler and cloudflared commands.
 
 * wrangler (`wrangler`)
 * cloudflared (`cloudflared`)
+
+=== modern-cli
+
+Your terminal's ls, cat, top, cd and git diff become the modern, colorful versions, and ll, la, .. work the way you expect.
+
+*Packages on Debian 13:* none
+
+*Downloads on Debian 13:*
+
+* `eza` latest, for 
+* `zoxide` latest, for 
+* `fzf` latest, for 
+* `bat` latest, for 
+* `delta` latest, for 
+* `btop` latest, for 
+
+*Packages on Ubuntu 24.04:* none
+
+*Downloads on Ubuntu 24.04:*
+
+* `eza` latest, for 
+* `zoxide` latest, for 
+* `fzf` latest, for 
+* `bat` latest, for 
+* `delta` latest, for 
+* `btop` latest, for 
+
+*Checks:*
+
+* eza (`eza`)
+* bat (`bat`)
+* btop (`btop`)
+* zoxide (`zoxide`)
+* fzf (`fzf`)
+* delta (`delta`)
 
 === press
 

@@ -64,6 +64,9 @@ def workspace_ensure(ctx):
     if cfg.prompt_theme() and not ctx.dry_run:
         yield _step("prompt", "Giving your terminal its prompt...")
         steps.append(_prompt_step(ctx, cfg.prompt_theme()))
+    if cfg.modern() and not ctx.dry_run:
+        yield _step("modern-cli", "Making your terminal use the modern tools...")
+        steps.append(_modern_step(ctx))
     yield _step("completions", "Setting up Tab completion...")
     steps.append(_completion_step())
     yield _step("sign-in", "Checking that you are signed in...")
@@ -81,6 +84,8 @@ def workspace_ensure(ctx):
     if ctx.dry_run:
         rows = [repos.state(r, cfg) for r in sorted(found, key=str)]
         todo = [("would copy " if not r["cloned"] else "would check ") + r["id"] for r in rows]
+        if cfg.modern():
+            todo.append("would make bash, fish and git use the modern tools")
         if cfg.prompt_theme():
             todo.append(f"would give your terminal the {cfg.prompt_theme()} prompt")
         yield Resource("workspace-ensure", "dry-run", {"plain": "Nothing was changed. This is what I would do.", "steps": steps,
@@ -112,11 +117,6 @@ def workspace_ensure(ctx):
     kit_result = kitrun.ensure(ctx, declared)
     updates.settle(cfg)
     steps.append({"name": "kits", "status": kit_result["status"], "plain": kit_result["plain"]})
-    if not ctx.dry_run:
-        yield _step("tools", "Looking for newer releases of the tools that float...")
-        tools = kitrun.refresh_installed(ctx)
-        if tools["tools"]:
-            steps.append({"name": "tools", "status": tools["status"], "plain": tools["plain"]})
     yield _step("editor", "Checking VS Code...")
     editor_actions = []
     if shutil.which("code"):
@@ -164,6 +164,20 @@ def _completion_step() -> dict:
             notes.append(r["plain"])
     return {"name": "completions", "status": "warn" if notes else "ok",
             "plain": " ".join(notes) if notes else f"Tab completes ws-host in {' and '.join(done)}; it starts in a new terminal window."}
+
+
+def _modern_step(ctx) -> dict:
+    """0003-kits FR-019: when the modern tools are here, bash, fish and git use them; it never fails the setup. WS_HOST_MODERN=no opts out."""
+    from ..lib import modern
+    if not shutil.which("eza") and not (paths.bin_dir() / "eza").exists():
+        return {"name": "modern-cli", "status": "ok", "plain": "The modern tools are not installed yet, so your terminal keeps its old commands. `ws-host kit add base` installs them."}
+    try:
+        r = modern.apply(ctx.offline)
+    except WsError as e:
+        return {"name": "modern-cli", "status": "warn", "plain": f"{e.plain} Run `ws-host kit add modern-cli` to try again."}
+    return {"name": "modern-cli", "status": "ok",
+            "plain": ("Made bash, fish and git use the modern tools; it shows in a new terminal window. Icons need a Nerd Font." if r["changed"]
+                      else "Your terminal already uses the modern tools.")}
 
 
 def _prompt_step(ctx, theme: str) -> dict:

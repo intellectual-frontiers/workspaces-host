@@ -5,8 +5,7 @@ from ..core.kit import Check, Floating, Kit
 from ..install import floating
 
 AZ = Floating("azure-cli", floating.pypi("azure-cli"), binaries={"az": "bin/az"}, manager="pip", package="azure-cli")
-AZD = Floating("azure-dev", floating.github("Azure/azure-dev", {"x86_64": r"^azd-linux-amd64\.tar\.gz$", "aarch64": r"^azd-linux-arm64\.tar\.gz$"}),
-               binaries={"azd": "azd-linux-{goarch}"}, kind="tar", strip=0)
+AZD = Floating("azure-dev", floating.github_auto("Azure/azure-dev"), binaries={"azd": "azd-linux-amd64|azd-linux-arm64|azd"}, auto=True)
 
 
 class Azure(Kit):

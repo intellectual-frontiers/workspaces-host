@@ -18,6 +18,7 @@ KEYS = {
     "WS_HOST_REPOS": "the repositories you work in, as host/org/repo, space-separated (the two starter repositories when you say nothing)",
     "WS_HOST_KIT": "kits to install for you whatever your repositories ask, space-separated (base and shell when you say nothing; empty for none)",
     "WS_HOST_PROMPT": "the prompt setup gives bash and fish: pretty when you say nothing (needs a Nerd Font), plain (emoji and box lines only), or no to keep your own",
+    "WS_HOST_MODERN": "whether setup makes bash, fish and git use the modern tools (eza, bat, zoxide, delta): yes when you say nothing, no to keep the old commands",
     "WS_HOST_PROVIDERS": "whether VS Code setup asks to enable the repositories that declare themselves providers: yes when you say nothing, no to enable them yourself",
     "WS_HOST_TRUSTED": "organizations whose repositories you trust, space-separated; only your own file can set this (intellectual-frontiers, the organization ws-host itself comes from, when you say nothing; empty to trust none)",
 }
@@ -59,6 +60,10 @@ class Config:
         if v in ("no", "false", "0", "off", "none"):
             return None
         return "ws-host-plain" if v == "plain" else "ws-host-pretty"
+
+    def modern(self) -> bool:
+        """Whether setup makes the shells and git use the modern tools (0003-kits FR-019): yes unless the person says no."""
+        return self.get("WS_HOST_MODERN", "yes").strip().lower() not in ("no", "false", "0", "off", "none")
 
     @property
     def workspaces(self) -> Path:

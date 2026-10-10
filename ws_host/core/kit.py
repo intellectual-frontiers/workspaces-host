@@ -41,6 +41,8 @@ class Resolved:
     key: str = ""                         # a path to the publisher's public key, shipped with ws-host
     fingerprint: str = ""
     integrity: str = ""                   # for a package: the registry's own integrity string for the version, which is checked after the install
+    kind: str = ""                        # what the file is (tar, zip or file), when the resolver chose it from the file's name
+    asset: str = ""                       # the name of the release file chosen, for saying what was found
 
 
 @dataclass
@@ -55,6 +57,7 @@ class Floating:
     strip: int = 1
     steps: tuple[tuple[str, ...], ...] = ()   # install steps; {src} and {dest} are filled in. With `in_place` the steps run in the unpacked source and install into {dest}
     in_place: bool = False                # the tool's own installer writes absolute paths, so it installs where it will stay
+    auto: bool = False                    # the release file is chosen by its name, and each program in `binaries` (link name -> the file names it may have, `a|b`) is found wherever the archive put it
     manager: str = ""
     package: str = ""
     version: str = "latest"
@@ -95,4 +98,8 @@ class Kit:
         return {}
 
     def checks(self, distro: dict) -> list[Check]:
+        return []
+
+    def configure(self, ctx) -> list[tuple[str, str]]:
+        """What the kit does to the person's own files once its programs are there, as (status, plain) pairs: ok, warn or fail. Nothing by default."""
         return []

@@ -68,6 +68,10 @@ image::figures/fig-5.2.png[Five steps from rendering a source folder to chezmoi 
 
 oh-my-posh renders the prompt. Two themes ship in `ws_host/data/themes/`: `ws-host-pretty.omp.json` needs a Nerd Font and is the default, and `ws-host-plain.omp.json` uses only emoji and box lines. The block points at the packaged file; nothing is copied into your home. `WS_HOST_PROMPT` is `pretty`, `plain` or `no`.
 
+=== The modern-cli lines
+
+`managed.modern_block` writes the aliases and hooks for bash and fish, and a git block for `~/.gitconfig`, each between `>>> workspaces-host: modern-cli` and `<<< workspaces-host` lines. Every shell line is guarded by `command -v`, so removing a tool never breaks a terminal. The git block goes first in the file so the person's own settings win. A startup file that holds both the prompt and the modern lines gets one modify script that runs both in turn (`managed.run("chain", …)`). `lib/modern.py` decides the targets and applies them; the `modern-cli` kit calls it from `Kit.configure`, and `workspace ensure` calls it by default unless `WS_HOST_MODERN=no`. Icons are on unless `WS_HOST_PROMPT=plain`.
+
 === Things I could not confirm, or that are open
 
 * The backup name has one-second resolution. Two applies of one file inside a second would collide. I did not find code that prevents it.

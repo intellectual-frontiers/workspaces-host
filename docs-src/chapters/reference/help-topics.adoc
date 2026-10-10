@@ -90,7 +90,10 @@ _Install the tools a kind of work needs, one kit at a time._
 A kit is a set of tools for one kind of work, and ws-host installs it for you.
 
 .The kits
-base is the everyday tools: git, gh, glab, search, images, a browser. press typesets books and PDFs. rust builds Rust programs. shell gives you fish 4 and oh-my-posh.
+base is the everyday tools: git, gh, glab, search, images, a browser. press typesets books and PDFs. rust builds Rust programs. shell gives you fish 4 and oh-my-posh. aws, azure, cloudflare and railway (or cloud, all four) give you each cloud's command line. modern-cli makes ls, cat, top, cd and git diff use the modern tools base installs (eza, bat, btop, zoxide, delta); icons need a Nerd Font.
+
+.Newest tools
+The cloud and modern command-line tools float with their newest release. ws-host update leaves them alone so it stays quick; ws-host update --tools, or ws-host kit sync, brings them up to date, and ws-host kit check says which are behind without changing anything.
 
 .Installing
 Packages come from your distribution, which needs your password, so ws-host tells you before it asks. Everything else is downloaded, checked against a fingerprint, and unpacked in ~/.local/share/workspaces-host/tools. Without administrator rights you get every download and are told what was left.

@@ -111,6 +111,11 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |terminal
 |Install a kit (uses sudo for packages, and says so first)
 
+|`ws-host kit check [KIT]`
+|check
+|terminal, editor, mcp
+|Ask the publishers of the tools that float what their newest releases are and how each would be checked; installs nothing
+
 |`ws-host kit list`
 |read
 |terminal, editor, mcp
@@ -120,6 +125,11 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |read
 |terminal, editor, mcp
 |Show what a kit installs on this machine
+
+|`ws-host kit sync [KIT]`
+|setup
+|terminal
+|Bring the tools that float with their newest release up to date, for every kit or for one
 
 |===
 
@@ -374,7 +384,7 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |terminal, editor, mcp
 |Run this repository's tests
 
-|`ws-host update [--check] [--cached] [--background]`
+|`ws-host update [--check] [--cached] [--background] [--tools]`
 |setup
 |terminal, editor
 |Bring everything up to date: ws-host, your repositories, the editor and what they need; only where nothing of yours is in the way; --check only looks

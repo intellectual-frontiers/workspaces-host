@@ -1,5 +1,5 @@
 name = "python"
-version = "3.13.16"
+version = "3.14.8"
 summary = "Python, which ws-host runs on"
 kind = "tool"
 tool = "python"

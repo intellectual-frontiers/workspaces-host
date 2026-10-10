@@ -12,7 +12,6 @@ import re
 import shutil
 import subprocess
 import tempfile
-import time
 import urllib.request
 from pathlib import Path
 
@@ -21,7 +20,6 @@ from ..core.kit import GOARCH, Download, Floating, Resolved
 from . import fetch
 from .fetch import FetchError
 
-CHECK_EVERY_HOURS = 6        # a quiet look for a newer version is not made more often than this, unless `ws-host update` or `kit add` asks
 KEEP_VERSIONS = 2            # the one in use and the one before it
 
 
@@ -85,6 +83,61 @@ def github(repo: str, assets: dict[str, str]):
         tag = str(rel.get("tag_name", ""))
         m = re.search(r"\d+(?:\.\d+)+", tag)               # `v4.5.0`, `2025.9.1` and `azure-dev-cli_1.23.0` are all the version in them
         return Resolved(version=m.group(0) if m else tag.lstrip("v"), url=a["browser_download_url"], sha256=sha)
+    return resolve
+
+
+_WRONG_ARCH = ("armv", "arm32", "i686", "i386", "riscv", "s390", "ppc", "mips", "loong", "386", "x86.", "-32bit")
+_WRONG_FILE = ("darwin", "macos", "apple", "windows", "win32", "win64", ".exe", "freebsd", "netbsd", "openbsd", "android", ".deb", ".rpm", ".apk", ".msi", ".pkg", ".dmg", ".sig", ".asc", ".pem",
+               ".sbom", ".sha", ".md5", "checksum", "sha256", ".json", ".txt", ".sh", ".intoto", ".sigstore", ".bundle", "source", "src.", "debug", "-symbols")
+_ARCHIVES = (".tar.gz", ".tgz", ".tar.xz", ".txz", ".tar.bz2", ".tbz", ".tbz2", ".zip")
+
+
+def pick_asset(names: list[str], arch: str) -> str | None:
+    """The release file for Linux on this architecture, chosen by its name: the one that says linux and the architecture, is not for another system, a package or a signature, and, of the rest,
+    is a static (musl) build if there is one, then a plain program or an archive. None when nothing fits; the caller then refuses rather than guess."""
+    words = {"x86_64": ("x86_64", "amd64", "x64"), "aarch64": ("aarch64", "arm64")}[arch]
+    other = {"x86_64": ("aarch64", "arm64"), "aarch64": ("x86_64", "amd64", "x64")}[arch]
+    best, best_score = None, -1
+    for n in names:
+        low = n.lower()
+        if "linux" not in low or not any(w in low for w in words) or any(o in low for o in other):
+            continue
+        if any(b in low for b in _WRONG_FILE) or any(b in low for b in _WRONG_ARCH):
+            continue
+        archive = any(low.endswith(e) for e in _ARCHIVES)
+        if not archive and low.endswith((".gz", ".xz", ".bz2", ".zst", ".7z")):
+            continue
+        score = (4 if "musl" in low else 2 if "static" in low else 0) + (0 if "gnueabi" in low else 1) + (1 if archive else 0)
+        if score > best_score:
+            best, best_score = n, score
+    return best
+
+
+def github_auto(repo: str):
+    """The newest release of a GitHub repository, the file for Linux on this architecture chosen by its name, and the checksum GitHub states for it."""
+    def resolve(arch: str) -> Resolved:
+        rel = _json(f"{_base('WS_HOST_GITHUB_API', 'https://api.github.com')}/repos/{repo}/releases/latest", _github_headers())
+        assets = rel.get("assets", [])
+        name = pick_asset([a.get("name", "") for a in assets], arch)
+        if not name:
+            raise FetchError("no-asset", f"the newest release of {repo} ({rel.get('tag_name')}) has no Linux file for {arch} that I can choose by its name")
+        a = next(x for x in assets if x.get("name") == name)
+        digest = str(a.get("digest") or "")
+        sha = digest.split(":", 1)[1] if digest.startswith("sha256:") else ""
+        if not sha:
+            for c in assets:
+                if re.search(r"(checksums?|sha256sums?)(\.txt)?$|\.sha256(sum)?$", c.get("name", ""), re.I):
+                    for line in _get(c["browser_download_url"]).decode("utf-8", "replace").splitlines():
+                        parts = line.split()
+                        if parts and re.fullmatch(r"[0-9a-f]{64}", parts[0]) and (name in line or c["name"].lower().endswith(".sha256") and c["name"].lower().startswith(name.lower())):
+                            sha = parts[0]
+        if not sha:
+            raise FetchError("no-checksum", f"{repo} published no checksum for {name}, so I will not install it")
+        low = name.lower()
+        kind = "zip" if low.endswith(".zip") else "tar" if any(low.endswith(e) for e in _ARCHIVES) else "file"
+        tag = str(rel.get("tag_name", ""))
+        m = re.search(r"\d+(?:\.\d+)+", tag)
+        return Resolved(version=m.group(0) if m else tag.lstrip("v"), url=a["browser_download_url"], sha256=sha, kind=kind, asset=name)
     return resolve
 
 
@@ -169,22 +222,6 @@ def _binaries(f: Floating, arch: str) -> dict[str, str]:
 def is_installed(f: Floating) -> bool:
     v = installed_version(f)
     return bool(v) and (_root(f) / v).is_dir() and all(os.path.lexists(paths.bin_dir() / n) for n in f.binaries)
-
-
-def _stamp(f: Floating) -> Path:
-    return paths.state_dir() / "floating" / f"{f.name}.checked"
-
-
-def _recent(f: Floating) -> bool:
-    try:
-        return time.time() - _stamp(f).stat().st_mtime < CHECK_EVERY_HOURS * 3600
-    except OSError:
-        return False
-
-
-def _touch(f: Floating) -> None:
-    _stamp(f).parent.mkdir(parents=True, exist_ok=True)
-    _stamp(f).touch()
 
 
 _FRESH = False
@@ -291,6 +328,35 @@ def _install_in_place(f: Floating, conc: Download, target: Path, archive: Path) 
         shutil.rmtree(src, ignore_errors=True)
 
 
+def _locate(target: Path, wanted: dict[str, str]) -> dict[str, str]:
+    """Where each program is in what was unpacked: the shallowest executable file with one of the names it may have."""
+    found: dict[str, str] = {}
+    files = [p for p in target.rglob("*") if p.is_file() and not p.is_symlink()]
+    for link, names in wanted.items():
+        cands = names.split("|")
+        hits = sorted((p for p in files if p.name in cands and os.access(p, os.X_OK)), key=lambda p: (len(p.relative_to(target).parts), cands.index(p.name)))
+        if not hits:
+            raise FetchError("no-program", f"{link} is not in what the release holds, so I installed nothing")
+        found[link] = str(hits[0].relative_to(target))
+    return found
+
+
+def _install_auto(f: Floating, conc: Download, target: Path, archive: Path) -> None:
+    """A release file chosen by its name: unpack it where it will stay and find the programs in it."""
+    shutil.rmtree(target, ignore_errors=True)
+    wanted = dict(conc.binaries)
+    try:
+        if conc.kind == "file":                      # one program, kept under the name it is linked by
+            conc.binaries = {k: k for k in wanted}
+            fetch._unpack(archive, conc, target)
+        else:
+            fetch._unpack(archive, conc, target)
+            conc.binaries = _locate(target, wanted)
+    except BaseException:
+        shutil.rmtree(target, ignore_errors=True)
+        raise
+
+
 def _prune(f: Floating, keep: set[str]) -> None:
     root = _root(f)
     versions = sorted((p for p in root.iterdir() if p.is_dir() and not p.is_symlink() and not p.name.endswith((".src", ".partial"))), key=lambda p: p.stat().st_mtime, reverse=True)
@@ -300,15 +366,15 @@ def _prune(f: Floating, keep: set[str]) -> None:
 
 
 def install(f: Floating, offline: bool = False, fresh: bool | None = None) -> dict:
-    """Install the newest version, or say that what is installed is it. A look for a newer one is quiet and made at most every few hours unless `fresh`
-    (`ws-host update`, `kit add`); one that cannot be made leaves what is installed alone and is not an error."""
+    """Install the newest version if none is installed, and, only when asked (`kit sync`, `ws-host update --tools`, `kit add`, which set `fresh`), look for a newer one. What is installed is never
+    looked into otherwise, so that an ordinary update stays quick; a look that cannot be made leaves what is installed alone and is not an error."""
     arch = fetch.arch()
     if not f.supports(arch):
         raise FetchError("unsupported-arch", f"{f.name} is not available for {arch}")
     fresh = (_FRESH or os.environ.get("WS_HOST_KITS_FRESH") == "1") if fresh is None else fresh
     have = installed_version(f)
     ok = is_installed(f)
-    if ok and (offline or (not fresh and _recent(f))):
+    if ok and (offline or not fresh):
         return {"name": f.name, "version": have, "outcome": "present"}
     if offline:
         raise FetchError("offline", f"{f.name} is needed and you are offline")
@@ -320,12 +386,11 @@ def install(f: Floating, offline: bool = False, fresh: bool | None = None) -> di
             return {"name": f.name, "version": have, "outcome": "present", "note": f"I could not look for a newer {f.name} ({e.message}); what is installed is kept."}
         raise
     if ok and r.version == have:
-        _touch(f)
         return {"name": f.name, "version": have, "outcome": "present"}
     if offline:
         raise FetchError("offline", f"{f.name} is needed and you are offline")
     target = _root(f) / r.version
-    conc = Download(f.name, r.version, r.url, {arch: r.sha256 or "-"}, binaries=_binaries(f, arch), kind=f.kind, strip=f.strip, steps=() if f.in_place else f.steps)
+    conc = Download(f.name, r.version, r.url, {arch: r.sha256 or "-"}, binaries=_binaries(f, arch), kind=r.kind or f.kind, strip=0 if f.auto else f.strip, steps=() if f.in_place or f.auto else f.steps)
     _root(f).mkdir(parents=True, exist_ok=True)
     if f.manager:
         with progress.step(f"📦 Installing {f.name} {r.version}", announce=not offline):
@@ -338,7 +403,8 @@ def install(f: Floating, offline: bool = False, fresh: bool | None = None) -> di
         if f.in_place:
             with progress.step(f"📦 Installing {f.name} {r.version}", announce=not offline):
                 _install_in_place(f, conc, target, fetch.download(r.url, sha, offline))
+        elif f.auto:
+            _install_auto(f, conc, target, fetch.download(r.url, sha, offline))
     done = fetch.install(conc, offline)           # unpacks what is not in place yet, repoints `current`, links the programs
-    _touch(f)
     _prune(f, {r.version, have})
     return {**done, "name": f.name, "version": r.version, "previous": have, "outcome": "updated" if have else "installed"}

@@ -10,7 +10,7 @@ description = "The environment orchestrator for Intellectual Frontiers repositor
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 dependencies = []
 classifiers = [
   "Development Status :: 3 - Alpha",

@@ -5,8 +5,7 @@ from ..core.kit import Check, Floating, Kit
 from ..install import floating
 
 WRANGLER = Floating("wrangler", floating.npm("wrangler"), binaries={"wrangler": "bin/wrangler"}, manager="npm", package="wrangler")
-CLOUDFLARED = Floating("cloudflared", floating.github("cloudflare/cloudflared", {"x86_64": r"^cloudflared-linux-amd64$", "aarch64": r"^cloudflared-linux-arm64$"}),
-                       binaries={"cloudflared": "cloudflared"}, kind="file")
+CLOUDFLARED = Floating("cloudflared", floating.github_auto("cloudflare/cloudflared"), binaries={"cloudflared": "cloudflared"}, auto=True)
 
 
 class Cloudflare(Kit):

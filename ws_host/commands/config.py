@@ -24,6 +24,10 @@ def managed_targets() -> list[chezmoi.Target]:
         if managed.BEGIN.format(shell=sh) in text:
             m = THEME_IN_BLOCK.search(text.partition(managed.BEGIN.format(shell=sh))[2])
             out.append(chezmoi.Target(f"{sh} prompt", f.resolve() if f.is_symlink() else f, sh, (m.group(1) if m else shell_cmd._theme_text(shell_kit.PRETTY),)))
+    from ..lib import modern
+    for t in modern.targets():
+        if managed.MODERN_BEGIN in chezmoi.current(t):
+            out.append(modern._resolved(t))
     vs = vscode_cmd.settings_target(vscode_cmd.baseline_settings())
     if vs.path.exists():
         out.append(vs)

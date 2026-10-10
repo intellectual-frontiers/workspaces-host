@@ -4,8 +4,7 @@ from __future__ import annotations
 from ..core.kit import Check, Floating, Kit
 from ..install import floating
 
-RAILWAY = Floating("railway", floating.github("railwayapp/cli", {"x86_64": r"x86_64-unknown-linux-musl\.tar\.gz$", "aarch64": r"aarch64-unknown-linux-musl\.tar\.gz$"}),
-                   binaries={"railway": "railway"}, kind="tar", strip=0)
+RAILWAY = Floating("railway", floating.github_auto("railwayapp/cli"), binaries={"railway": "railway"}, auto=True)
 
 
 class Railway(Kit):

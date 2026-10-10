@@ -49,10 +49,9 @@ def _child(ctx, words: list[str]) -> tuple[int, list[dict]]:
     """Run another ws-host command with the newest code. At a person's terminal it shares the terminal, so its spinners, its progress and the questions it asks
     (enabling a repository is the person's own yes) work as ever; for a program reading JSON it answers as JSON."""
     argv = [_launcher(), *words] + (["--offline"] if ctx.offline else [])
-    env = {**os.environ, "WS_HOST_KITS_FRESH": "1"}       # an update looks for newer releases of the tools that float (0003-kits FR-017); a throttled look is not enough
     if ctx.mode == "text":
-        return subprocess.run(argv, env=env).returncode, []
-    p = subprocess.run([*argv, "--json"], capture_output=True, text=True, env={**env, "WS_HOST_PROGRESS": "always"})
+        return subprocess.run(argv).returncode, []
+    p = subprocess.run([*argv, "--json"], capture_output=True, text=True, env={**os.environ, "WS_HOST_PROGRESS": "always"})
     docs = []
     for line in p.stdout.splitlines():
         try:
@@ -62,15 +61,16 @@ def _child(ctx, words: list[str]) -> tuple[int, list[dict]]:
     return p.returncode, docs
 
 
-def _upgrade(ctx):
+def _upgrade(ctx, tools=False):
     """ws-host first; then, in a new process so that it is the newest code that does the rest: repositories, kits, editor and what providers pin, then the
-    clean-up of what nothing pins any more."""
+    clean-up of what nothing pins any more. With `tools`, also the tools that float with their newest release (the cloud CLIs, the modern command-line tools), which an ordinary update leaves alone
+    so that it stays quick (0003-kits FR-017)."""
     r = selfupdate.update(ctx.offline)
     first = {"plain": r["plain"], **_report(r)}
     if ctx.mode == "text":
         yield Resource("progress", "update-ws-host", {"plain": "🔄 " + r["plain"], "step": "update-ws-host"})
     results, worst = [], 0
-    for words in (["workspace", "ensure"], ["toolchain", "remove", "--unused"]):
+    for words in (["workspace", "ensure"], *([["kit", "sync"]] if tools else []), ["toolchain", "remove", "--unused"]):
         code, docs = _child(ctx, words)
         results.append({"command": "ws-host " + " ".join(words), "exit": code})
         if docs:
@@ -88,9 +88,10 @@ def _upgrade(ctx):
 @command("update", category="setup", summary="Bring everything up to date: ws-host, your repositories, the editor and what they need; only where nothing of yours is in the way; --check only looks",
          args=(Arg("check", flag=True, help="only look for a newer version and say what is new; change nothing"),
                Arg("cached", flag=True, help="with --check: do not use the network; say what the last look found"),
-               Arg("background", flag=True, help="with --check: look quietly and leave a note for new terminal windows")),
+               Arg("background", flag=True, help="with --check: look quietly and leave a note for new terminal windows"),
+               Arg("tools", flag=True, help="also bring the tools that float with their newest release up to date (the cloud CLIs, the modern command-line tools); an ordinary update leaves them alone")),
          surfaces=("cli", "editor"))
-def update(ctx, check=False, cached=False, background=False):
+def update(ctx, check=False, cached=False, background=False, tools=False):
     if cached:
         note = selfupdate.read_notice()
         return Resource("update-check", "ws-host", {"plain": note or "As far as the last look knew, ws-host is up to date.", "waiting": bool(note)},
@@ -104,7 +105,7 @@ def update(ctx, check=False, cached=False, background=False):
             "ws-host is up to date." if not s["behind"] else f"I would move ws-host forward by {s['behind']} change{'s' if s['behind'] != 1 else ''}."
             if not why else f"A newer ws-host is waiting, but I would leave your copy as it is, because {why}."), **_report(s)})
     if not ctx.dry_run and not os.environ.get("WS_HOST_UPDATE_SELF_ONLY"):
-        return _upgrade(ctx)
+        return _upgrade(ctx, tools)
     r = selfupdate.update(ctx.offline)
     if r["outcome"] == "updated":
         try:

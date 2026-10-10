@@ -258,6 +258,14 @@ class WholeUpgrade(Home):
         self.assertEqual(self.log.read_text().splitlines(), ["workspace ensure", "toolchain remove --unused"])
         self.assertIn("ws-host moved forward by 2 changes", out)
 
+    def test_tools_that_float_are_brought_up_to_date_only_when_asked_for(self):
+        code, out = self.run_cmd("update", "--tools")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.log.read_text().splitlines(), ["workspace ensure", "kit sync", "toolchain remove --unused"])
+        self.log.unlink()
+        self.run_cmd("update")
+        self.assertNotIn("kit sync", self.log.read_text(), "an ordinary update stays quick")
+
     def test_offline_is_passed_on_and_a_failed_setup_is_the_commands_status(self):
         os.environ["STUB_EXIT"] = "3"
         code, out = self.run_cmd("update", "--offline")

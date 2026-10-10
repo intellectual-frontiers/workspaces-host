@@ -70,6 +70,16 @@ def install(ctx, kit, name: str):
         for prog in programs:
             if fetch.link_program(link, prog):
                 break
+    try:
+        for st, plain in kit.configure(ctx):
+            yield ("configure", st, plain)
+    except WsError as e:
+        yield ("configure", "fail", e.plain)
+    if kit.name != "modern-cli" and not ctx.dry_run:
+        from ..core import config
+        from ..lib import modern
+        if config.load().modern() and not modern.configured() and kit.downloads(d):
+            yield ("modern-cli", "info", "Tip: run `ws-host kit add modern-cli` to make ls, cat, top, cd and git diff use these modern tools (eza, bat, btop, zoxide, delta), in bash and fish.")
 
 
 def ensure(ctx, declared: dict[str, list[str]]) -> dict:
@@ -84,8 +94,7 @@ def ensure(ctx, declared: dict[str, list[str]]) -> dict:
             bad = True
             continue
         kit = kits[name]()
-        floats = any(isinstance(x, Floating) for x in kit.downloads(machine.distro()))
-        if not floats and all(kits_state.program_present(c.program) for c in kit.checks(machine.distro()) if c.program):
+        if all(kits_state.program_present(c.program) for c in kit.checks(machine.distro()) if c.program):
             notes.append(f"{name} is already installed")
             continue
         results = []
@@ -107,24 +116,55 @@ def ensure(ctx, declared: dict[str, list[str]]) -> dict:
     return {"status": "fail" if bad else "ok", "plain": "; ".join(notes) + ".", "actions": actions}
 
 
-def refresh_installed(ctx) -> dict:
-    """`ws-host update` keeps the tools that float current wherever they came from (0003-kits FR-017): every floating tool that is installed, whichever kit put it there, is looked at for
-    a newer release, and one that cannot be looked at is left alone. Returns what was done, in words."""
+def refresh_installed(ctx, only: str | None = None) -> dict:
+    """`kit sync` and `ws-host update --tools` (0003-kits FR-017): every floating tool that is installed, whichever kit put it there (or only one kit's), is looked at for a newer release and
+    brought up to date; one that cannot be looked at is left alone. An ordinary update never does this, so that it stays quick. Returns what was done, in words."""
     from ..install import floating
+    if ctx.offline:
+        return {"status": "ok", "plain": "You are offline, so I did not look for newer releases of the tools that float.", "tools": 0, "updated": [], "failed": []}
     updated, kept, failed = [], [], []
     seen: set[str] = set()
-    for kit_class in reg.discover().kits.values():
+    kits = reg.discover().kits
+    for kit_name, kit_class in sorted(kits.items()):
+        if only and kit_name != only:
+            continue
         for dl in kit_class().downloads(machine.distro()):
             if not isinstance(dl, Floating) or dl.name in seen or not floating.installed_version(dl):
                 continue
             seen.add(dl.name)
             try:
-                r = fetch.install(dl, offline=ctx.offline)
+                with floating.looking_fresh():
+                    r = fetch.install(dl, offline=ctx.offline)
             except fetch.FetchError as e:
                 failed.append(f"{dl.name}: {e.message}")
                 continue
-            (updated if r["outcome"] == "updated" else kept).append(f"{dl.name} {r['previous']} to {r['version']}" if r["outcome"] == "updated" else dl.name)
+            if r["outcome"] == "updated":
+                updated.append(f"{dl.name} {r['previous']} to {r['version']}")
+            else:
+                kept.append(dl.name)
     if not seen:
         return {"status": "ok", "plain": "No tool that floats with its newest release is installed.", "tools": 0}
     parts = ([f"updated {', '.join(updated)}"] if updated else []) + ([f"{len(kept)} already the newest"] if kept else []) + ([f"could not look at {'; '.join(failed)}"] if failed else [])
-    return {"status": "ok" if not failed else "warn", "plain": "Tools that float: " + "; ".join(parts) + ".", "tools": len(seen)}
+    return {"status": "ok" if not failed else "warn", "plain": "Tools that float: " + "; ".join(parts) + ".", "tools": len(seen), "updated": updated, "failed": failed}
+
+
+def verify(only: str | None = None) -> list[dict]:
+    """Ask each floating tool's publisher what its newest release is and which file would be taken and how it would be checked, installing nothing (0003-kits FR-018)."""
+    from ..install import floating
+    arch = fetch.arch()
+    rows, seen = [], set()
+    for kit_name, kit_class in sorted(reg.discover().kits.items()):
+        if only and kit_name != only:
+            continue
+        for dl in kit_class().downloads(machine.distro()):
+            if not isinstance(dl, Floating) or dl.name in seen:
+                continue
+            seen.add(dl.name)
+            try:
+                r = dl.resolve(arch)
+                how = "its publisher's checksum" if r.sha256 else "its publisher's signature" if r.signature_url else "the registry's integrity record"
+                rows.append({"name": dl.name, "status": "ok", "kit": kit_name, "version": r.version, "file": r.asset or r.url.rsplit("/", 1)[-1] or dl.package,
+                             "plain": f"the newest is {r.version}" + (f", the file {r.asset}" if r.asset else "") + f", checked by {how}"})
+            except fetch.FetchError as e:
+                rows.append({"name": dl.name, "status": "fail", "kit": kit_name, "plain": e.message})
+    return rows

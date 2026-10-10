@@ -81,7 +81,7 @@ Bump mise::
 _Bump mise to version X in the bootstrap. Update `MISE_VERSION` and both `MISE_SHA256_*` values in `ws_host/bootstrap.env` from the real release artifacts, keep `ws_host/lib/mise.py` in agreement, and run `ws-host test`. Show me the checksums and where you got them._
 
 Bump Python or uv::
-_Move the bootstrap Python to 3.13.N. Change `ws_host/bootstrap.env` and `.workspaces-host/toolchain.d/python.toml` together, run `ws-host toolchain generate`, commit the regenerated mise files and `mise.lock`, then run `ws-host test`, `ws-host check` and `ws-host fresh`._
+_Move the bootstrap Python to 3.14.N. Change `ws_host/bootstrap.env` and `.workspaces-host/toolchain.d/python.toml` together, run `ws-host toolchain generate`, commit the regenerated mise files and `mise.lock`, then run `ws-host test`, `ws-host check` and `ws-host fresh`._
 
 Change what the installer needs::
 _`install.sh` should also require `unzip`. Edit the prerequisite scan and its error text, keep it POSIX `sh`, run `sh -n install.sh`, and add a case to `tests/test_install.py`._
