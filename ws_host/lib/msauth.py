@@ -20,7 +20,7 @@ def say(**kw) -> None:
 def _credential(state: dict, name: str, unencrypted: bool, record=None, prompt=None):
     from azure.identity import DeviceCodeCredential, TokenCachePersistenceOptions
     options = TokenCachePersistenceOptions(name=name, allow_unencrypted_storage=unencrypted)
-    kw = {"client_id": state.get("client_id") or DEFAULT_CLIENT_ID, "tenant_id": state.get("tenant") or "common", "cache_persistence_options": options}
+    kw = {"client_id": DEFAULT_CLIENT_ID if state.get("client_id") in (None, "", "shared") else state["client_id"], "tenant_id": "common" if state.get("client_id") in (None, "", "shared") else (state.get("tenant") or "common"), "cache_persistence_options": options}
     if record is not None:
         kw.update(authentication_record=record, disable_automatic_authentication=True)
     if prompt is not None:

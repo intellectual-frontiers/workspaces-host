@@ -61,15 +61,18 @@ Give each account its own name with `--host`, for example `work` and `personal`,
 copies a file or folder to this machine, and `ws-host onedrive add LOCAL REMOTE` copies one into OneDrive. A file that is already at the other end is left alone, and
 ws-host says so, unless you add `--replace`; `--dry-run` shows what would be copied.
 
-Many work organizations need an administrator to approve the app that signs you in. If the sign-in stops for that reason, register an app of your own once, in the Microsoft Entra admin center:
+Many work organizations do not allow Microsoft's shared sign-in app, and need one that the organization has registered. You do not edit any file or set any variable: run
+`ws-host auth new microsoft --host work` and, the first time, it tells you where to click and asks for two values, checks them as you type, and keeps them for that account.
+For a home account (outlook.com, hotmail.com, live.com) answer `shared` to the first question and it asks nothing more. In VS Code the same sign-in asks in boxes. To register the app, in the
+Microsoft Entra admin center (entra.microsoft.com):
 
-. Choose *App registrations*, then *New registration*, and accept *accounts in any organizational directory and personal Microsoft accounts*.
+. Choose *App registrations*, then *New registration*, give it any name, and choose the account type your organization uses.
 . Under *Authentication*, add the platform *Mobile and desktop applications* with the redirect `https://login.microsoftonline.com/common/oauth2/nativeclient`, and turn on *Allow public client flows*.
-. Under *API permissions*, add the delegated Microsoft Graph permissions `Files.ReadWrite.All` and `User.Read`, and grant consent if your organization asks for it.
-. Put the *Application (client) ID* in `WS_HOST_MICROSOFT_CLIENT_ID` in `~/.config/workspaces-host/ws-host.env`.
+. Under *API permissions*, add the delegated Microsoft Graph permissions `Files.ReadWrite.All` and `User.Read`, and click *Grant admin consent* if it is there.
+. On the app's *Overview* page, copy the *Application (client) ID* and the *Directory (tenant) ID*. Those are the two answers.
 
-If you made the app for your organization only, also put its *Directory (tenant) ID* in `WS_HOST_MICROSOFT_TENANT`. If, after you pick your account, Microsoft shows a page that says *You don't have access to this*, it is this
-approval that is missing; nothing is wrong with your account. An administrator can also grant consent for the app under *Enterprise applications*, then *Permissions*, then *Grant admin consent*.
+If, after you pick your account, Microsoft shows a page that says *You don't have access to this*, the organization has not allowed the shared app; use your own as above. You can change the answers any time with
+`ws-host auth set microsoft CLIENT_ID TENANT --host work`.
 
 The sign-in is kept in your system keyring when there is one. Most WSL setups have none, so it is kept in a file only you can read, under `~/.IdentityService`, and ws-host tells you so.
 OneDrive's own sync program exists only for Windows and macOS: on WSL, let the Windows program sync, mark the folders you need as *Always keep on this device*, and read them at

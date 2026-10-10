@@ -22,6 +22,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | Command | Category | Where | What it does |
 | --- | --- | --- | --- |
 | `auth new` | setup | terminal, editor | Sign in to GitHub, GitLab or Microsoft with a one-time code |
+| `auth set` | setup | terminal, editor | Tell ws-host which app signs a Microsoft account in, from an app registration of your own |
 | `auth status` | read | terminal, editor, mcp | Say whether you are signed in to GitHub and GitLab |
 | `check` | check | terminal, editor, mcp | Run the checks of this repository |
 | `command list` | read | terminal, editor, mcp | List every command |

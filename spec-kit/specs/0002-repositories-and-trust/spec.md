@@ -141,8 +141,15 @@ work, and a failed clone reported as done. Each is a test here.
 - **FR-025**: `auth new microsoft [--host NAME]` MUST sign a person in to a personal or work Microsoft account, under a name of their choosing (`default` when none), with Microsoft's own
   `azure-identity` library from the `microsoft` kit (0003-kits FR-021) and its device-code flow, and MUST offer the one-time code and its address as a resource in a stream, as FR-011 does. No
   password and no token MUST be typed or shown. The library's token cache MUST be encrypted in the system keyring where there is one; where there is none, the sign-in MUST be kept in a file only
-  the person can read, and the command MUST say so. A person's own app registration (`WS_HOST_MICROSOFT_CLIENT_ID`, `WS_HOST_MICROSOFT_TENANT`) MUST replace Microsoft's shared one. `auth status`
+  the person can read, and the command MUST say so. The app that signs an account in (FR-026) MUST be kept per account, and `WS_HOST_MICROSOFT_CLIENT_ID` and `WS_HOST_MICROSOFT_TENANT` MUST be honored for anyone who sets them, though no one is ever required to. `auth status`
   MUST report each Microsoft sign-in beside the forges, once the kit or a sign-in is here. A missing kit MUST be an error whose action installs it.
+
+- **FR-026**: `auth new microsoft` MUST NOT require an environment variable or an edited file. When the app that signs the account in is not yet known (not saved for that account, and not set in
+  `WS_HOST_MICROSOFT_CLIENT_ID` and `WS_HOST_MICROSOFT_TENANT`), then at a terminal it MUST say in plain words where in Microsoft Entra to register one and which two values to copy, ask for each,
+  check it with its type (0041-command-line FR-013: an Application (client) ID or `shared`, a Directory (tenant) ID or a domain), ask again on a wrong answer and stop after a few, keep the answers
+  for that account in a file only the person can read, and not ask again. Where nothing can be asked (the editor, MCP, a pipeline) it MUST fail with the code `needs-input`, status `missing`, the same
+  words, and the actions `auth set` and `auth new`. `auth set microsoft CLIENT_ID TENANT [--host NAME]` MUST validate and keep the two values, so that the editor can ask for them in boxes; `shared` MUST
+  mean Microsoft's own app and the common tenant, for a home account.
 
 ## Out of scope
 

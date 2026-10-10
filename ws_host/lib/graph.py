@@ -29,9 +29,46 @@ def state_file(label: str) -> Path:
     return paths.state_dir() / "microsoft" / f"{label}.json"
 
 
+SHARED = "shared"         # Microsoft's own public app for Graph command-line tools, which a person's organization may not allow
+SHARED_CLIENT = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
+
+
+def _read(label: str) -> dict:
+    try:
+        d = json.loads(state_file(label).read_text(encoding="utf-8"))
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
 def accounts() -> list[str]:
+    """The names of the accounts a person has signed in to."""
     d = paths.state_dir() / "microsoft"
-    return sorted(p.stem for p in d.glob("*.json")) if d.is_dir() else []
+    return sorted(p.stem for p in d.glob("*.json") if "record" in _read(p.stem)) if d.is_dir() else []
+
+
+def save_profile(label: str, client_id: str, tenant: str) -> None:
+    """Which app signs this account in, kept beside its sign-in in a file only the person can read. The IDs are not secrets, but they are the person's own."""
+    f = state_file(label)
+    f.parent.mkdir(parents=True, exist_ok=True)
+    d = {**_read(label), "label": label, "client_id": client_id, "tenant": tenant}
+    tmp = f.with_name(f.name + ".new")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as h:
+        json.dump(d, h)
+    os.replace(tmp, f)
+
+
+def app_for(label: str) -> tuple[str, str] | None:
+    """The app and tenant to sign `label` in with: what was saved for it, else WS_HOST_MICROSOFT_CLIENT_ID and _TENANT for anyone who sets them, else None, and the person is asked."""
+    d = _read(label)
+    if d.get("client_id"):
+        return d["client_id"], d.get("tenant") or "common"
+    cfg = config.load()
+    cid = os.environ.get("WS_HOST_MICROSOFT_CLIENT_ID") or cfg.get("WS_HOST_MICROSOFT_CLIENT_ID")
+    if cid:
+        return cid, os.environ.get("WS_HOST_MICROSOFT_TENANT") or cfg.get("WS_HOST_MICROSOFT_TENANT") or "common"
+    return None
 
 
 def venv_python() -> Path:
@@ -55,9 +92,11 @@ def _run_msauth(*args: str, stdout=subprocess.PIPE, text=True) -> subprocess.Pop
 
 def sign_in(label: str):
     """Yields the lines `msauth login` prints, as dicts; the last is `done` or `error`."""
-    cfg = config.load()
-    f = state_file(label)
-    proc = _run_msauth("login", label, str(f), cfg.get("WS_HOST_MICROSOFT_CLIENT_ID") or "14d82eec-204b-4c2f-b7e8-296a70dab67e", cfg.get("WS_HOST_MICROSOFT_TENANT") or "common")
+    app = app_for(label)
+    if app is None:
+        raise WsError("needs-input", "no app is set for this Microsoft account", "I need to know which app signs this account in.")
+    client, tenant = app
+    proc = _run_msauth("login", label, str(state_file(label)), SHARED_CLIENT if client == SHARED else client, "common" if client == SHARED else tenant)
     for line in proc.stdout:
         try:
             yield json.loads(line)

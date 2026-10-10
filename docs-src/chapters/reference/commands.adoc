@@ -16,6 +16,11 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |terminal, editor
 |Sign in to GitHub, GitLab or Microsoft with a one-time code
 
+|`ws-host auth set FORGE CLIENT_ID TENANT [--host STRING]`
+|setup
+|terminal, editor
+|Tell ws-host which app signs a Microsoft account in, from an app registration of your own
+
 |`ws-host auth status`
 |read
 |terminal, editor, mcp

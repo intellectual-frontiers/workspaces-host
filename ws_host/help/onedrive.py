@@ -13,13 +13,11 @@ def onedrive():
                        "Microsoft shows a code and an address; you open the address in your browser, type the code and approve. No password is typed into a terminal."),
             ("Copying", "ws-host onedrive list shows a folder, onedrive sync REMOTE LOCAL copies a file or folder down, and onedrive add LOCAL REMOTE copies one up. "
                         "A file that is already at the other end is left as it is, and said so, unless you add --replace. --dry-run shows what would be copied. With two accounts, name one with --account."),
-            ("Work accounts", "Many organizations make an administrator approve the app that signs you in. If sign-in stops with that message, register an app of your own once: "
-                              "in the Microsoft Entra admin center choose App registrations, New registration, accept work accounts and Microsoft accounts for home use, add the platform Mobile and desktop "
-                              "with the redirect https://login.microsoftonline.com/common/oauth2/nativeclient, turn on Allow public client flows, and add the delegated Microsoft Graph "
-                              "permissions Files.ReadWrite.All and User.Read. Put its Application (client) ID in WS_HOST_MICROSOFT_CLIENT_ID in ~/.config/workspaces-host/ws-host.env."),
+            ("Work accounts", "Many organizations do not allow Microsoft's shared sign-in app. The first time you sign in, ws-host tells you where to click in the Microsoft Entra admin center to register one, "
+                              "asks for its Application (client) ID and Directory (tenant) ID, checks them as you type and keeps them for that account; you set no variable and edit no file. "
+                              "For a home account answer shared. ws-host auth set microsoft CLIENT_ID TENANT --host work changes them later."),
             ("If Microsoft says you do not have access", "After you pick your account, a page that says 'You don't have access to this' means your organization has not allowed the shared sign-in app. "
-                                                        "It is not a problem with your account. Register your own app as described above, then set WS_HOST_MICROSOFT_CLIENT_ID to its Application (client) ID and, if you made it for your "
-                                                        "organization only, WS_HOST_MICROSOFT_TENANT to its Directory (tenant) ID. An administrator can also grant consent for the app under Enterprise applications."),
+                                                        "It is not a problem with your account. Register an app of your own and give ws-host its two IDs, as above."),
             ("Where the sign-in is kept", "In your system keyring when there is one. On a machine without one, such as most WSL setups, in a file only you can read under ~/.IdentityService, and ws-host says so."),
             ("A synced folder", "OneDrive's own sync program exists only for Windows and macOS. On WSL, let the Windows OneDrive sync, mark the folders you need as Always keep on this device, "
                                 "and read them at /mnt/c/Users/<you>/OneDrive."),
@@ -27,6 +25,7 @@ def onedrive():
         "steps": (
             Step("Install the Microsoft sign-in library", ("kit", "add"), {"kit": "microsoft"}),
             Step("Sign in to Microsoft", ("auth", "new"), {"forge": "microsoft"}),
+            Step("Change which app signs an account in", ("auth", "set"), {"forge": "microsoft"}),
             Step("See whether I am signed in", ("auth", "status")),
             Step("List the top of my OneDrive", ("onedrive", "list")),
         ),
