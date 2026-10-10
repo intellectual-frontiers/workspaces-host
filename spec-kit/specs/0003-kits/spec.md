@@ -130,6 +130,11 @@ a kit installs what the distribution ships, so two machines may differ, and
   `dbmate`, and, from PyPI into folders of their own, `sqlite-utils`, `datasette`, `harlequin` and `visidata`. MotherDuck needs no program of its own (it is DuckDB with `ATTACH 'md:'`
   and a `MOTHERDUCK_TOKEN`), and ClickHouse MUST NOT be part of it. `workspace ensure` MUST install it by default with `base` and `shell`.
 
+- **FR-021**: The `microsoft` kit MUST install Microsoft's `azure-identity` library (from PyPI, newest, with the registry's integrity) into a folder of its own, and `ms-python`, a Python that has it. The
+  `onedrive` commands MUST reach the signed-in account's OneDrive over Microsoft Graph's REST API with a token from that library: `onedrive list` and `show` MUST change nothing; `onedrive add LOCAL REMOTE`
+  and `onedrive sync REMOTE LOCAL` MUST NOT replace or delete a file that is already there unless `--replace` is given, MUST say what they left, MUST send a file over 4 MiB in an upload session, MUST never send
+  the sign-in to a link Microsoft made for a download or an upload, MUST never write a file whose name would leave the folder, and MUST write nothing under `--dry-run`. With more than one sign-in,
+  `--account` MUST be required.
 ## Declared kits
 
 - **FR-012**: `workspace ensure` MUST install the kits the cloned repositories

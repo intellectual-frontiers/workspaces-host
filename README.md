@@ -21,12 +21,8 @@ something stops you.
 5. **Learn.** In VS Code press `Ctrl+Shift+P` and run *Workspaces Console: Learn a Topic*. Everything you do every day is taught there, one button at a
    time. In a terminal the same pages are `ws-host help`.
 
-**A modern terminal.** Setup installs modern command-line tools (eza, bat, zoxide, fzf, delta and more), and `ws-host kit add modern-cli` makes `ls`, `cat`, `top`,
-`cd` and `git diff` use them in bash and fish. The icons need a [Nerd Font](https://www.nerdfonts.com/font-downloads) in Windows Terminal (the guide has the steps);
-`WS_HOST_PROMPT=plain` leaves them out, and `WS_HOST_MODERN=no` keeps your old commands.
-
-**Small databases.** `base` has SQLite and DuckDB, and the `embedded-sql` kit (installed by default) adds Turso's CLI, usql, litestream, sqruff, dbmate, sqlite-utils, datasette, harlequin
-and visidata. MotherDuck is DuckDB with `ATTACH 'md:'`. `ws-host update --tools` brings them all to their newest release.
+**Also in the box.** Modern terminal tools (`ws-host kit add modern-cli`; icons need a [Nerd Font](https://www.nerdfonts.com/font-downloads)), SQLite, DuckDB and the `embedded-sql` kit,
+and OneDrive for personal or work Microsoft accounts (`ws-host kit add microsoft`, then `ws-host auth new microsoft`). `ws-host update --tools` brings the floating tools up to date; the guide has the rest.
 
 ## For contributors
 

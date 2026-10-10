@@ -340,7 +340,14 @@ def _install_package(f: Floating, r: Resolved, target: Path, arch: str) -> dict[
             target.mkdir(parents=True)
             _run([uv, "venv", "--python", ">=3.10", "--quiet", str(target)], env=env, what="uv venv")
         _run([uv, "pip", "install", "--quiet", "--python", str(target / "bin" / "python"), f"{f.package}=={r.version}"], env=env, what=f"uv pip install {f.package}")
-        return _binaries(f, arch)
+        out = _binaries(f, arch)
+        for name, rel in list(out.items()):
+            if rel == "bin/python":       # the package's own Python is offered under a name of its own, through a script: a link to a venv's Python would not find the venv
+                w = target / "bin" / name
+                w.write_text(f'#!/bin/sh\nexec "{_root(f) / "current" / "bin" / "python"}" "$@"\n')
+                w.chmod(0o755)
+                out[name] = f"bin/{name}"
+        return out
     raise FetchError("unknown-manager", f"I do not know how to install a {f.manager!r} package")
 
 

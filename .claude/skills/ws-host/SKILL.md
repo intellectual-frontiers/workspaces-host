@@ -21,7 +21,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 
 | Command | Category | Where | What it does |
 | --- | --- | --- | --- |
-| `auth new` | setup | terminal, editor | Sign in to GitHub or GitLab with a one-time code |
+| `auth new` | setup | terminal, editor | Sign in to GitHub, GitLab or Microsoft with a one-time code |
 | `auth status` | read | terminal, editor, mcp | Say whether you are signed in to GitHub and GitLab |
 | `check` | check | terminal, editor, mcp | Run the checks of this repository |
 | `command list` | read | terminal, editor, mcp | List every command |
@@ -42,6 +42,10 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `kit list` | read | terminal, editor, mcp | List the kits and which are installed |
 | `kit show` | read | terminal, editor, mcp | Show what a kit installs on this machine |
 | `kit sync` | setup | terminal | Bring the tools that float with their newest release up to date, for every kit or for one |
+| `onedrive add` | setup | terminal, editor | Copy a local file or folder into OneDrive; nothing already there is replaced unless you say so |
+| `onedrive list` | read | terminal, editor, mcp | List the files and folders in a OneDrive folder |
+| `onedrive show` | read | terminal, editor, mcp | Show one file or folder in OneDrive |
+| `onedrive sync` | setup | terminal, editor | Copy a OneDrive file or folder to this machine; a local file that differs is kept unless you say so |
 | `provider add` | decision | terminal, editor | Enable a repository as a provider, so ws-host installs and runs what it declares |
 | `provider list` | read | terminal, editor, mcp | List the providers you have enabled |
 | `provider remove` | decision | terminal, editor | Stop using a provider (its programs stay until you prune them) |
@@ -80,6 +84,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - `cloud`: the aws, azure, cloudflare and railway kits together
 - `cloudflare`: Wrangler (Workers, Pages) and cloudflared (tunnels), always the newest release
 - `embedded-sql`: tools for SQLite, DuckDB, Turso and MotherDuck: turso, usql, litestream, sqruff, dbmate, sqlite-utils, datasette, harlequin and visidata
+- `microsoft`: Microsoft's sign-in library (azure-identity) and ms-python, a Python that has it, for ws-host auth new microsoft and the onedrive commands
 - `modern-cli`: bash, fish and git use eza, bat, btop, zoxide, fzf and delta, with the common aliases
 - `press`: TeX Live (LuaLaTeX, XeTeX), latexmk, poppler, qpdf, rsvg, Java, epubcheck, asciidoctor, potrace
 - `railway`: the Railway CLI, always the newest release
@@ -92,6 +97,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - `editor`: Use VS Code as the way to do everything ws-host does.
 - `extend`: Add a command or a kit by asking an AI to write it in Python.
 - `kits`: Install the tools a kind of work needs, one kit at a time.
+- `onedrive`: Sign in to Microsoft and copy files to and from OneDrive.
 - `recover`: What to do when something fails, or when a repository was left alone.
 - `release`: Make a release: build it, check that anyone could rebuild it, and publish it to GitHub Releases.
 - `repos`: Copy your repositories and keep them up to date without risking your work.

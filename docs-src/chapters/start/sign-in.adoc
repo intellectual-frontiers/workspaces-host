@@ -46,3 +46,28 @@ If it says it could not copy a repository and mentions `Username`, you are not s
 <<troubleshooting>>.
 
 TIP: In VS Code the same sign-in is a notification with a button, *Copy code and open browser*, or the command *Workspaces Console: Sign In…*. It runs `ws-host auth new github` for you. You will meet it in the next chapter.
+
+=== Microsoft OneDrive (optional)
+
+Install the `microsoft` kit, then sign in the same way, with a code and a web page and no password in the terminal:
+
+----
+ws-host kit add microsoft
+ws-host auth new microsoft --host work
+ws-host onedrive list
+----
+
+Give each account its own name with `--host`, for example `work` and `personal`, and name one with `--account` when you have both. `ws-host onedrive sync REMOTE LOCAL`
+copies a file or folder to this machine, and `ws-host onedrive add LOCAL REMOTE` copies one into OneDrive. A file that is already at the other end is left alone, and
+ws-host says so, unless you add `--replace`; `--dry-run` shows what would be copied.
+
+Many work organizations need an administrator to approve the app that signs you in. If the sign-in stops for that reason, register an app of your own once, in the Microsoft Entra admin center:
+
+. Choose *App registrations*, then *New registration*, and accept *accounts in any organizational directory and personal Microsoft accounts*.
+. Under *Authentication*, add the platform *Mobile and desktop applications* with the redirect `https://login.microsoftonline.com/common/oauth2/nativeclient`, and turn on *Allow public client flows*.
+. Under *API permissions*, add the delegated Microsoft Graph permissions `Files.ReadWrite.All` and `User.Read`, and grant consent if your organization asks for it.
+. Put the *Application (client) ID* in `WS_HOST_MICROSOFT_CLIENT_ID` in `~/.config/workspaces-host/ws-host.env`.
+
+The sign-in is kept in your system keyring when there is one. Most WSL setups have none, so it is kept in a file only you can read, under `~/.IdentityService`, and ws-host tells you so.
+OneDrive's own sync program exists only for Windows and macOS: on WSL, let the Windows program sync, mark the folders you need as *Always keep on this device*, and read them at
+`/mnt/c/Users/<you>/OneDrive`.

@@ -14,7 +14,7 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |`ws-host auth new FORGE [--host STRING]`
 |setup
 |terminal, editor
-|Sign in to GitHub or GitLab with a one-time code
+|Sign in to GitHub, GitLab or Microsoft with a one-time code
 
 |`ws-host auth status`
 |read
@@ -130,6 +130,34 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |setup
 |terminal
 |Bring the tools that float with their newest release up to date, for every kit or for one
+
+|===
+
+=== onedrive
+
+[cols="3,1,2,5"]
+|===
+|Usage |Category |Where it runs |What it does
+
+|`ws-host onedrive add LOCAL REMOTE [--account STRING] [--replace]`
+|setup
+|terminal, editor
+|Copy a local file or folder into OneDrive; nothing already there is replaced unless you say so
+
+|`ws-host onedrive list [PATH] [--account STRING]`
+|read
+|terminal, editor, mcp
+|List the files and folders in a OneDrive folder
+
+|`ws-host onedrive show PATH [--account STRING]`
+|read
+|terminal, editor, mcp
+|Show one file or folder in OneDrive
+
+|`ws-host onedrive sync REMOTE LOCAL [--account STRING] [--replace]`
+|setup
+|terminal, editor
+|Copy a OneDrive file or folder to this machine; a local file that differs is kept unless you say so
 
 |===
 

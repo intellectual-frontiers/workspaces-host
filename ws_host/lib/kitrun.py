@@ -78,7 +78,7 @@ def install(ctx, kit, name: str):
             yield ("configure", st, plain)
     except WsError as e:
         yield ("configure", "fail", e.plain)
-    if kit.name != "modern-cli" and not ctx.dry_run:
+    if kit.name == "base" and not ctx.dry_run:
         from ..core import config
         from ..lib import modern
         if config.load().modern() and not modern.configured() and kit.downloads(d):

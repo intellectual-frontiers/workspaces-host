@@ -17,6 +17,8 @@ KEYS = {
     "WS_HOST_GITLAB_HOSTS": "GitLab hosts you sign in to, space-separated",
     "WS_HOST_REPOS": "the repositories you work in, as host/org/repo, space-separated (the two starter repositories when you say nothing)",
     "WS_HOST_KIT": "kits to install for you whatever your repositories ask, space-separated (base, shell and embedded-sql when you say nothing; empty for none)",
+    "WS_HOST_MICROSOFT_CLIENT_ID": "the application (client) ID of your own app registration in Microsoft Entra, for signing in to Microsoft when your work account does not allow the shared one",
+    "WS_HOST_MICROSOFT_TENANT": "the Microsoft Entra tenant to sign in to: common (any work or personal account) when you say nothing",
     "WS_HOST_PROMPT": "the prompt setup gives bash and fish: pretty when you say nothing (needs a Nerd Font), plain (emoji and box lines only), or no to keep your own",
     "WS_HOST_MODERN": "whether setup makes bash, fish and git use the modern tools (eza, bat, zoxide, delta): yes when you say nothing, no to keep the old commands",
     "WS_HOST_PROVIDERS": "whether VS Code setup asks to enable the repositories that declare themselves providers: yes when you say nothing, no to enable them yourself",

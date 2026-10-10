@@ -31,8 +31,8 @@ STRING = register(Type("STRING", ("text",), lambda v, ctx: None))
 PATH = register(Type("PATH", ("/home/me/file",), lambda v, ctx: None))
 COMMAND = _pattern("COMMAND", r"^[a-z][a-z0-9-]*(?: [a-z][a-z0-9-]*)?$", ("doctor", "repo list"))
 SECTION = _pattern("SECTION", r"^[a-z][a-z0-9-]*$", ("registry", "launcher"))
-FORGE = register(Type("FORGE", ("github", "gitlab"), lambda v, ctx: None if v in ("github", "gitlab") else f"{v!r} is not github or gitlab",
-                      lambda ctx: ["github", "gitlab"]))
+FORGE = register(Type("FORGE", ("github", "gitlab", "microsoft"), lambda v, ctx: None if v in ("github", "gitlab", "microsoft") else f"{v!r} is not github, gitlab or microsoft",
+                      lambda ctx: ["github", "gitlab", "microsoft"]))
 SHELL = register(Type("SHELL", ("bash", "fish"), lambda v, ctx: None if v in ("bash", "fish") else f"{v!r} is not bash or fish",
                       lambda ctx: ["bash", "fish"]))
 # REPO and KIT resolve against the repositories and kits the machine knows; their validators are installed by the
