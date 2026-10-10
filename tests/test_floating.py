@@ -33,6 +33,7 @@ class Publisher:
     def __init__(self):
         self.routes: dict[str, bytes] = {}
         self.hits: list[str] = []
+        self.listing: dict[str, list] = {}
         outer = self
 
         class H(BaseHTTPRequestHandler):
@@ -66,6 +67,8 @@ class Publisher:
                 a["digest"] = digest
             listed.append(a)
         self.routes[f"/repos/{repo}/releases/latest"] = json.dumps({"tag_name": tag, "assets": listed}).encode()
+        self.listing.setdefault(repo, []).insert(0, {"tag_name": tag, "assets": listed})
+        self.routes[f"/repos/{repo}/releases?per_page=15"] = json.dumps(self.listing[repo]).encode()
 
     def stop(self):
         self.server.shutdown()
@@ -403,6 +406,13 @@ class Chosen(Home):
         self.assertEqual(c.exception.code, "no-program")
         self.assertFalse((paths.bin_dir() / "chosen").exists())
         self.assertFalse((paths.tools_dir() / "chosen" / "1.0.0").exists())
+
+    def test_a_newest_release_made_without_its_programs_falls_back_to_the_newest_that_has_them(self):
+        a = self.arch_words()
+        self.pub.release("acme/chosen", "v1.0.0", {f"chosen-{a}-unknown-linux-musl.tar.gz": tarball("chosen", "#!/bin/sh\necho one\n")})
+        self.pub.release("acme/chosen", "v2.0.0", {"source.tar.gz": b"x"})
+        r = floating.github_auto("acme/chosen")(fetch.arch())
+        self.assertEqual(r.version, "1.0.0")
 
     def test_a_release_with_no_file_for_this_machine_is_refused_in_words(self):
         self.pub.release("acme/chosen", "v1.0.0", {"chosen-windows-amd64.zip": b"x"})

@@ -6,7 +6,7 @@ from ..core.kit import Check, Floating, Kit
 from ..install import floating
 
 _GH = (("turso", "tursodatabase/turso-cli", {"turso": "turso"}),
-       ("usql", "xo/usql", {"usql": "usql"}),
+       ("usql", "xo/usql", {"usql": "usql|usql_static"}),
        ("litestream", "benbjohnson/litestream", {"litestream": "litestream"}),
        ("sqruff", "quarylabs/sqruff", {"sqruff": "sqruff"}),
        ("dbmate", "amacneil/dbmate", {"dbmate": "dbmate-linux-amd64|dbmate-linux-arm64|dbmate"}))

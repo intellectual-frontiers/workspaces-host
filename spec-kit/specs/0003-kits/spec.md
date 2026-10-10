@@ -119,7 +119,7 @@ a kit installs what the distribution ships, so two machines may differ, and
 - **FR-018**: The `base` kit MUST install `duckdb` and SQLite's own command-line tools (`sqlite3`, `sqldiff`, `sqlite3_analyzer`) as floating tools (FR-017), where sqlite.org builds them
   (x86-64; elsewhere the distribution's `sqlite3` is the one used and ws-host MUST say so and not fail), and these modern command-line tools as floating tools (FR-017): eza, zoxide, fzf, yazi, bat, delta, sd, yq, glow, btop, dust, duf, procs, just,
   watchexec, hyperfine, tokei, lazygit, tealdeer, xh, shfmt and actionlint; `tree` and `ncdu` come from the distribution's own packages. Each is found by the name of its release file for
-  the machine's architecture, and refused unless it matches the checksum GitHub states for that file. `kit check` MUST ask each publisher for the newest release and say which
+  the machine's architecture, and refused unless it matches the checksum GitHub states for that file. When the newest release was made without its programs, the newest release before it that has them MUST be used, and the version installed MUST be named. `kit check` MUST ask each publisher for the newest release and say which
   installed tools are behind, and MUST change nothing.
 - **FR-019**: The `modern-cli` kit MUST make `bash`, `fish` (where installed) and `git` use those tools, through chezmoi (0010-managed-config), in marked lines that never touch
   anything outside them: `ls`, `ll`, `la`, `lt` and `tree` by eza (with icons, which need a Nerd Font), `cat` by bat in plain form without a pager, `top` by btop, `..` and `...`, zoxide's
