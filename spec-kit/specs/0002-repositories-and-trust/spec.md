@@ -138,6 +138,12 @@ work, and a failed clone reported as done. Each is a test here.
   git does not track where they are, MUST make no backup when nothing is only here, and MUST refuse, saying why and what to do, in the middle of a merge or a rebase, off a branch, or
   with no shared branch. `repo status --details` MUST offer it for a repository with something only here, and the what-changed page (0009-workspaces-console FR-069) MUST too.
 
+- **FR-025**: `auth new microsoft [--host NAME]` MUST sign a person in to a personal or work Microsoft account, under a name of their choosing (`default` when none), with Microsoft's own
+  `azure-identity` library from the `microsoft` kit (0003-kits FR-021) and its device-code flow, and MUST offer the one-time code and its address as a resource in a stream, as FR-011 does. No
+  password and no token MUST be typed or shown. The library's token cache MUST be encrypted in the system keyring where there is one; where there is none, the sign-in MUST be kept in a file only
+  the person can read, and the command MUST say so. A person's own app registration (`WS_HOST_MICROSOFT_CLIENT_ID`, `WS_HOST_MICROSOFT_TENANT`) MUST replace Microsoft's shared one. `auth status`
+  MUST report each Microsoft sign-in beside the forges, once the kit or a sign-in is here. A missing kit MUST be an error whose action installs it.
+
 ## Out of scope
 
 - Kits and installers: 0003-kits.

@@ -150,7 +150,7 @@ class Fetch(Home):
 class Contract(Home):
     def test_kits_are_found_by_presence_with_unique_names(self):
         r = reg.discover()
-        self.assertEqual(sorted(r.kits), ["aws", "azure", "base", "cloud", "cloudflare", "embedded-sql", "modern-cli", "press", "railway", "rust", "shell"])
+        self.assertEqual(sorted(r.kits), ["aws", "azure", "base", "cloud", "cloudflare", "embedded-sql", "microsoft", "modern-cli", "press", "railway", "rust", "shell"])
         self.assertEqual(r.conflicts, [])
         for name, cls in r.kits.items():
             self.assertTrue(issubclass(cls, Kit))
@@ -211,7 +211,7 @@ class Commands(Home):
     def test_list_show_and_an_unknown_kit(self):
         code, doc = self.run_json("kit", "list")
         self.assertEqual(code, 0)
-        self.assertEqual({k["name"] for k in doc["data"]["kits"]}, {"aws", "azure", "base", "cloud", "cloudflare", "embedded-sql", "modern-cli", "press", "railway", "rust", "shell"})
+        self.assertEqual({k["name"] for k in doc["data"]["kits"]}, {"aws", "azure", "base", "cloud", "cloudflare", "embedded-sql", "microsoft", "modern-cli", "press", "railway", "rust", "shell"})
         code, doc = self.run_json("kit", "show", "rust")
         self.assertEqual(code, 0)
         self.assertEqual(doc["data"]["downloads"][0]["name"], "rust")

@@ -48,9 +48,9 @@ class Generated(Home):
         self.assertIn("--confirmed", complete_bash(self.script, "ws-host", "repo", "set", "x", "--"))
 
     def test_the_values_of_arguments_are_offered(self):
-        self.assertEqual(complete_bash(self.script, "ws-host", "kit", "add", ""), ["aws", "azure", "base", "cloud", "cloudflare", "embedded-sql", "modern-cli", "press", "railway", "rust", "shell"])
+        self.assertEqual(complete_bash(self.script, "ws-host", "kit", "add", ""), ["aws", "azure", "base", "cloud", "cloudflare", "embedded-sql", "microsoft", "modern-cli", "press", "railway", "rust", "shell"])
         self.assertEqual(complete_bash(self.script, "ws-host", "shell", "add", ""), ["bash", "fish"])
-        self.assertEqual(complete_bash(self.script, "ws-host", "auth", "new", ""), ["github", "gitlab"])
+        self.assertEqual(complete_bash(self.script, "ws-host", "auth", "new", ""), ["github", "gitlab", "microsoft"])
         self.assertIn("start", complete_bash(self.script, "ws-host", "help", ""))
         self.assertIn("registry", complete_bash(self.script, "ws-host", "check", ""))
 
@@ -85,7 +85,7 @@ class Generated(Home):
         self.assertIn("workspace", lines["[ws-host "].split())
         self.assertEqual(lines["[ws-host re"].split(), ["release", "repo"])
         self.assertEqual(sorted(lines["[ws-host repo "].split()), sorted(self.model["verbs"]["repo"]))
-        self.assertEqual(lines["[ws-host kit add "].split(), ["aws", "azure", "base", "cloud", "cloudflare", "embedded-sql", "modern-cli", "press", "railway", "rust", "shell"])
+        self.assertEqual(lines["[ws-host kit add "].split(), ["aws", "azure", "base", "cloud", "cloudflare", "embedded-sql", "microsoft", "modern-cli", "press", "railway", "rust", "shell"])
         self.assertIn("--plain", lines["[ws-host shell add bash --"].split())
         self.assertIn("registry", lines["[ws-host check --suite x "].split())
 
@@ -126,7 +126,7 @@ class Installing(Home):
 
     def test_completion_list_prints_one_value_per_line_for_a_shell_to_read(self):
         code, out = self.run_cmd("completion", "list", "KIT")
-        self.assertEqual([l[4:] for l in out.splitlines() if l.startswith("  - ")], ["aws", "azure", "base", "cloud", "cloudflare", "embedded-sql", "modern-cli", "press", "railway", "rust", "shell"])
+        self.assertEqual([l[4:] for l in out.splitlines() if l.startswith("  - ")], ["aws", "azure", "base", "cloud", "cloudflare", "embedded-sql", "microsoft", "modern-cli", "press", "railway", "rust", "shell"])
         code, out = self.run_cmd("completion", "list", "NOPE")
         self.assertEqual(code, 2)
 

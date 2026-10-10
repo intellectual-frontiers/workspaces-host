@@ -296,6 +296,27 @@ Work with small, embedded SQL databases: query, explore, migrate, back up and fo
 * vd (`vd`)
 * visidata (`visidata`)
 
+=== microsoft
+
+Sign in to a personal or work Microsoft account, and list, copy and fetch files in its OneDrive.
+
+*Packages on Debian 13:* `ca-certificates`
+
+*Downloads on Debian 13:*
+
+* `microsoft-identity` latest, for 
+
+*Packages on Ubuntu 24.04:* `ca-certificates`
+
+*Downloads on Ubuntu 24.04:*
+
+* `microsoft-identity` latest, for 
+
+*Checks:*
+
+* ms-python (`ms-python`)
+* Microsoft sign-in library loads
+
 === modern-cli
 
 Your terminal's ls, cat, top, cd and git diff become the modern, colorful versions, and ll, la, .. work the way you expect.

@@ -19,6 +19,7 @@ reg.noun("kit", "Kit", "package", "kits", {
     "command": "kit list", "rows": "kits", "id": "name", "label": "name", "description": "plain", "status": "status",
     "status_map": {"ok": "ok", "warn": "warning"}, "tooltip": ["missing"]})
 reg.noun("auth", "Sign-in", "account", "setup")
+reg.noun("onedrive", "OneDrive", "cloud", "setup")
 reg.noun("vscode", "VS Code", "extensions", "setup")
 reg.noun("shell", "Prompt", "terminal", "setup")
 reg.noun("config", "Managed files", "gear", "setup")
@@ -42,6 +43,8 @@ for _id, _title, _icon in (
     ("context", "Show Context", None), ("docs build", "Build Guide", "book"), ("docs generate", "Generate Guide Reference", None),
     ("doctor", "Check Machine", "pulse"), ("fresh", "Check Generated Files", None), ("help", "Learn Daily Work", "book"),
     ("kit add", "Install Kit…", "cloud-download"), ("kit sync", "Update Floating Tools", "sync"), ("kit check", "Check Floating Tools", None), ("kit list", "List Kits", None), ("kit show", "Show Kit…", None),
+    ("onedrive add", "Copy to OneDrive…", "cloud-upload"), ("onedrive list", "List OneDrive Files", None), ("onedrive show", "Show OneDrive File…", None),
+    ("onedrive sync", "Copy From OneDrive…", "cloud-download"),
     ("provider add", "Enable Provider…", "plug"), ("provider list", "List Providers", None), ("provider remove", "Disable Provider…", "trash"),
     ("provider run", "Run With Provider…", "play"), ("provider show", "Show Provider…", None),
     ("system ensure", "Install System Libraries", "server"),
