@@ -281,7 +281,7 @@ def _install_package(f: Floating, r: Resolved, target: Path, arch: str) -> dict[
         npm = shutil.which("npm", path=env["PATH"])
         if not npm:
             raise FetchError("no-npm", "ws-host's Node has no npm")
-        _run([npm, "install", "--prefix", str(target), "--no-audit", "--no-fund", "--ignore-scripts", "--loglevel=error", f"{f.package}@{r.version}"], env=env, what=f"npm install {f.package}")
+        _run([npm, "install", "--prefix", str(target), "--no-audit", "--no-fund", "--loglevel=error", f"{f.package}@{r.version}"], env=env, what=f"npm install {f.package}")
         lock = target / "node_modules" / ".package-lock.json"
         if r.integrity and lock.is_file():
             held = (json.loads(lock.read_text()).get("packages", {}).get(f"node_modules/{f.package}") or {}).get("integrity")
