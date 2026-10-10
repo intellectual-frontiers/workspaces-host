@@ -114,40 +114,47 @@ def pick_asset(names: list[str], arch: str) -> str | None:
     return best
 
 
+def _checksum_of(assets: list[dict], name: str, a: dict) -> str:
+    """The SHA-256 GitHub states for a release file, or one in a checksum file beside it; empty when there is none."""
+    digest = str(a.get("digest") or "")
+    sha = digest.split(":", 1)[1] if digest.startswith("sha256:") else ""
+    if not sha:
+        for c in assets:
+            if re.search(r"(checksums?|sha256sums?)(\.txt)?$|\.sha256(sum)?$", c.get("name", ""), re.I):
+                for line in _get(c["browser_download_url"]).decode("utf-8", "replace").splitlines():
+                    parts = line.split()
+                    if parts and re.fullmatch(r"[0-9a-f]{64}", parts[0]) and (name in line or c["name"].lower().endswith(".sha256") and c["name"].lower().startswith(name.lower())):
+                        sha = parts[0]
+    return sha
+
+
 def github_auto(repo: str):
-    """The newest release of a GitHub repository, the file for Linux on this architecture chosen by its name, and the checksum GitHub states for it."""
+    """The newest release of a GitHub repository, the file for Linux on this architecture chosen by its name, and the checksum GitHub states for it. A release made without its programs,
+    or without a checksum for them (an old one, or one whose build had not finished), is passed over for the newest before it that has both."""
     def resolve(arch: str) -> Resolved:
         api = f"{_base('WS_HOST_GITHUB_API', 'https://api.github.com')}/repos/{repo}/releases"
-        rel = _json(f"{api}/latest", _github_headers())
-        assets = rel.get("assets", [])
-        name = pick_asset([a.get("name", "") for a in assets], arch)
-        if not name:        # a release made without its programs (the project's build had not finished, or failed): the newest one before it that has them
-            for older in _json(f"{api}?per_page=15", _github_headers()):
-                if older.get("draft") or older.get("prerelease"):
+        first = _json(f"{api}/latest", _github_headers())
+        tried, lacking = [first], ""
+        for n in range(2):
+            for rel in tried:
+                assets = rel.get("assets", [])
+                name = pick_asset([a.get("name", "") for a in assets], arch)
+                if not name:
+                    lacking = lacking or f"the release {rel.get('tag_name')} has no Linux file for {arch} that I can choose by its name"
                     continue
-                name = pick_asset([a.get("name", "") for a in older.get("assets", [])], arch)
-                if name:
-                    rel, assets = older, older.get("assets", [])
-                    break
-        if not name:
-            raise FetchError("no-asset", f"the newest releases of {repo} (from {rel.get('tag_name')}) have no Linux file for {arch} that I can choose by its name")
-        a = next(x for x in assets if x.get("name") == name)
-        digest = str(a.get("digest") or "")
-        sha = digest.split(":", 1)[1] if digest.startswith("sha256:") else ""
-        if not sha:
-            for c in assets:
-                if re.search(r"(checksums?|sha256sums?)(\.txt)?$|\.sha256(sum)?$", c.get("name", ""), re.I):
-                    for line in _get(c["browser_download_url"]).decode("utf-8", "replace").splitlines():
-                        parts = line.split()
-                        if parts and re.fullmatch(r"[0-9a-f]{64}", parts[0]) and (name in line or c["name"].lower().endswith(".sha256") and c["name"].lower().startswith(name.lower())):
-                            sha = parts[0]
-        if not sha:
-            raise FetchError("no-checksum", f"{repo} published no checksum for {name}, so I will not install it")
-        low = name.lower()
-        kind = "zip" if low.endswith(".zip") else "tar" if any(low.endswith(e) for e in _ARCHIVES) else "file"
-        tag = str(rel.get("tag_name", ""))
-        m = re.search(r"\d+(?:\.\d+)+", tag)
-        return Resolved(version=m.group(0) if m else tag.lstrip("v"), url=a["browser_download_url"], sha256=sha, kind=kind, asset=name)
+                a = next(x for x in assets if x.get("name") == name)
+                sha = _checksum_of(assets, name, a)
+                if not sha:
+                    lacking = lacking or f"{repo} published no checksum for {name}"
+                    continue
+                low = name.lower()
+                kind = "zip" if low.endswith(".zip") else "tar" if any(low.endswith(e) for e in _ARCHIVES) else "file"
+                tag = str(rel.get("tag_name", ""))
+                m = re.search(r"\d+(?:\.\d+)+", tag)
+                return Resolved(version=m.group(0) if m else tag.lstrip("v"), url=a["browser_download_url"], sha256=sha, kind=kind, asset=name)
+            if n == 0:
+                tried = [r for r in _json(f"{api}?per_page=15", _github_headers()) if not r.get("draft") and not r.get("prerelease") and r.get("tag_name") != first.get("tag_name")]
+        raise FetchError("no-asset", f"I found no release of {repo} with a Linux file for {arch} and a checksum from its publisher ({lacking}), so I will not install it")
     return resolve
 
 

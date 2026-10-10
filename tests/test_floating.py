@@ -414,6 +414,13 @@ class Chosen(Home):
         r = floating.github_auto("acme/chosen")(fetch.arch())
         self.assertEqual(r.version, "1.0.0")
 
+    def test_a_release_without_a_checksum_is_passed_over_for_an_earlier_one_that_has_one(self):
+        a = self.arch_words()
+        name = f"chosen-{a}-unknown-linux-musl.tar.gz"
+        self.pub.release("acme/chosen", "v1.0.0", {name: tarball("chosen", "#!/bin/sh\necho one\n")})
+        self.pub.release("acme/chosen", "v2.0.0", {name: tarball("chosen", "#!/bin/sh\necho two\n")}, digest=False)
+        self.assertEqual(floating.github_auto("acme/chosen")(fetch.arch()).version, "1.0.0")
+
     def test_a_release_with_no_file_for_this_machine_is_refused_in_words(self):
         self.pub.release("acme/chosen", "v1.0.0", {"chosen-windows-amd64.zip": b"x"})
         with self.assertRaises(fetch.FetchError) as c:
@@ -435,10 +442,10 @@ class BaseTools(Home):
         base = reg.discover().kits["base"]()
         d = {"id": "debian", "codename": "trixie", "id_like": ""}
         floats = [x.name for x in base.downloads(d) if isinstance(x, Floating)]
-        want = ["duckdb", "sqlite", "eza", "zoxide", "fzf", "yazi", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "tokei", "lazygit", "tealdeer", "xh", "shfmt", "actionlint"]
+        want = ["duckdb", "sqlite", "eza", "zoxide", "fzf", "yazi", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "lazygit", "tealdeer", "xh", "shfmt", "actionlint"]
         self.assertEqual(floats, want)
         programs = {c.program for c in base.checks(d) if c.program}
-        for p in ("eza", "zoxide", "fzf", "yazi", "ya", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "tokei", "lazygit", "tldr", "xh", "shfmt", "actionlint"):
+        for p in ("eza", "zoxide", "fzf", "yazi", "ya", "bat", "delta", "sd", "yq", "glow", "btop", "dust", "duf", "procs", "just", "watchexec", "hyperfine", "lazygit", "tldr", "xh", "shfmt", "actionlint"):
             self.assertIn(p, programs, p)
         self.assertNotIn("tree", programs, "eza --tree stands in for it")
 

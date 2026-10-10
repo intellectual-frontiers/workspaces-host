@@ -80,7 +80,6 @@ The everyday tools every repository assumes: git, GitHub and GitLab sign-in, sea
 * `just` latest, for 
 * `watchexec` latest, for 
 * `hyperfine` latest, for 
-* `tokei` latest, for 
 * `lazygit` latest, for 
 * `tealdeer` latest, for 
 * `xh` latest, for 
@@ -111,7 +110,6 @@ The everyday tools every repository assumes: git, GitHub and GitLab sign-in, sea
 * `just` latest, for 
 * `watchexec` latest, for 
 * `hyperfine` latest, for 
-* `tokei` latest, for 
 * `lazygit` latest, for 
 * `tealdeer` latest, for 
 * `xh` latest, for 
@@ -177,7 +175,6 @@ The everyday tools every repository assumes: git, GitHub and GitLab sign-in, sea
 * just (`just`)
 * watchexec (`watchexec`)
 * hyperfine (`hyperfine`)
-* tokei (`tokei`)
 * lazygit (`lazygit`)
 * tldr (`tldr`)
 * xh (`xh`)
