@@ -62,7 +62,8 @@ The everyday tools every repository assumes: git, GitHub and GitLab sign-in, sea
 
 *Downloads on Debian 13:*
 
-* `duckdb` 1.5.6, for aarch64, x86_64
+* `duckdb` latest, for 
+* `sqlite` latest, for 
 * `eza` latest, for 
 * `zoxide` latest, for 
 * `fzf` latest, for 
@@ -90,7 +91,8 @@ The everyday tools every repository assumes: git, GitHub and GitLab sign-in, sea
 
 *Downloads on Ubuntu 24.04:*
 
-* `duckdb` 1.5.6, for aarch64, x86_64
+* `duckdb` latest, for 
+* `sqlite` latest, for 
 * `glab` 1.120.0, for aarch64, x86_64
 * `chrome-for-testing` 154.0.8037.92, for x86_64
 * `eza` latest, for 
@@ -248,6 +250,51 @@ Deploy to Cloudflare: the wrangler and cloudflared commands.
 
 * wrangler (`wrangler`)
 * cloudflared (`cloudflared`)
+
+=== embedded-sql
+
+Work with small, embedded SQL databases: query, explore, migrate, back up and format them, and use Turso and MotherDuck.
+
+*Packages on Debian 13:* none
+
+*Downloads on Debian 13:*
+
+* `turso` latest, for 
+* `usql` latest, for 
+* `litestream` latest, for 
+* `sqruff` latest, for 
+* `dbmate` latest, for 
+* `sqlite-utils` latest, for 
+* `datasette` latest, for 
+* `harlequin` latest, for 
+* `visidata` latest, for 
+
+*Packages on Ubuntu 24.04:* none
+
+*Downloads on Ubuntu 24.04:*
+
+* `turso` latest, for 
+* `usql` latest, for 
+* `litestream` latest, for 
+* `sqruff` latest, for 
+* `dbmate` latest, for 
+* `sqlite-utils` latest, for 
+* `datasette` latest, for 
+* `harlequin` latest, for 
+* `visidata` latest, for 
+
+*Checks:*
+
+* turso (`turso`)
+* usql (`usql`)
+* litestream (`litestream`)
+* sqruff (`sqruff`)
+* dbmate (`dbmate`)
+* sqlite-utils (`sqlite-utils`)
+* datasette (`datasette`)
+* harlequin (`harlequin`)
+* vd (`vd`)
+* visidata (`visidata`)
 
 === modern-cli
 

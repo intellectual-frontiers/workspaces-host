@@ -6,6 +6,7 @@ kept, so a bad release can be left behind. Standard library only."""
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import json
 import os
 import re
@@ -156,6 +157,16 @@ AWS_KEY = Path(__file__).resolve().parents[1] / "data" / "keys" / "aws-cli.asc"
 AWS_FINGERPRINT = "FB5DB77FD5C118B80511ADA8A6310ACC4672475C"      # published by AWS at docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 
+def sqlite_org(arch: str) -> Resolved:
+    """SQLite's own newest command-line tools (sqlite3, sqldiff, sqlite3_analyzer): sqlite.org lists the newest version, each file and its SHA3-256 on its download page."""
+    page = _get(_base("WS_HOST_SQLITE_URL", "https://www.sqlite.org") + "/download.html").decode("utf-8", "replace")
+    word = {"x86_64": "x64", "aarch64": "arm64"}.get(arch)
+    for m in re.finditer(r"^PRODUCT,([\d.]+),(\S*?sqlite-tools-linux-(\w+)-\d+\.zip),\d+,([0-9a-f]{64})\s*$", page, re.M):
+        if m.group(3) == word:
+            return Resolved(version=m.group(1), url=f"{_base('WS_HOST_SQLITE_URL', 'https://www.sqlite.org')}/{m.group(2)}", sha3=m.group(4), kind="zip")
+    raise FetchError("unsupported-arch", f"sqlite.org publishes no command-line tools for {arch}")
+
+
 def npm(package: str):
     def resolve(arch: str) -> Resolved:
         doc = _json(f"{_base('WS_HOST_NPM_REGISTRY', 'https://registry.npmjs.org')}/{package.replace('/', '%2f')}/latest")
@@ -194,6 +205,12 @@ def _fetch_checked(r: Resolved, offline: bool) -> str:
     if r.sha256:
         fetch.download(r.url, r.sha256, offline)
         return r.sha256
+    if r.sha3:
+        archive = fetch.download(r.url, None, offline)
+        if hashlib.sha3_256(archive.read_bytes()).hexdigest() != r.sha3:
+            archive.unlink(missing_ok=True)
+            raise FetchError("checksum", f"the file at {r.url} is not the one its publisher lists (its SHA3-256 differs); nothing was installed")
+        return archive.name
     if r.signature_url:
         archive = fetch.download(r.url, None, offline)
         with tempfile.TemporaryDirectory() as t:

@@ -28,7 +28,7 @@ detail, troubleshooting, and how to take over in VS Code.
   Microsoft Store under WSL on Windows 11, as a person finds it: a minimal system
   with `sudo` and an account they created at first launch.
 - **FR-004**: A person MAY name the kits they always want in `WS_HOST_KIT` of
-  their own configuration; it is `base` and `shell` when they say nothing and
+  their own configuration; it is `base`, `shell` and `embedded-sql` when they say nothing and
   none when it is empty. `workspace ensure` MUST install them before anything else, because the
   sign-in tool is in `base`.
 - **FR-005**: Signing in to GitHub MUST be prescribed one way: `ws-host auth new
