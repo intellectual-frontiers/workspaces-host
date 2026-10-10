@@ -117,11 +117,20 @@ def pick_asset(names: list[str], arch: str) -> str | None:
 def github_auto(repo: str):
     """The newest release of a GitHub repository, the file for Linux on this architecture chosen by its name, and the checksum GitHub states for it."""
     def resolve(arch: str) -> Resolved:
-        rel = _json(f"{_base('WS_HOST_GITHUB_API', 'https://api.github.com')}/repos/{repo}/releases/latest", _github_headers())
+        api = f"{_base('WS_HOST_GITHUB_API', 'https://api.github.com')}/repos/{repo}/releases"
+        rel = _json(f"{api}/latest", _github_headers())
         assets = rel.get("assets", [])
         name = pick_asset([a.get("name", "") for a in assets], arch)
+        if not name:        # a release made without its programs (the project's build had not finished, or failed): the newest one before it that has them
+            for older in _json(f"{api}?per_page=15", _github_headers()):
+                if older.get("draft") or older.get("prerelease"):
+                    continue
+                name = pick_asset([a.get("name", "") for a in older.get("assets", [])], arch)
+                if name:
+                    rel, assets = older, older.get("assets", [])
+                    break
         if not name:
-            raise FetchError("no-asset", f"the newest release of {repo} ({rel.get('tag_name')}) has no Linux file for {arch} that I can choose by its name")
+            raise FetchError("no-asset", f"the newest releases of {repo} (from {rel.get('tag_name')}) have no Linux file for {arch} that I can choose by its name")
         a = next(x for x in assets if x.get("name") == name)
         digest = str(a.get("digest") or "")
         sha = digest.split(":", 1)[1] if digest.startswith("sha256:") else ""
