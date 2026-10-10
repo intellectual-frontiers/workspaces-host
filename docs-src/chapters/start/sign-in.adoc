@@ -68,6 +68,9 @@ Many work organizations need an administrator to approve the app that signs you 
 . Under *API permissions*, add the delegated Microsoft Graph permissions `Files.ReadWrite.All` and `User.Read`, and grant consent if your organization asks for it.
 . Put the *Application (client) ID* in `WS_HOST_MICROSOFT_CLIENT_ID` in `~/.config/workspaces-host/ws-host.env`.
 
+If you made the app for your organization only, also put its *Directory (tenant) ID* in `WS_HOST_MICROSOFT_TENANT`. If, after you pick your account, Microsoft shows a page that says *You don't have access to this*, it is this
+approval that is missing; nothing is wrong with your account. An administrator can also grant consent for the app under *Enterprise applications*, then *Permissions*, then *Grant admin consent*.
+
 The sign-in is kept in your system keyring when there is one. Most WSL setups have none, so it is kept in a file only you can read, under `~/.IdentityService`, and ws-host tells you so.
 OneDrive's own sync program exists only for Windows and macOS: on WSL, let the Windows program sync, mark the folders you need as *Always keep on this device*, and read them at
 `/mnt/c/Users/<you>/OneDrive`.

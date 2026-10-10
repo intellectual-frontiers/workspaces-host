@@ -128,7 +128,8 @@ def _microsoft_new(ctx, label: str):
     note, done = "", None
     for ev in graph.sign_in(label):
         if ev.get("event") == "code":
-            yield Resource("auth-code", label, {"plain": f"To sign in, open {ev['url']} and type this code: {ev['code']}", "code": ev["code"], "url": ev["url"], "host": label})
+            yield Resource("auth-code", label, {"plain": f"To sign in, open {ev['url']} and type this code: {ev['code']}", "code": ev["code"], "url": ev["url"], "host": label,
+                                                   "hint": "If Microsoft then says 'You don't have access to this', your organization has not allowed the shared sign-in app: run `ws-host help onedrive` for how to register your own."})
         elif ev.get("event") == "note":
             note = ev["message"]
         elif ev.get("event") in ("done", "error"):
