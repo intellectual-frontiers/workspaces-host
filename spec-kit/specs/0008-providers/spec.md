@@ -60,7 +60,9 @@ different versions of one program without conflict. Nothing here installs a prog
   installed path, the environment it sets and the programs it provides, so that a provider's own command line can find what it pinned.
 - **FR-013**: `provider run PROVIDER -- COMMAND...` MUST run the command with that provider's environment: its entries' folders first on
   `PATH` and their `env` set; a variable several entries set holds each value in entry-name order joined by a colon. `provider show` MUST return that environment, as the PATH pieces and variables it adds, so a provider's own command line can run its programs itself.
-  No pinned program MUST be put on a person's PATH.
+  No pinned program MUST be put on a person's PATH. A stop asked for at the terminal while the command runs (Ctrl+C, SIGINT)
+  reaches the command itself, which is the one to answer it: `provider run` MUST wait for the command to end and MUST end with
+  the command's status (128 plus the signal's number when a signal ended it), printing nothing of its own and never a traceback.
 - **FR-014**: Environment variables that change what a program's output is, such as those of TeX, Node and Playwright, MUST be left
   to the provider to remove from the programs it starts; `ws-host` MUST pass through only the variables `mise` needs and the person's own.
 - **FR-015**: `toolchain remove --unused` MUST remove stored programs that no enabled provider's lock names, and with `--dry-run` MUST say what it

@@ -293,6 +293,30 @@ class Installing(Home):
         r = subprocess.run([sys.executable, "-m", "ws_host", "provider", "run", "demo", "--", "echo", "--json", "--offline"], capture_output=True, text=True, cwd=REPO)
         self.assertEqual(r.stdout.strip(), "--json --offline", "a flag after -- is the program's, not ws-host's")
 
+    def test_a_stop_at_the_terminal_reaches_the_program_and_ws_host_says_nothing_of_its_own(self):
+        """0008 FR-013: Ctrl+C goes to the whole foreground group; the program answers it and ws-host ends with the program's status."""
+        import os
+        import signal
+        import time
+
+        self.enable()
+        script = "trap 'echo stopped; exit 0' INT; echo up; sleep 30"
+        r = subprocess.Popen([sys.executable, "-m", "ws_host", "provider", "run", "demo", "--", "sh", "-c", script],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=REPO, start_new_session=True)
+        assert r.stdout is not None
+        self.assertEqual(r.stdout.readline().strip(), "up")
+        time.sleep(0.2)
+        os.killpg(os.getpgid(r.pid), signal.SIGINT)
+        out, err = r.communicate(timeout=20)
+        self.assertEqual((r.returncode, out.strip()), (0, "stopped"), err)
+        self.assertNotIn("Traceback", err)
+        # a program that the signal itself ended gives the status a shell gives it
+        r = subprocess.Popen([sys.executable, "-m", "ws_host", "provider", "run", "demo", "--", "sh", "-c", "kill -INT $$"],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=REPO, start_new_session=True)
+        out, err = r.communicate(timeout=20)
+        self.assertEqual(r.returncode, 130, err)
+        self.assertNotIn("Traceback", err)
+
     def test_a_tampered_archive_installs_nothing(self):
         root = self.enable(entries={"minitool": archive(sha="0" * 64)})
         code, r = self.run_json("toolchain", "ensure", "--all")
