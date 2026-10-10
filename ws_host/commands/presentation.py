@@ -36,7 +36,7 @@ reg.noun("command", "Command", "terminal-cmd")
 
 # The title a command has in the editor's command palette: a verb and an object, with an ellipsis when it asks for a value first.
 for _id, _title, _icon in (
-    ("auth new", "Sign In…", "key"), ("auth status", "Show Sign-In Status", "account"),
+    ("auth new", "Sign In…", "key"), ("auth set", "Set Sign-In App…", "settings-gear"), ("auth status", "Show Sign-In Status", "account"),
     ("check", "Run Checks", "checklist"), ("command list", "List Commands", None), ("command show", "Show Command", None),
     ("completion add", "Set Up Tab Completion…", "keyboard"), ("config check", "Check Managed Files", None), ("config ensure", "Update Managed Files", "sync"),
     ("config show", "List Managed Files", None), ("completion list", "List Completion Values…", None),

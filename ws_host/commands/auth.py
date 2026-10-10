@@ -125,6 +125,8 @@ def _microsoft_new(ctx, label: str):
     if ctx.dry_run:
         yield Resource("auth", label, {"plain": f"Nothing was changed. I would sign you in to Microsoft as '{label}'.", "would_run": "ws-host auth new microsoft --host " + label})
         return
+    if graph.app_for(label) is None:
+        _ask_app(ctx, label)           # asks at a terminal and keeps the answers; where nothing can be asked, says what to do and stops
     note, done = "", None
     for ev in graph.sign_in(label):
         if ev.get("event") == "code":
@@ -140,3 +142,64 @@ def _microsoft_new(ctx, label: str):
         f"Signing in to Microsoft did not finish" + (f": {done['message']}" if done and done.get("message") else ".") + (" A work account may need an administrator to approve the app; the guide says how to use your own." if not ok else "")
     yield Resource("auth", label, {"plain": plain, "signed_in": ok}, actions=[] if ok else [Action(("auth", "new"), "Try again", {"forge": "microsoft", "host": label})],
                    status=OK if ok else FAILED)
+
+
+ENTRA = "https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade"
+GUIDE = (
+    "To sign in to a work Microsoft account I need two numbers from an app that your organization has registered, because many organizations do not allow the shared one.\n"
+    "If nobody has registered one for you, you can, in two minutes, at " + ENTRA + " :\n"
+    "  1. New registration; give it any name, such as ws-host. Choose the account type your organization uses (\"this organizational directory only\" is fine).\n"
+    "  2. Authentication: add the platform \"Mobile and desktop applications\" with the redirect https://login.microsoftonline.com/common/oauth2/nativeclient, and turn on \"Allow public client flows\".\n"
+    "  3. API permissions: add the Microsoft Graph delegated permissions Files.ReadWrite.All and User.Read, and click \"Grant admin consent\" if it is there.\n"
+    "  4. On the app's Overview page, copy the \"Application (client) ID\" and the \"Directory (tenant) ID\".\n"
+    "For a home account (outlook.com, hotmail.com, live.com) you need no app: type shared.")
+
+
+def _plain_missing(label: str) -> str:
+    return (GUIDE + f"\nThen run:  ws-host auth set microsoft CLIENT_ID TENANT --host {label}\nor, at a terminal, run  ws-host auth new microsoft --host {label}  again and answer the two questions.")
+
+
+def _ask_app(ctx, label: str) -> None:
+    """The one place a person is asked for the app's IDs (0002 FR-026): at a terminal, in plain words, checked as typed and kept for this account, so no environment variable or file is ever edited by hand."""
+    from ..core import types
+    if not ctx.interactive():
+        raise WsError("needs-input", f"ws-host needs the app that signs {label} in to Microsoft", _plain_missing(label),
+                      [Action(("auth", "set"), "Enter the app's IDs", {"forge": "microsoft", "host": label}), Action(("auth", "new"), "Sign in once they are set", {"forge": "microsoft", "host": label})],
+                      status=MISSING)
+    print(GUIDE + "\n")
+    client = _ask("Application (client) ID, or shared", types.CLIENTID)
+    tenant = "common" if client == "shared" else _ask("Directory (tenant) ID, or your organization's domain such as example.com", types.TENANT)
+    graph.save_profile(label, client, tenant)
+    print(f"Saved for '{label}'. You will not be asked again.\n")
+
+
+def _ask(question: str, typ) -> str:
+    for _ in range(4):
+        try:
+            answer = input(f"{question}: ").strip()
+        except EOFError:
+            break
+        problem = typ.validate(answer, None) if answer else "nothing was typed"
+        if not problem:
+            return answer
+        print(f"  {problem}")
+    raise WsError("needs-input", "no valid answer was given", "I did not get a valid answer, so I stopped. Run the command again when you have the value.", exit_code=2)
+
+
+@command("auth", "set", category="setup", summary="Tell ws-host which app signs a Microsoft account in, from an app registration of your own",
+         args=(Arg("forge", "FORGE", positional=True, required=True, help="microsoft"),
+               Arg("client_id", "CLIENTID", positional=True, required=True, help="the Application (client) ID of your app registration, or shared for Microsoft's own app"),
+               Arg("tenant", "TENANT", positional=True, required=True, help="the Directory (tenant) ID or your organization's domain; say common with shared"),
+               Arg("host", help="the name of the account, such as work (default: default)")),
+         surfaces=("cli", "editor"))
+def auth_set(ctx, forge, client_id, tenant, host=None):
+    if forge != "microsoft":
+        raise WsError("usage", "only microsoft has settings to set", "Only a Microsoft account needs this. GitHub and GitLab sign in without it.", exit_code=2)
+    label = host or "default"
+    tenant = "common" if client_id == "shared" else tenant
+    if ctx.dry_run:
+        return Resource("auth", label, {"plain": f"Nothing was changed. I would remember that '{label}' signs in with that app.", "account": label})
+    graph.save_profile(label, client_id, tenant)
+    return Resource("auth", label, {"plain": f"Saved. '{label}' will sign in with that app. Next: ws-host auth new microsoft --host {label}", "account": label, "client_id": client_id, "tenant": tenant,
+                                    "next": f"ws-host auth new microsoft --host {label}"},
+                    actions=[Action(("auth", "new"), "Sign in now", {"forge": "microsoft", "host": label})], status=OK)

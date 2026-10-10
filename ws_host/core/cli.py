@@ -31,6 +31,10 @@ class Ctx:
     exit_code: int | None = None  # a command that returns nothing (it ran a program whose output is the output) sets the status here
     confirmed: bool = False     # the Workspaces Console passes --confirmed only after its modal (0041 FR-051)
 
+    def interactive(self) -> bool:
+        """True where a person can be asked a question: the terminal, in text mode. The editor, MCP and a pipeline cannot be (0041 FR-082)."""
+        return self.surface == "cli" and self.mode == "text" and sys.stdin.isatty() and sys.stdout.isatty()
+
     def confirm(self, question: str) -> None:
         """A `decision` needs a confirmation only a person can give: a typed answer at a terminal, or the editor's modal
         (0041 FR-014, FR-051). Raises when neither is possible, so an agent without a terminal cannot decide."""

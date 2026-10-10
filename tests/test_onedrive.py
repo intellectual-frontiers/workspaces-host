@@ -138,7 +138,7 @@ class OneDrive(Home):
         for label in ("work",):
             f = graph.state_file(label)
             f.parent.mkdir(parents=True, exist_ok=True)
-            f.write_text("{}")
+            f.write_text('{"record": "x"}')
         self.g.files.update({"Docs/a.txt": b"alpha", "Docs/sub/b.txt": b"bravo!", "top.txt": b"t"})
         self.g.folders.update({"Docs", "Docs/sub"})
         self.local = Path(self._tmp.name) / "local"
@@ -222,7 +222,7 @@ class OneDrive(Home):
 
     def test_two_sign_ins_must_be_told_apart(self):
         f = graph.state_file("personal")
-        f.write_text("{}")
+        f.write_text('{"record": "x"}')
         code, doc = self.run_json("onedrive", "list")
         self.assertEqual(code, 2)
         self.assertIn("--account", json.dumps(doc))
@@ -278,6 +278,7 @@ class Signing(Home):
         self.addCleanup(self.g.stop)
         os.environ["WS_HOST_GRAPH_URL"] = self.g.url
         self.g.files["hello.txt"] = b"hi"
+        os.environ["WS_HOST_MICROSOFT_CLIENT_ID"] = "0a1b2c3d-1111-2222-3333-444455556666"      # a person who set it is not asked
 
     def test_auth_new_microsoft_shows_the_code_stores_a_private_record_and_the_files_then_open_with_the_token(self):
         code, out = self.run_cmd("auth", "new", "microsoft", "--host", "work", "--json")
@@ -316,3 +317,98 @@ class Signing(Home):
         code, doc = self.run_json("onedrive", "list")
         self.assertNotEqual(code, 0)
         self.assertIn("sign in", json.dumps(doc).lower())
+
+
+class AskingForTheApp(Home):
+    """0002 FR-026: nobody is ever told to set an environment variable; a terminal is asked, anything else is told what to do, and an answer is kept for that account."""
+
+    def setUp(self):
+        super().setUp()
+        pkg = Path(self._tmp.name) / "fakeid" / "azure" / "identity"
+        pkg.mkdir(parents=True)
+        (pkg.parent / "__init__.py").write_text("")
+        (pkg / "__init__.py").write_text(FAKE_IDENTITY)
+        os.environ["PYTHONPATH"] = str(Path(self._tmp.name) / "fakeid")
+        py = graph.venv_python()
+        py.parent.mkdir(parents=True)
+        py.write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
+        py.chmod(py.stat().st_mode | stat.S_IXUSR)
+        for k in ("WS_HOST_MICROSOFT_CLIENT_ID", "WS_HOST_MICROSOFT_TENANT"):
+            os.environ.pop(k, None)
+
+    def test_where_nothing_can_be_asked_it_says_what_to_do_in_plain_words_and_offers_the_setting_command(self):
+        code, doc = self.run_json("auth", "new", "microsoft", "--host", "work")
+        self.assertEqual(code, 3, doc)
+        self.assertEqual(doc["data"]["code"], "needs-input")
+        text = json.dumps(doc)
+        self.assertIn("Application (client) ID", text)
+        self.assertNotIn("environment variable", text.lower())
+        self.assertNotIn("ws-host.env", text)
+        self.assertIn("auth", json.dumps(doc["actions"]))
+        self.assertIn("set", json.dumps(doc["actions"]))
+
+    def test_auth_set_checks_what_is_typed_and_keeps_it_for_that_account_only(self):
+        code, doc = self.run_json("auth", "set", "microsoft", "not-a-guid", "example.com", "--host", "work")
+        self.assertEqual(code, 2)
+        self.assertIn("Application (client) ID", json.dumps(doc))
+        code, doc = self.run_json("auth", "set", "microsoft", "0a1b2c3d-1111-2222-3333-444455556666", "contoso.com", "--host", "work")
+        self.assertEqual(code, 0, doc)
+        self.assertEqual(graph.app_for("work"), ("0a1b2c3d-1111-2222-3333-444455556666", "contoso.com"))
+        self.assertIsNone(graph.app_for("personal"))
+        self.assertEqual(stat.S_IMODE(graph.state_file("work").stat().st_mode), 0o600)
+        self.assertEqual(graph.accounts(), [], "an app is not yet a sign-in")
+
+    def test_shared_means_microsofts_own_app_and_the_common_tenant(self):
+        self.run_json("auth", "set", "microsoft", "shared", "common", "--host", "personal")
+        self.assertEqual(graph.app_for("personal"), ("shared", "common"))
+
+    def test_the_saved_app_is_the_one_the_sign_in_uses(self):
+        self.run_json("auth", "set", "microsoft", "0a1b2c3d-1111-2222-3333-444455556666", "contoso.com", "--host", "work")
+        code, out = self.run_cmd("auth", "new", "microsoft", "--host", "work", "--json")
+        self.assertEqual(code, 0, out)
+        state = json.loads(graph.state_file("work").read_text())
+        self.assertEqual((state["client_id"], state["tenant"]), ("0a1b2c3d-1111-2222-3333-444455556666", "contoso.com"))
+        self.assertIn("record", state)
+
+    def test_a_person_who_does_set_the_variables_is_not_asked(self):
+        os.environ["WS_HOST_MICROSOFT_CLIENT_ID"] = "0a1b2c3d-1111-2222-3333-444455556666"
+        os.environ["WS_HOST_MICROSOFT_TENANT"] = "contoso.com"
+        self.assertEqual(graph.app_for("work"), ("0a1b2c3d-1111-2222-3333-444455556666", "contoso.com"))
+        code, out = self.run_cmd("auth", "new", "microsoft", "--host", "work", "--json")
+        self.assertEqual(code, 0, out)
+
+    def test_at_a_terminal_it_asks_validates_keeps_the_answers_and_does_not_ask_again(self):
+        from unittest import mock
+        from ws_host.commands import auth as auth_cmd
+
+        class Terminal:
+            def interactive(self):
+                return True
+        answers = iter(["oops", "0a1b2c3d-1111-2222-3333-444455556666", "also bad", "contoso.com"])
+        with mock.patch("builtins.input", lambda prompt="": next(answers)), mock.patch("builtins.print"):
+            auth_cmd._ask_app(Terminal(), "work")
+        self.assertEqual(graph.app_for("work"), ("0a1b2c3d-1111-2222-3333-444455556666", "contoso.com"))
+        self.assertEqual(list(answers), [], "every answer was used")
+
+    def test_typing_shared_asks_nothing_more(self):
+        from unittest import mock
+        from ws_host.commands import auth as auth_cmd
+
+        class Terminal:
+            def interactive(self):
+                return True
+        with mock.patch("builtins.input", lambda prompt="": "shared"), mock.patch("builtins.print"):
+            auth_cmd._ask_app(Terminal(), "personal")
+        self.assertEqual(graph.app_for("personal"), ("shared", "common"))
+
+    def test_four_bad_answers_stop_it_with_a_plain_message(self):
+        from unittest import mock
+        from ws_host.commands import auth as auth_cmd
+        from ws_host.core.resource import WsError
+
+        class Terminal:
+            def interactive(self):
+                return True
+        with mock.patch("builtins.input", lambda prompt="": "x"), mock.patch("builtins.print"):
+            with self.assertRaises(WsError):
+                auth_cmd._ask_app(Terminal(), "work")
