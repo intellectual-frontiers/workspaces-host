@@ -103,6 +103,7 @@ def _verified(local: Path, item: dict) -> bool:
     return True
 
 
+SKIP_COPIES = Arg("skip_copies", flag=True, help="leave out a file when the folder already holds one with the same content under another name, so a file renamed by the date does not go up twice")
 ALSO = Arg("also", multiple=True, help="LOCAL=REMOTE: another folder and where it goes; copy several in one run, which signs in once and is much faster than one run each")
 
 
@@ -118,9 +119,9 @@ def _pairs(local: str, remote: str, also: tuple[str, ...]) -> list[tuple[Path, s
 
 @command("onedrive", "add", category="setup", summary="Copy a local file or folder into OneDrive; with --update, new files and changed ones; nothing is replaced unless you say so",
          args=(Arg("local", "LOCAL", positional=True, required=True, help="a file or folder on this machine"),
-               Arg("remote", "REMOTE", positional=True, required=True, help="where in OneDrive it goes, from the root, such as Documents/report.docx"), ACCOUNT, REPLACE, UPDATE, EXCLUDE, INCLUDE, ALSO),
+               Arg("remote", "REMOTE", positional=True, required=True, help="where in OneDrive it goes, from the root, such as Documents/report.docx"), ACCOUNT, REPLACE, UPDATE, EXCLUDE, INCLUDE, SKIP_COPIES, ALSO),
          surfaces=("cli", "editor"))
-def onedrive_add(ctx, local, remote, account=None, replace=False, update=False, exclude=(), include=(), also=()):
+def onedrive_add(ctx, local, remote, account=None, replace=False, update=False, exclude=(), include=(), skip_copies=False, also=()):
     pairs = _pairs(local, remote, tuple(also))
     for src, _ in pairs:
         if not src.exists():
@@ -167,6 +168,12 @@ def onedrive_add(ctx, local, remote, account=None, replace=False, update=False, 
             for f, r in files:
                 folder, _, name = r.rpartition("/")
                 there = listing(folder).get(name)
+                if there is None and skip_copies:
+                    twin = next((e["name"] for e in listing(folder).values() if e.get("kind") == "file" and _same(f, e) and (e.get("sha1") or e.get("quickxor"))), None)
+                    if twin:
+                        counts["same"] += 1
+                        rows.append({"name": r, "action": "same", "status": "ok", "plain": f"{r} is already in OneDrive as {twin}, with the same content."})
+                        continue
                 if there is None:
                     action = "new"
                 elif replace:
@@ -174,24 +181,24 @@ def onedrive_add(ctx, local, remote, account=None, replace=False, update=False, 
                 elif update:
                     if _same(f, there):
                         counts["same"] += 1
-                        rows.append({"name": r, "status": "ok", "plain": f"{r} is already up to date."})
+                        rows.append({"name": r, "action": "same", "status": "ok", "plain": f"{r} is already up to date."})
                         continue
                     action = "updated"
                 else:
                     counts["left"] += 1
-                    rows.append({"name": r, "status": "skipped", "plain": f"{r} is already in OneDrive, so I left it (--update copies it if it changed, --replace always does)."})
+                    rows.append({"name": r, "action": "left", "status": "skipped", "plain": f"{r} is already in OneDrive, so I left it (--update copies it if it changed, --replace always does)."})
                     continue
                 if ctx.dry_run:
-                    rows.append({"name": r, "status": "would-add", "plain": f"Would copy {f.name} ({_human(f.stat().st_size)}) to {r} ({'new' if action == 'new' else 'changed'})."})
+                    rows.append({"name": r, "action": action, "status": "would-add", "plain": f"Would copy {f.name} ({_human(f.stat().st_size)}) to {r} ({'new' if action == 'new' else 'changed'})."})
                     counts[action] += 1
                     continue
                 n, item = d.upload(f, r)
                 counts[action] += 1
                 if _verified(f, item):
-                    rows.append({"name": r, "status": "ok", "plain": f"{'Copied' if action == 'new' else 'Updated'} {f.name} ({_human(n)}) to {r}."})
+                    rows.append({"name": r, "action": action, "status": "ok", "plain": f"{'Copied' if action == 'new' else 'Updated'} {f.name} ({_human(n)}) to {r}."})
                 else:
                     counts["wrong"] += 1
-                    rows.append({"name": r, "status": "warn", "plain": f"Copied {f.name} to {r}, but OneDrive's checksum for it is not this file's. Run the command again; if it stays, tell whoever looks after ws-host."})
+                    rows.append({"name": r, "action": action, "status": "warn", "plain": f"Copied {f.name} to {r}, but OneDrive's checksum for it is not this file's. Run the command again; if it stays, tell whoever looks after ws-host."})
             for k, v in counts.items():
                 totals[k] += v
             parts.append({"remote": base, "new": counts["new"], "updated": counts["updated"], "unchanged": counts["same"], "left": counts["left"], "checksum_differs": counts["wrong"]})

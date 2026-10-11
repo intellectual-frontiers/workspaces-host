@@ -100,6 +100,7 @@ class FakeGraph:
                     return self._json(202, {})
                 kind, rel = self._target()
                 outer.files[rel] = body
+                outer.make_parents(rel)
                 return self._json(201, self._item(rel))
 
             def do_POST(self):
@@ -124,6 +125,12 @@ class FakeGraph:
         self.server = HTTPServer(("127.0.0.1", 0), H)
         self.url = f"http://127.0.0.1:{self.server.server_port}"
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def make_parents(self, rel: str) -> None:
+        """Graph makes the folders on the way when a file is put at a path."""
+        parts = rel.split("/")[:-1]
+        for i in range(1, len(parts) + 1):
+            self.folders.add("/".join(parts[:i]))
 
     def stated(self, data: bytes) -> dict:
         import hashlib
@@ -649,6 +656,20 @@ class Updating(OneDrive):
         self.assertEqual(code, 0, doc)
         self.assertEqual(sorted(k for k in self.g.files if k.startswith("R/")), ["R/b/Book.PDF", "R/b/book.epub"])
         self.assertNotIn("R/b/x", self.g.folders, "a folder with nothing wanted in it is not made")
+
+    def test_a_file_renamed_by_the_date_is_not_sent_twice_when_its_content_is_already_there(self):
+        (self.local / "a.pdf").write_bytes(b"the same book")
+        args = ["onedrive", "add", str(self.local / "a.pdf"), "Books/Title 2026-10-11 09-00.pdf", "--update", "--skip-copies"]
+        self.assertEqual(self.run_json(*args)[0], 0)
+        self.g.calls.clear()
+        code, doc = self.run_json("onedrive", "add", str(self.local / "a.pdf"), "Books/Title 2026-10-12 10-30.pdf", "--update", "--skip-copies")
+        self.assertEqual((doc["data"]["new"], doc["data"]["unchanged"]), (0, 1))
+        self.assertEqual([c for c in self.g.calls if c[0] == "PUT"], [])
+        self.assertEqual([k for k in self.g.files if k.startswith("Books/")], ["Books/Title 2026-10-11 09-00.pdf"])
+        (self.local / "a.pdf").write_bytes(b"a rebuilt book")
+        code, doc = self.run_json("onedrive", "add", str(self.local / "a.pdf"), "Books/Title 2026-10-12 10-30.pdf", "--update", "--skip-copies")
+        self.assertEqual(doc["data"]["new"], 1, "different content is a new file, and the earlier one stays")
+        self.assertEqual(sorted(k for k in self.g.files if k.startswith("Books/")), ["Books/Title 2026-10-11 09-00.pdf", "Books/Title 2026-10-12 10-30.pdf"])
 
     def test_a_malformed_also_is_a_usage_error_before_anything_happens(self):
         code, doc = self.run_json("onedrive", "add", str(self.local), "W", "--also", "no-equals-sign")
