@@ -90,13 +90,10 @@ def _run_msauth(*args: str, stdout=subprocess.PIPE, text=True) -> subprocess.Pop
     return subprocess.Popen([str(venv_python()), "-m", "ws_host.lib.msauth", *args], stdout=stdout, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL, text=text, env=env)
 
 
-def sign_in(label: str):
-    """Yields the lines `msauth login` prints, as dicts; the last is `done` or `error`."""
-    app = app_for(label)
-    if app is None:
-        raise WsError("needs-input", "no app is set for this Microsoft account", "I need to know which app signs this account in.")
-    client, tenant = app
-    proc = _run_msauth("login", label, str(state_file(label)), SHARED_CLIENT if client == SHARED else client, "common" if client == SHARED else tenant)
+def sign_in(label: str, method: str = "browser"):
+    """Yields the lines `msauth login` prints, as dicts; the last is `done` or `error`. Without an app of the person's own, Microsoft's shared public app for Graph command-line tools is used."""
+    client, tenant = app_for(label) or (SHARED, "common")
+    proc = _run_msauth("login", label, str(state_file(label)), SHARED_CLIENT if client == SHARED else client, "common" if client == SHARED else tenant, method)
     for line in proc.stdout:
         try:
             yield json.loads(line)
@@ -105,6 +102,27 @@ def sign_in(label: str):
     rc = proc.wait()
     if rc != 0:
         yield {"event": "error", "message": (proc.stderr.read() or "").strip()[-300:] or "the sign-in did not finish"}
+
+
+def open_url(url: str) -> bool:
+    """Open a sign-in address in the person's browser, the best way this machine allows: on WSL the Windows browser, otherwise the desktop's when there is one. A text-mode browser is never started, since
+    it would take over the terminal. False when none worked, and the address is shown anyway."""
+    import platform
+    if not url.startswith("https://") or any(c in url for c in "\"'`$\n\r\t "):
+        return False
+    tries = []
+    if "microsoft" in platform.uname().release.lower():
+        tries += [["wslview", url], ["powershell.exe", "-NoProfile", "-Command", f'Start-Process "{url}"']]
+    if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY") or sys.platform == "darwin":
+        tries += [["open" if sys.platform == "darwin" else "xdg-open", url]]
+    for argv in tries:
+        if shutil.which(argv[0]):
+            try:
+                if subprocess.run(argv, capture_output=True, timeout=15, stdin=subprocess.DEVNULL).returncode == 0:
+                    return True
+            except (OSError, subprocess.TimeoutExpired):
+                continue
+    return False
 
 
 def _token(label: str) -> str:

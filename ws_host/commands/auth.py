@@ -65,11 +65,13 @@ def auth_status(ctx):
 
 @command("auth", "new", category="setup", summary="Sign in to GitHub, GitLab or Microsoft with a one-time code",
          args=(Arg("forge", "FORGE", positional=True, required=True, help="github, gitlab or microsoft"),
-               Arg("host", help="the host, for a GitLab other than the first configured; for Microsoft, a name for this account, such as work (default: default)")),
+               Arg("host", help="the host, for a GitLab other than the first configured; for Microsoft, a name for this account, such as work (default: default)"),
+               Arg("method", choices=("browser", "code"), help="Microsoft only: browser (a page opens and you sign in there; the default) or code (you type a one-time code on another page)"),
+               Arg("own_app", flag=True, help="Microsoft only: sign in with an app registration of your own, and be asked for its two IDs if they are not saved")),
          surfaces=("cli", "editor"))
-def auth_new(ctx, forge, host):
+def auth_new(ctx, forge, host, method=None, own_app=False):
     if forge == "microsoft":
-        yield from _microsoft_new(ctx, host or "default")
+        yield from _microsoft_new(ctx, host or "default", method or "browser", own_app)
         return
     cfg = config.load()
     prog = "gh" if forge == "github" else "glab"
@@ -118,20 +120,24 @@ def auth_new(ctx, forge, host):
                    actions=[] if ok else [Action(("auth", "new"), "Try again", {"forge": forge})], status=OK if ok else FAILED)
 
 
-def _microsoft_new(ctx, label: str):
-    """The one-time code and the page to type it in, from Microsoft's own library; no password or token is typed or shown here."""
+def _microsoft_new(ctx, label: str, method: str = "browser", own_app: bool = False):
+    """The sign-in page (or the one-time code and the page to type it in), from Microsoft's own library; no password, second factor or token is typed or shown here. No app registration is needed."""
     if not graph.kit_here():
         raise graph.need_kit()
     if ctx.dry_run:
         yield Resource("auth", label, {"plain": f"Nothing was changed. I would sign you in to Microsoft as '{label}'.", "would_run": "ws-host auth new microsoft --host " + label})
         return
-    if graph.app_for(label) is None:
+    if own_app and graph.app_for(label) is None:
         _ask_app(ctx, label)           # asks at a terminal and keeps the answers; where nothing can be asked, says what to do and stops
     note, done = "", None
-    for ev in graph.sign_in(label):
-        if ev.get("event") == "code":
+    for ev in graph.sign_in(label, method):
+        if ev.get("event") == "url":
+            opened = graph.open_url(ev["url"])
+            yield Resource("auth-url", label, {"plain": ("A Microsoft sign-in page is opening in your browser. Sign in there; this window finishes by itself. " if opened else
+                                                         "Open this address in your browser to sign in; this window finishes by itself: ") + ev["url"], "url": ev["url"], "opened": opened, "host": label})
+        elif ev.get("event") == "code":
             yield Resource("auth-code", label, {"plain": f"To sign in, open {ev['url']} and type this code: {ev['code']}", "code": ev["code"], "url": ev["url"], "host": label,
-                                                   "hint": "If Microsoft then says 'You don't have access to this', your organization has not allowed the shared sign-in app: run `ws-host help onedrive` for how to register your own."})
+                                                   "hint": "If Microsoft then says 'You don't have access to this', your organization may block this method: try  ws-host auth new microsoft --method browser."})
         elif ev.get("event") == "note":
             note = ev["message"]
         elif ev.get("event") in ("done", "error"):
@@ -139,7 +145,7 @@ def _microsoft_new(ctx, label: str):
     ok = bool(done) and done.get("event") == "done"
     who = f" ({done['username']})" if ok and done.get("username") else ""
     plain = (f"You are signed in to Microsoft as '{label}'{who}." + (f" {note}" if note else "")) if ok else \
-        f"Signing in to Microsoft did not finish" + (f": {done['message']}" if done and done.get("message") else ".") + (" A work account may need an administrator to approve the app; the guide says how to use your own." if not ok else "")
+        f"Signing in to Microsoft did not finish" + (f": {done['message']}" if done and done.get("message") else ".") + (f" Your organization may allow only one method: try the other with  ws-host auth new microsoft --host {label} --method {'code' if method == 'browser' else 'browser'}." if not ok else "")
     yield Resource("auth", label, {"plain": plain, "signed_in": ok}, actions=[] if ok else [Action(("auth", "new"), "Try again", {"forge": "microsoft", "host": label})],
                    status=OK if ok else FAILED)
 

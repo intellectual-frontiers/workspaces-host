@@ -18,11 +18,14 @@ def say(**kw) -> None:
 
 
 def _credential(state: dict, name: str, unencrypted: bool, record=None, prompt=None):
-    from azure.identity import DeviceCodeCredential, TokenCachePersistenceOptions
+    from azure.identity import DeviceCodeCredential, InteractiveBrowserCredential, TokenCachePersistenceOptions
     options = TokenCachePersistenceOptions(name=name, allow_unencrypted_storage=unencrypted)
     kw = {"client_id": DEFAULT_CLIENT_ID if state.get("client_id") in (None, "", "shared") else state["client_id"], "tenant_id": "common" if state.get("client_id") in (None, "", "shared") else (state.get("tenant") or "common"), "cache_persistence_options": options}
     if record is not None:
         kw.update(authentication_record=record, disable_automatic_authentication=True)
+    if state.get("method") == "browser":
+        kw["timeout"] = 300
+        return InteractiveBrowserCredential(**kw)
     if prompt is not None:
         kw["prompt_callback"] = prompt
     return DeviceCodeCredential(**kw)
@@ -37,12 +40,20 @@ def _write(path: str, state: dict) -> None:
     os.replace(tmp, path)
 
 
-def login(label: str, path: str, client_id: str, tenant: str) -> int:
-    """Device-code sign-in: the code and where to type it are printed as a `code` line; the token is kept by Microsoft's library in the system keyring where there is one,
-    and otherwise in a private file, which is said."""
+def _announce_browser() -> None:
+    """The library opens the sign-in page itself, which a terminal cannot be relied on to allow (WSL, SSH, a container): the address is announced instead, and ws-host opens it the best way it knows."""
+    import webbrowser
+    webbrowser.open = lambda url, *a, **k: (say(event="url", url=url), True)[1]
+
+
+def login(label: str, path: str, client_id: str, tenant: str, method: str = "browser") -> int:
+    """Sign-in, in a browser (the default: Microsoft's page, and the answer comes back to a short-lived address on this machine) or with a one-time code. The token is kept by Microsoft's
+    library in the system keyring where there is one, and otherwise in a private file, which is said."""
     def prompt(url, code, expires):
         say(event="code", url=url, code=code)
-    state = {"label": label, "client_id": client_id, "tenant": tenant}
+    if method == "browser":
+        _announce_browser()
+    state = {"label": label, "client_id": client_id, "tenant": tenant, "method": method}
     name = f"ws-host-microsoft-{label}"
     stored = "keyring"
     try:
@@ -84,11 +95,11 @@ def token(path: str) -> int:
 
 
 def main(argv: list[str]) -> int:
-    if argv and argv[0] == "login" and len(argv) == 5:
+    if argv and argv[0] == "login" and len(argv) in (5, 6):
         return login(*argv[1:])
     if argv and argv[0] == "token" and len(argv) == 2:
         return token(argv[1])
-    print("usage: msauth login LABEL FILE CLIENT_ID TENANT | msauth token FILE", file=sys.stderr)
+    print("usage: msauth login LABEL FILE CLIENT_ID TENANT [browser|code] | msauth token FILE", file=sys.stderr)
     return 64
 
 

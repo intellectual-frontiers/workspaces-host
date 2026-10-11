@@ -247,6 +247,15 @@ FAKE_IDENTITY = textwrap.dedent('''
         def deserialize(s): return AuthenticationRecord(json.loads(s)["u"])
     class Tok:
         token, expires_on = "faketoken", 9999999999
+    class InteractiveBrowserCredential:
+        def __init__(self, **kw): self.kw = kw
+        def authenticate(self, scopes):
+            import webbrowser
+            assert webbrowser.open("https://login.example/authorize?client_id=x&redirect_uri=http%3A%2F%2Flocalhost%3A8400"), "the page is announced, so the library believes it opened"
+            return AuthenticationRecord("ada@example.com")
+        def get_token(self, *scopes):
+            assert self.kw.get("disable_automatic_authentication") is True, "a token is never asked for with a prompt"
+            return Tok()
     class DeviceCodeCredential:
         def __init__(self, **kw): self.kw = kw
         def authenticate(self, scopes):
@@ -265,6 +274,9 @@ class Signing(Home):
 
     def setUp(self):
         super().setUp()
+        self._real_open = graph.open_url
+        graph.open_url = lambda url: True               # a test never starts a real browser
+        self.addCleanup(lambda: setattr(graph, "open_url", self._real_open))
         pkg = Path(self._tmp.name) / "fakeid" / "azure" / "identity"
         pkg.mkdir(parents=True)
         (pkg.parent / "__init__.py").write_text("")
@@ -281,7 +293,7 @@ class Signing(Home):
         os.environ["WS_HOST_MICROSOFT_CLIENT_ID"] = "0a1b2c3d-1111-2222-3333-444455556666"      # a person who set it is not asked
 
     def test_auth_new_microsoft_shows_the_code_stores_a_private_record_and_the_files_then_open_with_the_token(self):
-        code, out = self.run_cmd("auth", "new", "microsoft", "--host", "work", "--json")
+        code, out = self.run_cmd("auth", "new", "microsoft", "--host", "work", "--method", "code", "--json")
         self.assertEqual(code, 0, out)
         self.assertIn("ABCD1234E", out)
         f = graph.state_file("work")
@@ -297,7 +309,7 @@ class Signing(Home):
 
     def test_without_a_system_keyring_the_sign_in_is_kept_in_a_private_file_and_that_is_said(self):
         os.environ["FAKE_NO_KEYRING"] = "1"
-        code, out = self.run_cmd("auth", "new", "microsoft", "--json")
+        code, out = self.run_cmd("auth", "new", "microsoft", "--method", "code", "--json")
         self.assertEqual(code, 0, out)
         self.assertIn("private file", out)
         self.assertEqual(json.loads(graph.state_file("default").read_text())["stored"], "file")
@@ -324,6 +336,9 @@ class AskingForTheApp(Home):
 
     def setUp(self):
         super().setUp()
+        self._real_open = graph.open_url
+        graph.open_url = lambda url: True               # a test never starts a real browser
+        self.addCleanup(lambda: setattr(graph, "open_url", self._real_open))
         pkg = Path(self._tmp.name) / "fakeid" / "azure" / "identity"
         pkg.mkdir(parents=True)
         (pkg.parent / "__init__.py").write_text("")
@@ -337,7 +352,7 @@ class AskingForTheApp(Home):
             os.environ.pop(k, None)
 
     def test_where_nothing_can_be_asked_it_says_what_to_do_in_plain_words_and_offers_the_setting_command(self):
-        code, doc = self.run_json("auth", "new", "microsoft", "--host", "work")
+        code, doc = self.run_json("auth", "new", "microsoft", "--host", "work", "--own-app")
         self.assertEqual(code, 3, doc)
         self.assertEqual(doc["data"]["code"], "needs-input")
         text = json.dumps(doc)
@@ -364,7 +379,7 @@ class AskingForTheApp(Home):
 
     def test_the_saved_app_is_the_one_the_sign_in_uses(self):
         self.run_json("auth", "set", "microsoft", "0a1b2c3d-1111-2222-3333-444455556666", "contoso.com", "--host", "work")
-        code, out = self.run_cmd("auth", "new", "microsoft", "--host", "work", "--json")
+        code, out = self.run_cmd("auth", "new", "microsoft", "--host", "work", "--own-app", "--json")
         self.assertEqual(code, 0, out)
         state = json.loads(graph.state_file("work").read_text())
         self.assertEqual((state["client_id"], state["tenant"]), ("0a1b2c3d-1111-2222-3333-444455556666", "contoso.com"))
@@ -412,3 +427,71 @@ class AskingForTheApp(Home):
         with mock.patch("builtins.input", lambda prompt="": "x"), mock.patch("builtins.print"):
             with self.assertRaises(WsError):
                 auth_cmd._ask_app(Terminal(), "work")
+
+
+class Browser(Home):
+    """The browser sign-in, which is the default and needs no app registration of the person's own."""
+
+    def setUp(self):
+        super().setUp()
+        pkg = Path(self._tmp.name) / "fakeid" / "azure" / "identity"
+        pkg.mkdir(parents=True)
+        (pkg.parent / "__init__.py").write_text("")
+        (pkg / "__init__.py").write_text(FAKE_IDENTITY)
+        os.environ["PYTHONPATH"] = str(Path(self._tmp.name) / "fakeid")
+        py = graph.venv_python()
+        py.parent.mkdir(parents=True)
+        py.write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
+        py.chmod(py.stat().st_mode | stat.S_IXUSR)
+        for k in ("WS_HOST_MICROSOFT_CLIENT_ID", "WS_HOST_MICROSOFT_TENANT"):
+            os.environ.pop(k, None)
+        self.opened = []
+        self._real_open = graph.open_url
+        graph.open_url = lambda url: self.opened.append(url) or True
+        self.addCleanup(lambda: setattr(graph, "open_url", self._real_open))
+        self.g = FakeGraph()
+        self.addCleanup(self.g.stop)
+        os.environ["WS_HOST_GRAPH_URL"] = self.g.url
+        self.g.files["hello.txt"] = b"hi"
+
+    def test_it_signs_in_in_a_browser_by_default_with_no_app_and_nothing_asked(self):
+        code, out = self.run_cmd("auth", "new", "microsoft", "--host", "work", "--json")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(len(self.opened), 1)
+        self.assertTrue(self.opened[0].startswith("https://login.example/authorize"))
+        self.assertIn("login.example", out, "the address is shown too, in case the browser did not open")
+        state = json.loads(graph.state_file("work").read_text())
+        self.assertEqual(state["method"], "browser")
+        self.assertEqual(state["client_id"], graph.SHARED_CLIENT)
+        self.assertEqual(state["tenant"], "common")
+
+    def test_the_files_open_with_the_token_the_browser_sign_in_left(self):
+        self.run_cmd("auth", "new", "microsoft", "--host", "work", "--json")
+        code, doc = self.run_json("onedrive", "list")
+        self.assertEqual(code, 0, doc)
+        self.assertEqual(self.g.calls[0][2], "Bearer faketoken")
+
+    def test_the_code_method_is_still_there_for_a_machine_with_no_browser(self):
+        code, out = self.run_cmd("auth", "new", "microsoft", "--method", "code", "--json")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.opened, [])
+        self.assertIn("ABCD1234E", out)
+
+    def test_without_a_desktop_or_wsl_no_program_is_started_and_the_address_is_only_shown(self):
+        import platform
+        from unittest import mock
+        for k in ("DISPLAY", "WAYLAND_DISPLAY"):
+            os.environ.pop(k, None)
+        with mock.patch.object(platform, "uname", lambda: platform.uname_result("Linux", "h", "6.1.0-generic", "v", "x86_64")), mock.patch("subprocess.run") as run:
+            self.assertFalse(self._real_open("https://login.example/authorize?x=1"))
+            run.assert_not_called()
+
+    def test_an_address_that_could_break_out_of_a_command_is_never_opened(self):
+        for bad in ("http://insecure.example/", 'https://x/"; calc', "https://x/`id`", "https://x/ y", "file:///etc/passwd", "https://x/$(id)"):
+            self.assertFalse(self._real_open(bad), bad)
+
+    def test_a_browser_that_did_not_open_still_gets_the_address(self):
+        graph.open_url = lambda url: False
+        code, out = self.run_cmd("auth", "new", "microsoft", "--json")
+        self.assertEqual(code, 0, out)
+        self.assertIn("Open this address", out)

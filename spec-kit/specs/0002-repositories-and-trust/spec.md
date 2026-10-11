@@ -138,18 +138,20 @@ work, and a failed clone reported as done. Each is a test here.
   git does not track where they are, MUST make no backup when nothing is only here, and MUST refuse, saying why and what to do, in the middle of a merge or a rebase, off a branch, or
   with no shared branch. `repo status --details` MUST offer it for a repository with something only here, and the what-changed page (0009-workspaces-console FR-069) MUST too.
 
-- **FR-025**: `auth new microsoft [--host NAME]` MUST sign a person in to a personal or work Microsoft account, under a name of their choosing (`default` when none), with Microsoft's own
-  `azure-identity` library from the `microsoft` kit (0003-kits FR-021) and its device-code flow, and MUST offer the one-time code and its address as a resource in a stream, as FR-011 does. No
-  password and no token MUST be typed or shown. The library's token cache MUST be encrypted in the system keyring where there is one; where there is none, the sign-in MUST be kept in a file only
-  the person can read, and the command MUST say so. The app that signs an account in (FR-026) MUST be kept per account, and `WS_HOST_MICROSOFT_CLIENT_ID` and `WS_HOST_MICROSOFT_TENANT` MUST be honored for anyone who sets them, though no one is ever required to. `auth status`
-  MUST report each Microsoft sign-in beside the forges, once the kit or a sign-in is here. A missing kit MUST be an error whose action installs it.
-
-- **FR-026**: `auth new microsoft` MUST NOT require an environment variable or an edited file. When the app that signs the account in is not yet known (not saved for that account, and not set in
-  `WS_HOST_MICROSOFT_CLIENT_ID` and `WS_HOST_MICROSOFT_TENANT`), then at a terminal it MUST say in plain words where in Microsoft Entra to register one and which two values to copy, ask for each,
-  check it with its type (0041-command-line FR-013: an Application (client) ID or `shared`, a Directory (tenant) ID or a domain), ask again on a wrong answer and stop after a few, keep the answers
-  for that account in a file only the person can read, and not ask again. Where nothing can be asked (the editor, MCP, a pipeline) it MUST fail with the code `needs-input`, status `missing`, the same
-  words, and the actions `auth set` and `auth new`. `auth set microsoft CLIENT_ID TENANT [--host NAME]` MUST validate and keep the two values, so that the editor can ask for them in boxes; `shared` MUST
-  mean Microsoft's own app and the common tenant, for a home account.
+- **FR-025**: `auth new microsoft [--host NAME] [--method browser|code]` MUST sign a person in to a home or work Microsoft account, under a name of their choosing (`default` when none), with
+  Microsoft's own `azure-identity` library from the `microsoft` kit (0003-kits FR-021), and MUST NOT need an app registration, an administrator or a setting. The default method MUST be a browser sign-in:
+  Microsoft's page is opened in the person's browser (the Windows browser under WSL), the address is shown as a resource in the stream whether or not it opened, and the answer returns to a short-lived address on
+  this machine. The `code` method MUST be the device-code flow, offering the one-time code and its address as FR-011 does, for a machine with no browser or an organization that blocks the browser method.
+  No password, second factor or token MUST be typed or shown by ws-host. An address MUST be opened only if it is `https` and holds no character that a shell or PowerShell could take as more than text. The
+  library's token cache MUST be encrypted in the system keyring where there is one; where there is none, the sign-in MUST be kept in a file only the person can read, and the command MUST say so. When
+  a sign-in does not finish, the words MUST suggest the other method. `auth status` MUST report each Microsoft sign-in beside the forges, once the kit or a sign-in is here. A missing kit MUST be an
+  error whose action installs it.
+- **FR-026**: A person who has an app registration of their own MAY sign in with it by `auth new microsoft --own-app`, or by `WS_HOST_MICROSOFT_CLIENT_ID` and `WS_HOST_MICROSOFT_TENANT`, and no one
+  is required to. With `--own-app`, when the app is not yet known, then at a terminal ws-host MUST say in plain words where in Microsoft Entra its two IDs are, ask for each, check it with its type
+  (0041-command-line FR-013: an Application (client) ID or `shared`, a Directory (tenant) ID or a domain), ask again on a wrong answer and stop after a few, keep the answers for that account in a
+  file only the person can read, and not ask again. Where nothing can be asked (the editor, MCP, a pipeline) it MUST fail with the code `needs-input` (0041-command-line FR-077), status `missing`,
+  the same words, and the actions `auth set` and `auth new`. `auth set microsoft CLIENT_ID TENANT [--host NAME]` MUST validate and keep the two values, so that the editor can ask for them in boxes;
+  `shared` MUST mean Microsoft's own app and the common tenant.
 
 ## Out of scope
 
