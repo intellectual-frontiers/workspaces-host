@@ -369,10 +369,10 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |terminal, editor
 |Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health
 
-|`ws-host workspace set [--pull-ff-only]`
+|`ws-host workspace set [--pull-ff-only] [--git-identity] [--git-name STRING] [--git-email EMAIL] [--work-email EMAIL]`
 |setup
 |terminal, editor
-|Make git's Sync button safe: set pull.ff to only
+|Set what git needs for you: pull.ff to only, and the name and email on your commits
 
 |`ws-host workspace status`
 |read

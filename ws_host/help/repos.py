@@ -36,11 +36,14 @@ def signin():
                              "type the code, and approve. In VS Code the notification has a button that copies the code and opens the browser."),
             ("GitLab", "List your GitLab hosts in WS_HOST_GITLAB_HOSTS and sign in to each one the same way."),
             ("Where it is kept", "In the credential storage of gh and glab, which is where they keep it. ws-host stores no password."),
+            ("Whose commits they are", "Signing in to GitHub also sets the name and email git puts on your commits, where git has none: your GitHub name and GitHub's private noreply address for you. "
+                                      "It never changes what you set yourself. ws-host workspace set --git-name, --git-email and --git-identity set them; --work-email gives the repositories of the organizations you trust your work address; ws-host doctor says when they are missing."),
         ),
         "steps": (
             Step("See whether I am signed in", ("auth", "status")),
             Step("Sign in to GitHub", ("auth", "new"), {"forge": "github"}),
             Step("Sign in to GitLab", ("auth", "new"), {"forge": "gitlab"}),
+            Step("Set the name and email on my commits from GitHub", ("workspace", "set"), {"git_identity": True}),
         ),
     }
 

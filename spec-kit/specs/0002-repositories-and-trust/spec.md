@@ -158,6 +158,15 @@ work, and a failed clone reported as done. Each is a test here.
   the same words, and the actions `auth set` and `auth new`. `auth set microsoft CLIENT_ID TENANT [--host NAME]` MUST validate and keep the two values, so that the editor can ask for them in boxes;
   `shared` MUST mean Microsoft's own app and the common tenant.
 
+- **FR-027**: Signing in to GitHub (`auth new github`) and `workspace ensure` once signed in MUST make commits go in as the person: where git has no `user.name`, the name of the GitHub account, and
+  where it has no `user.email`, GitHub's private noreply address (`<id>+<login>@users.noreply.github.com`), never the account's public email. What a person set in git themselves MUST NOT be changed by
+  anything worked out from the account; a name or email in `WS_HOST_GIT_NAME` or `WS_HOST_GIT_EMAIL` is the person's own wish and MUST be set over git's. Where the account has no name, the words
+  MUST say how to give one and MUST NOT invent one. The values MUST be written by `git config --global` and the person MUST be told, in one sentence, whose commits they will be. Setting the identity
+  MUST NEVER fail a sign-in or a setup, and MUST change nothing under `--dry-run`. `workspace set --git-identity`, `--git-name`, `--git-email` (checked as an email) and `--work-email` MUST do the same
+  by command, and `doctor` MUST say when git has no name or email and offer it. A work email MAY be set for the folders of the organizations the person trusts (`WS_HOST_TRUSTED`) by an `includeIf` that
+  names a small file, written after the global address so that it wins in those folders only, and `none` MUST take it away; `auth new microsoft` MUST offer, in its closing words, the work address of the account
+  it signed in to, and MUST NOT set it.
+
 ## Out of scope
 
 - Kits and installers: 0003-kits.

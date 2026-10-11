@@ -33,6 +33,7 @@ COMMAND = _pattern("COMMAND", r"^[a-z][a-z0-9-]*(?: [a-z][a-z0-9-]*)?$", ("docto
 SECTION = _pattern("SECTION", r"^[a-z][a-z0-9-]*$", ("registry", "launcher"))
 FORGE = register(Type("FORGE", ("github", "gitlab", "microsoft"), lambda v, ctx: None if v in ("github", "gitlab", "microsoft") else f"{v!r} is not github, gitlab or microsoft",
                       lambda ctx: ["github", "gitlab", "microsoft"]))
+EMAIL = register(Type("EMAIL", ("you@example.com",), lambda v, ctx: None if re.match(r"^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$", v) else f"{v!r} is not an email address, such as you@example.com"))
 GUID_RX = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 DOMAIN_RX = re.compile(r"^(?=.{4,253}$)([A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$")
 CLIENTID = register(Type("CLIENTID", ("0a1b2c3d-1111-2222-3333-444455556666", "shared"),

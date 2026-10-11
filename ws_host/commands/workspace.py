@@ -73,6 +73,8 @@ def workspace_ensure(ctx):
     a = auth_cmd.auth_status(ctx)
     github = next((f for f in a.data["forges"] if f["name"] == "github.com"), None)
     steps.append({"name": "sign-in", "status": "ok" if all(f["signed_in"] for f in a.data["forges"]) else "warn", "plain": a.data["plain"]})
+    if github and github["signed_in"] and not ctx.dry_run:
+        steps.append(_identity_step(cfg))
     if github and github["signed_in"] is False and not ctx.dry_run:
         # 0006-onboarding FR-005: sign in first, once, in one prescribed way, before anything private is copied.
         yield Resource("workspace-ensure", "needs-sign-in",
@@ -86,6 +88,7 @@ def workspace_ensure(ctx):
         todo = [("would copy " if not r["cloned"] else "would check ") + r["id"] for r in rows]
         if cfg.modern():
             todo.append("would make bash, fish and git use the modern tools")
+        todo.append("would set the name and email on your commits from GitHub, where git has none")
         if cfg.prompt_theme():
             todo.append(f"would give your terminal the {cfg.prompt_theme()} prompt")
         yield Resource("workspace-ensure", "dry-run", {"plain": "Nothing was changed. This is what I would do.", "steps": steps,
@@ -180,6 +183,16 @@ def _modern_step(ctx) -> dict:
                       else "Your terminal already uses the modern tools.")}
 
 
+def _identity_step(cfg) -> dict:
+    """0002-repositories-and-trust FR-027: commits go in as the person who signed in; it never fails the setup and never changes a name or email a person set."""
+    from ..lib import identity
+    try:
+        r = identity.ensure(cfg)
+    except Exception as e:      # noqa: BLE001
+        return {"name": "git-identity", "status": "warn", "plain": f"I could not set the name and email on your commits ({e}). Run `ws-host workspace set --git-identity` to try again."}
+    return {"name": "git-identity", "status": "warn" if r["needs_name"] else "ok", "plain": identity.sentence(r)}
+
+
 def _prompt_step(ctx, theme: str) -> dict:
     """0006-onboarding FR-022: setup gives bash, and fish when it is there, its prompt; it never fails the setup."""
     done, notes = [], []
@@ -210,15 +223,34 @@ def _auth_actions(results, cfg):
     return acts
 
 
-@command("workspace", "set", category="setup", summary="Make git's Sync button safe: set pull.ff to only",
-         args=(Arg("pull_ff_only", flag=True, help="set git's pull.ff to only"),), surfaces=("cli", "editor"))
-def workspace_set(ctx, pull_ff_only):
-    if not pull_ff_only:
-        raise WsError("usage", "name what to set: --pull-ff-only", "Tell me what to change. The one thing I can set is --pull-ff-only.", exit_code=2)
-    if ctx.dry_run:
-        return Resource("workspace", "git", {"plain": "Nothing was changed. I would set git's pull.ff to only.", "from": pull_ff() or "unset"})
-    before = pull_ff()
-    p = git.run(None, "config", "--global", "pull.ff", "only")
-    if p.returncode != 0:
-        raise WsError("git-config", git.reason(p), "I could not change your git settings.")
-    return Resource("workspace", "git", {"plain": "Git's Sync button now only moves forward, and never rewrites your work.", "from": before or "unset", "to": "only"})
+@command("workspace", "set", category="setup", summary="Set what git needs for you: pull.ff to only, and the name and email on your commits",
+         args=(Arg("pull_ff_only", flag=True, help="set git's pull.ff to only, so its Sync button never rewrites your work"),
+               Arg("git_identity", flag=True, help="set the name and email on your commits from the GitHub account you signed in with, where git has none"),
+               Arg("git_name", help="the name to put on your commits"),
+               Arg("git_email", "EMAIL", help="the email to put on your commits (GitHub's private noreply address when you do not say)"),
+               Arg("work_email", "EMAIL", help="a work email for the repositories of the organizations you trust; say none to take it away")),
+         surfaces=("cli", "editor"))
+def workspace_set(ctx, pull_ff_only=False, git_identity=False, git_name=None, git_email=None, work_email=None):
+    from ..lib import identity
+    if not (pull_ff_only or git_identity or git_name or git_email or work_email):
+        raise WsError("usage", "name what to set", "Tell me what to change: --pull-ff-only, --git-identity, --git-name, --git-email or --work-email.", exit_code=2)
+    if git_name and not identity.valid_name(git_name):
+        raise WsError("usage", "that name is not usable", "A name is plain text with no < or >, and no longer than 100 characters.", exit_code=2)
+    for label, v in (("--git-email", git_email), ("--work-email", work_email if work_email != "none" else None)):
+        if v and not identity.valid_email(v):
+            raise WsError("usage", f"{label} is not an email address", f"{v!r} is not an email address, such as you@example.com.", exit_code=2)
+    parts, data = [], {}
+    if pull_ff_only:
+        if ctx.dry_run:
+            parts.append("I would set git's pull.ff to only.")
+        else:
+            p = git.run(None, "config", "--global", "pull.ff", "only")
+            if p.returncode != 0:
+                raise WsError("git-config", git.reason(p), "I could not change your git settings.")
+            parts.append("Git's Sync button now only moves forward, and never rewrites your work.")
+        data.update({"from": pull_ff() or "unset", "to": "only"})
+    if git_identity or git_name or git_email or work_email:
+        r = identity.ensure(config.load(), git_name, git_email, work_email, from_github=True, dry_run=ctx.dry_run)
+        parts.append(("I would set: " + ", ".join(r["changed"]) + "." if r["changed"] else "Nothing to change.") if ctx.dry_run else identity.sentence(r))
+        data["identity"] = r
+    return Resource("workspace", "git", {"plain": ("Nothing was changed. " if ctx.dry_run else "") + " ".join(parts), **data})

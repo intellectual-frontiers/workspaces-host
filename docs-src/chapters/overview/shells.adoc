@@ -101,5 +101,5 @@ The git lines go first in `~/.gitconfig`, so anything you set yourself below the
 * *Take the lines out:* delete the lines between the markers, which say `>>> workspaces-host` and `<<< workspaces-host`.
 
 The one rule I keep for shells is that `ws-host` never edits your login shell, your git configuration or your VS Code settings
-unasked. The prompt lines and the modern-tools lines are the only things setup adds to your shell files and `~/.gitconfig`, they are marked, they are backed up, and one setting turns
+unasked. The one thing it sets in git when you sign in to GitHub is the name and email on your commits, where git has none, and it says so. The prompt lines and the modern-tools lines are the only things setup adds to your shell files and `~/.gitconfig`, they are marked, they are backed up, and one setting turns
 each off. It tells you what it recommends and offers a button; you press it or you do not.

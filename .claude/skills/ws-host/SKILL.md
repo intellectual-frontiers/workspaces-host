@@ -75,7 +75,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `vscode check` | check | terminal | Run a provider's tests of the Workspaces Console in a real VS Code under a display server |
 | `vscode ensure` | setup | terminal, editor | Put VS Code in its recommended state: the Workspaces Console, helpful extensions and safe settings |
 | `workspace ensure` | setup | terminal, editor | Install your kits, check sign-in, copy missing repositories, update the rest, set up the editor, check health |
-| `workspace set` | setup | terminal, editor | Make git's Sync button safe: set pull.ff to only |
+| `workspace set` | setup | terminal, editor | Set what git needs for you: pull.ff to only, and the name and email on your commits |
 | `workspace status` | read | terminal, editor, mcp | Say how this machine and your repositories stand |
 
 ## Kits

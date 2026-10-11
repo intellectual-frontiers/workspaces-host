@@ -11,8 +11,8 @@ from . import env, paths
 
 # The keys a person's configuration may hold (0001-ws-host FR-008). The guide's file reference is generated from this.
 KEYS = {
-    "WS_HOST_GIT_NAME": "the name to put on your commits",
-    "WS_HOST_GIT_EMAIL": "the email to put on your commits",
+    "WS_HOST_GIT_NAME": "the name to put on your commits; setup sets it over the one git has. You need not set it: signing in to GitHub sets it from your account when git has none",
+    "WS_HOST_GIT_EMAIL": "the email to put on your commits; setup sets it over the one git has. When you say nothing, it is your GitHub account's private noreply address",
     "WS_HOST_WORKSPACES": "the folder repositories are copied under (default ~/workspaces)",
     "WS_HOST_GITLAB_HOSTS": "GitLab hosts you sign in to, space-separated",
     "WS_HOST_REPOS": "the repositories you work in, as host/org/repo, space-separated (the two starter repositories when you say nothing)",

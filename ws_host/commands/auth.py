@@ -116,7 +116,15 @@ def auth_new(ctx, forge, host, method=None, own_app=False):
     if rc == 0 and prog == "gh":
         subprocess.run([exe, "auth", "setup-git", "--hostname", host], capture_output=True, text=True, timeout=60, stdin=subprocess.DEVNULL)
     ok = rc == 0
-    yield Resource("auth", host, {"plain": f"You are signed in to {host}." if ok else f"Signing in to {host} did not finish.", "signed_in": ok},
+    who, data = "", {}
+    if ok and prog == "gh":
+        try:                    # whose commits they are: never fails a sign-in, never changes what a person set themselves
+            from ..lib import identity
+            r = identity.ensure(cfg)
+            who, data = " " + identity.sentence(r), {"identity": r}
+        except Exception:       # noqa: BLE001
+            pass
+    yield Resource("auth", host, {"plain": (f"You are signed in to {host}.{who}" if ok else f"Signing in to {host} did not finish."), "signed_in": ok, **data},
                    actions=[] if ok else [Action(("auth", "new"), "Try again", {"forge": forge})], status=OK if ok else FAILED)
 
 
@@ -148,7 +156,15 @@ def _microsoft_new(ctx, label: str, method: str = "browser", own_app: bool = Fal
             done = ev
     ok = bool(done) and done.get("event") == "done"
     who = f" ({done['username']})" if ok and done.get("username") else ""
-    plain = (f"You are signed in to Microsoft as '{label}'{who}." + (f" {note}" if note else "")) if ok else \
+    hint = ""
+    if ok:
+        try:                    # a work address the person may want on commits in the company's repositories
+            mail = graph.Drive(label).me().get("email", "")
+            if mail and "@" in mail:
+                hint = f" To put {mail} on commits in your trusted organizations' repositories: ws-host workspace set --work-email {mail}"
+        except Exception:       # noqa: BLE001
+            pass
+    plain = (f"You are signed in to Microsoft as '{label}'{who}." + (f" {note}" if note else "") + hint) if ok else \
         f"Signing in to Microsoft did not finish" + (f": {done['message']}" if done and done.get("message") else ".") + (f" Your organization may allow only one method: try the other with  ws-host auth new microsoft --host {label} --method {'code' if method == 'browser' else 'browser'}." if not ok else "")
     yield Resource("auth", label, {"plain": plain, "signed_in": ok}, actions=[] if ok else [Action(("auth", "new"), "Try again", {"forge": "microsoft", "host": label})],
                    status=OK if ok else FAILED)

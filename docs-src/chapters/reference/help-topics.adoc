@@ -316,11 +316,15 @@ List your GitLab hosts in WS_HOST_GITLAB_HOSTS and sign in to each one the same 
 .Where it is kept
 In the credential storage of gh and glab, which is where they keep it. ws-host stores no password.
 
+.Whose commits they are
+Signing in to GitHub also sets the name and email git puts on your commits, where git has none: your GitHub name and GitHub's private noreply address for you. It never changes what you set yourself. ws-host workspace set --git-name, --git-email and --git-identity set them; --work-email gives the repositories of the organizations you trust your work address; ws-host doctor says when they are missing.
+
 .Steps
 
 * See whether I am signed in: `ws-host auth status`
 * Sign in to GitHub: `ws-host auth new github`
 * Sign in to GitLab: `ws-host auth new gitlab`
+* Set the name and email on my commits from GitHub: `ws-host workspace set --git-identity`
 
 === start
 

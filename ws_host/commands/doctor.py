@@ -108,6 +108,12 @@ def _build() -> tuple[dict, list[Action]]:
                              "pull.ff is only" if ff == "only" else
                              "git's Sync button may rewrite your work: pull.ff is not set to only; `ws-host workspace set --pull-ff-only` fixes it",
                              action=None if ff == "only" else (("workspace", "set"), "Make git's Sync button safe", {"pull_ff_only": True})))
+    if git_ver:
+        from ..lib import identity
+        now = identity.current()
+        who = f"{now['name']} <{now['email']}>" if now["name"] and now["email"] else ""
+        checks.append(_check("git identity", "ok" if who else "warn", f"commits are made as {who}" if who else "git has no name or email for your commits, so they may go in under a guess; `ws-host workspace set --git-identity` sets them from GitHub",
+                             action=None if who else (("workspace", "set"), "Set the name and email on my commits", {"git_identity": True})))
     found, _ = repos.known(cfg)
     for rid in sorted(found, key=str):
         ok, _why = trust.trust_state(rid, cfg)

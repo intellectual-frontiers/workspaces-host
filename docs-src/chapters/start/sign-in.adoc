@@ -47,6 +47,16 @@ If it says it could not copy a repository and mentions `Username`, you are not s
 
 TIP: In VS Code the same sign-in is a notification with a button, *Copy code and open browser*, or the command *Workspaces Console: Sign In…*. It runs `ws-host auth new github` for you. You will meet it in the next chapter.
 
+=== Whose commits they are
+
+Git puts a name and an email on every commit. When you sign in to GitHub, `ws-host` sets them for you if git has none: your GitHub name, and GitHub's private "noreply" address for you
+(`<number>+<login>@users.noreply.github.com`), which links the commits to your account and is never refused for showing a private email. It tells you in one sentence whose commits they will be.
+It never changes a name or email you set yourself, and it never fails your sign-in. `ws-host workspace set --git-identity` does it again, `--git-name "Your Name"` and `--git-email you@example.com`
+set them yourself, and `ws-host doctor` says when they are missing.
+
+If you want your work address on the commits you make in your organization's repositories, and only there, run `ws-host workspace set --work-email you@company.example` (`none` takes it away). It
+applies to the folders of the organizations you trust, and everywhere else the noreply address stays. After you sign in to Microsoft, ws-host shows the work address of that account for you to copy.
+
 === Microsoft OneDrive (optional)
 
 If you also work with files in Microsoft OneDrive, `ws-host auth new microsoft --host work` signs you in the same way, with a page in your browser and no password in the terminal. <<onedrive>> has everything about it.
