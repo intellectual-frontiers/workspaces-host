@@ -465,6 +465,17 @@ class Browser(Home):
         self.assertEqual(state["client_id"], graph.SHARED_CLIENT)
         self.assertEqual(state["tenant"], "common")
 
+    def test_a_saved_app_of_the_persons_own_is_named_and_the_way_back_to_the_shared_one_is_given(self):
+        self.run_json("auth", "set", "microsoft", "0a1b2c3d-1111-2222-3333-444455556666", "contoso.com", "--host", "work")
+        code, out = self.run_cmd("auth", "new", "microsoft", "--host", "work", "--json")
+        self.assertEqual(code, 0, out)
+        self.assertIn("0a1b2c3d-1111-2222-3333-444455556666", out)
+        self.assertIn("ws-host auth set microsoft shared common --host work", out)
+        self.run_json("auth", "set", "microsoft", "shared", "common", "--host", "work")
+        code, out = self.run_cmd("auth", "new", "microsoft", "--host", "work", "--json")
+        self.assertNotIn("you saved", out)
+        self.assertEqual(json.loads(graph.state_file("work").read_text())["client_id"], graph.SHARED_CLIENT)
+
     def test_the_files_open_with_the_token_the_browser_sign_in_left(self):
         self.run_cmd("auth", "new", "microsoft", "--host", "work", "--json")
         code, doc = self.run_json("onedrive", "list")
