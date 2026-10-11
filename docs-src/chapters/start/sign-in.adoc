@@ -49,7 +49,7 @@ TIP: In VS Code the same sign-in is a notification with a button, *Copy code and
 
 === Microsoft OneDrive (optional)
 
-Install the `microsoft` kit, then sign in the same way, with a code and a web page and no password in the terminal:
+Install the `microsoft` kit, then sign in. You do not need an app registration, an administrator or any setting:
 
 ----
 ws-host kit add microsoft
@@ -57,22 +57,22 @@ ws-host auth new microsoft --host work
 ws-host onedrive list
 ----
 
-Give each account its own name with `--host`, for example `work` and `personal`, and name one with `--account` when you have both. `ws-host onedrive sync REMOTE LOCAL`
-copies a file or folder to this machine, and `ws-host onedrive add LOCAL REMOTE` copies one into OneDrive. A file that is already at the other end is left alone, and
+A Microsoft sign-in page opens in your browser (in Windows, if you use WSL). You sign in there, with your password and any second factor your account asks for, and the command finishes by itself. ws-host never sees your password or your second factor.
+It prints the address as well, in case the browser does not open. Give each account its own name with `--host`, for example `work` and `personal`, and name one with `--account` when you have both.
+
+`ws-host onedrive sync REMOTE LOCAL` copies a file or folder to this machine, and `ws-host onedrive add LOCAL REMOTE` copies one into OneDrive. A file that is already at the other end is left alone, and
 ws-host says so, unless you add `--replace`; `--dry-run` shows what would be copied.
 
-Many work organizations do not allow Microsoft's shared sign-in app, and need one that the organization has registered. You do not edit any file or set any variable: run
-`ws-host auth new microsoft --host work` and, the first time, it tells you where to click and asks for two values, checks them as you type, and keeps them for that account.
-For a home account (outlook.com, hotmail.com, live.com) answer `shared` to the first question and it asks nothing more. In VS Code the same sign-in asks in boxes. To register the app, in the
-Microsoft Entra admin center (entra.microsoft.com):
+Some organizations allow only one way of signing in. If Microsoft says *You don't have access to this* after you pick your account, try the other way:
 
-. Choose *App registrations*, then *New registration*, give it any name, and choose the account type your organization uses.
-. Under *Authentication*, add the platform *Mobile and desktop applications* with the redirect `https://login.microsoftonline.com/common/oauth2/nativeclient`, and turn on *Allow public client flows*.
-. Under *API permissions*, add the delegated Microsoft Graph permissions `Files.ReadWrite.All` and `User.Read`, and click *Grant admin consent* if it is there.
-. On the app's *Overview* page, copy the *Application (client) ID* and the *Directory (tenant) ID*. Those are the two answers.
+----
+ws-host auth new microsoft --host work --method code
+----
 
-If, after you pick your account, Microsoft shows a page that says *You don't have access to this*, the organization has not allowed the shared app; use your own as above. You can change the answers any time with
-`ws-host auth set microsoft CLIENT_ID TENANT --host work`.
+That shows a short code and an address; you type the code on that page. On a machine with no browser (a server, an SSH session) use `--method code` from the start. If neither works, ask your administrator to look
+in the Entra sign-in log for the time of the attempt: it names the Conditional Access policy that blocked it.
+
+If you have an app registration of your own and want to sign in with it, run `ws-host auth new microsoft --host work --own-app`; it explains where to find the two IDs, asks for them, checks them and keeps them for that account.
 
 The sign-in is kept in your system keyring when there is one. Most WSL setups have none, so it is kept in a file only you can read, under `~/.IdentityService`, and ws-host tells you so.
 OneDrive's own sync program exists only for Windows and macOS: on WSL, let the Windows program sync, mark the folders you need as *Always keep on this device*, and read them at

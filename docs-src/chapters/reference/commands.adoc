@@ -11,7 +11,7 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |===
 |Usage |Category |Where it runs |What it does
 
-|`ws-host auth new FORGE [--host STRING]`
+|`ws-host auth new FORGE [--host STRING] [--method STRING] [--own-app]`
 |setup
 |terminal, editor
 |Sign in to GitHub, GitLab or Microsoft with a one-time code

@@ -118,16 +118,16 @@ _Sign in to Microsoft and copy files to and from OneDrive._
 Sign in to a home or work Microsoft account with a one-time code, then list, fetch and copy files in its OneDrive. Nothing already there is replaced unless you say so.
 
 .Set up
-Install the microsoft kit, then sign in. For a second account give each a name: ws-host auth new microsoft --host work, and --host home. Microsoft shows a code and an address; you open the address in your browser, type the code and approve. No password is typed into a terminal.
+Install the microsoft kit, then sign in: ws-host auth new microsoft --host work. A Microsoft page opens in your browser and you sign in there, with any second factor your account asks for. ws-host never sees your password. No app registration or administrator is needed. For a second account give each a name: --host work and --host home.
 
 .Copying
 ws-host onedrive list shows a folder, onedrive sync REMOTE LOCAL copies a file or folder down, and onedrive add LOCAL REMOTE copies one up. A file that is already at the other end is left as it is, and said so, unless you add --replace. --dry-run shows what would be copied. With two accounts, name one with --account.
 
-.Work accounts
-Many organizations do not allow Microsoft's shared sign-in app. The first time you sign in, ws-host tells you where to click in the Microsoft Entra admin center to register one, asks for its Application (client) ID and Directory (tenant) ID, checks them as you type and keeps them for that account; you set no variable and edit no file. For a home account answer shared. ws-host auth set microsoft CLIENT_ID TENANT --host work changes them later.
-
 .If Microsoft says you do not have access
-After you pick your account, a page that says 'You don't have access to this' means your organization has not allowed the shared sign-in app. It is not a problem with your account. Register an app of your own and give ws-host its two IDs, as above.
+Some organizations allow only one way of signing in. After you pick your account, a page that says 'You don't have access to this' means they block this one: try ws-host auth new microsoft --host work --method code, which shows a code to type on a page. On a machine with no browser use --method code from the start. If neither works, an administrator can read the Entra sign-in log, which names the policy that blocked it.
+
+.An app of your own
+If you have an app registration, ws-host auth new microsoft --host work --own-app explains where its two IDs are, asks for them, checks them and keeps them for that account.
 
 .Where the sign-in is kept
 In your system keyring when there is one. On a machine without one, such as most WSL setups, in a file only you can read under ~/.IdentityService, and ws-host says so.
@@ -139,7 +139,7 @@ OneDrive's own sync program exists only for Windows and macOS. On WSL, let the W
 
 * Install the Microsoft sign-in library: `ws-host kit add microsoft`
 * Sign in to Microsoft: `ws-host auth new microsoft`
-* Change which app signs an account in: `ws-host auth set microsoft`
+* Sign in with the code method instead: `ws-host auth new microsoft --method code`
 * See whether I am signed in: `ws-host auth status`
 * List the top of my OneDrive: `ws-host onedrive list`
 
