@@ -671,6 +671,18 @@ class Updating(OneDrive):
         self.assertEqual(doc["data"]["new"], 1, "different content is a new file, and the earlier one stays")
         self.assertEqual(sorted(k for k in self.g.files if k.startswith("Books/")), ["Books/Title 2026-10-11 09-00.pdf", "Books/Title 2026-10-12 10-30.pdf"])
 
+    def test_a_name_onedrive_cannot_hold_is_refused_before_anything_is_sent_even_in_a_dry_run(self):
+        (self.local / "a.pdf").write_bytes(b"x")
+        for dest in ("Books/Vol 3: Building.pdf", 'Books/What "now".pdf', "Books/a?.pdf", "Books/ends with dot.", "Books/CON.pdf", "A/B /x.pdf"):
+            self.g.calls.clear()
+            code, doc = self.run_json("onedrive", "add", str(self.local / "a.pdf"), dest, "--dry-run")
+            self.assertEqual(code, 2, dest)
+            self.assertEqual(doc["data"]["code"], "bad-name")
+            self.assertEqual([c for c in self.g.calls if c[0] in ("PUT", "POST")], [], dest)
+        from ws_host.commands.onedrive import bad_name
+        self.assertIsNone(bad_name("Books/Title, Author 2026-10-11 09-30.pdf"))
+        self.assertIn(":", bad_name("A/b: c.pdf"))
+
     def test_a_malformed_also_is_a_usage_error_before_anything_happens(self):
         code, doc = self.run_json("onedrive", "add", str(self.local), "W", "--also", "no-equals-sign")
         self.assertEqual(code, 2)

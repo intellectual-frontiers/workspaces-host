@@ -107,6 +107,23 @@ SKIP_COPIES = Arg("skip_copies", flag=True, help="leave out a file when the fold
 ALSO = Arg("also", multiple=True, help="LOCAL=REMOTE: another folder and where it goes; copy several in one run, which signs in once and is much faster than one run each")
 
 
+FORBIDDEN = '"*:<>?|\\'
+RESERVED = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
+
+
+def bad_name(remote: str) -> str | None:
+    """Why OneDrive cannot hold a file or folder at this path, in a sentence; None when it can. Asked before anything is sent, so a dry run finds the same problems a copy would."""
+    for part in remote.strip("/").split("/"):
+        wrong = sorted({c for c in part if c in FORBIDDEN or ord(c) < 32})
+        if wrong:
+            return f"'{part}' has {'the character' if len(wrong) == 1 else 'the characters'} {' '.join(repr(c) if ord(c) < 32 else c for c in wrong)}, which OneDrive does not allow in a name"
+        if part != part.strip() or part.endswith(".") or part.startswith("~$") or part.split(".")[0].upper() in RESERVED:
+            return f"'{part}' ends with a space or a dot, starts with ~$, or is a name OneDrive keeps for itself"
+        if len(part) > 255 or len(remote) > 400:
+            return f"'{part[:40]}…' is too long for OneDrive (a name may have 255 characters, a path 400)"
+    return None
+
+
 def _pairs(local: str, remote: str, also: tuple[str, ...]) -> list[tuple[Path, str]]:
     out = [(Path(local).expanduser(), remote.strip("/"))]
     for item in also:
@@ -123,9 +140,12 @@ def _pairs(local: str, remote: str, also: tuple[str, ...]) -> list[tuple[Path, s
          surfaces=("cli", "editor"))
 def onedrive_add(ctx, local, remote, account=None, replace=False, update=False, exclude=(), include=(), skip_copies=False, also=()):
     pairs = _pairs(local, remote, tuple(also))
-    for src, _ in pairs:
+    for src, dest in pairs:
         if not src.exists():
             raise WsError("no-such-file", f"{src} is not there", f"I cannot find {src} on this machine.", exit_code=2)
+        why = bad_name(dest)
+        if why:
+            raise WsError("bad-name", f"OneDrive cannot hold {dest}", f"{why}. Nothing was copied. Rename it and run this again.", exit_code=2)
     d = graph.Drive(_label(account))
     listed: dict[str, dict[str, dict]] = {}
 
