@@ -14,6 +14,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - A command in the `decision` category is for a person. It is not offered to you; it needs a prompt in a terminal or the editor's dialog. Tell the person what you want decided.
 - A command that needs `sudo` (`kit add`) is not offered to you either.
 - Add `--dry-run` to anything that writes, and read what it would do first.
+- A `decision` needs a person. `--yes` stands for that person's answer only where the person typed it or committed it in a setup script, a session hook or a CI workflow; never add `--yes` yourself.
 - A repository `repo sync` leaves alone is safe and is not an error; its resource says why.
 - `ws-host help` is the daily-work documentation; `ws-host help TOPIC` for one. `ws-host context` and `ws-host doctor` give a report with no secrets.
 

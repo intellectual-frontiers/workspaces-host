@@ -150,6 +150,11 @@ and 0026-workspaces, held in the public root, govern all of them.
   name a confidential repository or say what one holds. It is public, and it
   knows only the public root.
 
+- **FR-020**: The author and the committer of every commit in this repository
+  MUST be Shahid Shah <shahid@shah.org>, unless a person expressly authorizes
+  an agent to be the author of a named commit in its message; an agent's part
+  is a `Co-Authored-By` trailer (the public root's architecture spec,
+  FR-038).
 ## Edge cases
 
 - The runtime is missing and the computer is offline when the launcher runs: it exits 3 and says in plain words

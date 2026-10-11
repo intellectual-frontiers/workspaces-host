@@ -150,6 +150,8 @@ def agent_skill() -> dict:
              "- A command in the `decision` category is for a person. It is not offered to you; it needs a prompt in a terminal or the editor's dialog. Tell the person what you want decided.",
              "- A command that needs `sudo` (`kit add`) is not offered to you either.",
              "- Add `--dry-run` to anything that writes, and read what it would do first.",
+             "- A `decision` needs a person. `--yes` stands for that person's answer only where the person typed it or committed it in a "
+             "setup script, a session hook or a CI workflow; never add `--yes` yourself.",
              "- A repository `repo sync` leaves alone is safe and is not an error; its resource says why.",
              f"- `{NAME} help` is the daily-work documentation; `{NAME} help TOPIC` for one. `{NAME} context` and `{NAME} doctor` give a report with no secrets.", "",
              "## Commands", "", "| Command | Category | Where | What it does |", "| --- | --- | --- | --- |"]

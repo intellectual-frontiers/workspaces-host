@@ -81,7 +81,7 @@ image::figures/fig-10.1.png[Five steps: the outcome, the layer and files, the ru
 * *Never edit a generated file.* Run its generator.
 * *Never weaken a safety rule to pass a test.* The sync, trust and decision rules are the product.
 * *Never add a package at module level in a command or kit.* A dependency goes in a group in `pyproject.toml` and is imported inside the function.
-* *Do not run what is a person's decision.* An agent does not run `release publish`, `provider add`, `repo set` or `kit add`.
+* *Do not run what is a person's decision.* An agent does not run `release publish`, `provider add`, `repo set` or `kit add`. `--yes` on such a command is the person's answer only where the person typed it or committed it in a setup script, a session hook or a CI workflow (0002-repositories-and-trust FR-014); an agent never adds it.
 * *Keep the change small.* One layer, one purpose, and a test that fails without it.
 * *Say what you did not verify.* Several checks skip on a machine without a display, `agora` or a real VS Code.
 

@@ -79,6 +79,11 @@ class Trust(Workspace):
         self.assertEqual(code, 1)
         self.assertFalse(os.path.lexists(self.link))
 
+    def test_yes_stands_for_the_persons_typed_answer_where_there_is_no_terminal(self):
+        code, doc = self.run_json("repo", "set", "site", "--trusted", "--yes")
+        self.assertEqual(code, 0, doc)
+        self.assertTrue(self.link.is_symlink())
+
     def test_dry_run_needs_no_confirmation_and_changes_nothing(self):
         code, doc = self.run_json("repo", "set", "site", "--trusted", "--dry-run")
         self.assertEqual(code, 0)

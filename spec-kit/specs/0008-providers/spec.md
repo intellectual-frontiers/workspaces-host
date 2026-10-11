@@ -45,7 +45,7 @@ different versions of one program without conflict. Nothing here installs a prog
 
 ## Providers and trust
 
-- **FR-010**: A provider is in use when a person enabled it with `provider add PATH` (a `decision`: it links the provider's `.workspaces-host/` folder
+- **FR-010**: A provider is in use when a person enabled it with `provider add PATH` (a `decision`, confirmed as 0002-repositories-and-trust FR-014 says, `--yes` included: it links the provider's `.workspaces-host/` folder
   into `~/.config/workspaces-host/providers.d/<name>`; `provider remove NAME` removes it), or when it needs no enabling: the clone of `ws-host` that is
   running, which is the code the person installed, and every cloned repository the person trusts (0002-repositories-and-trust FR-012), which until their
   own configuration says otherwise includes the organization `ws-host` itself comes from. A repository MUST NOT be able to enable itself. `provider list`

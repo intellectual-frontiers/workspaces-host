@@ -104,8 +104,13 @@ work, and a failed clone reported as done. Each is a test here.
   MUST be a `decision` command (0041-command-line FR-014, FR-023): it MUST
   NOT be exposed over MCP, and it MUST need a confirmation only a person can
   give: in the terminal an answer typed at a prompt that needs a terminal,
-  and in the editor the Workspaces Console's modal confirmation
-  (0041-command-line FR-051).
+  in the editor the Workspaces Console's modal confirmation
+  (0041-command-line FR-051), or `--yes` on the command line, which stands
+  for the typed answer of the person who typed it or who committed it in a
+  setup script, a session hook or a CI workflow (the public root's
+  0025-tooling-environment FR-033). `--confirmed` alone is never enough
+  outside the editor, and an agent MUST NOT add `--yes` on its own
+  initiative. Every `decision` command takes `--yes` in the same way.
 - **FR-015**: When trust is granted `ws-host` MUST record the repository's
   commit in its state directory, and `doctor` MUST warn, without failing,
   when the repository's `.workspaces-host/kits/` has changed since.

@@ -30,6 +30,7 @@ class Ctx:
     mode: str = "text"          # how the result is written: text, json or html
     exit_code: int | None = None  # a command that returns nothing (it ran a program whose output is the output) sets the status here
     confirmed: bool = False     # the Workspaces Console passes --confirmed only after its modal (0041 FR-051)
+    yes: bool = False           # --yes: the typed answer of the person who typed it or committed it in a hook or a workflow (0002 FR-014)
 
     def interactive(self) -> bool:
         """True where a person can be asked a question: the terminal, in text mode. The editor, MCP and a pipeline cannot be (0041 FR-077)."""
@@ -38,7 +39,7 @@ class Ctx:
     def confirm(self, question: str) -> None:
         """A `decision` needs a confirmation only a person can give: a typed answer at a terminal, or the editor's modal
         (0041 FR-014, FR-051). Raises when neither is possible, so an agent without a terminal cannot decide."""
-        if self.dry_run:
+        if self.dry_run or self.yes:
             return
         if self.surface == "editor" and self.confirmed:
             return
@@ -73,6 +74,7 @@ def build_parser(cmd: Command) -> argparse.ArgumentParser:
         p.add_argument("--dry-run", dest="dry_run", action="store_true")
     if cmd.category == "decision":
         p.add_argument("--confirmed", dest="confirmed", action="store_true")
+        p.add_argument("--yes", dest="yes", action="store_true")
     p.add_argument("--debug", action="store_true")
     p.add_argument("--offline", action="store_true")
     return p
@@ -181,6 +183,7 @@ def run(argv: list[str], surface: str = "cli", out=None, err=None) -> int:
         ns = build_parser(cmd).parse_args(rest)
         ctx.dry_run, ctx.debug = bool(getattr(ns, "dry_run", False)), ns.debug
         ctx.confirmed = bool(getattr(ns, "confirmed", False))
+        ctx.yes = bool(getattr(ns, "yes", False))
         ctx.offline = ctx.offline or ns.offline
         ctx.values = _validate(cmd, ns, ctx)
         _plan(cmd, argv)
