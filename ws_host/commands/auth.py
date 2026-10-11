@@ -129,6 +129,10 @@ def _microsoft_new(ctx, label: str, method: str = "browser", own_app: bool = Fal
         return
     if own_app and graph.app_for(label) is None:
         _ask_app(ctx, label)           # asks at a terminal and keeps the answers; where nothing can be asked, says what to do and stops
+    app = graph.app_for(label)
+    if app and app[0] != graph.SHARED:
+        yield Resource("auth-app", label, {"plain": f"Signing in with the app you saved for '{label}' (client ID {app[0]}). To use Microsoft's own app instead, run:  ws-host auth set microsoft shared common --host {label}",
+                                           "client_id": app[0], "tenant": app[1], "host": label})
     note, done = "", None
     for ev in graph.sign_in(label, method):
         if ev.get("event") == "url":
