@@ -35,6 +35,8 @@ include::chapters/overview/day-to-day.adoc[]
 
 include::chapters/overview/shells.adoc[]
 
+include::chapters/overview/onedrive.adoc[]
+
 include::chapters/overview/trust.adoc[]
 
 include::chapters/overview/extend-with-ai.adoc[]

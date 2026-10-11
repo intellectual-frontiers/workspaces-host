@@ -49,32 +49,4 @@ TIP: In VS Code the same sign-in is a notification with a button, *Copy code and
 
 === Microsoft OneDrive (optional)
 
-Install the `microsoft` kit, then sign in. You do not need an app registration, an administrator or any setting:
-
-----
-ws-host kit add microsoft
-ws-host auth new microsoft --host work
-ws-host onedrive list
-----
-
-A Microsoft sign-in page opens in your browser (in Windows, if you use WSL). You sign in there, with your password and any second factor your account asks for, and the command finishes by itself. ws-host never sees your password or your second factor.
-It prints the address as well, in case the browser does not open. Give each account its own name with `--host`, for example `work` and `personal`, and name one with `--account` when you have both.
-
-`ws-host onedrive sync REMOTE LOCAL` copies a file or folder to this machine, and `ws-host onedrive add LOCAL REMOTE` copies one into OneDrive. A file that is already at the other end is left alone, and
-ws-host says so, unless you add `--update` (copy the new files and the ones that changed; OneDrive keeps each earlier one as a version) or `--replace` (copy everything). `--include '*.pdf'` copies only names that match, and `--exclude '.*'` leaves out names that match, such as
-hidden files; `--dry-run` shows what would be copied.
-
-Some organizations allow only one way of signing in. If Microsoft says *You don't have access to this* after you pick your account, try the other way:
-
-----
-ws-host auth new microsoft --host work --method code
-----
-
-That shows a short code and an address; you type the code on that page. On a machine with no browser (a server, an SSH session) use `--method code` from the start. If neither works, ask your administrator to look
-in the Entra sign-in log for the time of the attempt: it names the Conditional Access policy that blocked it.
-
-If you have an app registration of your own and want to sign in with it, run `ws-host auth new microsoft --host work --own-app`; it explains where to find the two IDs, asks for them, checks them and keeps them for that account.
-
-The sign-in is kept in your system keyring when there is one. Most WSL setups have none, so it is kept in a file only you can read, under `~/.IdentityService`, and ws-host tells you so.
-OneDrive's own sync program exists only for Windows and macOS: on WSL, let the Windows program sync, mark the folders you need as *Always keep on this device*, and read them at
-`/mnt/c/Users/<you>/OneDrive`.
+If you also work with files in Microsoft OneDrive, `ws-host auth new microsoft --host work` signs you in the same way, with a page in your browser and no password in the terminal. <<onedrive>> has everything about it.
