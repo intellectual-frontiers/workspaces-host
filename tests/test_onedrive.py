@@ -637,6 +637,19 @@ class Updating(OneDrive):
         self.assertEqual(doc["data"]["new"], 5)
         self.assertLessEqual(len([c for c in self.g.calls if c[0] == "GET"]), 3, "a folder that is not there is empty: one question for the top, none for each of its folders")
 
+    def test_include_copies_only_the_named_kinds_whatever_the_case_and_makes_no_folder_for_nothing(self):
+        (self.local / "b" / "x").mkdir(parents=True)
+        (self.local / "b" / "Book.PDF").write_bytes(b"pdf")
+        (self.local / "b" / "book.epub").write_bytes(b"epub")
+        (self.local / "b" / "notes.md").write_bytes(b"md")
+        (self.local / "b" / "x" / "more.md").write_bytes(b"md")
+        (self.local / "b" / ".build").mkdir()
+        (self.local / "b" / ".build" / "paper.pdf").write_bytes(b"intermediate")
+        code, doc = self.run_json("onedrive", "add", str(self.local / "b"), "R/b", "--update", "--include", "*.pdf", "--include", "*.epub", "--exclude", ".*")
+        self.assertEqual(code, 0, doc)
+        self.assertEqual(sorted(k for k in self.g.files if k.startswith("R/")), ["R/b/Book.PDF", "R/b/book.epub"])
+        self.assertNotIn("R/b/x", self.g.folders, "a folder with nothing wanted in it is not made")
+
     def test_a_malformed_also_is_a_usage_error_before_anything_happens(self):
         code, doc = self.run_json("onedrive", "add", str(self.local), "W", "--also", "no-equals-sign")
         self.assertEqual(code, 2)

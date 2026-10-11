@@ -58,6 +58,18 @@ UPDATE = Arg("update", flag=True, help="copy new files, and replace the ones who
 EXCLUDE = Arg("exclude", multiple=True, help="leave out names that match this pattern, such as '*.tmp' or '.*' (any part of the path; repeat it for more)")
 
 
+INCLUDE = Arg("include", multiple=True, help="copy only files whose name matches this pattern, such as '*.pdf' (repeat it for more); without it, every file that is not left out")
+
+
+def _not_wanted(rel: str, include: tuple[str, ...]) -> bool:
+    """With `--include`, a file is wanted only when its name (or its path) matches one of the patterns, whatever the case of its extension."""
+    import fnmatch
+    if not include:
+        return False
+    name = rel.rsplit("/", 1)[-1].lower()
+    return not any(fnmatch.fnmatchcase(name, p.lower()) or fnmatch.fnmatchcase(rel.lower(), p.lower()) for p in include)
+
+
 def _left_out(rel: str, patterns: tuple[str, ...]) -> bool:
     import fnmatch
     parts = rel.split("/")
@@ -106,9 +118,9 @@ def _pairs(local: str, remote: str, also: tuple[str, ...]) -> list[tuple[Path, s
 
 @command("onedrive", "add", category="setup", summary="Copy a local file or folder into OneDrive; with --update, new files and changed ones; nothing is replaced unless you say so",
          args=(Arg("local", "LOCAL", positional=True, required=True, help="a file or folder on this machine"),
-               Arg("remote", "REMOTE", positional=True, required=True, help="where in OneDrive it goes, from the root, such as Documents/report.docx"), ACCOUNT, REPLACE, UPDATE, EXCLUDE, ALSO),
+               Arg("remote", "REMOTE", positional=True, required=True, help="where in OneDrive it goes, from the root, such as Documents/report.docx"), ACCOUNT, REPLACE, UPDATE, EXCLUDE, INCLUDE, ALSO),
          surfaces=("cli", "editor"))
-def onedrive_add(ctx, local, remote, account=None, replace=False, update=False, exclude=(), also=()):
+def onedrive_add(ctx, local, remote, account=None, replace=False, update=False, exclude=(), include=(), also=()):
     pairs = _pairs(local, remote, tuple(also))
     for src, _ in pairs:
         if not src.exists():
@@ -144,7 +156,7 @@ def onedrive_add(ctx, local, remote, account=None, replace=False, update=False, 
                 files = [(src, base)]
             else:
                 files = [(f, f"{base}/{f.relative_to(src).as_posix()}") for f in sorted(src.rglob("*"))
-                         if f.is_file() and not _left_out(f.relative_to(src).as_posix(), tuple(exclude))]
+                         if f.is_file() and not _left_out(f.relative_to(src).as_posix(), tuple(exclude)) and not _not_wanted(f.relative_to(src).as_posix(), tuple(include))]
             wanted = {base} | {r.rpartition("/")[0] for _, r in files}
             folders = [] if src.is_file() else sorted({"/".join(w.split("/")[:i]) for w in wanted for i in range(1, len(w.split("/")) + 1)}, key=lambda x: x.count("/"))
             if not ctx.dry_run:
