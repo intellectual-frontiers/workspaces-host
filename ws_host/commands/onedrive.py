@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from ..core import progress
 from ..core.registry import Arg, command
 from ..core.resource import Action, OK, Resource, WsError
 from ..lib import graph
@@ -90,67 +91,106 @@ def _verified(local: Path, item: dict) -> bool:
     return True
 
 
+ALSO = Arg("also", multiple=True, help="LOCAL=REMOTE: another folder and where it goes; copy several in one run, which signs in once and is much faster than one run each")
+
+
+def _pairs(local: str, remote: str, also: tuple[str, ...]) -> list[tuple[Path, str]]:
+    out = [(Path(local).expanduser(), remote.strip("/"))]
+    for item in also:
+        src, sep, dest = item.partition("=")
+        if not sep or not src or not dest.strip("/"):
+            raise WsError("usage", f"--also {item!r} is not LOCAL=REMOTE", "Each --also needs a folder on this machine, an equals sign, and where it goes in OneDrive, such as /home/me/a=Backups/a.", exit_code=2)
+        out.append((Path(src).expanduser(), dest.strip("/")))
+    return out
+
+
 @command("onedrive", "add", category="setup", summary="Copy a local file or folder into OneDrive; with --update, new files and changed ones; nothing is replaced unless you say so",
          args=(Arg("local", "LOCAL", positional=True, required=True, help="a file or folder on this machine"),
-               Arg("remote", "REMOTE", positional=True, required=True, help="where in OneDrive it goes, from the root, such as Documents/report.docx"), ACCOUNT, REPLACE, UPDATE, EXCLUDE),
+               Arg("remote", "REMOTE", positional=True, required=True, help="where in OneDrive it goes, from the root, such as Documents/report.docx"), ACCOUNT, REPLACE, UPDATE, EXCLUDE, ALSO),
          surfaces=("cli", "editor"))
-def onedrive_add(ctx, local, remote, account=None, replace=False, update=False, exclude=()):
-    src = Path(local).expanduser()
-    if not src.exists():
-        raise WsError("no-such-file", f"{src} is not there", f"I cannot find {src} on this machine.", exit_code=2)
+def onedrive_add(ctx, local, remote, account=None, replace=False, update=False, exclude=(), also=()):
+    pairs = _pairs(local, remote, tuple(also))
+    for src, _ in pairs:
+        if not src.exists():
+            raise WsError("no-such-file", f"{src} is not there", f"I cannot find {src} on this machine.", exit_code=2)
     d = graph.Drive(_label(account))
-    base = remote.strip("/")
-    if src.is_file():
-        files = [(src, base)]
-    else:
-        files = [(f, f"{base}/{f.relative_to(src).as_posix()}") for f in sorted(src.rglob("*"))
-                 if f.is_file() and not _left_out(f.relative_to(src).as_posix(), tuple(exclude))]
-    wanted = {base} | {r.rpartition("/")[0] for _, r in files}
-    folders = [] if src.is_file() else sorted({"/".join(w.split("/")[:i]) for w in wanted for i in range(1, len(w.split("/")) + 1)}, key=lambda x: x.count("/"))
     listed: dict[str, dict[str, dict]] = {}
-    rows, counts = [], {"new": 0, "updated": 0, "same": 0, "left": 0, "wrong": 0}
-    if not ctx.dry_run:
-        for fol in folders:
-            if fol:
-                d.make_folder(fol)
-    for f, r in files:
-        folder, _, name = r.rpartition("/")
+
+    def listing(folder: str) -> dict[str, dict]:
+        """What is in a folder of OneDrive. A folder whose parent does not hold it is empty, so nothing is asked about it: a first copy of a big tree asks about its top and no further."""
         if folder not in listed:
-            listed[folder] = d.listing(folder)
-        there = listed[folder].get(name)
-        if there is None:
-            action = "new"
-        elif replace:
-            action = "updated"
-        elif update:
-            if _same(f, there):
-                counts["same"] += 1
-                rows.append({"name": r, "status": "ok", "plain": f"{r} is already up to date."})
-                continue
-            action = "updated"
-        else:
-            counts["left"] += 1
-            rows.append({"name": r, "status": "skipped", "plain": f"{r} is already in OneDrive, so I left it (--update copies it if it changed, --replace always does)."})
-            continue
-        if ctx.dry_run:
-            rows.append({"name": r, "status": "would-add", "plain": f"Would copy {f.name} ({_human(f.stat().st_size)}) to {r} ({'new' if action == 'new' else 'changed'})."})
-            counts[action] += 1
-            continue
-        n, item = d.upload(f, r)
-        counts[action] += 1
-        if _verified(f, item):
-            rows.append({"name": r, "status": "ok", "plain": f"{'Copied' if action == 'new' else 'Updated'} {f.name} ({_human(n)}) to {r}."})
-        else:
-            counts["wrong"] += 1
-            rows.append({"name": r, "status": "warn", "plain": f"Copied {f.name} to {r}, but OneDrive's checksum for it is not this file's. Run the command again; if it stays, tell whoever looks after ws-host."})
+            if folder:
+                parent, _, name = folder.rpartition("/")
+                held = listing(parent).get(name)
+                listed[folder] = d.listing(folder) if held and held.get("kind") == "folder" else {}
+            else:
+                listed[folder] = d.listing(folder)
+        return listed[folder]
+
+    def ensure_folder(fol: str) -> None:
+        parent, _, name = fol.rpartition("/")
+        if name in listing(parent):
+            return
+        d.make_folder(fol)
+        listing(parent)[name] = {"name": name, "kind": "folder"}
+        listed[fol] = {}
+
+    rows, parts = [], []
+    totals = {"new": 0, "updated": 0, "same": 0, "left": 0, "wrong": 0}
+    with progress.step("📤 Copying to OneDrive"):
+        for number, (src, base) in enumerate(pairs, 1):
+            progress.detail(f"{number} of {len(pairs)}: {base}")
+            if src.is_file():
+                files = [(src, base)]
+            else:
+                files = [(f, f"{base}/{f.relative_to(src).as_posix()}") for f in sorted(src.rglob("*"))
+                         if f.is_file() and not _left_out(f.relative_to(src).as_posix(), tuple(exclude))]
+            wanted = {base} | {r.rpartition("/")[0] for _, r in files}
+            folders = [] if src.is_file() else sorted({"/".join(w.split("/")[:i]) for w in wanted for i in range(1, len(w.split("/")) + 1)}, key=lambda x: x.count("/"))
+            if not ctx.dry_run:
+                for fol in folders:
+                    if fol:
+                        ensure_folder(fol)
+            counts = {"new": 0, "updated": 0, "same": 0, "left": 0, "wrong": 0}
+            for f, r in files:
+                folder, _, name = r.rpartition("/")
+                there = listing(folder).get(name)
+                if there is None:
+                    action = "new"
+                elif replace:
+                    action = "updated"
+                elif update:
+                    if _same(f, there):
+                        counts["same"] += 1
+                        rows.append({"name": r, "status": "ok", "plain": f"{r} is already up to date."})
+                        continue
+                    action = "updated"
+                else:
+                    counts["left"] += 1
+                    rows.append({"name": r, "status": "skipped", "plain": f"{r} is already in OneDrive, so I left it (--update copies it if it changed, --replace always does)."})
+                    continue
+                if ctx.dry_run:
+                    rows.append({"name": r, "status": "would-add", "plain": f"Would copy {f.name} ({_human(f.stat().st_size)}) to {r} ({'new' if action == 'new' else 'changed'})."})
+                    counts[action] += 1
+                    continue
+                n, item = d.upload(f, r)
+                counts[action] += 1
+                if _verified(f, item):
+                    rows.append({"name": r, "status": "ok", "plain": f"{'Copied' if action == 'new' else 'Updated'} {f.name} ({_human(n)}) to {r}."})
+                else:
+                    counts["wrong"] += 1
+                    rows.append({"name": r, "status": "warn", "plain": f"Copied {f.name} to {r}, but OneDrive's checksum for it is not this file's. Run the command again; if it stays, tell whoever looks after ws-host."})
+            for k, v in counts.items():
+                totals[k] += v
+            parts.append({"remote": base, "new": counts["new"], "updated": counts["updated"], "unchanged": counts["same"], "left": counts["left"], "checksum_differs": counts["wrong"]})
     if ctx.dry_run:
-        plain = (f"Nothing was changed. I would copy {counts['new']} new file(s) and update {counts['updated']}"
-                 + (f"; {counts['same']} are already up to date" if counts["same"] else "") + (f"; {counts['left']} that are there would be left" if counts["left"] else "") + ".")
+        plain = (f"Nothing was changed. I would copy {totals['new']} new file(s) and update {totals['updated']}"
+                 + (f"; {totals['same']} are already up to date" if totals["same"] else "") + (f"; {totals['left']} that are there would be left" if totals["left"] else "") + ".")
     else:
-        plain = (f"Copied {counts['new']} new file(s) and updated {counts['updated']}" + (f"; {counts['same']} were already up to date" if counts["same"] else "")
-                 + (f"; {counts['left']} already there were left as they are" if counts["left"] else "") + ".")
-    return Resource("onedrive-add", remote, {"plain": plain, "files": rows, "account": d.label, "new": counts["new"], "updated": counts["updated"], "unchanged": counts["same"],
-                                              "left": counts["left"], "checksum_differs": counts["wrong"]}, status=OK)
+        plain = (f"Copied {totals['new']} new file(s) and updated {totals['updated']}" + (f"; {totals['same']} were already up to date" if totals["same"] else "")
+                 + (f"; {totals['left']} already there were left as they are" if totals["left"] else "") + ".")
+    return Resource("onedrive-add", remote, {"plain": plain, "files": rows, "parts": parts, "account": d.label, "new": totals["new"], "updated": totals["updated"], "unchanged": totals["same"],
+                                              "left": totals["left"], "checksum_differs": totals["wrong"]}, status=OK)
 
 
 @command("onedrive", "sync", category="setup", summary="Copy a OneDrive file or folder to this machine; a local file that differs is kept unless you say so",

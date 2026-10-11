@@ -607,6 +607,41 @@ class Updating(OneDrive):
         self.assertGreaterEqual(doc["data"]["checksum_differs"], 1)
         self.assertIn("checksum", json.dumps(doc))
 
+    def test_several_folders_go_in_one_run_that_signs_in_once_and_each_has_its_own_counts(self):
+        for name in ("one", "two"):
+            (self.local / name / "sub").mkdir(parents=True)
+            (self.local / name / "a.txt").write_bytes(name.encode())
+            (self.local / name / "sub" / "b.txt").write_bytes(name.encode() * 2)
+        tokens = []
+        graph.token_for = lambda label: tokens.append(label) or "tok-" + label
+        args = ["onedrive", "add", str(self.local / "one"), "Works/one", "--also", f"{self.local / 'two'}=Works/two", "--update"]
+        code, doc = self.run_json(*args)
+        self.assertEqual(code, 0, doc)
+        self.assertEqual(len(tokens), 1, "one sign-in for every folder")
+        self.assertEqual([(p["remote"], p["new"]) for p in doc["data"]["parts"]], [("Works/one", 2), ("Works/two", 2)])
+        self.assertEqual(self.g.files["Works/two/sub/b.txt"], b"twotwo")
+        posts = [c for c in self.g.calls if c[0] == "POST"]
+        self.g.calls.clear()
+        code, doc = self.run_json(*args)
+        self.assertEqual([(p["new"], p["updated"], p["unchanged"]) for p in doc["data"]["parts"]], [(0, 0, 2), (0, 0, 2)])
+        self.assertEqual([c for c in self.g.calls if c[0] in ("POST", "PUT")], [], "folders that are there are not made again, and nothing is sent")
+        self.assertGreater(len(posts), 0)
+
+    def test_a_first_copy_of_a_big_tree_asks_about_its_top_and_no_further(self):
+        for i in range(5):
+            (self.local / "t" / f"d{i}" / "deep").mkdir(parents=True)
+            (self.local / "t" / f"d{i}" / "deep" / "f.txt").write_bytes(b"x")
+        self.g.calls.clear()
+        code, doc = self.run_json("onedrive", "add", str(self.local / "t"), "Brand/New/t", "--update", "--dry-run")
+        self.assertEqual(code, 0, doc)
+        self.assertEqual(doc["data"]["new"], 5)
+        self.assertLessEqual(len([c for c in self.g.calls if c[0] == "GET"]), 3, "a folder that is not there is empty: one question for the top, none for each of its folders")
+
+    def test_a_malformed_also_is_a_usage_error_before_anything_happens(self):
+        code, doc = self.run_json("onedrive", "add", str(self.local), "W", "--also", "no-equals-sign")
+        self.assertEqual(code, 2)
+        self.assertEqual(self.g.calls, [])
+
     def test_exclude_matches_any_part_of_a_path_and_a_pattern(self):
         from ws_host.commands.onedrive import _left_out
         self.assertTrue(_left_out("a/.git/config", (".*",)))
