@@ -144,10 +144,10 @@ Every command, taken from the registry. `ws-host command list` and `ws-host comm
 |===
 |Usage |Category |Where it runs |What it does
 
-|`ws-host onedrive add LOCAL REMOTE [--account STRING] [--replace]`
+|`ws-host onedrive add LOCAL REMOTE [--account STRING] [--replace] [--update] [--exclude STRING]`
 |setup
 |terminal, editor
-|Copy a local file or folder into OneDrive; nothing already there is replaced unless you say so
+|Copy a local file or folder into OneDrive; with --update, new files and changed ones; nothing is replaced unless you say so
 
 |`ws-host onedrive list [PATH] [--account STRING]`
 |read

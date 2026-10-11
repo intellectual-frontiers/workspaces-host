@@ -61,7 +61,8 @@ A Microsoft sign-in page opens in your browser (in Windows, if you use WSL). You
 It prints the address as well, in case the browser does not open. Give each account its own name with `--host`, for example `work` and `personal`, and name one with `--account` when you have both.
 
 `ws-host onedrive sync REMOTE LOCAL` copies a file or folder to this machine, and `ws-host onedrive add LOCAL REMOTE` copies one into OneDrive. A file that is already at the other end is left alone, and
-ws-host says so, unless you add `--replace`; `--dry-run` shows what would be copied.
+ws-host says so, unless you add `--update` (copy the new files and the ones that changed; OneDrive keeps each earlier one as a version) or `--replace` (copy everything). `--exclude '.*'` leaves out names that match, such as
+hidden files; `--dry-run` shows what would be copied.
 
 Some organizations allow only one way of signing in. If Microsoft says *You don't have access to this* after you pick your account, try the other way:
 

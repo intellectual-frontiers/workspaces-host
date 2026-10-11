@@ -198,8 +198,10 @@ class Drive:
     @staticmethod
     def _entry(d: dict) -> dict:
         folder = "folder" in d
+        hashes = (d.get("file") or {}).get("hashes") or {}
         return {"name": d.get("name", ""), "kind": "folder" if folder else "file", "size": d.get("size", 0), "modified": d.get("lastModifiedDateTime", ""),
-                "children": (d.get("folder") or {}).get("childCount"), "id": d.get("id", ""), "web_url": d.get("webUrl", "")}
+                "children": (d.get("folder") or {}).get("childCount"), "id": d.get("id", ""), "web_url": d.get("webUrl", ""),
+                "sha1": hashes.get("sha1Hash", ""), "quickxor": hashes.get("quickXorHash", "")}
 
     def children(self, path: str) -> list[dict]:
         url = self._item(path) + "/children?$top=200"
@@ -209,6 +211,15 @@ class Drive:
             out += [self._entry(x) for x in d.get("value", [])]
             url = d.get("@odata.nextLink")
         return out
+
+    def listing(self, path: str) -> dict[str, dict]:
+        """The names in a folder and what OneDrive holds for each; empty when the folder is not there."""
+        try:
+            return {e["name"]: e for e in self.children(path)}
+        except WsError as e:
+            if "404" in e.message:
+                return {}
+            raise
 
     def download(self, path: str, dest: Path) -> int:
         meta = self._call("GET", self._item(path) + "?select=@microsoft.graph.downloadUrl,size")
@@ -227,23 +238,25 @@ class Drive:
         os.replace(tmp, dest)
         return dest.stat().st_size
 
-    def upload(self, src: Path, remote: str) -> int:
+    def upload(self, src: Path, remote: str) -> tuple[int, dict]:
+        """Sends a file, replacing the one at `remote`; OneDrive keeps the earlier one as a version. Returns its size and what OneDrive then holds for it."""
         size = src.stat().st_size
         target = self._item(remote)
         if size <= SIMPLE_LIMIT:
-            self._call("PUT", target + "/content", src.read_bytes(), {"Content-Type": "application/octet-stream"})
-            return size
+            item = self._call("PUT", target + "/content", src.read_bytes(), {"Content-Type": "application/octet-stream"})
+            return size, self._entry(item) if isinstance(item, dict) else {}
         sess = self._call("POST", target + "/createUploadSession", json.dumps({"item": {"@microsoft.graph.conflictBehavior": "replace"}}).encode(),
                           {"Content-Type": "application/json"})
         url = sess["uploadUrl"]
+        item: dict = {}
         with open(src, "rb") as f:
             start = 0
             while start < size:
                 chunk = f.read(CHUNK)
                 end = start + len(chunk) - 1
-                self._call("PUT", url, chunk, {"Content-Range": f"bytes {start}-{end}/{size}"}, auth=False)
+                item = self._call("PUT", url, chunk, {"Content-Range": f"bytes {start}-{end}/{size}"}, auth=False)
                 start = end + 1
-        return size
+        return size, self._entry(item) if isinstance(item, dict) and item.get("name") else {}
 
     def make_folder(self, remote: str) -> None:
         parent, _, name = remote.strip("/").rpartition("/")

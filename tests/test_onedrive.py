@@ -10,7 +10,7 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-from ws_host.lib import graph, msauth
+from ws_host.lib import graph, msauth, quickxor
 from .helpers import Home
 
 
@@ -22,6 +22,8 @@ class FakeGraph:
         self.folders: set[str] = set()
         self.calls: list[tuple[str, str, str | None]] = []
         self.sessions: dict[str, dict] = {}
+        self.hashes = "quickxor"            # what the stand-in states for a file: quickxor (work), sha1 (home) or none
+        self.lie = False                    # states a checksum that is not the file's, as a broken upload would
         outer = self
 
         class H(BaseHTTPRequestHandler):
@@ -45,7 +47,7 @@ class FakeGraph:
             def _item(self, rel):
                 if rel in outer.files:
                     return {"name": rel.rsplit("/", 1)[-1], "size": len(outer.files[rel]), "lastModifiedDateTime": "2026-10-01T00:00:00Z", "id": rel, "webUrl": "https://x/" + rel,
-                            "@microsoft.graph.downloadUrl": f"{outer.url}/dl/{urllib.parse.quote(rel)}", "file": {}}
+                            "@microsoft.graph.downloadUrl": f"{outer.url}/dl/{urllib.parse.quote(rel)}", "file": {"hashes": outer.stated(outer.files[rel])}}
                 if rel == "" or rel in outer.folders:
                     kids = [k for k in list(outer.files) + list(outer.folders) if k.rpartition("/")[0] == rel and k != rel]
                     return {"name": rel.rsplit("/", 1)[-1] or "root", "size": 0, "lastModifiedDateTime": "2026-10-01T00:00:00Z", "id": rel or "root", "folder": {"childCount": len(kids)}}
@@ -94,10 +96,11 @@ class FakeGraph:
                     s["data"] += body
                     if self.headers["Content-Range"].split("/")[0].endswith(str(int(self.headers["Content-Range"].split("/")[1]) - 1)):
                         outer.files[s["path"]] = s["data"]
+                        return self._json(201, self._item(s["path"]))
                     return self._json(202, {})
                 kind, rel = self._target()
                 outer.files[rel] = body
-                return self._json(201, {"name": rel})
+                return self._json(201, self._item(rel))
 
             def do_POST(self):
                 self._note()
@@ -121,6 +124,19 @@ class FakeGraph:
         self.server = HTTPServer(("127.0.0.1", 0), H)
         self.url = f"http://127.0.0.1:{self.server.server_port}"
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def stated(self, data: bytes) -> dict:
+        import hashlib
+        p = Path(tempfile.mktemp())
+        p.write_bytes(data + (b"x" if self.lie else b""))
+        try:
+            if self.hashes == "quickxor":
+                return {"quickXorHash": quickxor.quickxor_file(p)}
+            if self.hashes == "sha1":
+                return {"sha1Hash": hashlib.sha1(data + (b"x" if self.lie else b"")).hexdigest().upper()}
+            return {}
+        finally:
+            p.unlink()
 
     def stop(self):
         self.server.shutdown()
@@ -506,3 +522,114 @@ class Browser(Home):
         code, out = self.run_cmd("auth", "new", "microsoft", "--json")
         self.assertEqual(code, 0, out)
         self.assertIn("Open this address", out)
+
+
+class Updating(OneDrive):
+    """0003-kits FR-021: `onedrive add --update` copies new files and the ones whose content changed, by OneDrive's own checksum, and leaves the rest."""
+
+    def tree(self):
+        (self.local / "w").mkdir()
+        (self.local / "w" / "a.txt").write_bytes(b"alpha")
+        (self.local / "w" / "sub").mkdir()
+        (self.local / "w" / "sub" / "b.txt").write_bytes(b"bravo")
+        (self.local / "w" / ".hidden").write_bytes(b"h")
+        (self.local / "w" / "scratch.tmp").write_bytes(b"t")
+
+    def puts(self):
+        return [c for c in self.g.calls if c[0] == "PUT"]
+
+    def test_the_second_run_sends_nothing_and_a_changed_file_is_the_only_one_sent(self):
+        for kind in ("quickxor", "sha1"):
+            self.g.files.clear()
+            self.g.folders.clear()
+            self.g.hashes = kind
+            self.tree()
+            code, doc = self.run_json("onedrive", "add", str(self.local / "w"), "Works/w", "--update", "--exclude", ".*", "--exclude", "*.tmp")
+            self.assertEqual(code, 0, doc)
+            self.assertEqual((doc["data"]["new"], doc["data"]["updated"]), (2, 0), kind)
+            self.assertEqual(sorted(k for k in self.g.files if k.startswith("Works/")), ["Works/w/a.txt", "Works/w/sub/b.txt"], "hidden and excluded files stay out")
+            self.g.calls.clear()
+            code, doc = self.run_json("onedrive", "add", str(self.local / "w"), "Works/w", "--update", "--exclude", ".*", "--exclude", "*.tmp")
+            self.assertEqual((doc["data"]["new"], doc["data"]["updated"], doc["data"]["unchanged"]), (0, 0, 2), kind)
+            self.assertEqual(self.puts(), [], "a file that has not changed is not sent again")
+            (self.local / "w" / "a.txt").write_bytes(b"ALPHA")
+            code, doc = self.run_json("onedrive", "add", str(self.local / "w"), "Works/w", "--update", "--exclude", ".*", "--exclude", "*.tmp")
+            self.assertEqual((doc["data"]["new"], doc["data"]["updated"], doc["data"]["unchanged"]), (0, 1, 1), kind)
+            self.assertEqual(self.g.files["Works/w/a.txt"], b"ALPHA")
+            self.assertEqual(len(self.puts()), 1)
+            shutil_rmtree = __import__("shutil").rmtree
+            shutil_rmtree(self.local / "w")
+
+    def test_a_file_of_the_same_size_with_other_bytes_is_found_changed(self):
+        self.tree()
+        self.run_json("onedrive", "add", str(self.local / "w"), "W", "--update", "--exclude", ".*")
+        (self.local / "w" / "a.txt").write_bytes(b"alphb")
+        code, doc = self.run_json("onedrive", "add", str(self.local / "w"), "W", "--update", "--exclude", ".*")
+        self.assertEqual(doc["data"]["updated"], 1)
+
+    def test_where_no_checksum_is_stated_size_and_date_decide(self):
+        self.g.hashes = "none"
+        self.tree()
+        self.run_json("onedrive", "add", str(self.local / "w"), "W", "--update", "--exclude", ".*")
+        self.g.calls.clear()
+        code, doc = self.run_json("onedrive", "add", str(self.local / "w"), "W", "--update", "--exclude", ".*")
+        self.assertEqual(doc["data"]["unchanged"] + doc["data"]["updated"], 3)       # three files, none hidden: nothing says they differ except date, and the stand-in's is old, so each is sent
+        (self.local / "w" / "a.txt").write_bytes(b"longer than before")
+        code, doc = self.run_json("onedrive", "add", str(self.local / "w"), "W", "--update", "--exclude", ".*")
+        self.assertGreaterEqual(doc["data"]["updated"], 1)
+
+    def test_without_update_a_file_already_there_is_left_and_replace_sends_it_anyway(self):
+        self.tree()
+        self.run_json("onedrive", "add", str(self.local / "w"), "W", "--exclude", ".*")
+        (self.local / "w" / "a.txt").write_bytes(b"ALPHA")
+        code, doc = self.run_json("onedrive", "add", str(self.local / "w"), "W", "--exclude", ".*")
+        self.assertEqual(self.g.files["W/a.txt"], b"alpha")
+        self.assertEqual(doc["data"]["left"], 3)
+        self.run_json("onedrive", "add", str(self.local / "w"), "W", "--exclude", ".*", "--replace")
+        self.assertEqual(self.g.files["W/a.txt"], b"ALPHA")
+
+    def test_dry_run_says_what_would_be_new_and_what_would_change_and_sends_nothing(self):
+        self.tree()
+        self.run_json("onedrive", "add", str(self.local / "w"), "W", "--exclude", ".*")
+        (self.local / "w" / "a.txt").write_bytes(b"ALPHA")
+        (self.local / "w" / "new.txt").write_bytes(b"n")
+        self.g.calls.clear()
+        code, doc = self.run_json("onedrive", "add", str(self.local / "w"), "W", "--update", "--exclude", ".*", "--dry-run")
+        self.assertEqual((doc["data"]["new"], doc["data"]["updated"]), (1, 1))
+        self.assertEqual(self.puts(), [])
+        self.assertEqual(self.g.files["W/a.txt"], b"alpha")
+
+    def test_a_copy_whose_checksum_does_not_match_is_said_not_hidden(self):
+        self.g.lie = True
+        self.tree()
+        code, doc = self.run_json("onedrive", "add", str(self.local / "w"), "W", "--update", "--exclude", ".*")
+        self.assertEqual(code, 0, doc)
+        self.assertGreaterEqual(doc["data"]["checksum_differs"], 1)
+        self.assertIn("checksum", json.dumps(doc))
+
+    def test_exclude_matches_any_part_of_a_path_and_a_pattern(self):
+        from ws_host.commands.onedrive import _left_out
+        self.assertTrue(_left_out("a/.git/config", (".*",)))
+        self.assertTrue(_left_out("a/b/x.tmp", ("*.tmp",)))
+        self.assertTrue(_left_out("node_modules/x/y.js", ("node_modules",)))
+        self.assertFalse(_left_out("a/b/x.txt", (".*", "*.tmp")))
+
+
+class QuickXor(Home):
+    """The checksum OneDrive for Business states, computed here; the vectors are from an independent implementation of Microsoft's algorithm."""
+
+    VECTORS = {b"": "AAAAAAAAAAAAAAAAAAAAAAAAAAA=", b"a": "YQAAAAAAAAAAAAAAAQAAAAAAAAA=", b"Hello, OneDrive!": "aSwDG9jwBhaA4AluOAMR5JAGO5Q=",
+               bytes(i % 251 for i in range(1000)): "KbphcpColXb1/3Wm950vUzeX1es=", bytes((i * 7) % 256 for i in range(10000)): "Wlry/IdxdNc5Chkh/PCuOxMnCgk="}
+
+    def test_it_equals_the_independent_implementation_on_every_vector(self):
+        for data, want in self.VECTORS.items():
+            f = Path(self._tmp.name) / "v.bin"
+            f.write_bytes(data)
+            self.assertEqual(quickxor.quickxor_file(f), want, len(data))
+
+    def test_a_file_read_in_pieces_gives_the_same_answer(self):
+        data = os.urandom(3 * quickxor.BLOCK * 6554 + 77)
+        f = Path(self._tmp.name) / "big.bin"
+        f.write_bytes(data)
+        small = quickxor.quickxor_file(f, chunk=quickxor.BLOCK * 3)
+        self.assertEqual(small, quickxor.quickxor_file(f))

@@ -43,7 +43,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 | `kit list` | read | terminal, editor, mcp | List the kits and which are installed |
 | `kit show` | read | terminal, editor, mcp | Show what a kit installs on this machine |
 | `kit sync` | setup | terminal | Bring the tools that float with their newest release up to date, for every kit or for one |
-| `onedrive add` | setup | terminal, editor | Copy a local file or folder into OneDrive; nothing already there is replaced unless you say so |
+| `onedrive add` | setup | terminal, editor | Copy a local file or folder into OneDrive; with --update, new files and changed ones; nothing is replaced unless you say so |
 | `onedrive list` | read | terminal, editor, mcp | List the files and folders in a OneDrive folder |
 | `onedrive show` | read | terminal, editor, mcp | Show one file or folder in OneDrive |
 | `onedrive sync` | setup | terminal, editor | Copy a OneDrive file or folder to this machine; a local file that differs is kept unless you say so |
