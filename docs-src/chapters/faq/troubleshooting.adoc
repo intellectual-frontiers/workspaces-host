@@ -159,3 +159,21 @@ your work.
   https://learn.microsoft.com/en-us/windows/terminal/customize-settings/profile-appearance#font-face[font face].
 * *Or use the plain prompt:* run `ws-host shell add bash --plain`, and put `WS_HOST_PROMPT=plain` in `~/.config/workspaces-host/ws-host.env`
   so setup keeps it that way.
+
+=== Microsoft says "You don't have access to this" after I pick my account
+
+*Why:* Your organization allows only some ways of signing in, and the one used is not among them (Conditional Access).
+
+*Fix:* Try the other way: `ws-host auth new microsoft --host work --method code` shows a short code to type on Microsoft's page, and the default opens a browser page. Use the code from the start on a computer with no browser. If neither works, ask your administrator to read the Entra sign-in log for the time of the attempt: it names the policy. `ws-host help onedrive` has the same steps.
+
+=== Microsoft says the application was not found in the directory (AADSTS700016)
+
+*Why:* You once gave `ws-host` the IDs of an app of your own, it saved them for that account name, and the app is not (or is no longer) in the organization you are signing in to. Saved IDs are used for every later sign-in with that `--host`.
+
+*Fix:* The sign-in prints "Signing in with the app you saved for ..." with the client ID when it uses one. To go back to Microsoft's own app, which needs no registration, run `ws-host auth set microsoft shared common --host work` and sign in again. To use your app, run `ws-host auth new microsoft --host work --own-app` and enter its Application (client) ID and Directory (tenant) ID again.
+
+=== `ws-host onedrive` says I am signed out, or the sign-in ended
+
+*Why:* Microsoft's sign-in lasts about three months of not using it, and your organization may set it shorter.
+
+*Fix:* Run the sign-in it names again, `ws-host auth new microsoft --host work`. Nothing in OneDrive is changed by signing in again.

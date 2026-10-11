@@ -85,3 +85,11 @@ It never starts a text-mode browser in your terminal, and it opens a sign-in add
 
 OneDrive's own sync program exists only for Windows and macOS. On WSL, let the Windows program sync, mark the folders you need as *Always keep on this device*, and read them at
 `/mnt/c/Users/<you>/OneDrive`.
+
+=== Known limits
+
+* Tested against the Microsoft Graph service and against a work account's OneDrive; a personal account follows the same calls but has had less use.
+* Large files are sent in pieces, and a copy that stops can be run again: files already there are not sent twice. A very large upload on a slow line has not been timed.
+* OneDrive keeps earlier versions of a changed file; ws-host never deletes or replaces anything there.
+* A synced folder (the OneDrive app on Windows) is a separate way to the same files; ws-host does not start or manage that app.
+* An organization that blocks every non-managed sign-in method cannot be used from ws-host; ask the administrator, as above.
