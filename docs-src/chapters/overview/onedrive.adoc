@@ -65,7 +65,7 @@ Whether a file has changed is decided by the checksum OneDrive states for the co
 the checksum OneDrive states for what it received, and says so, never hides it, if it differs. A file over 4 MiB goes up in pieces.
 
 OneDrive does not allow `"`, `*`, `:`, `<`, `>`, `?` or `|` in a name, nor a name that ends in a space or a dot. ws-host checks every name first and stops before sending anything, saying which name
-and why. The programs that call it, such as `eid`, make names OneDrive can hold.
+and why. The programs that call it, such as a repository's own command line, make names OneDrive can hold.
 
 === Copy down
 
