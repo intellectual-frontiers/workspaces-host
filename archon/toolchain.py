@@ -74,12 +74,12 @@ def ensure(p: prov.Provider, names: list[str] | None, offline: bool = False) -> 
     stale = prov.stale(p)
     if stale:
         raise ToolchainError("stale", ", ".join(stale), f"{p.name}'s generated mise files are older than its entries ({', '.join(stale[:2])}). "
-                             f"Run ws-host toolchain generate {p.name} and commit what it writes.")
-    wanted = closure(p, names) if names else sorted(p.entries)
+                             f"Run `archon generate` and commit what it writes.")
+    wanted = [n for n in (closure(p, names) if names else sorted(p.entries)) if p.entries[n].kind != "system"]
     if not wanted:
         return []
     if not lockfile(p).is_file():
-        raise ToolchainError("no-lock", "mise.lock", f"{p.name} has no lock yet. Run ws-host toolchain generate {p.name} and commit what it writes.")
+        raise ToolchainError("no-lock", "mise.lock", f"{p.name} has no lock yet. Run `archon generate` and commit what it writes.")
     args = ["install", "--locked"] + ([f"{p.entries[n].tool_id()}@{p.entries[n].version}" for n in wanted] if names else [])
     done = _mise(p, args, offline, label=f"📦 Installing {', '.join(wanted) if len(wanted) <= 3 else str(len(wanted)) + ' programs'} for {p.name}")
     if done.returncode != 0:
@@ -90,10 +90,15 @@ def ensure(p: prov.Provider, names: list[str] | None, offline: bool = False) -> 
 
 def install_path(p: prov.Provider, e: prov.Entry) -> Path | None:
     """Where an entry is installed, or None when it is not."""
+    if e.kind == "system":
+        return None
     if e.kind == "archive":
         d = mise.data_dir() / "installs" / f"http-{e.name}" / e.version
         return d if d.is_dir() else None
-    done = _mise(p, ["where", f"{e.tool_id()}@{e.version}"])
+    try:
+        done = mise.run(["where", f"{e.tool_id()}@{e.version}"], p.mise_dir, fetch_it=False)      # asking never downloads mise
+    except mise.MiseMissing:
+        return None
     path = Path(done.stdout.strip()) if done.returncode == 0 and done.stdout.strip() else None
     return path if path and path.is_dir() else None
 

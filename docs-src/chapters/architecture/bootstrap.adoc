@@ -1,7 +1,7 @@
 [#bootstrap]
 == Bootstrap: from `curl` to a working machine
 
-A new machine has nothing: no `ws-host`, no Python, no `uv`. Bootstrap is the two scripts that get from there to a running Python program using only `sh`, `curl` and the distribution's packages. Everything after bootstrap is ordinary Python.
+A new machine has nothing: no `ws-host`, no Python, no `uv`. A computer that only has to run an Intellectual Frontiers command line needs none of this chapter: it needs `uv`, and `uv` fetches `archon` (see <<archon>>). Bootstrap is for a person's machine, where `ws-host` is the friendly front. It is the two scripts that get from there to a running Python program using only `sh`, `curl` and the distribution's packages. Everything after bootstrap is ordinary Python.
 
 .From curl to a working machine
 image::figures/fig-2.1.png[Five steps from install.sh to workspace ensure,width=95%]
@@ -23,7 +23,7 @@ Every long step runs quietly with a spinner, and its log is shown only if it fai
 
 `ws-host` at the repository root is also POSIX `sh`. It is the only entry point; the symlink in `~/.local/bin` points at it and it resolves the link to find the clone.
 
-. It reads five pins from `ws_host/bootstrap.env`: `MISE_VERSION`, `MISE_SHA256_X86_64`, `MISE_SHA256_AARCH64`, `PYTHON_VERSION` and `UV_VERSION`.
+. It reads five pins from `archon/bootstrap.env`: `MISE_VERSION`, `MISE_SHA256_X86_64`, `MISE_SHA256_AARCH64`, `PYTHON_VERSION` and `UV_VERSION`.
 . If `python` and `uv` are already in the private store it skips to the last step. Otherwise it bootstraps. Offline, that is an error.
 . It downloads mise from `mise.jdx.dev` into `~/.cache/workspaces-host/downloads/<sha256>.part`, checks the SHA-256 *before* unpacking, and only then moves it into place. A mismatch deletes the file and stops. The download cache is keyed by fingerprint and re-verified when reused.
 . It unpacks mise into `~/.local/share/workspaces-host/tools/mise/<version>/bin/mise`.
@@ -49,7 +49,7 @@ It is safe to run again at any time. That is how an update reaches an existing m
 
 === The three pin tables must agree
 
-The bootstrap pins are repeated in two other places, and a test fails when they disagree: `ws_host/bootstrap.env`, the mise entry in `ws_host/lib/mise.py`, and `.workspaces-host/toolchain.d/python.toml` and `uv.toml`. The test is `tests/test_launcher.py`. This is why bumping Python is a four-file change, not a one-line one (see <<mise-toolchain>>).
+The bootstrap pins are repeated in two other places, and a test fails when they disagree: `archon/bootstrap.env`, the mise entry in `archon/mise.py`, and `.workspaces-host/toolchain.d/python.toml` and `uv.toml`. The test is `tests/test_launcher.py`. This is why bumping Python is a four-file change, not a one-line one (see <<mise-toolchain>>).
 
 === Failure behavior
 
@@ -78,10 +78,10 @@ The bootstrap pins are repeated in two other places, and a test fails when they 
 NOTE: Start every prompt below with: _Read `.claude/skills/ws-host/SKILL.md` and this chapter first._
 
 Bump mise::
-_Bump mise to version X in the bootstrap. Update `MISE_VERSION` and both `MISE_SHA256_*` values in `ws_host/bootstrap.env` from the real release artifacts, keep `ws_host/lib/mise.py` in agreement, and run `ws-host test`. Show me the checksums and where you got them._
+_Bump mise to version X in the bootstrap. Update `MISE_VERSION` and both `MISE_SHA256_*` values in `archon/bootstrap.env` from the real release artifacts, keep `archon/mise.py` in agreement, and run `ws-host test`. Show me the checksums and where you got them._
 
 Bump Python or uv::
-_Move the bootstrap Python to 3.14.N. Change `ws_host/bootstrap.env` and `.workspaces-host/toolchain.d/python.toml` together, run `ws-host toolchain generate`, commit the regenerated mise files and `mise.lock`, then run `ws-host test`, `ws-host check` and `ws-host fresh`._
+_Move the bootstrap Python to 3.14.N. Change `archon/bootstrap.env` and `.workspaces-host/toolchain.d/python.toml` together, run `ws-host toolchain generate`, commit the regenerated mise files and `mise.lock`, then run `ws-host test`, `ws-host check` and `ws-host fresh`._
 
 Change what the installer needs::
 _`install.sh` should also require `unzip`. Edit the prerequisite scan and its error text, keep it POSIX `sh`, run `sh -n install.sh`, and add a case to `tests/test_install.py`._
@@ -89,4 +89,4 @@ _`install.sh` should also require `unzip`. Edit the prerequisite scan and its er
 Make a failure kinder::
 _When the mise download fails offline the launcher message is unclear. Rewrite it in the same two-line style (what failed, what to do), without changing the exit code, and test it._
 
-Files these touch: `install.sh`, `ws-host`, `ws_host/bootstrap.env`, `ws_host/lib/mise.py`, `ws_host/commands/workspace.py`, `tests/test_launcher.py`, `tests/test_install.py`.
+Files these touch: `install.sh`, `ws-host`, `archon/bootstrap.env`, `archon/mise.py`, `ws_host/commands/workspace.py`, `tests/test_launcher.py`, `tests/test_install.py`.

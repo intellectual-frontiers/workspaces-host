@@ -1,0 +1,92 @@
+[#archon]
+== archon: the command runner
+
+`archon` is the Python package that every Intellectual Frontiers command line runs on: `agora`, the other command lines, and `ws-host` itself. It lives in this repository, in `archon/`, and uses only the Python standard library. Its one promise is that nobody ever wonders about tools: when a command needs a Python package, a typesetter, a browser or a Java runtime, `archon` makes it exist before the command runs. `ws-host` is what a person sees (the friendly command line, the editor window, setting up a Linux machine); `archon` is what does the work, for a person and for an AI agent alike.
+
+=== The whole picture
+
+.One runner under every command line
+image::figures/fig-a1.png[Five layers: people, agents and CI; ws-host; the command lines; archon; where programs come from,width=95%]
+
+`ws-host` is the human experience of all of it: a friendly command line, the Workspaces Console in VS Code, and the setting up of a Debian or Ubuntu machine. A person never has to know `archon` exists. An agent or a CI job reaches the same `archon` directly, through a repository's launcher, with no `ws-host` at all.
+
+=== All you need is uv
+
+A computer needs `uv` and nothing else. A repository's launcher is a few lines of shell that run `archon` at the revision the repository pins:
+
+----
+uvx --from git+https://github.com/intellectual-frontiers/workspaces-host@REVISION \
+    archon run --repo . --path tools -- agora check
+----
+
+`uv` supplies the Python, builds `archon` from this repository once, and keeps it. `archon run` then runs `python -m agora check` under the newest Python the repository's `requires-python` allows, with the repository's locked packages for that command and every program outside Python that the command names, all made available first. The same `archon` is what `ws-host` runs on.
+
+=== Where a program comes from
+
+.Where a program comes from
+image::figures/fig-a4.png[Three sources in order: already on PATH, the package manager, the verified download; then exit 3 saying why,width=95%]
+
+A repository declares each program as an entry in `.workspaces-host/toolchain.d/`. An entry may also say the least version it accepts (`minimum`), how to ask the program for its version (`probe`), and what the computer's package manager calls it (`packages`). `archon` takes a program from the first of three sources that has it, in this order:
+
+[cols="1,4"]
+|===
+|Source |What it is
+
+|`path`
+|A program already on the computer, found on `PATH`, whose version meets the minimum. It is used as it is.
+
+|`system`
+|The computer's package manager (`apt`, `dnf`, `apk` or `brew`), when it offers a version that meets the minimum. It is installed without questions, as root or through `sudo` (without a password when nobody is there to type one), and checked again afterwards.
+
+|`pinned`
+|The entry's own download, whose SHA-256 is checked before anything is unpacked, or the `mise` tool or npm package the entry names, installed from the lock. It lives in one store that every repository shares.
+|===
+
+An entry that gives no minimum has only the third source. That is how a program whose output is written into a committed file stays the same on every computer. When no source works, the command stops with exit status 3 and says, for each source, why: not on `PATH`, the package manager offers 18 and 22 is needed, there are no administrator rights, you are offline, there is no build for this platform.
+
+=== A person or nobody
+
+`archon` decides once per run whether a person is there. It assumes not. It treats the run as attended only when something says so, in this order:
+
+.How archon tells a person from an agent
+image::figures/fig-a2.png[Four steps: the variable, CI or an agent, a terminal on both standard input and standard error, otherwise unattended,width=95%]
+
+Nothing about the computer, such as whether `ws-host` is installed, changes the decision. A pipe on its own never makes a run attended, because the Workspaces Console reads a command's JSON through one and says so with `ARCHON_ATTENDANCE`.
+
+.What changes, and what never does
+image::figures/fig-a3.png[Attended shows a spinner, emoji and a progress bar and asks before sudo; unattended draws nothing and asks nothing; the result is the same,width=95%]
+
+* **Attended:** a step that takes a while shows a spinner with the seconds and how much has arrived, with colour and an emoji for the kind of step, and leaves one line behind when it finishes. Before an install that needs `sudo`, `archon` says what it will install and asks. In the Workspaces Console the same steps arrive as events (`ARCHON_PROGRESS=events` makes `archon` write one JSON object per line to standard error) and become the editor's progress bar and notification.
+* **Unattended:** nothing asks, nothing is drawn, and every question that is `archon`'s own is answered yes, so an install never waits for a person. It may still say what it is doing, as plain lines on standard error.
+
+=== One story of progress
+
+.One story of progress, drawn four ways
+image::figures/fig-a5.png[One step drawn as a terminal spinner, an editor progress bar, a web page and a plain line,width=95%]
+
+Each step is reported once, and the surface decides how it looks. At a terminal `archon` draws it. In the Workspaces Console and on the web it arrives as events and is drawn as a bar or a notification, with the same emoji and words, so a person sees the same story everywhere.
+
+=== The commands
+
+[cols="2,5"]
+|===
+|Command |What it does
+
+|`archon run --repo DIR --path DIR -- MODULE ARGS`
+|Runs `python -m MODULE ARGS` under the repository's Python, with its requirements available, and returns the command's own exit status.
+
+|`archon ensure NAME... [--json]`
+|Makes the named requirements available and says, for each, which source supplied it and where its programs are.
+
+|`archon generate`
+|Writes the generated `mise` files and lock of a repository's entries.
+
+|`archon doctor`
+|Says the profile, the package manager found, and where each requirement would come from. It changes nothing.
+|===
+
+=== What `ws-host` adds
+
+Everything `archon` does works without `ws-host`. `ws-host` shares the same store and the same rules, and adds what a person chooses: setting up a Debian or Ubuntu machine, copying and updating repositories, kits, the shell, VS Code and the Workspaces Console, and a command line written for people.
+
+Files these touch: `archon/*.py`, `tests/test_archon.py`, `console/src/services/launcher.ts`, `console/src/views/ui.ts`.

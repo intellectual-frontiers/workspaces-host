@@ -3,7 +3,7 @@
 # workspaces-host
 
 `ws-host` sets up your machine for Intellectual Frontiers work, copies your repositories and keeps them current without touching your
-changes, installs the tools each kind of work needs, and gives VS Code a window onto all of it.
+changes, installs the tools each kind of work needs, and gives VS Code a window onto all of it. It is the human experience of the whole infrastructure, built on `archon`.
 
 **Read the guide: <https://intellectual-frontiers.github.io/workspaces-host/>**
 
@@ -23,6 +23,11 @@ something stops you.
 
 **Also in the box.** Modern terminal tools (`ws-host kit add modern-cli`; icons need a [Nerd Font](https://www.nerdfonts.com/font-downloads)), SQLite, DuckDB and the `embedded-sql` kit,
 and OneDrive for personal or work Microsoft accounts (`ws-host kit add microsoft`, then `ws-host auth new microsoft`). `ws-host update --tools` brings the floating tools up to date; the guide has the rest.
+
+## One runner under every command line
+
+`ws-host` is the friendly front for a person. Underneath it, and under `agora` and the other command lines, `archon` makes whatever a command needs exist, for people, agents and CI alike: a computer needs only [`uv`](https://docs.astral.sh/uv/). It tells a person from an agent by itself, drawing progress for one and staying plain for the other. The guide's chapter *archon* has the pictures.
+<p align="center"><img src="docs/figures/fig-a1.png" alt="Five layers: people, agents and CI; ws-host, the human experience; the command lines; archon; and where programs come from" width="640"></p>
 
 ## For contributors
 

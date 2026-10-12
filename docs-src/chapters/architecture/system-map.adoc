@@ -109,7 +109,7 @@ Every download is checked against a SHA-256 written in the code before it is unp
 |Verified downloads, keyed by fingerprint
 |===
 
-All paths follow the XDG conventions and are honored only when absolute. `ws_host/core/paths.py` is the one place that decides them, so an AI asked to move a folder starts there.
+All paths follow the XDG conventions and are honored only when absolute. `archon/paths.py` is the one place that decides them, so an AI asked to move a folder starts there.
 
 === A vocabulary for prompts
 

@@ -44,6 +44,7 @@ def run(a) -> int:
     here = str(Path(__file__).resolve().parents[1])
     pythonpath = [str((repo / p).resolve()) for p in a.path] + [here] + ([env["PYTHONPATH"]] if env.get("PYTHONPATH") else [])
     env["PYTHONPATH"] = os.pathsep.join(pythonpath)
+    env["ARCHON_PATH"] = here
     env.pop("VIRTUAL_ENV", None)
     argv = [exe, "run", "--no-project", "--quiet", "--python", pyenv.requires_python(repo), *(["--offline"] if a.offline or env.get("ARCHON_OFFLINE") else []),
             "--", "python", "-W", "ignore", "-m", a.module, *a.args]
@@ -62,6 +63,16 @@ def ensure(a) -> int:
     else:
         for r in results:
             print(f"✅ {r.name} {r.version} from {r.source}" + "".join(f"\n   {k}: {v}" for k, v in r.programs.items()))
+    return OK
+
+
+def generate(a) -> int:
+    """Write a repository's translation of its entries into `mise` configuration and lock (0008-providers FR-006)."""
+    try:
+        changed = tc.lock(_provider(a), offline=bool(a.offline))
+    except tc.ToolchainError as e:
+        return _fail(e)
+    print("\n".join(f"✅ {c}" for c in changed) if changed else "✅ the generated files are current")
     return OK
 
 
@@ -100,6 +111,9 @@ def main(argv: list[str] | None = None) -> int:
     e.add_argument("--repo"), e.add_argument("--json", action="store_true"), e.add_argument("--offline", action="store_true")
     e.add_argument("names", nargs="+")
     e.set_defaults(fn=ensure)
+    g = sub.add_parser("generate", help="write the generated mise files and lock of a repository's entries")
+    g.add_argument("--repo"), g.add_argument("--offline", action="store_true")
+    g.set_defaults(fn=generate)
     d = sub.add_parser("doctor", help="say the profile and where each requirement would come from")
     d.add_argument("--repo")
     d.set_defaults(fn=doctor)

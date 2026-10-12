@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 641" width="1040" height="641">
+  <defs><marker id="arrD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-line"/></marker></defs>
+  <rect width="1040" height="641" class="f-surface"/>
+  <text x="28" y="50" text-anchor="start" class="f-ink" font-size="34" font-weight="bold">What changes, and what never does</text>
+  <text x="28" y="84" text-anchor="start" class="f-muted" font-size="20" font-weight="normal" font-style="italic">Attended and unattended differ in what you see, never in the result</text>
+  <text x="270.0" y="140" text-anchor="middle" class="f-muted" font-size="20" font-weight="bold">Attended: a person is there</text>
+  <text x="770.0" y="140" text-anchor="middle" class="f-muted" font-size="20" font-weight="bold">Unattended: nobody is there</text>
+  <rect x="40" y="156" width="460" height="90.6" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="270.0" y="195.0" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">A spinner with the seconds, the megabytes so</text>
+  <text x="270.0" y="222.3" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">far and an emoji for the kind of step, in colour</text>
+  <line x1="270.0" y1="246.6" x2="270.0" y2="275.6" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="40" y="276.6" width="460" height="90.6" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="270.0" y="315.6000000000001" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">A line left behind when a long step finishes or</text>
+  <text x="270.0" y="342.9000000000001" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">fails</text>
+  <line x1="270.0" y1="367.20000000000005" x2="270.0" y2="396.20000000000005" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="40" y="397.20000000000005" width="460" height="90.6" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="270.0" y="436.2000000000001" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">In VS Code or on the web: the same steps</text>
+  <text x="270.0" y="463.5000000000001" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">arrive as events and become a progress bar</text>
+  <line x1="270.0" y1="487.80000000000007" x2="270.0" y2="516.8000000000001" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="40" y="517.8000000000001" width="460" height="93.2" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="270.0" y="557.8000000000002" text-anchor="middle" class="f-ink" font-size="22" font-weight="bold">Before an install that needs sudo: it says</text>
+  <text x="270.0" y="586.4000000000002" text-anchor="middle" class="f-ink" font-size="22" font-weight="bold">what, and asks</text>
+  <rect x="540" y="156" width="460" height="90.6" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="770.0" y="195.0" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">No spinner, no colour, no cursor movement:</text>
+  <text x="770.0" y="222.3" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">plain lines on standard error at most</text>
+  <line x1="770.0" y1="246.6" x2="770.0" y2="275.6" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="540" y="276.6" width="460" height="90.6" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="770.0" y="315.6000000000001" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">No question is ever asked: archon answers yes</text>
+  <text x="770.0" y="342.9000000000001" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">to its own installs and goes on</text>
+  <line x1="770.0" y1="367.20000000000005" x2="770.0" y2="396.20000000000005" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="540" y="397.20000000000005" width="460" height="90.6" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="770.0" y="436.2000000000001" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">A download whose fingerprint is wrong is still</text>
+  <text x="770.0" y="463.5000000000001" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">refused: nobody can approve that</text>
+  <line x1="770.0" y1="487.80000000000007" x2="770.0" y2="516.8000000000001" class="s-line" stroke-width="2" marker-end="url(#arrD)"/>
+  <rect x="540" y="517.8000000000001" width="460" height="93.2" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="770.0" y="557.8000000000002" text-anchor="middle" class="f-emphasis" font-size="22" font-weight="bold">Same command, same inputs: same result</text>
+  <text x="770.0" y="586.4000000000002" text-anchor="middle" class="f-emphasis" font-size="22" font-weight="bold">and same exit status</text>
+</svg>

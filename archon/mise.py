@@ -76,6 +76,11 @@ def data_dir() -> Path:
     return paths.data_dir() / "mise" / "data"
 
 
+def rust_home() -> Path:
+    """Where the Rust a `tool` entry installs keeps its toolchains and cargo's files, inside archon's store and never in the person's home."""
+    return paths.data_dir() / "rust"
+
+
 def environment(extra: dict[str, str] | None = None) -> dict[str, str]:
     """The environment `mise` runs in: ws-host's own configuration, state, cache and store, safe mode, and nothing from a repository."""
     config = paths.state_dir() / "mise" / "config"
@@ -85,6 +90,8 @@ def environment(extra: dict[str, str] | None = None) -> dict[str, str]:
         del env[k]
     env.update({"MISE_DATA_DIR": str(data_dir()), "MISE_CACHE_DIR": str(paths.cache_dir() / "mise"), "MISE_STATE_DIR": str(paths.state_dir() / "mise" / "state"),
                 "MISE_CONFIG_DIR": str(config), "MISE_SAFE": "1", "MISE_YES": "1",
+                "RUSTUP_HOME": str(rust_home() / "rustup"), "CARGO_HOME": str(rust_home() / "cargo"),
+                "MISE_RUSTUP_HOME": str(rust_home() / "rustup"), "MISE_CARGO_HOME": str(rust_home() / "cargo"),   # rust's installer writes nowhere else
                 "NO_COLOR": "1", "MISE_QUIET": "1"})
     env.update(extra or {})
     return env

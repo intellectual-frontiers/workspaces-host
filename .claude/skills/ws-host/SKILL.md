@@ -96,6 +96,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 ## Help topics
 
 - `ai`: Work with an AI agent without handing it your decisions.
+- `archon`: How archon makes everything a command needs exist, and how it knows whether a person is there.
 - `editor`: Use VS Code as the way to do everything ws-host does.
 - `extend`: Add a command or a kit by asking an AI to write it in Python.
 - `kits`: Install the tools a kind of work needs, one kit at a time.

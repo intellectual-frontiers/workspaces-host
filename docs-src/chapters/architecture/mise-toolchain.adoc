@@ -12,7 +12,7 @@ image::figures/fig-3.1.png[Three boxes (bootstrap.env, toolchain.d, kit modules)
 |===
 |Pin |Holds |Checked by
 
-|`ws_host/bootstrap.env`
+|`archon/bootstrap.env`
 |mise, Python and uv versions, and mise's SHA-256 for each architecture
 |The launcher, before unpacking mise; `mise.lock` for Python and uv
 
@@ -22,7 +22,7 @@ image::figures/fig-3.1.png[Three boxes (bootstrap.env, toolchain.d, kit modules)
 
 |`ws_host/kits/*.py`
 |A kit's downloads: Rust, `glab`, DuckDB, oh-my-posh, Chrome for Testing
-|`install/fetch.py`, before unpacking
+|`archon/fetch.py`, before unpacking
 |===
 
 The three are separate on purpose. Bootstrap must work with nothing installed, so it cannot use a provider file. Kits install tools a person asks for by name, in code a test can run. Provider tools belong to a repository, so they are declared beside it.
@@ -41,7 +41,7 @@ A provider is a repository with a `.workspaces-host/` folder. This repository's 
   mise/.config/mise/     generated: conf.d/*.toml and mise.lock
 ----
 
-Each entry in `toolchain.d` is validated by `ws_host/lib/provider.py`:
+Each entry in `toolchain.d` is validated by `archon/provider.py`:
 
 * the version is exact: no range and no floating tag such as `latest`;
 * the kind is `archive`, `npm` or `tool`;
@@ -58,7 +58,7 @@ image::figures/fig-3.2.png[Four steps from a toolchain.d file to toolchain ensur
 
 === How mise is run
 
-`ws_host/lib/mise.py` runs `mise -C <provider folder>` with:
+`archon/mise.py` runs `mise -C <provider folder>` with:
 
 * every inherited `MISE_*` variable removed;
 * `MISE_CEILING_PATHS` set to the folder's parent, so mise never reads configuration above the provider;
@@ -84,6 +84,6 @@ _Add `jq` as a provider tool. Create `toolchain.d/jq.toml` following `node.toml`
 Diagnose a stale error::
 _`toolchain ensure` says the files are stale. Find out which declaration changed, regenerate, and explain why the check caught it._
 
-Files these touch: `.workspaces-host/toolchain.d/*.toml`, `.workspaces-host/mise/.config/mise/` (generated, commit all of it), `ws_host/lib/provider.py`, `ws_host/lib/toolchain.py`, `ws_host/lib/mise.py`, `tests/test_provider.py`.
+Files these touch: `.workspaces-host/toolchain.d/*.toml`, `.workspaces-host/mise/.config/mise/` (generated, commit all of it), `archon/provider.py`, `archon/toolchain.py`, `archon/mise.py`, `tests/test_provider.py`.
 
 CAUTION: Never ask an AI to hand-edit `mise.lock` or a generated `conf.d` file. Ask it to run `ws-host toolchain generate`. The generated files carry a header saying so, and `ws-host check providers` fails when they drift.

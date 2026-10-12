@@ -49,6 +49,8 @@ include::chapters/overview/moving-over.adoc[]
 
 include::chapters/architecture/system-map.adoc[]
 
+include::chapters/architecture/archon.adoc[]
+
 include::chapters/architecture/bootstrap.adoc[]
 
 include::chapters/architecture/mise-toolchain.adoc[]

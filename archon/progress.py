@@ -243,7 +243,7 @@ def step(label: str, probe=None, announce: bool = False):
         return _Quiet()
     if events():
         return Working(label, probe=probe)
-    if announce and ENABLED and not visible():
+    if announce and ENABLED and os.environ.get(VARIABLE) != "never" and not visible():
         try:
             sys.stderr.write(label + "...\n")
             sys.stderr.flush()

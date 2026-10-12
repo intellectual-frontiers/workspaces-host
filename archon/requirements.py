@@ -112,6 +112,9 @@ def _from_system(e: prov.Entry, reasons: list[tuple[str, str]], offline: bool, p
 
 
 def _from_pinned(p: prov.Provider, e: prov.Entry, reasons: list[tuple[str, str]], offline: bool) -> Result | None:
+    if e.kind == "system":
+        reasons.append((PINNED, "this entry has no download; only the computer's own program or package can supply it"))
+        return None
     path = tc.install_path(p, e)
     if path is None:
         try:

@@ -222,8 +222,59 @@ def stuck(path):
         ("Paste the report to a person or an AI", True)], box_w=860)
 
 
+# ---- archon: who runs what, how it tells a person from an agent, and where a program comes from ----
+
+def archon_layers(path):
+    layouts.stack_layers(path, "One runner under every command line", "A person, an AI agent and a CI job all end up in the same place", layers(
+        ("A person at a terminal or in VS Code, an AI agent in a cloud session, a CI job", E),
+        ("ws-host: the human experience. A friendly command line, the Workspaces Console, setting up your machine", P),
+        ("agora and the other command lines: each is a tree of commands that a short launcher hands to archon", N),
+        ("archon: tells who is there, finds or installs each program, prepares the Python packages, shows progress", P),
+        ("Where things come from: your PATH, your package manager, verified downloads, the uv.lock of each repository", N)),
+        box_w=900, note="The only thing a computer must supply is uv")
+
+
+def attendance(path):
+    layouts.chain_vertical(path, "How archon tells a person from an agent", "It assumes nobody is there unless something says someone is", [
+        "1. ARCHON_ATTENDANCE says attended or unattended? That answer wins. The Workspaces Console sets attended",
+        "2. CI or CLAUDE_CODE_REMOTE is true or 1? An agent or a CI job runs this. Unattended",
+        "3. Standard input and standard error are both a terminal? A person is typing. Attended",
+        ("4. Anything else, including output sent through a pipe alone: unattended", True)], box_w=860,
+        note="Whether ws-host is installed plays no part in the decision")
+
+
+def attended_vs_unattended(path):
+    layouts.two_column(path, "What changes, and what never does", "Attended and unattended differ in what you see, never in the result",
+                       "Attended: a person is there",
+                       ["A spinner with the seconds, the megabytes so far and an emoji for the kind of step, in colour",
+                        "A line left behind when a long step finishes or fails",
+                        "In VS Code or on the web: the same steps arrive as events and become a progress bar",
+                        "Before an install that needs sudo: it says what, and asks"],
+                       "Unattended: nobody is there",
+                       ["No spinner, no colour, no cursor movement: plain lines on standard error at most",
+                        "No question is ever asked: archon answers yes to its own installs and goes on",
+                        "A download whose fingerprint is wrong is still refused: nobody can approve that",
+                        "Same command, same inputs: same result and same exit status"])
+
+
+def sources(path):
+    layouts.chain_vertical(path, "Where a program comes from", "archon tries three sources in order and uses the first that has it", [
+        "1. Already on your computer: a program on PATH whose version meets the least the entry accepts. Used as it is",
+        "2. Your package manager (apt, dnf, apk or brew) offers that version: installed without questions, as root or with sudo",
+        "3. The download named by the entry, its SHA-256 checked before it is unpacked, kept once in one store",
+        ("None works: the command stops with exit status 3 and says why each source did not", True)], box_w=860)
+
+
+def progress_surfaces(path):
+    layouts.tree(path, "One story of progress, drawn four ways", "archon reports each step once; the surface decides how it looks",
+                 "A step: Installing the Java runtime",
+                 ["Terminal: a coloured spinner, seconds and megabytes", "VS Code: a progress bar and a notification",
+                  "The web: the same events drawn on a page", "Agent or CI: one plain line, or nothing"])
+
+
 FIGURES = {"fig-1.1": system_map, "fig-2.1": bootstrap, "fig-3.1": pins, "fig-3.2": toolchain, "fig-4.1": kit_life, "fig-5.1": managed,
            "fig-5.2": ensure_flow, "fig-6.1": registry, "fig-6.2": resource, "fig-7.1": sync_gate, "fig-8.1": console_run, "fig-9.1": release,
            "fig-9.2": enforcement, "fig-10.1": prompting,
            "fig-g1": journey, "fig-g2": where, "fig-g3": signin, "fig-g4": buttons, "fig-g5": console_screen, "fig-g6": safe_sync,
-           "fig-g7": trust_steps, "fig-g8": one_window, "fig-g9": kits_menu, "fig-g10": stuck}
+           "fig-g7": trust_steps, "fig-g8": one_window, "fig-g9": kits_menu, "fig-g10": stuck,
+           "fig-a1": archon_layers, "fig-a2": attendance, "fig-a3": attended_vs_unattended, "fig-a4": sources, "fig-a5": progress_surfaces}

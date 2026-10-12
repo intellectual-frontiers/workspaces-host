@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 763" width="1040" height="763">
+  <defs><marker id="arrD" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="f-line"/></marker></defs>
+  <rect width="1040" height="763" class="f-surface"/>
+  <text x="28" y="50" text-anchor="start" class="f-ink" font-size="34" font-weight="bold">One runner under every command line</text>
+  <text x="28" y="84" text-anchor="start" class="f-muted" font-size="20" font-weight="normal" font-style="italic">A person, an AI agent and a CI job all end up in the same place</text>
+  <rect x="70.0" y="120" width="900" height="80" rx="4" class="f-emphasis-tint s-emphasis" stroke-width="1.5"/>
+  <text x="520.0" y="167.35" text-anchor="middle" class="f-emphasis" font-size="21" font-weight="normal">A person at a terminal or in VS Code, an AI agent in a cloud session, a CI job</text>
+  <rect x="70.0" y="218" width="900" height="90.6" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="257.00000000000006" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">ws-host: the human experience. A friendly command line, the Workspaces Console, setting up</text>
+  <text x="520.0" y="284.30000000000007" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">your machine</text>
+  <rect x="70.0" y="326.6" width="900" height="90.6" rx="4" class="f-neutral-tint s-line" stroke-width="1.5"/>
+  <text x="520.0" y="365.6000000000001" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">agora and the other command lines: each is a tree of commands that a short launcher hands to</text>
+  <text x="520.0" y="392.9000000000001" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">archon</text>
+  <rect x="70.0" y="435.20000000000005" width="900" height="90.6" rx="4" class="f-primary-tint s-primary" stroke-width="1.5"/>
+  <text x="520.0" y="474.2000000000001" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">archon: tells who is there, finds or installs each program, prepares the Python packages, shows</text>
+  <text x="520.0" y="501.5000000000001" text-anchor="middle" class="f-ink" font-size="21" font-weight="normal">progress</text>
+  <rect x="70.0" y="543.8000000000001" width="900" height="90.6" rx="4" class="f-neutral-tint s-line" stroke-width="1.5"/>
+  <text x="520.0" y="582.8000000000001" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">Where things come from: your PATH, your package manager, verified downloads, the uv.lock of</text>
+  <text x="520.0" y="610.1" text-anchor="middle" class="f-body" font-size="21" font-weight="normal">each repository</text>
+  <rect x="28" y="658.4000000000001" width="984" height="76.6" rx="3" class="f-neutral-tint s-line" stroke-width="1.2"/>
+  <text x="520.0" y="704.4000000000001" text-anchor="middle" class="f-ink" font-size="22" font-weight="bold">The only thing a computer must supply is uv</text>
+</svg>

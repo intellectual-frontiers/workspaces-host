@@ -43,7 +43,7 @@ image::figures/fig-10.1.png[Five steps: the outcome, the layer and files, the ru
 |If the change is about... |Start in... |Chapter
 
 |The installer, the launcher, the first run
-|`install.sh`, `ws-host`, `ws_host/bootstrap.env`
+|`install.sh`, `ws-host`, `archon/bootstrap.env`
 |<<bootstrap>>
 
 |A tool version for ws-host or a provider
@@ -115,7 +115,7 @@ These came up while this part was written. Each is a good first task, and each s
 |`commands/doctor.py`, `spikes/chezmoi/NOTES.md` finding 8
 
 |There is no kit uninstall, and links can dangle
-|`install/fetch.py`, `lib/kitrun.py`
+|`archon/fetch.py`, `lib/kitrun.py`
 
 |The `mcp serve` command the Console looks for is not in the files I read
 |`console/src/services/mcp.ts`, `ws_host/commands/`

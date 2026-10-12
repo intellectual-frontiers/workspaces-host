@@ -331,7 +331,7 @@ class Installing(Home):
         self.run_json("provider", "add", str(root), "--confirmed")
         code, r = self.run_json("toolchain", "ensure", "--all")
         self.assertEqual(code, 1)
-        self.assertIn("toolchain generate", r["data"]["plain"])
+        self.assertIn("archon generate", r["data"]["plain"])
 
     def test_a_configuration_above_the_provider_is_never_read(self):
         root = self.enable()

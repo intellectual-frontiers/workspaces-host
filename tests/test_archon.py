@@ -262,6 +262,27 @@ class Sources(Home):
         self.assertEqual(requirements.obtainable(self.p, ["jre"], offline=True), [])
         self.assertFalse(self.log.exists())
 
+    def test_a_system_entry_has_only_the_computers_sources(self):  # FR-008, FR-011
+        (self.root / ".workspaces-host" / "toolchain.d" / "make.toml").write_text(
+            'name = "make"\nversion = "4.3"\nsummary = "GNU Make"\nkind = "system"\nminimum = "4"\nprobe = { program = "make" }\n'
+            'packages = { apt = ["make"] }\nprovides = { make = "make" }\n')
+        p = prov.load(self.root)
+        self.assertEqual(p.problems, [])
+        self.assertNotIn("make", " ".join(prov.translate(p)))
+        script(self.bin / "make", 'echo "GNU Make 4.3"\n')
+        [r] = requirements.ensure(p, ["make"], profile=self.unattended, say=self.said.append)
+        self.assertEqual((r.source, r.version), ("path", "4.3"))
+        os.remove(self.bin / "make")
+        self.apt("3.81")
+        with self.assertRaises(requirements.Unavailable) as e:
+            requirements.ensure(p, ["make"], profile=self.unattended, say=self.said.append)
+        self.assertIn("this entry has no download", str(e.exception))
+        self.assertIn("offers make 3.81; 4 is needed", str(e.exception))
+
+    def test_a_system_entry_needs_a_minimum_and_packages(self):
+        (self.root / ".workspaces-host" / "toolchain.d" / "make.toml").write_text('name = "make"\nversion = "4.3"\nsummary = "GNU Make"\nkind = "system"\n')
+        self.assertIn("a 'system' entry needs a 'minimum' and 'packages'", " ".join(map(str, prov.load(self.root).problems)))
+
     def test_the_declaration_is_checked(self):  # FR-008
         (self.root / ".workspaces-host" / "toolchain.d" / "jre.toml").write_text(ENTRY.format(sha="0" * 64).replace('minimum = "21"', 'minimum = "twenty"').replace("apt =", "pacman ="))
         p = prov.load(self.root)

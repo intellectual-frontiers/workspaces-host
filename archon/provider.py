@@ -15,7 +15,7 @@ from . import paths
 
 FOLDER = ".workspaces-host"
 PLATFORMS = ("linux-x64", "linux-arm64")
-KINDS = ("archive", "npm", "tool")
+KINDS = ("archive", "npm", "tool", "system")   # `system`: a program only the computer can supply (a PATH program or its package manager)
 MANAGERS = ("apt", "dnf", "apk", "brew")
 NAME_RE = re.compile(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*")
 VERSION_RE = re.compile(r"\d+(?:\.\d+)*(?:[+-][A-Za-z0-9._+-]*)?")
@@ -62,7 +62,7 @@ class Entry:
 
     def tool_id(self) -> str:
         """The name `mise` knows this entry by."""
-        return {"archive": f"http:{self.name}", "npm": f"npm:{self.package}", "tool": self.tool}[self.kind]
+        return {"archive": f"http:{self.name}", "npm": f"npm:{self.package}", "tool": self.tool, "system": ""}[self.kind]
 
     def signature(self) -> str:
         """What makes two declarations of one name and version the same program (0008-providers FR-009)."""
@@ -167,6 +167,8 @@ def _entry(path: Path, rel: str, problems: list[Problem]) -> Entry | None:
         e.package = _str(raw, "package", rel, problems)
     elif kind == "tool":
         e.tool = _str(raw, "tool", rel, problems)
+    elif kind == "system" and not (raw.get("minimum") and raw.get("packages")):
+        problems.append(Problem(rel, "a 'system' entry needs a 'minimum' and 'packages': the computer's own program or package is its only source"))
     e.bin = str(raw["bin"]) if "bin" in raw else None
     for key in ("provides", "env"):
         val = raw.get(key, {})
@@ -276,6 +278,8 @@ def translate(p: Provider) -> dict[str, str]:
     out = {".config/mise/conf.d/00-settings.toml": "\n".join([
         GENERATED.format(source=f"{FOLDER}/toolchain.d"), "[settings]", "lockfile = true", ""])}
     for name, e in sorted(p.entries.items()):
+        if e.kind == "system":          # nothing to install from a lock: only the computer can supply it
+            continue
         head = GENERATED.format(source=f"{FOLDER}/toolchain.d/{name}.toml")
         if e.kind == "archive":
             lines = [head, f"[tools.{_q(e.tool_id())}]", f"version = {_q(e.version)}", f"strip_components = {e.strip}"]

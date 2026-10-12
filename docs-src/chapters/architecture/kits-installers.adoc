@@ -43,10 +43,10 @@ image::figures/fig-4.1.png[Four steps: declare, plan, install, check,width=95%]
 |===
 |Installer |Behavior
 
-|`install/apt.py`
+|`archon/apt.py`
 |Runs `apt-get` through `sudo`. It says so before it asks for a password. As root it uses no prefix; with `sudo` but no terminal it tries `sudo -n` and, if that needs a password, reports `needs-password` and points at `ws-host kit add <name>` instead of failing. It resolves `a|b` alternatives and skips what the distribution lacks.
 
-|`install/fetch.py`
+|`archon/fetch.py`
 |Downloads with a `.part` file while hashing, compares the SHA-256 with the one in the code, and only then unpacks. It guards against path traversal in archive members, unpacks beside the target and moves into `~/.local/share/workspaces-host/tools/<name>/<version>`, repoints `current` atomically, and links binaries into `~/.local/bin` without overwriting a file that is not its own.
 |===
 
