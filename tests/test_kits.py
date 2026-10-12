@@ -196,6 +196,7 @@ class Contract(Home):
         major_minor = tuple(map(int, entry["minimum"].split(".")[:2]))
         self.assertEqual(rust.MINIMUM, major_minor, "the kit asks for what the requirement asks for")
         self.assertGreaterEqual(tuple(map(int, entry["version"].split(".")[:2])), rust.MINIMUM)
+        self.assertIn("build-essential", entry["system"], "Rust links with the computer's C compiler, installed with the entry")
 
     def test_the_kit_links_scripts_that_set_the_requirements_environment_and_replaces_none_of_the_persons(self):
         from archon import paths, requirements

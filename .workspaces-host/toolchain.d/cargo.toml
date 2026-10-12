@@ -9,3 +9,5 @@ probe = { program = "cargo", args = ["--version"] }
 packages = { apt = ["cargo"], dnf = ["cargo"], apk = ["cargo"], brew = ["rust"] }
 provides = { cargo = "cargo" }
 env = { CARGO_HOME = "{dir}/..", RUSTUP_HOME = "{dir}/../../rustup" }
+# Rust links with the computer's C compiler; the ones a computer lacks are installed with the entry (0011-archon FR-022)
+system = ["build-essential", "pkg-config", "cmake", "perl"]

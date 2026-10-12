@@ -138,7 +138,8 @@ function offered(src: HomeSource, words: string[]): CommandSummary | null {
 }
 
 // --- doctor ------------------------------------------------------------------------------------------------------------
-const NOT_READY = new Set(['ready', 'n/a', 'override', '']);
+// An entry the repository's command line obtains by itself when a command needs it is nothing for the person to do (0011-archon FR-009).
+const NOT_READY = new Set(['ready', 'n/a', 'override', '', 'not obtained yet']);
 
 function doctorItems(src: HomeSource): Suggestion[] {
   const doctor = src.doctor;

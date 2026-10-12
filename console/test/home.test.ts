@@ -163,3 +163,10 @@ test('FR-054: several programs not installed yet are one row with one Install ev
   const one = doc('doctor', { status: 'missing', conflicts: [], missing: [], toolchain: [{ entry: 'jre', cache: 'not fetched' }] }, []);
   assert.equal((deriveHome(source({ doctor: one })).needs.find((x) => x.group === 'toolchain') as Loose).id, 'toolchain:jre');
 });
+
+test('doctor: an entry the command line obtains by itself when a command needs it is not something the person must do', () => {
+  const d = doc('doctor', { status: 'ok', conflicts: [], missing: [], toolchain: [{ entry: 'make', cache: 'not obtained yet' }, { entry: 'cargo', cache: 'ready' },
+    { entry: 'x', cache: 'cannot be obtained here: offline' }] });
+  const needs = deriveHome(source({ doctor: d }), { group: false }).needs.filter((n) => n.group === 'toolchain');
+  assert.deepEqual(needs.map((n) => (n as Loose).id), ['toolchain:x']);
+});
