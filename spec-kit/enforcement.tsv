@@ -264,3 +264,4 @@ requirement	mechanism	by	note
 0011-archon FR-020	check	workspaces-host: ws-host test	tests check a command gives the same result with and without ws-host on PATH
 0011-archon FR-021	check	workspaces-host: ws-host test	tests check the spinner, colour, emoji, megabytes and the line left behind at a terminal, none of it unattended, and the JSON events with ARCHON_PROGRESS=events
 0011-archon FR-022	check	workspaces-host: ws-host test	tests check missing libraries are installed through the package manager as part of an entry, and exit status 3 names them when it cannot
+0011-archon FR-023	check	workspaces-host: ws-host test	tests run the launcher with a store that has uv and no uv on PATH, and check the links are made once and a uv the person has is never replaced

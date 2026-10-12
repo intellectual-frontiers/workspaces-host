@@ -150,6 +150,9 @@ the extension is `ws-host`'s, and the providers that plug into it hold no code o
   and MUST set the environment variable `IF_CONSOLE` to `1` for every
   invocation so that the launcher logs the surface `editor`
   (0041-command-line FR-042).
+  It MUST run the launcher with `~/.local/bin` on `PATH` when the window it
+  runs in does not have it, since a window started before that folder existed
+  does not, and the launcher needs `uv` from there (0011-archon FR-023).
 - **FR-018**: The extension MUST offer `context` for an agent: `Workspaces Console:
   Copy Context` runs `<launcher> context RESOURCE --json` for the resource
   selected in the tree or chosen in a quick pick, and puts the result on the

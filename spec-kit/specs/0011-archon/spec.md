@@ -103,6 +103,9 @@ line, the editor window, setting up a Linux machine) and is built on `archon`; `
   sees and chooses: the friendly command line, the editor window, the setting up of a Linux machine and of a person's repositories. A
   repository does not have to be enabled as a provider (0008-providers FR-010) for `archon` to make its own requirements available: running
   a repository's command line already trusts that repository's code.
+- **FR-023**: `ws-host` MUST make the `uv` and `uvx` of its own runtime available to a person's repositories: on every run it links them
+  into `~/.local/bin`, which a Debian or Ubuntu login puts on `PATH`, and it MUST NOT replace a `uv` or `uvx` it did not link. A launcher
+  that finds no `uv` on `PATH` looks there and in `ws-host`'s store of installed tools before it says `uv` is missing (0041-command-line FR-001, `.github`).
 - **FR-020**: A computer that has `ws-host` and one that has only `uv` MUST produce the same results from the same command: `ws-host`
   changes how a person is helped, never what a command does.
 
