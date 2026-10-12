@@ -396,19 +396,11 @@ Deploy to Railway: the railway command.
 
 === rust
 
-The Rust compiler and cargo, current stable, for building the company's Rust programs.
+The Rust compiler and cargo, for building the company's Rust programs.
 
 *Packages on Debian 13:* `build-essential`, `cmake`, `pkg-config`, `perl`, `ca-certificates`
 
-*Downloads on Debian 13:*
-
-* `rust` 1.99.0, for aarch64, x86_64
-
 *Packages on Ubuntu 24.04:* `build-essential`, `cmake`, `pkg-config`, `perl`, `ca-certificates`
-
-*Downloads on Ubuntu 24.04:*
-
-* `rust` 1.99.0, for aarch64, x86_64
 
 *Checks:*
 
@@ -418,7 +410,7 @@ The Rust compiler and cargo, current stable, for building the company's Rust pro
 * cmake (`cmake`)
 * pkg-config (`pkg-config`)
 * perl (`perl`)
-* cargo is 1.87 or later
+* cargo is 1.92 or later
 * rustc compiles a program
 
 === shell

@@ -1,7 +1,7 @@
 """Planning and installing kits (0003-kits). The commands and `workspace ensure` both come here."""
 from __future__ import annotations
 
-from archon import apt, fetch, machine, progress
+from archon import apt, fetch, machine, paths, progress
 from ..core import kits_state, registry as reg
 from ..core.resource import Action, WsError
 from ..core.kit import Floating
@@ -34,6 +34,7 @@ def plan(kit, distro: dict | None = None, resolve: bool = True) -> dict:
     downloads = [{"name": x.name, "version": x.version, "url": x.url_for(a) if x.supports(a) else None,
                   "sha256": x.sha256.get(a), "supported": x.supports(a), "installed": _installed(x)} for x in kit.downloads(d)]
     return {"packages": names, "to_install": todo, "unavailable": lacking, "downloads": downloads,
+            "requirements": {k: list(v) for k, v in kit.requirements(d).items()},
             "links": {k: list(v) for k, v in kit.links(d).items()}}
 
 
@@ -82,6 +83,8 @@ def install(ctx, kit, name: str):
         for prog in programs:
             if fetch.link_program(link, prog):
                 break
+    for step in _requirements(ctx, kit, d):
+        yield step
     try:
         for st, plain in kit.configure(ctx):
             yield ("configure", st, plain)
@@ -92,6 +95,49 @@ def install(ctx, kit, name: str):
         from ..lib import modern
         if config.load().modern() and not modern.configured() and kit.downloads(d):
             yield ("modern-cli", "info", "Tip: run `ws-host kit add modern-cli` to make ls, cat, top, cd and git diff use these modern tools (eza, bat, btop, zoxide, delta), in bash and fish.")
+
+
+SHIM = "# ws-host kit shim"
+
+
+def _requirements(ctx, kit, distro: dict):
+    """The requirements a kit names, made available by `archon` (0011-archon FR-024) and linked into the person's bin directory as scripts that set the
+    requirement's own environment; a program that is not ws-host's own link is never replaced."""
+    from pathlib import Path
+
+    from archon import profile, provider, requirements as req
+
+    wanted = kit.requirements(distro)
+    if not wanted:
+        return
+    root = Path(__file__).resolve().parents[2]
+    try:
+        p = provider.load(root)
+        with progress.working("📥 Making " + ", ".join(wanted) + " available"):
+            got = {r.name: r for r in req.ensure(p, list(wanted), offline=ctx.offline, profile=profile.current(), say=lambda line: None)}
+    except req.Unavailable as e:
+        yield (f"requirement {', '.join(wanted)}", "missing" if ctx.offline else "fail", str(e))
+        return
+    bindir = paths.bin_dir()
+    for name, programs in wanted.items():
+        r = got[name]
+        yield (f"requirement {name}", "ok", f"{name} {r.version} is available ({r.source}).")
+        if r.source != "pinned":
+            continue                                    # a program on PATH or the package manager's needs no script
+        env = {k: v for k, v in r.env.items() if k != "PATH"}
+        folder = Path(r.programs[next(iter(r.programs))]).parent
+        bindir.mkdir(parents=True, exist_ok=True)
+        for prog in programs:
+            target, link = folder / prog, bindir / prog
+            if not target.exists():
+                continue
+            if link.exists() or link.is_symlink():
+                if SHIM not in (link.read_text(errors="ignore") if link.is_file() and not link.is_symlink() else ""):
+                    continue
+            exports = "".join(f"{k}='{v}'; export {k}\n" for k, v in sorted(env.items()))
+            link.write_text(f"#!/bin/sh\n{SHIM} ({name}, 0003-kits FR-010)\n{exports}exec '{target}' \"$@\"\n")
+            link.chmod(0o755)
+        yield (f"requirement {name}", "ok", "Linked " + ", ".join(programs) + f" into {bindir}.")
 
 
 def ensure(ctx, declared: dict[str, list[str]]) -> dict:

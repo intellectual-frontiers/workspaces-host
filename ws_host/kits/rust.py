@@ -1,4 +1,4 @@
-"""The `rust` kit: current stable Rust from the official tarball, plus a C toolchain (0003-kits FR-010)."""
+"""The `rust` kit: Rust through the `cargo` requirement of archon, the one copy a computer holds, plus a C toolchain (0003-kits FR-010)."""
 from __future__ import annotations
 
 import re
@@ -7,13 +7,8 @@ from pathlib import Path
 
 from ..core.kit import Check, Download, Kit
 
-MINIMUM = (1, 87)     # www.intellectualfrontiers.com needs 1.87 or later (edition 2024)
-RUST_VERSION = "1.99.0"
-RUST = Download("rust", RUST_VERSION, "https://static.rust-lang.org/dist/rust-{version}-{triple}.tar.xz",
-                {"x86_64": "891c6366d7100feda0bca4c03ce63f3c9ac827cbebbc283e7433061d42c6a376",
-                 "aarch64": "5a30ce742be0835d9b23fc862db5cbbbc71464e1c9b1fca22917e10e4ba32a92"},
-                binaries={n: f"bin/{n}" for n in ("rustc", "cargo", "rustdoc", "rustfmt", "cargo-fmt", "cargo-clippy", "clippy-driver", "rust-gdb", "rust-lldb")},
-                steps=(("sh", "install.sh", "--prefix={dest}", "--disable-ldconfig", "--without=rust-docs"),))
+MINIMUM = (1, 92)     # www.intellectualfrontiers.com needs 1.92 or later (the same as the cargo requirement's minimum)
+PROGRAMS = ("rustc", "cargo", "rustdoc", "rustfmt", "cargo-fmt", "cargo-clippy", "clippy-driver")
 
 
 def new_enough(work: Path) -> str:
@@ -35,16 +30,16 @@ def compiles(work: Path) -> str:
 
 class Rust(Kit):
     name = "rust"
-    summary = "Rust stable (official tarball, no rustup), build-essential, cmake, pkg-config, perl"
-    plain = "the Rust compiler and cargo, current stable, for building the company's Rust programs."
+    summary = "Rust (the one copy archon installs for the repositories), build-essential, cmake, pkg-config, perl"
+    plain = "the Rust compiler and cargo, for building the company's Rust programs."
 
     def apt(self, distro):
         return ["build-essential", "cmake", "pkg-config", "perl", "ca-certificates"]
 
-    def downloads(self, distro):
-        return [RUST]
+    def requirements(self, distro):
+        return {"cargo": PROGRAMS}
 
     def checks(self, distro):
         return [Check("rustc", "rustc"), Check("cargo", "cargo"), Check("cc", "cc"), Check("cmake", "cmake"), Check("pkg-config", "pkg-config"), Check("perl", "perl"),
-                Check("cargo is 1.87 or later", run=new_enough, needs=("cargo",)),
+                Check("cargo is 1.92 or later", run=new_enough, needs=("cargo",)),
                 Check("rustc compiles a program", run=compiles, needs=("rustc", "cc"))]

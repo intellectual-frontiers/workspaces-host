@@ -53,6 +53,19 @@ def _from_path(e: prov.Entry, reasons: list[tuple[str, str]]) -> Result | None:
     return None
 
 
+def installed(e: prov.Entry) -> tuple[str, Path] | None:
+    """The copy of the entry already in the store that will do (0011-archon FR-011, FR-024); see `toolchain.installed`."""
+    return tc.installed(e)
+
+
+def _from_installed(e: prov.Entry, reasons: list[tuple[str, str]]) -> Result | None:
+    found = installed(e)
+    if found is None:
+        return None
+    version, path = found
+    return Result(e.name, PINNED, version, {k: str(path / v) for k, v in e.provides.items()}, tc.entry_delta(e, path))
+
+
 def _ask(question: str) -> bool:
     """An attended person is asked before an install that needs administrator rights; the default is yes."""
     import sys
@@ -173,8 +186,8 @@ def ensure(p: prov.Provider, names: list[str], *, offline: bool | None = None, p
         reasons: list[tuple[str, str]] = []
         got = None
         if e.satisfiable_by_computer:
-            got = _from_path(e, reasons) or _from_system(e, reasons, offline, prof, say, ask)
-        got = got or _from_pinned(p, e, reasons, offline)
+            got = _from_path(e, reasons) or _from_installed(e, reasons) or _from_system(e, reasons, offline, prof, say, ask)
+        got = got or _from_installed(e, reasons) or _from_pinned(p, e, reasons, offline)
         if got is None:
             raise Unavailable(name, e.minimum, reasons)
         if got.source == PINNED:
@@ -208,7 +221,7 @@ def available(p: prov.Provider, name: str) -> bool:
         exe, found = _probe(e)
         if exe and found and versions.meets(found, e.minimum):
             return True
-    return tc.install_path(p, e) is not None
+    return tc.install_path(p, e) is not None or installed(e) is not None
 
 
 def obtainable(p: prov.Provider, names: list[str], *, offline: bool | None = None) -> list[tuple[str, str]]:

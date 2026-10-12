@@ -164,6 +164,31 @@ class Sources(Home):
         self.assertEqual(e.exception.exit_code, 3)
         self.assertIn("pinned: no network", str(e.exception))
 
+    def test_a_copy_already_in_the_store_that_meets_the_minimum_is_used_and_no_second_one_is_installed(self):  # FR-011, FR-024
+        from archon import mise
+
+        store = mise.data_dir() / "installs" / "http-jre"
+        for version in ("17.0.1", "21.0.2", "21.0.9"):                      # one too old, two that meet 21, none the lock's own 21.0.12.1+1
+            (store / version / "bin").mkdir(parents=True)
+            script(store / version / "bin" / "java", "exit 0\n")
+        (store / "21").symlink_to("21.0.9")                                  # mise's alias is not a version
+        self.apt("21.0.5-1", installs_version="21.0.5")
+        with mock.patch.object(tc, "ensure", side_effect=AssertionError("no second copy is installed")):
+            [r] = self.ensure()
+        self.assertEqual((r.source, r.version), ("pinned", "21.0.9"), "the newest that meets the minimum")
+        self.assertEqual(r.programs["java"], str(store / "21.0.9" / "bin" / "java"))
+        self.assertEqual(r.env["PATH"], str(store / "21.0.9" / "bin"))
+        self.assertFalse(self.log.exists() and "install" in self.log.read_text(), "and the package manager is not asked either")
+        self.assertTrue(requirements.available(self.p, "jre"))
+
+    def test_a_copy_that_is_too_old_is_not_reused(self):
+        from archon import mise
+
+        (mise.data_dir() / "installs" / "http-jre" / "17.0.1" / "bin").mkdir(parents=True)
+        self.apt("21.0.5-1", installs_version="21.0.5")
+        [r] = self.ensure()
+        self.assertEqual(r.source, "system")
+
     def test_an_entry_without_a_minimum_has_only_the_pinned_source(self):  # FR-008
         (self.root / ".workspaces-host" / "toolchain.d" / "jre.toml").write_text(ENTRY.format(sha="0" * 64).replace('minimum = "21"\n', ""))
         self.p = prov.load(self.root)

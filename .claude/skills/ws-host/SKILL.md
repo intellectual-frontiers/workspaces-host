@@ -90,7 +90,7 @@ description: Use ws-host, the environment orchestrator, to prepare this machine,
 - `modern-cli`: bash, fish and git use eza, bat, btop, zoxide, fzf and delta, with the common aliases
 - `press`: TeX Live (LuaLaTeX, XeTeX), latexmk, poppler, qpdf, rsvg, Java, epubcheck, asciidoctor, potrace
 - `railway`: the Railway CLI, always the newest release
-- `rust`: Rust stable (official tarball, no rustup), build-essential, cmake, pkg-config, perl
+- `rust`: Rust (the one copy archon installs for the repositories), build-essential, cmake, pkg-config, perl
 - `shell`: fish 4 and oh-my-posh, with the ws-host-pretty and ws-host-plain prompt themes; bash works as well
 
 ## Help topics

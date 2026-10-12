@@ -5,7 +5,7 @@ import os
 import shutil
 from pathlib import Path
 
-from . import mise, provider as prov
+from . import versions, mise, provider as prov
 
 
 class ToolchainError(Exception):
@@ -103,6 +103,32 @@ def install_path(p: prov.Provider, e: prov.Entry) -> Path | None:
     return path if path and path.is_dir() else None
 
 
+def installed_versions(e: prov.Entry) -> dict[str, Path]:
+    """Every version of an entry's tool already in the shared store (its own download or its `mise` tool), by version. Nothing is installed or downloaded."""
+    if e.kind == "system":
+        return {}
+    name = f"http-{e.name}" if e.kind == "archive" else e.tool_id().replace(":", "-").replace("/", "-")
+    base = mise.data_dir() / "installs" / name
+    if not base.is_dir():
+        return {}
+    return {d.name: d for d in sorted(base.iterdir()) if d.is_dir() and not d.is_symlink()}
+
+
+def installed(e: prov.Entry) -> tuple[str, Path] | None:
+    """The newest copy of the entry already in the store whose version meets `minimum` (the one the lock names, when it is there): a tool is never
+    installed a second time beside one that will do (0011-archon FR-011, FR-024). Only an entry that gives `minimum` can use another version."""
+    have = installed_versions(e)
+    if e.version in have:
+        return e.version, have[e.version]
+    if not e.minimum:
+        return None
+    fits = [v for v in have if versions.meets(v, e.minimum)]
+    if not fits:
+        return None
+    best = max(fits, key=lambda v: versions.parse(v) or ())
+    return best, have[best]
+
+
 def state(p: prov.Provider) -> dict[str, dict]:
     """Each entry's version, state and path, in name order."""
     out = {}
@@ -144,7 +170,7 @@ def delta_of(p: prov.Provider) -> dict[str, str]:
     values: dict[str, list[str]] = {}
     for n in sorted(p.entries):
         e = p.entries[n]
-        path = install_path(p, e)
+        path = install_path(p, e) or (installed(e) or (None, None))[1]
         if path is None:
             continue
         d = entry_delta(e, path)

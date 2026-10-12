@@ -4,9 +4,11 @@ import io
 import json
 import os
 import stat
+import subprocess
 import tarfile
 import zipfile
 from pathlib import Path
+from unittest import mock
 
 from ws_host.core import registry as reg
 from ws_host.core.kit import Check, Download, Kit
@@ -183,13 +185,42 @@ class Contract(Home):
         for p in "sed find xargs diff cmp patch tar gzip unzip zip bzip2 xz file less which ps hostname tput rsync bc grep awk git gh glab jq rg fd curl python3 uv node cwebp dwebp sqlite3 duckdb shellcheck chromium".split():
             self.assertIn(p, progs)
 
-    def test_rust_is_fetched_not_rustup_and_is_at_least_1_87(self):
+    def test_rust_is_the_cargo_requirement_of_archon_and_not_a_second_download(self):          # 0003-kits FR-010, 0011-archon FR-024
+        import tomllib
+
         from ws_host.kits import rust
-        self.assertGreaterEqual(tuple(map(int, rust.RUST_VERSION.split(".")[:2])), rust.MINIMUM)
-        self.assertEqual(rust.MINIMUM, (1, 87))
         kit = rust.Rust()
-        self.assertNotIn("rustup", " ".join(kit.apt({"id": "debian"})))
-        self.assertTrue(kit.downloads({"id": "debian"}))
+        self.assertEqual(kit.downloads({"id": "debian"}), [], "Rust is installed once, by archon")
+        self.assertEqual(kit.requirements({"id": "debian"}), {"cargo": rust.PROGRAMS})
+        entry = tomllib.loads((REPO / ".workspaces-host" / "toolchain.d" / "cargo.toml").read_text())
+        major_minor = tuple(map(int, entry["minimum"].split(".")[:2]))
+        self.assertEqual(rust.MINIMUM, major_minor, "the kit asks for what the requirement asks for")
+        self.assertGreaterEqual(tuple(map(int, entry["version"].split(".")[:2])), rust.MINIMUM)
+
+    def test_the_kit_links_scripts_that_set_the_requirements_environment_and_replaces_none_of_the_persons(self):
+        from archon import paths, requirements
+        from ws_host.core.kit import Kit
+        from ws_host.kits import rust
+        from ws_host.lib import kitrun
+
+        store = self.home / "store" / "rust" / "1.99.0"
+        store.mkdir(parents=True)
+        for name in rust.PROGRAMS[:3]:
+            f = store / name
+            f.write_text("#!/bin/sh\necho real-" + name + " $CARGO_HOME $RUSTUP_HOME\n")
+            f.chmod(0o755)
+        got = requirements.Result("cargo", "pinned", "1.99.0", {"cargo": str(store / "cargo")}, {"PATH": str(store), "CARGO_HOME": "/s/rust", "RUSTUP_HOME": "/s/rustup"})
+        bindir = paths.bin_dir()
+        bindir.mkdir(parents=True, exist_ok=True)
+        (bindir / "rustc").write_text("#!/bin/sh\n# the person's own\n")
+        ctx = type("Ctx", (), {"offline": False, "dry_run": False})()
+        with mock.patch("archon.requirements.ensure", return_value=[got]):
+            steps = list(kitrun._requirements(ctx, rust.Rust(), {"id": "debian"}))
+        self.assertTrue(all(s[1] == "ok" for s in steps), steps)
+        out = subprocess.run([str(bindir / "cargo")], capture_output=True, text=True).stdout.strip()
+        self.assertEqual(out, "real-cargo /s/rust /s/rustup", "the script sets CARGO_HOME and RUSTUP_HOME")
+        self.assertIn("the person's own", (bindir / "rustc").read_text(), "a program ws-host did not link stays")
+        self.assertTrue((bindir / "cargo").exists() and (bindir / "rustdoc").exists() and not (bindir / "rustfmt").exists(), "only the programs the install has are linked")
 
     def test_press_installs_the_named_texlive_packages(self):
         apt = reg.discover().kits["press"]().apt({"id": "debian"})
@@ -214,7 +245,8 @@ class Commands(Home):
         self.assertEqual({k["name"] for k in doc["data"]["kits"]}, {"aws", "azure", "base", "cloud", "cloudflare", "embedded-sql", "microsoft", "modern-cli", "press", "railway", "rust", "shell"})
         code, doc = self.run_json("kit", "show", "rust")
         self.assertEqual(code, 0)
-        self.assertEqual(doc["data"]["downloads"][0]["name"], "rust")
+        self.assertEqual(doc["data"]["downloads"], [])
+        self.assertEqual(list(doc["data"]["requirements"]), ["cargo"])
         code, doc = self.run_json("kit", "show", "nope")
         self.assertEqual(code, 2)
 
@@ -244,8 +276,8 @@ class Commands(Home):
         code, out = self.run_cmd("kit", "add", "rust", "--offline", "--json")
         docs = [json.loads(l) for l in out.strip().splitlines()]
         steps = {s["name"]: s for s in docs[-1]["data"]["steps"]}
-        self.assertEqual(steps["download rust"]["status"], "missing")
-        self.assertIn("offline", steps["download rust"]["plain"])
+        self.assertEqual(steps["requirement cargo"]["status"], "missing")
+        self.assertIn("offline", steps["requirement cargo"]["plain"])
         self.assertEqual(code, 3)
 
 

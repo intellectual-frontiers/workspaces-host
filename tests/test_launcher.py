@@ -149,6 +149,25 @@ class PythonPin(unittest.TestCase):
         self.assertEqual(floor, ".".join(pinned.split(".")[:2]))
         self.assertIn(f"PYTHON_VERSION={pinned}", (REPO / "archon" / "bootstrap.env").read_text())
 
+    def test_an_entry_that_ws_host_and_a_sibling_repository_both_declare_is_one_version(self):        # 0011-archon FR-025
+        """What a repository says about why it needs a program (its summary, its minimum) is its own; which program, and which version, is one."""
+        import tomllib
+
+        mine = REPO / ".workspaces-host" / "toolchain.d"
+        compared = 0
+        for sibling in sorted(d for d in REPO.parent.iterdir() if d != REPO):
+            theirs = sibling / ".workspaces-host" / "toolchain.d"
+            if not theirs.is_dir():
+                continue
+            for f in sorted(mine.glob("*.toml")):
+                if (theirs / f.name).is_file():
+                    compared += 1
+                    a, b = tomllib.loads(f.read_text()), tomllib.loads((theirs / f.name).read_text())
+                    for key in ("name", "version", "kind", "tool", "platforms"):
+                        self.assertEqual(a.get(key), b.get(key), f"{f.name} {key} differs from {sibling.name}'s: a tool is installed once, at one version")
+        if not compared:
+            self.skipTest("no sibling repository is beside this one")
+
     def test_every_sibling_repository_that_is_here_pins_the_same_python(self):
         pinned = self.pin(REPO)
         for root in sorted(REPO.parent.iterdir()):

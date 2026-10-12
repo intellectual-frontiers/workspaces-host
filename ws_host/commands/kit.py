@@ -33,7 +33,7 @@ def kit_show(ctx, kit):
     p = kitrun.plan(obj, d)
     return Resource("kit", kit, {"plain": f"{kit}: {obj.plain}", "summary": obj.summary, "distribution": d["pretty"], "architecture": fetch.arch(),
                                  "packages": p["packages"], "not_installed": p["to_install"], "unavailable": p["unavailable"],
-                                 "downloads": p["downloads"], "links": p["links"],
+                                 "downloads": p["downloads"], "requirements": p["requirements"], "links": p["links"],
                                  "checks": [{"name": c.name, "program": c.program, "functional": c.run is not None} for c in obj.checks(d)]},
                     actions=[Action(("kit", "add"), f"Install {kit}", {"kit": kit})])
 

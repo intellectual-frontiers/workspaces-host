@@ -74,6 +74,11 @@ class Kit:
     def downloads(self, distro: dict) -> list[Download]:
         return []
 
+    def requirements(self, distro: dict) -> dict[str, tuple[str, ...]]:
+        """Requirements `archon` makes available (0011-archon FR-024), each with the programs to put in the person's bin directory as small scripts that set
+        what the requirement's install needs: the one copy of a tool a computer holds, never a second download of it."""
+        return {}
+
     def links(self, distro: dict) -> dict[str, tuple[str, ...]]:
         """Names to link into the person's bin directory to the first program that exists, such as fd -> fdfind."""
         return {}

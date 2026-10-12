@@ -1,0 +1,11 @@
+name = "cargo"
+version = "1.99.0"
+summary = "Rust's cargo and compiler, for the programs the company writes in Rust (the website needs 1.92)"
+kind = "tool"
+tool = "rust"
+bin = "."
+minimum = "1.92"
+probe = { program = "cargo", args = ["--version"] }
+packages = { apt = ["cargo"], dnf = ["cargo"], apk = ["cargo"], brew = ["rust"] }
+provides = { cargo = "cargo" }
+env = { CARGO_HOME = "{dir}/..", RUSTUP_HOME = "{dir}/../../rustup" }
