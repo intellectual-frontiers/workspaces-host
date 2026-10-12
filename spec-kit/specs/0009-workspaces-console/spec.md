@@ -165,8 +165,9 @@ the extension is `ws-host`'s, and the providers that plug into it hold no code o
   proposals (`proposal list --status open`, each to be read and then decided or
   left, FR-015), the sections whose last check found something, the generators
   `fresh` reports stale (each with its rewriting command and its dry-run diff,
-  FR-014), the toolchain entries `doctor` reports absent (each with its fetch
-  command) and a "Get help" group. Home MUST be built from the launcher's own
+  FR-014), the toolchain entries `doctor` reports cannot be obtained here (an
+  entry that is only not obtained yet is obtained by the command that needs it,
+  and is not a thing for the person to do) and a "Get help" group. Home MUST be built from the launcher's own
   resources and MUST add nothing the launcher has no command for (FR-003).
 - **FR-020**: The extension MUST show a stream (NDJSON,
   0041-command-line FR-019) as VS Code progress with the stream's own words,
