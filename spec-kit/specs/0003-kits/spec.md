@@ -71,12 +71,15 @@ a kit installs what the distribution ships, so two machines may differ, and
   converters where the distribution has them, and `potrace`. Its checks MUST
   include that `lualatex` compiles a document using `fontspec`, `unicode-math`
   and `lualatex-math`.
-- **FR-010**: The `rust` kit MUST provide the current stable Rust from the
-  official tarball, fetched and verified (FR-006), with `build-essential`,
-  `cmake`, `pkg-config` and `perl`. Its version MUST be at least the
-  one the company's website needs (1.87, edition 2024), and its checks MUST
-  include that `rustc` compiles a program and that `cargo` is at least that
-  version. The kit MUST NOT install or use `rustup`.
+- **FR-010**: The `rust` kit MUST provide Rust through the `cargo`
+  requirement of `archon` (0011-archon FR-024), the one copy of Rust a computer
+  holds, with `build-essential`, `cmake`, `pkg-config` and `perl`. It MUST link
+  `rustc`, `cargo`, `rustdoc`, `rustfmt` and `cargo-clippy` into `~/.local/bin`
+  as small scripts that set `CARGO_HOME` and `RUSTUP_HOME` to the ones the
+  requirement installed, and never replace a program it did not link. Its
+  version MUST be at least the one the company's website needs (1.92), and its
+  checks MUST include that `rustc` compiles a program and that `cargo` is at
+  least that version.
 - **FR-011**: A kit's download versions, addresses and checksums MUST be in its
   code, and updating one MUST be a change of its own that the tests run
   against.

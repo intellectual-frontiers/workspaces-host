@@ -63,12 +63,15 @@ line, the editor window, setting up a Linux machine) and is built on `archon`; `
   (an epoch such as `2:`, a revision such as `-1~deb12u1`, a suffix such as `+dfsg`) MUST be ignored.
 - **FR-011**: `archon` MUST obtain a requirement from the first of these sources that yields a program meeting `minimum`, in this order:
   1. `path`: a program on `PATH` whose probe meets `minimum`;
-  2. `system`: the computer's package manager, when it offers a version meeting `minimum`, installed non-interactively, and used only when a
+  2. `installed`: a copy of the entry already in the store (its own download or its `mise` tool, of any version) whose version meets
+     `minimum`, the newest if several do, reported as `pinned`. A second copy of a tool MUST NOT be installed while one that
+     meets `minimum` is in the store (FR-024);
+  3. `system`: the computer's package manager, when it offers a version meeting `minimum`, installed non-interactively, and used only when a
      probe of the installed program then meets `minimum`. `archon` MUST use administrator rights only as root or through `sudo` (without a
      password when unattended); when it cannot, the source is skipped, not failed;
-  3. `pinned`: the entry's own download, whose SHA-256 is checked before anything is unpacked (0003-kits FR-006; 0008-providers FR-007), or
+  4. `pinned`: the entry's own download, whose SHA-256 is checked before anything is unpacked (0003-kits FR-006; 0008-providers FR-007), or
      the `mise` tool or npm package the entry names, installed from the lock.
-  An entry without `minimum` and `probe` has only the third source.
+  An entry without `minimum` and `probe` has only the pinned source, of the version its lock names.
 - **FR-012**: A program found by the first or second source MUST be used as it is: the entry's `env` and `bin` (0008-providers FR-003) MUST
   NOT be applied to it, since they describe the pinned copy. The pinned copy MUST be put first on `PATH` only for what `archon` starts, and
   nothing MUST be put on a person's `PATH` (FR-003).
@@ -106,6 +109,13 @@ line, the editor window, setting up a Linux machine) and is built on `archon`; `
 - **FR-023**: `ws-host` MUST make the `uv` and `uvx` of its own runtime available to a person's repositories: on every run it links them
   into `~/.local/bin`, which a Debian or Ubuntu login puts on `PATH`, and it MUST NOT replace a `uv` or `uvx` it did not link. A launcher
   that finds no `uv` on `PATH` looks there and in `ws-host`'s store of installed tools before it says `uv` is missing (0041-command-line FR-001, `.github`).
+- **FR-024**: A computer MUST hold one copy of a tool. `ws-host` and `archon` share one store, so a tool and version two repositories declare is
+  installed once (0008-providers FR-009), and a tool that a `ws-host` kit also provides MUST be the kit's one copy of it: the `rust` kit makes the
+  `cargo` requirement available through `archon` and links its programs into `~/.local/bin` as small scripts that set the entry's `env`
+  (0003-kits FR-010), instead of installing Rust again.
+- **FR-025**: The versions of Python and `uv` in `archon/bootstrap.env` MUST equal the `python` and `uv` entries `ws-host` declares, and every
+  entry of one name that two repositories declare MUST be the same declaration (0008-providers FR-009), so a version changes in every
+  repository together.
 - **FR-020**: A computer that has `ws-host` and one that has only `uv` MUST produce the same results from the same command: `ws-host`
   changes how a person is helped, never what a command does.
 
