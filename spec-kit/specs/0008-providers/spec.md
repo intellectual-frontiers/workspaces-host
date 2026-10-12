@@ -4,8 +4,9 @@
 **Status:** Draft
 
 **Input:** A provider is a repository that declares what it needs in a `.workspaces-host/` folder of small TOML files and ships a
-launcher that speaks the command-line protocol (0041-command-line). `ws-host` is the one owner of installing, finding and pruning the
-programs providers pin: it reads the declarations as data, translates them into a pinned `mise` configuration, and runs `mise` with
+launcher that speaks the command-line protocol (0041-command-line). `archon` (0011-archon) is the one owner of installing, finding and pruning the
+programs providers pin, and `ws-host` offers it to a person: it reads the declarations as data, takes a program from the computer when the
+computer has one that is new enough, and otherwise translates the declaration into a pinned `mise` configuration and runs `mise` with
 nothing that can execute. A provider's programs are reached only through that provider's own environment, so two providers may pin
 different versions of one program without conflict. Nothing here installs a program onto a person's PATH.
 
@@ -37,7 +38,7 @@ different versions of one program without conflict. Nothing here installs a prog
 - **FR-007**: Every install MUST use only that translation, with `mise install --locked`, in `MISE_SAFE=1` mode, from a configuration
   and data directory that are `ws-host`'s own, never a person's or a repository's. One store, `~/.local/share/workspaces-host/mise`,
   holds every provider's programs.
-- **FR-008**: `ws-host` MUST fetch the `mise` it uses itself, at one exact version and SHA-256 per architecture written in its code,
+- **FR-008**: `archon` MUST fetch the `mise` it uses itself, at one exact version and SHA-256 per architecture written in its code,
   verified before anything is unpacked, and MUST NOT use a `mise` found on PATH unless the person names it in `WS_HOST_MISE`. Offline,
   a `mise` that is not already here MUST end the command with exit status 3 naming it.
 - **FR-009**: Two enabled providers MUST NOT declare one entry name and version with different URLs, checksums or packages. The `providers` check section
@@ -55,8 +56,8 @@ different versions of one program without conflict. Nothing here installs a prog
 
 ## Using a provider's programs
 
-- **FR-012**: `toolchain ensure NAME` (setup) MUST install one entry and the entries it needs, or every entry of a provider with
-  `--all`; `toolchain show NAME` and `toolchain list` (read) MUST return, as a resource, each entry's version, state,
+- **FR-012**: `toolchain ensure NAME` (setup) MUST make one entry and the entries it needs available, or every entry of a provider with
+  `--all`, from the sources and in the order 0011-archon FR-011 gives (a program of the computer's, its package manager, the lock); `toolchain show NAME` and `toolchain list` (read) MUST return, as a resource, each entry's version, state,
   installed path, the environment it sets and the programs it provides, so that a provider's own command line can find what it pinned.
 - **FR-013**: `provider run PROVIDER -- COMMAND...` MUST run the command with that provider's environment: its entries' folders first on
   `PATH` and their `env` set; a variable several entries set holds each value in entry-name order joined by a colon. `provider show` MUST return that environment, as the PATH pieces and variables it adds, so a provider's own command line can run its programs itself. It MUST exit 0 for a provider in use and 3 for one that is not, which is how a launcher asks, quietly, whether it can hand over to `provider run` (0041-command-line FR-001, `.github`).
