@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Loose } from './support/fake-launcher';
 import * as fs from 'fs';
-import { Launcher, type ProgressEvent } from '../src/services/launcher';
+import { Launcher, withUserBin, type ProgressEvent } from '../src/services/launcher';
 import { CancelSource } from '../src/services/cancellation';
 import { makeRepo, secondCommandLine } from './support/fake-launcher';
 
@@ -102,4 +102,14 @@ test('0011-archon FR-021: progress events on standard error reach onProgress and
   assert.ok(log.includes('an ordinary line'));
   assert.ok(!log.some((l: string) => l.startsWith('{"event"')));
   repo.cleanup();
+});
+
+test('FR-017: ~/.local/bin is added last to a PATH that lacks it, and a PATH that has it, or no home, is left alone', () => {
+  const lacking = withUserBin({ HOME: '/home/p', PATH: '/usr/bin:/bin' });
+  assert.equal(lacking.PATH, '/usr/bin:/bin:/home/p/.local/bin');
+  const has = { HOME: '/home/p', PATH: '/home/p/.local/bin:/usr/bin' };
+  assert.equal(withUserBin(has), has);
+  const none = { PATH: '/usr/bin' };
+  assert.equal(withUserBin(none), none);
+  assert.equal(withUserBin({ HOME: '/home/p' }).PATH, '/home/p/.local/bin');
 });

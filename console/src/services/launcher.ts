@@ -3,11 +3,25 @@
 // (0041-command-line FR-042), and a person at the editor, so that progress comes as events the editor draws (0011-archon FR-005, FR-021).
 // Nothing else is ever run.
 import * as childProcess from 'child_process';
+import * as path from 'path';
 import { commandLine } from '../model/forms';
 import { asString } from '../model/json';
 import { errorOf, parseDocuments, readDoc, type Doc, type ErrorInfo } from '../model/wire';
 
 export type SpawnFn = typeof childProcess.spawn;
+
+/**
+ * The environment a launcher runs in, with `~/.local/bin` on `PATH` when the window has not got it (0009-workspaces-console FR-017): a window started before that
+ * folder existed lacks it, and it is where `ws-host` links `uv`, the one thing a launcher needs of the computer (0011-archon FR-023). It is added last, so a
+ * program the person put earlier on `PATH` still wins.
+ */
+export const withUserBin = (env: NodeJS.ProcessEnv): NodeJS.ProcessEnv => {
+  const home = env.HOME ?? env.USERPROFILE;
+  if (!home) return env;
+  const bin = path.join(home, '.local', 'bin');
+  const parts = (env.PATH ?? '').split(path.delimiter).filter(Boolean);
+  return parts.includes(bin) ? env : { ...env, PATH: [...parts, bin].join(path.delimiter) };
+};
 
 /** What the launcher needs of a cancellation token: structurally VS Code's `CancellationToken`, without importing VS Code. */
 export interface Cancellation {
@@ -99,7 +113,7 @@ export class Launcher {
     return new Promise<RunResult>((resolve) => {
       let child: ReturnType<typeof childProcess.spawn>;
       try {
-        child = this.spawn(this.file, full, { cwd: this.root, env: { ...this.env, IF_CONSOLE: '1', ARCHON_ATTENDANCE: 'attended', ARCHON_PROGRESS: 'events' }, stdio: ['ignore', 'pipe', 'pipe'] });
+        child = this.spawn(this.file, full, { cwd: this.root, env: { ...withUserBin(this.env), IF_CONSOLE: '1', ARCHON_ATTENDANCE: 'attended', ARCHON_PROGRESS: 'events' }, stdio: ['ignore', 'pipe', 'pipe'] });
       } catch (e) {
         const why = e instanceof Error ? e.message : String(e);
         this.log(`could not start: ${why}`);

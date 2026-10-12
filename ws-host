@@ -143,6 +143,27 @@ else
   PATH=$store/python/$py_version/bin:$store/uv/$uv_version/.mise-bins:$store/uv/$uv_version:$PATH
   export PATH
 fi
+
+# uv is every repository's one prerequisite (0011-archon FR-023): ws-host puts the one of its own runtime where a person's PATH has it, ~/.local/bin, and never
+# replaces a uv or uvx it did not link. A repository's launcher also looks in ws-host's store, so this is a convenience for terminals and agents.
+link_uv() {
+  [ -n "${WS_HOST_PYTHON:-}" ] && return 0
+  [ -d "$store/uv/$uv_version" ] || return 0
+  bin=$HOME/.local/bin
+  mkdir -p "$bin" 2>/dev/null || return 0
+  for tool in uv uvx; do
+    src=$store/uv/$uv_version/.mise-bins/$tool
+    [ -x "$src" ] || src=$store/uv/$uv_version/$tool
+    [ -x "$src" ] || continue
+    dst=$bin/$tool
+    if [ ! -e "$dst" ] && [ ! -L "$dst" ]; then ln -s "$src" "$dst" 2>/dev/null
+    elif [ -L "$dst" ]; then
+      case $(readlink "$dst") in "$store"/uv/*) [ "$(readlink "$dst")" = "$src" ] || ln -sf "$src" "$dst" 2>/dev/null ;; esac
+    fi
+  done
+  return 0
+}
+link_uv
 [ "${WS_HOST_BOOTSTRAP_ONLY:-}" = 1 ] && exit 0
 
 PYTHONPATH="$here${PYTHONPATH:+:$PYTHONPATH}"

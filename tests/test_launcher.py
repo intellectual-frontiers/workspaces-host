@@ -86,6 +86,31 @@ printf '#!/bin/sh\nexit 0\n' > "{store}/uv/{pins['UV_VERSION']}/.mise-bins/uv"; 
         self.assertEqual(again.returncode, 0, again.stderr)
         self.assertFalse((self.home / "mise.args").exists(), "a runtime that is already there is not installed again")
 
+    def test_its_uv_is_linked_into_local_bin_once_and_a_uv_the_person_has_is_never_replaced(self):        # 0011-archon FR-023
+        pins = self.pins()
+        store = self.home / "data" / "workspaces-host" / "mise" / "data" / "installs"
+        (store / "python" / pins["PYTHON_VERSION"] / "bin").mkdir(parents=True)
+        (store / "python" / pins["PYTHON_VERSION"] / "bin" / "python3").symlink_to(sys.executable)
+        tools = store / "uv" / pins["UV_VERSION"] / ".mise-bins"
+        tools.mkdir(parents=True)
+        for name in ("uv", "uvx"):
+            (tools / name).write_text("#!/bin/sh\nexit 0\n")
+            (tools / name).chmod(0o755)
+
+        def run():
+            return subprocess.run(["sh", str(REPO / "ws-host"), "command", "list", "--json"], capture_output=True, text=True,
+                                  env=self.runtime_env(), cwd=str(self.home))
+
+        self.assertEqual(run().returncode, 0)
+        bin_ = self.home / ".local" / "bin"
+        for name in ("uv", "uvx"):
+            self.assertEqual((bin_ / name).resolve(), (tools / name).resolve(), name)
+        self.assertEqual(run().returncode, 0)                                               # again: nothing changes
+        (bin_ / "uv").unlink()
+        (bin_ / "uv").write_text("#!/bin/sh\n# the person's own\n")
+        self.assertEqual(run().returncode, 0)
+        self.assertIn("the person's own", (bin_ / "uv").read_text(), "a uv ws-host did not link stays")
+
     def test_the_pins_agree_with_the_providers_entries_and_the_mise_in_the_code(self):
         import tomllib
         from archon import mise

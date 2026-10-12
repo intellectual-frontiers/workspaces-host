@@ -21,6 +21,8 @@ uvx --from git+https://github.com/intellectual-frontiers/workspaces-host@REVISIO
 
 `uv` supplies the Python, builds `archon` from this repository once, and keeps it. `archon run` then runs `python -m agora check` under the newest Python the repository's `requires-python` allows, with the repository's locked packages for that command and every program outside Python that the command names, all made available first. The same `archon` is what `ws-host` runs on.
 
+If `uv` is not on the `PATH` of the window or terminal that runs a launcher, the launcher looks where `uv`'s own installer puts it (`~/.local/bin`, `~/.cargo/bin`) and in ws-host's store of tools before it says `uv` is missing. `ws-host` links the `uv` and `uvx` of its own runtime into `~/.local/bin` every time it runs, and never replaces a `uv` you installed yourself; the Workspaces Console runs launchers with `~/.local/bin` on the `PATH` even in a window that was started before that folder existed.
+
 === Where a program comes from
 
 .Where a program comes from
