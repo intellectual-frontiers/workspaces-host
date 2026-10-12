@@ -23,6 +23,8 @@ uvx --from git+https://github.com/intellectual-frontiers/workspaces-host@REVISIO
 
 If `uv` is not on the `PATH` of the window or terminal that runs a launcher, the launcher looks where `uv`'s own installer puts it (`~/.local/bin`, `~/.cargo/bin`) and in ws-host's store of tools before it says `uv` is missing. `ws-host` links the `uv` and `uvx` of its own runtime into `~/.local/bin` every time it runs, and never replaces a `uv` you installed yourself; the Workspaces Console runs launchers with `~/.local/bin` on the `PATH` even in a window that was started before that folder existed.
 
+A computer holds one copy of a tool. `ws-host` and `archon` share one store, so a tool and version two repositories declare is installed once, and a copy already in the store whose version meets the entry's `minimum` is used before the package manager is asked or anything is downloaded, so a newer pin elsewhere never leaves two versions behind. The `rust` kit makes the `cargo` requirement available through `archon` and links `cargo`, `rustc` and the rest into `~/.local/bin` as small scripts that set `CARGO_HOME` and `RUSTUP_HOME`, instead of installing Rust a second time. An entry that two repositories declare is one declaration, and a version moves in every repository together: the public root's `agora check toolchain` and the vault's `eid check toolchain` fail when `python` or `uv` differ from the versions in `archon/bootstrap.env`, and `eid fresh` rewrites the vault's copies of the shared entries from the public root's.
+
 === Where a program comes from
 
 .Where a program comes from
