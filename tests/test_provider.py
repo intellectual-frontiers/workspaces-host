@@ -173,10 +173,12 @@ class Commands(Home):
         self.assertEqual(code, 0, r)
         self.assertTrue((prov.providers_dir() / "demo").is_symlink())
         code, r = self.run_json("provider", "show", "demo")
-        self.assertEqual(r["data"]["entries"][0]["state"], "missing")
+        self.assertEqual((code, r["data"]["entries"][0]["state"]), (0, "missing"))   # exit 0: a launcher may hand over to `provider run`
         code, r = self.run_json("provider", "remove", "demo", "--confirmed")
         self.assertEqual(code, 0)
         self.assertEqual(prov.enabled(), [])
+        code, _ = self.run_json("provider", "show", "demo")
+        self.assertEqual(code, 3)   # exit 3: not in use, which a launcher takes as "run without me" (0008 FR-013)
 
     def test_a_provider_with_problems_or_a_conflict_is_not_enabled(self):
         bad = make_provider(self.home, "bad", entries={"minitool": archive(version="latest")})

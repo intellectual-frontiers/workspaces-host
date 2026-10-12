@@ -35,6 +35,12 @@ class Cli(Home):
         code, doc = self.run_json("command", "show", "nope")
         self.assertEqual((code, doc["kind"], doc["data"]["code"]), (2, "error", "unknown-command"))
 
+    def test_help_after_a_double_dash_belongs_to_the_program_provider_run_starts(self):
+        _, text = self.run_cmd("provider", "run", "ws-host", "--", "echo", "--help")   # the child gets --help; ws-host does not answer it
+        self.assertNotIn("'provider run'", text)
+        _, own = self.run_cmd("provider", "run", "--help")                              # before `--` it is ws-host's own
+        self.assertIn("'provider run'", own)
+
     def test_an_unknown_command_is_an_error_resource_with_a_next_action(self):
         code, doc = self.run_json("frobnicate")
         self.assertEqual((code, doc["data"]["code"]), (2, "usage"))
