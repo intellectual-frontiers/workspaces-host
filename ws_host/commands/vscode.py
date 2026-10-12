@@ -12,11 +12,13 @@ import subprocess
 import urllib.request
 from pathlib import Path
 
-from ..core import config, machine, paths, progress, registry as reg
+from archon import machine, paths, progress
+from ..core import config, registry as reg
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
-from ..install import fetch
+from archon import fetch
 from ..lib import chezmoi, repos
+from ..lib import inuse
 
 CONSOLE_ID = "intellectual-frontiers.workspaces-console"
 RELEASE_API = "https://api.github.com/repos/intellectual-frontiers/workspaces-host/releases/latest"
@@ -125,7 +127,8 @@ def local_source() -> bool:
 def local_step(ctx, have: set) -> dict:
     """Build the Console from this clone's own source with ws-host's own Node, and install it (0004-editor-extension FR-026). Nothing is downloaded from a
     release and nothing needs a network but the npm packages the clone's lock names; a rebuild happens only when the source has changed."""
-    from ..lib import provider as prov, release, toolchain as tc
+    from archon import provider as prov, toolchain as tc
+    from ..lib import release
     name = "Workspaces Console extension"
     fingerprint = release.source_hash()
     current = read_stamp().get("source") == fingerprint and CONSOLE_ID in have
@@ -178,7 +181,7 @@ def console_step(ctx, cfg, code: str | None, have: set) -> tuple[dict, list[Acti
 
 def provider_candidates(cfg) -> list[Path]:
     """The clones this person works in that declare themselves providers (and this clone of ws-host itself), in a stable order, each once."""
-    from ..lib import provider as prov
+    from archon import provider as prov
     roots, seen = [], set()
     for r in sorted(repos.known(cfg)[0], key=str):
         roots.append(r.path(cfg))
@@ -195,8 +198,8 @@ def provider_candidates(cfg) -> list[Path]:
 
 def runtime_rows(ctx, p, actions: list) -> list[dict]:
     """Install everything a provider in use pins (so its Home in the Console shows nothing missing), then the shared libraries its programs link."""
-    from ..install import apt
-    from ..lib import toolchain as tc
+    from archon import apt
+    from archon import toolchain as tc
     todo = [n for n, v in tc.state(p).items() if v["state"] != "ready"]
     rows = []
     name = f"Install what {p.name} needs"
@@ -241,7 +244,7 @@ def providers_steps(ctx, cfg) -> tuple[list[dict], list[Action]]:
     """Enable the clones that declare themselves providers, and fetch the runtime their launchers start with, so the Workspaces Console opens with
     its views ready and nothing left for a person to work out (0009-workspaces-console FR-009). Enabling is a decision: it is asked at the terminal
     in plain words, and never answered for the person."""
-    from ..lib import provider as prov, toolchain as tc
+    from archon import provider as prov, toolchain as tc
     from . import provider as prov_cmd
     rows, actions = [], []
     if cfg.get("WS_HOST_PROVIDERS", "yes").strip().lower() in ("no", "false", "0", "off"):
@@ -251,9 +254,9 @@ def providers_steps(ctx, cfg) -> tuple[list[dict], list[Action]]:
         if p is None or p.problems:
             continue
         name = f"Enable {p.name} for ws-host"
-        have = prov.get(p.name)
+        have = inuse.get(p.name)
         if have is not None and have.root.resolve() == root:
-            row = {"name": name, "status": "already", "plain": f"{p.name} is in use: {prov.how_enabled(p.name)}."}
+            row = {"name": name, "status": "already", "plain": f"{p.name} is in use: {inuse.how_enabled(p.name)}."}
         elif ctx.dry_run:
             row = {"name": name, "status": "would-install", "plain": f"I would ask you to let ws-host use {p.name} ({root}), so the Workspaces Console can show it."}
         else:
@@ -265,7 +268,7 @@ def providers_steps(ctx, cfg) -> tuple[list[dict], list[Action]]:
                 actions.append(Action(("provider", "add"), f"Enable {p.name}", {"path": str(root)}))
                 rows.append(row)
                 continue
-            have = prov.get(p.name)
+            have = inuse.get(p.name)
         rows.append(row)
         if have is not None:
             rows.extend(runtime_rows(ctx, have, actions))

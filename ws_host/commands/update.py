@@ -7,7 +7,8 @@ import os
 import subprocess
 import sys
 
-from ..core import config, paths
+from archon import paths
+from ..core import config
 from ..core import registry as reg
 from ..core.registry import Arg, command
 from ..core.resource import Action, OK, Resource

@@ -8,10 +8,11 @@ import os
 import shutil
 from pathlib import Path
 
-from ..core import paths, registry as reg
+from archon import paths
+from ..core import registry as reg
 from ..core.registry import Arg, command
 from ..core.resource import Action, OK, Resource, WsError
-from ..install import fetch
+from archon import fetch
 from ..kits import shell as shell_kit
 
 from ..lib import chezmoi, managed
@@ -71,7 +72,7 @@ def add_prompt(shell: str, offline: bool = False, dry_run: bool = False, theme_n
     if dry_run:
         return {"file": str(shown), "changed": after != before, "lines": block(shell, theme_name).splitlines(), "backup": None}
     if not (shutil.which("oh-my-posh") or (paths.bin_dir() / "oh-my-posh").exists()):
-        from ..core import progress
+        from archon import progress
         try:
             with progress.working("📥 Downloading oh-my-posh"):
                 fetch.install(shell_kit.POSH, offline=offline)

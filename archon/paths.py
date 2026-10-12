@@ -62,4 +62,4 @@ def trust_dir() -> Path:
 
 def repo_root() -> Path:
     """The clone this code runs from."""
-    return Path(__file__).resolve().parents[2]
+    return Path(__file__).resolve().parents[1]

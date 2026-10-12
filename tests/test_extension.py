@@ -12,6 +12,7 @@ from pathlib import Path
 
 from ws_host.commands import vscode as vs
 from ws_host.core import registry as reg
+from ws_host.lib import inuse
 from .helpers import GIT_ENV, REPO, Home, Workspace, git
 
 WIRE_SURFACES = {"terminal", "editor", "mcp"}
@@ -183,7 +184,7 @@ class Setup(Home):
         self.assertEqual(doc["data"]["settings"]["status"], "unchanged")
 
     def test_under_wsl_the_machine_settings_file_is_used(self):
-        from ws_host.core import machine
+        from archon import machine
         orig = machine.distro
         machine.distro = lambda: {**orig(), "wsl": True}
         self.addCleanup(lambda: setattr(machine, "distro", orig))
@@ -443,7 +444,8 @@ class LocalBuild(Home):
         self.paths.config_dir().mkdir(parents=True, exist_ok=True)
         self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS=""\nWS_HOST_PROMPT="no"\nWS_HOST_PROVIDERS="no"\n')
         self.built = []
-        from ws_host.lib import release, toolchain as tc
+        from archon import toolchain as tc
+        from ws_host.lib import release
 
         def fake_build(out, env):
             out.mkdir(parents=True, exist_ok=True)
@@ -526,8 +528,8 @@ class ProvidersAtSetup(Home):
         self.assertEqual(s["status"], "warn")
         self.assertIn("ws-host provider add", s["plain"])
         self.assertTrue(any(a["cli"].startswith("ws-host provider add") for a in doc["actions"]))
-        from ws_host.lib import provider as prov
-        self.assertIsNone(prov.get("demo"))
+        from archon import provider as prov
+        self.assertIsNone(inuse.get("demo"))
 
     def test_a_typed_yes_at_a_terminal_enables_it_and_a_second_run_says_so(self):
         import io
@@ -539,16 +541,16 @@ class ProvidersAtSetup(Home):
         with unittest.mock.patch("sys.stdin", Tty("yes\n")), unittest.mock.patch("sys.stdout", Tty()):
             code, doc = self.run_json("vscode", "ensure")
         self.assertEqual(self.step(doc, "Enable demo for ws-host")["status"], "ok", doc)
-        from ws_host.lib import provider as prov
-        self.assertIsNotNone(prov.get("demo"))
+        from archon import provider as prov
+        self.assertIsNotNone(inuse.get("demo"))
         code, again = self.run_json("vscode", "ensure")
         self.assertEqual(self.step(again, "Enable demo for ws-host")["plain"], "demo is in use: you enabled it.")
 
     def test_a_dry_run_asks_for_nothing_and_enables_nothing(self):
         code, doc = self.run_json("vscode", "ensure", "--dry-run")
         self.assertIn("I would ask you", self.step(doc, "Enable demo for ws-host")["plain"])
-        from ws_host.lib import provider as prov
-        self.assertIsNone(prov.get("demo"))
+        from archon import provider as prov
+        self.assertIsNone(inuse.get("demo"))
 
     def test_the_person_can_opt_out(self):
         self.paths.config_file().write_text('WS_HOST_KIT=""\nWS_HOST_REPOS="github.com/acme/demo"\nWS_HOST_PROMPT="no"\nWS_HOST_PROVIDERS="no"\n')
@@ -561,7 +563,7 @@ class RuntimeAtSetup(ProvidersAtSetup):
 
     def test_setup_installs_every_pinned_program_one_by_one_and_says_so(self):
         import unittest.mock
-        from ws_host.lib import toolchain as tc
+        from archon import toolchain as tc
         calls = []
         state = {"alpha": "missing", "beta": "missing"}
         fake_state = lambda p: {n: {"state": v} for n, v in state.items()}
@@ -572,7 +574,7 @@ class RuntimeAtSetup(ProvidersAtSetup):
         with unittest.mock.patch.object(tc, "state", fake_state), unittest.mock.patch.object(tc, "ensure", fake_ensure):
             os.environ["WS_HOST_PROVIDERS"] = "yes"
             from ws_host.commands import vscode
-            from ws_host.lib import provider as prov
+            from archon import provider as prov
             p = prov.load(self.repo)
             rows = vscode.runtime_rows(type("C", (), {"dry_run": False, "offline": False})(), p, [])
         self.assertEqual(calls, [["alpha"], ["beta"]])
@@ -581,10 +583,10 @@ class RuntimeAtSetup(ProvidersAtSetup):
 
     def test_a_dry_run_names_what_it_would_install(self):
         import unittest.mock
-        from ws_host.lib import toolchain as tc
+        from archon import toolchain as tc
         with unittest.mock.patch.object(tc, "state", lambda p: {"alpha": {"state": "missing"}, "tex": {"state": "ready"}}):
             from ws_host.commands import vscode
-            from ws_host.lib import provider as prov
+            from archon import provider as prov
             rows = vscode.runtime_rows(type("C", (), {"dry_run": True, "offline": False})(), prov.load(self.repo), [])
         self.assertEqual(rows[0]["status"], "would-install")
         self.assertIn("alpha", rows[0]["plain"])

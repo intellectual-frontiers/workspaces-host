@@ -122,9 +122,19 @@ def environment(p: prov.Provider, base: dict[str, str] | None = None) -> dict[st
     return env
 
 
+def entry_delta(e: prov.Entry, path: Path) -> dict[str, str]:
+    """What one installed entry adds to an environment: its programs' folder on PATH and its `env` ({dir} is the unpacked root)."""
+    out: dict[str, str] = {}
+    b = e.bin_dir(prov.platform())
+    if b is not None:
+        out["PATH"] = str(path / b) if b not in ("", ".") else str(path)
+    for k, v in e.env.items():
+        out[k] = v.replace("{dir}", str(path))
+    return out
+
+
 def delta_of(p: prov.Provider) -> dict[str, str]:
     """What a provider's installed entries add to an environment: PATH pieces and variables, nothing else."""
-    plat = prov.platform()
     pieces: list[str] = []
     values: dict[str, list[str]] = {}
     for n in sorted(p.entries):
@@ -132,13 +142,12 @@ def delta_of(p: prov.Provider) -> dict[str, str]:
         path = install_path(p, e)
         if path is None:
             continue
-        b = e.bin_dir(plat)
-        if b is not None:
-            d = str(path / b) if b not in ("", ".") else str(path)
-            if d not in pieces:
-                pieces.append(d)
-        for k, v in e.env.items():
-            values.setdefault(k, []).append(v.replace("{dir}", str(path)))
+        d = entry_delta(e, path)
+        if "PATH" in d and d["PATH"] not in pieces:
+            pieces.append(d["PATH"])
+        for k, v in d.items():
+            if k != "PATH":
+                values.setdefault(k, []).append(v)
     out = {k: ":".join(v) for k, v in values.items()}
     if pieces:
         out["PATH"] = os.pathsep.join(pieces)

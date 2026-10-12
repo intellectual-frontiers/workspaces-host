@@ -11,11 +11,12 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ..core import paths
+from . import paths
 
 FOLDER = ".workspaces-host"
 PLATFORMS = ("linux-x64", "linux-arm64")
 KINDS = ("archive", "npm", "tool")
+MANAGERS = ("apt", "dnf", "apk", "brew")
 NAME_RE = re.compile(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*")
 VERSION_RE = re.compile(r"\d+(?:\.\d+)*(?:[+-][A-Za-z0-9._+-]*)?")
 SHA_RE = re.compile(r"[0-9a-f]{64}")
@@ -49,6 +50,15 @@ class Entry:
     system: list[str] = field(default_factory=list)
     package: str = ""
     tool: str = ""
+    minimum: str = ""                                          # the least version the computer may supply (0011-archon FR-008)
+    probe_program: str = ""
+    probe_args: list[str] = field(default_factory=lambda: ["--version"])
+    packages: dict[str, list[str]] = field(default_factory=dict)   # package manager -> package names
+
+    @property
+    def satisfiable_by_computer(self) -> bool:
+        """True when the computer's own program or package may stand in for the pinned download (0011-archon FR-008)."""
+        return bool(self.minimum and self.probe_program)
 
     def tool_id(self) -> str:
         """The name `mise` knows this entry by."""
@@ -169,6 +179,29 @@ def _entry(path: Path, rel: str, problems: list[Problem]) -> Entry | None:
         problems.append(Problem(rel, "'system' must be a list of package names"))
     else:
         e.system = list(system)
+    minimum = raw.get("minimum")
+    if minimum is not None:
+        if not isinstance(minimum, str) or not re.fullmatch(r"\d+(?:\.\d+)*", minimum):
+            problems.append(Problem(rel, f"'minimum' is {minimum!r}; it must be a version of digits and dots"))
+        else:
+            e.minimum = minimum
+    probe = raw.get("probe")
+    if probe is not None:
+        if not isinstance(probe, dict) or not isinstance(probe.get("program"), str) or not probe["program"].strip() \
+                or not all(isinstance(a, str) for a in probe.get("args", [])):
+            problems.append(Problem(rel, "'probe' must be a table with a 'program' and, optionally, a list of 'args'"))
+        else:
+            e.probe_program = probe["program"]
+            e.probe_args = list(probe.get("args", ["--version"]))
+    elif e.minimum and e.provides:
+        e.probe_program = next(iter(e.provides))
+    if e.minimum and not e.probe_program:
+        problems.append(Problem(rel, "'minimum' needs a 'probe' (the program to ask for its version), or a 'provides' to take it from"))
+    packages = raw.get("packages", {})
+    if not isinstance(packages, dict) or not all(k in MANAGERS and isinstance(v, list) and all(isinstance(x, str) for x in v) for k, v in packages.items()):
+        problems.append(Problem(rel, f"'packages' must be a table whose keys are among {', '.join(MANAGERS)} and whose values are lists of package names"))
+    else:
+        e.packages = {k: list(v) for k, v in packages.items()}
     needs = raw.get("needs", [])
     if not isinstance(needs, list) or not all(isinstance(n, str) for n in needs):
         problems.append(Problem(rel, "'needs' must be a list of entry names"))
@@ -288,84 +321,3 @@ def write(p: Provider) -> list[str]:
             f.unlink()
             changed.append(f"{FOLDER}/mise/.config/mise/conf.d/{f.name} (removed)")
     return changed
-
-
-# ---- enabled providers ----------------------------------------------------------------------------------------------------
-
-def providers_dir() -> Path:
-    return paths.config_dir() / "providers.d"
-
-
-def explicit() -> list[Provider]:
-    """The providers a person enabled with `provider add`: the links in their providers folder; a link that no longer leads to a provider is skipped."""
-    out = []
-    d = providers_dir()
-    for link in sorted(d.iterdir()) if d.is_dir() else []:
-        folder = Path(os.path.realpath(link))
-        if folder.name != FOLDER:
-            continue
-        p = load(folder.parent)
-        if p is not None and p.name == link.name:
-            out.append(p)
-    return out
-
-
-def implicit() -> dict[str, tuple[Provider, str]]:
-    """The providers that need no `provider add`, with why (0008-providers FR-010): the clone of ws-host that is running, which is the code the person
-    installed, and every cloned repository the person trusts (0002 FR-012), which includes the organization ws-host itself comes from."""
-    out: dict[str, tuple[Provider, str]] = {}
-    if os.environ.get("WS_HOST_IMPLICIT") == "no":      # the tests' own homes, where nothing is in use until a test enables it
-        return out
-    own = load(paths.repo_root())
-    if own is not None and not own.problems:
-        out[own.name] = (own, "this is the ws-host you are running")
-    try:
-        from ..core import config
-        from . import repos, trust
-        cfg = config.load()
-        for rid in sorted(repos.known(cfg)[0], key=str):
-            if not (rid.path(cfg) / FOLDER / "provider.toml").is_file():
-                continue
-            ok, why = trust.trust_state(rid, cfg)
-            p = load(rid.path(cfg)) if ok else None
-            if p is not None and p.name not in out:
-                out[p.name] = (p, why)
-    except Exception:             # a broken configuration must not stop a provider that was enabled by hand
-        pass
-    return out
-
-
-def enabled() -> list[Provider]:
-    """Every provider in use, in name order: the ones a person enabled by hand, then those that need no enabling (see `implicit`); by hand wins a name."""
-    by_name = {p.name: p for p in explicit()}
-    for name, (p, _why) in implicit().items():
-        by_name.setdefault(name, p)
-    return [by_name[n] for n in sorted(by_name)]
-
-
-def how_enabled(name: str) -> str:
-    """Why a provider is in use, in plain words."""
-    if any(p.name == name for p in explicit()):
-        return "you enabled it"
-    return implicit().get(name, (None, "not enabled"))[1]
-
-
-def conflicts(providers: list[Provider]) -> list[str]:
-    """Two providers declaring one entry name and version differently (0008-providers FR-009), one sentence for each pair."""
-    seen: dict[tuple[str, str], tuple[str, str]] = {}
-    out = []
-    for p in sorted(providers, key=lambda x: x.name):
-        for e in p.entries.values():
-            key = (e.name, e.version)
-            sig = e.signature()
-            if key in seen and seen[key][1] != sig:
-                out.append(f"{seen[key][0]} and {p.name} both declare {e.name} {e.version}, but not the same file; give one of them another name or version")
-            seen.setdefault(key, (p.name, sig))
-    return out
-
-
-def get(name: str) -> Provider | None:
-    for p in enabled():
-        if p.name == name:
-            return p
-    return None

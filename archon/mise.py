@@ -6,16 +6,15 @@ import os
 import subprocess
 from pathlib import Path
 
-from ..core import paths, progress
-from ..core.kit import Download
-from ..install import fetch
+from . import fetch, paths, progress
+from .download import Download
 
 
 
 def _pins() -> dict[str, str]:
-    """ws_host/bootstrap.env: the one place the launcher and this module read mise's version and checksums from."""
+    """archon/bootstrap.env: the one place the launcher and this module read mise's version and checksums from."""
     out = {}
-    for line in (Path(__file__).resolve().parents[1] / "bootstrap.env").read_text(encoding="utf-8").splitlines():
+    for line in (Path(__file__).resolve().parent / "bootstrap.env").read_text(encoding="utf-8").splitlines():
         if "=" in line and not line.lstrip().startswith("#"):
             k, v = line.split("=", 1)
             out[k.strip()] = v.strip()

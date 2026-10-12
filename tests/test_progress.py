@@ -7,7 +7,7 @@ import time
 import unittest
 import unittest.mock
 
-from ws_host.core import progress
+from archon import progress
 from .helpers import Home
 
 
@@ -27,7 +27,9 @@ class Spinner(Home):
                                  setattr(progress, "LEFT_BEHIND", self._saved_progress[2])))
         progress.ENABLED, progress.DELAY, progress.LEFT_BEHIND = True, 0.15, 0.3
         os.environ.pop("WS_HOST_PROGRESS", None)
+        os.environ.pop("ARCHON_PROGRESS", None)
         os.environ.pop("NO_COLOR", None)
+        os.environ["ARCHON_ATTENDANCE"] = "attended"
         os.environ["TERM"] = "xterm"
         os.environ["LANG"] = "C.UTF-8"
 
@@ -61,11 +63,18 @@ class Spinner(Home):
             progress.ENABLED = how != "json"
             os.environ["TERM"] = "dumb" if how == "dumb" else "xterm"
             if how == "never":
-                os.environ["WS_HOST_PROGRESS"] = "never"
+                os.environ["ARCHON_PROGRESS"] = "never"
             out = Tty()
             with progress.Working("Slow", out):
                 time.sleep(0.4)
             self.assertEqual(out.getvalue(), "", how)
+
+    def test_an_unattended_terminal_gets_no_spinner(self):    # 0011-archon FR-006
+        os.environ["ARCHON_ATTENDANCE"] = "unattended"
+        out = Tty()
+        with progress.Working("Slow", out):
+            time.sleep(0.4)
+        self.assertEqual(out.getvalue(), "")
 
     def test_a_pipe_gets_nothing_even_when_enabled(self):
         out = io.StringIO()
@@ -92,12 +101,12 @@ class Spinner(Home):
 
     def test_download_progress_reaches_the_spinner(self):
         import hashlib
-        from ws_host.install import fetch
+        from archon import fetch
         src = self.home.parent / "blob"
         src.write_bytes(b"x" * 300_000)
         seen = []
         orig = progress.detail
-        progress.detail = lambda t: seen.append(t)
+        progress.detail = lambda t, *more: seen.append(t)
         self.addCleanup(lambda: setattr(progress, "detail", orig))
         fetch.download(src.as_uri(), hashlib.sha256(src.read_bytes()).hexdigest())
         self.assertTrue(seen and seen[-1] == "0.3 of 0.3 MB", seen)
@@ -313,7 +322,7 @@ class SlowEditor(Home):
         self.fakebin = self.home.parent / "fakebin"
         self.fakebin.mkdir()
         os.environ["PATH"] = f"{self.fakebin}:{os.environ['PATH']}"
-        from ws_host.core import machine
+        from archon import machine
         real = machine.distro
         machine.distro = lambda: {**real(), "wsl": True}
         self.addCleanup(lambda: setattr(machine, "distro", real))
@@ -334,7 +343,8 @@ class SlowEditor(Home):
         saved = (progress.DELAY, progress.ENABLED)
         progress.DELAY, progress.ENABLED = 0.1, True
         self.addCleanup(lambda: (setattr(progress, "DELAY", saved[0]), setattr(progress, "ENABLED", saved[1])))
-        os.environ.update(TERM="xterm", LANG="C.UTF-8")
+        os.environ.update(TERM="xterm", LANG="C.UTF-8", ARCHON_ATTENDANCE="attended")
+        os.environ.pop("ARCHON_PROGRESS", None)
         self.fake_code(f'mkdir -p "{self.home}/.vscode-server/bin"\ndd if=/dev/zero of="{self.home}/.vscode-server/bin/vscode-server.tar.gz" bs=1000000 count=3 2>/dev/null\nsleep 0.8\nexit 0\n')
         out = Tty()
         real_working = progress.Working
@@ -413,7 +423,8 @@ class ProgressBesideJson(Home):
         env = {**os.environ, "WS_HOST_PROGRESS": "always", "PYTHONPATH": str(self.paths.repo_root())}
         p = subprocess.run([sys.executable, "-m", "ws_host", "command", "list", "--json"], capture_output=True, text=True, env=env)
         self.assertEqual(json.loads(p.stdout.strip().splitlines()[-1])["kind"], "command-list")
-        from ws_host.core import cli, progress
+        from archon import progress
+        from ws_host.core import cli
         cli.run(["command", "list", "--json"], out=io.StringIO(), err=io.StringIO())
         self.assertFalse(progress.ENABLED)
         os.environ["WS_HOST_PROGRESS"] = "always"

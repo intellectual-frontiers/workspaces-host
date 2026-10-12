@@ -27,15 +27,16 @@ Issues = "https://github.com/intellectual-frontiers/workspaces-host/issues"
 
 [project.scripts]
 ws-host = "ws_host.__main__:run"
+archon = "archon.__main__:run_main"
 
 [tool.hatch.version]
 # The one place the version is written: ws_host/__init__.py (VERSION), which the command line, the wheel and the Console all use.
 path = "ws_host/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["ws_host"]
+packages = ["ws_host", "archon"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/ws_host", "/tests", "/README.md", "/LICENSE", "/pyproject.toml"]
+include = ["/ws_host", "/archon", "/tests", "/README.md", "/LICENSE", "/pyproject.toml"]
 
 [dependency-groups]

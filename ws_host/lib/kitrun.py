@@ -1,10 +1,19 @@
 """Planning and installing kits (0003-kits). The commands and `workspace ensure` both come here."""
 from __future__ import annotations
 
-from ..core import kits_state, machine, progress, registry as reg
+from archon import apt, fetch, machine, progress
+from ..core import kits_state, registry as reg
 from ..core.resource import Action, WsError
 from ..core.kit import Floating
-from ..install import apt, fetch
+from ..install import floating
+
+
+def _installed(x) -> bool:
+    return floating.is_installed(x) if isinstance(x, Floating) else fetch.is_installed(x)
+
+
+def _install(x, offline: bool) -> dict:
+    return floating.install(x, offline) if isinstance(x, Floating) else fetch.install(x, offline=offline)
 
 
 def get(name: str):
@@ -23,7 +32,7 @@ def plan(kit, distro: dict | None = None, resolve: bool = True) -> dict:
     todo = apt.to_install(names) if resolve and apt.available() else names
     a = fetch.arch()
     downloads = [{"name": x.name, "version": x.version, "url": x.url_for(a) if x.supports(a) else None,
-                  "sha256": x.sha256.get(a), "supported": x.supports(a), "installed": fetch.is_installed(x)} for x in kit.downloads(d)]
+                  "sha256": x.sha256.get(a), "supported": x.supports(a), "installed": _installed(x)} for x in kit.downloads(d)]
     return {"packages": names, "to_install": todo, "unavailable": lacking, "downloads": downloads,
             "links": {k: list(v) for k, v in kit.links(d).items()}}
 
@@ -57,7 +66,7 @@ def install(ctx, kit, name: str):
     for dl in kit.downloads(d):
         try:
             with progress.working(f"📥 Downloading {dl.name}" if not isinstance(dl, Floating) else f"🔎 {dl.name}: looking for the newest release"):
-                r = fetch.install(dl, offline=ctx.offline)
+                r = _install(dl, ctx.offline)
             if r["outcome"] == "present":
                 yield (f"download {dl.name}", "ok", r.get("note") or (f"{dl.name} {r['version']} is the newest I know of." if isinstance(dl, Floating) else f"{dl.name} {dl.version} was already installed."))
             elif r["outcome"] == "updated":
@@ -122,7 +131,6 @@ def ensure(ctx, declared: dict[str, list[str]]) -> dict:
 def refresh_installed(ctx, only: str | None = None) -> dict:
     """`kit sync` and `ws-host update --tools` (0003-kits FR-017): every floating tool that is installed, whichever kit put it there (or only one kit's), is looked at for a newer release and
     brought up to date; one that cannot be looked at is left alone. An ordinary update never does this, so that it stays quick. Returns what was done, in words."""
-    from ..install import floating
     if ctx.offline:
         return {"status": "ok", "plain": "You are offline, so I did not look for newer releases of the tools that float.", "tools": 0, "updated": [], "failed": []}
     updated, kept, failed = [], [], []
@@ -137,7 +145,7 @@ def refresh_installed(ctx, only: str | None = None) -> dict:
             seen.add(dl.name)
             try:
                 with floating.looking_fresh():
-                    r = fetch.install(dl, offline=ctx.offline)
+                    r = _install(dl, ctx.offline)
             except fetch.FetchError as e:
                 failed.append(f"{dl.name}: {e.message}")
                 continue
@@ -153,7 +161,6 @@ def refresh_installed(ctx, only: str | None = None) -> dict:
 
 def verify(only: str | None = None) -> list[dict]:
     """Ask each floating tool's publisher what its newest release is and which file would be taken and how it would be checked, installing nothing (0003-kits FR-018)."""
-    from ..install import floating
     arch = fetch.arch()
     rows, seen = [], set()
     for kit_name, kit_class in sorted(reg.discover().kits.items()):

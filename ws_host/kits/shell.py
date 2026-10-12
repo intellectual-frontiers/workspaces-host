@@ -5,7 +5,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from ..core import paths
+from archon import paths
 from ..core.kit import Check, Download, Kit
 
 POSH_VERSION = "31.4.1"

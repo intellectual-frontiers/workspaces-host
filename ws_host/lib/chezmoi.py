@@ -18,10 +18,10 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..core import paths
+from archon import paths
 from ..core.kit import Download
 from ..core.resource import WsError
-from ..install import fetch
+from archon import fetch
 
 VERSION = "2.73.0"          # the newest chezmoi these requirements were tested against: the oldest ws-host accepts, and what it installs when none is here
 DOWNLOAD = Download("chezmoi", VERSION, "https://github.com/twpayne/chezmoi/releases/download/v{version}/chezmoi_{version}_linux_{goarch}.tar.gz",

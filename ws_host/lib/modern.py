@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import shutil
 
-from ..core import config, paths
+from archon import paths
+from ..core import config
 from . import chezmoi, managed
 
 MARK = managed.MODERN_BEGIN

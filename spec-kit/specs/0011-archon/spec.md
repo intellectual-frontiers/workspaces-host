@@ -3,11 +3,11 @@
 **Spec ID:** 0011-archon
 **Status:** Draft
 
-**Input:** `archon` is the Python command runner that every command line of Intellectual Frontiers runs on: `agora`, `eid` and `ws-host`. A
+**Input:** `archon` is the Python command runner that every command line of Intellectual Frontiers runs on: `agora`, the command lines of the repositories that use it, and `ws-host`. A
 person or an AI agent who has Python's package runner `uv` on a computer, and nothing else, runs `archon`, and `archon` makes whatever a
 command needs exist before the command runs: the interpreter, the command's Python packages, and the programs outside Python. Nobody is
 asked to install a tool, and nobody wonders whether one is there. `ws-host` is the interactive experience for a person (a friendly command
-line, the editor window, setting up a Linux machine) and is built on `archon`; `agora` and `eid` are command trees that `archon` runs.
+line, the editor window, setting up a Linux machine) and is built on `archon`; `agora` and the other command lines are command trees that `archon` runs.
 `archon` assumes no person is present unless something says one is.
 
 ## What archon is
@@ -33,11 +33,19 @@ line, the editor window, setting up a Linux machine) and is built on `archon`; `
   search); the invocation surface is an editor (the Workspaces Console sets `ARCHON_ATTENDANCE=attended`); or neither `CI` nor
   `CLAUDE_CODE_REMOTE` is set to `1` or `true` and both standard input and standard error are terminals. A pipe alone never makes an
   invocation attended, and nothing about the computer (`ws-host` present or not) enters the decision.
-- **FR-006**: An unattended invocation MUST NOT prompt or ask for confirmation, MUST draw no spinner and no colour, and MUST take the
-  yes-answer to every question that is `archon`'s own, including installing a requirement (FR-011); it MUST still refuse what no one has
-  authorised, such as a program whose checksum differs. An attended invocation MUST show progress for a step that takes a while
-  (0006-onboarding FR-020) and MUST say, before an install that needs administrator rights, what will be installed and that `sudo` will ask
-  for the password; a person who declines moves the requirement to its next source (FR-011).
+- **FR-006**: An unattended invocation MUST NOT prompt or ask for confirmation, MUST draw no spinner and write no colour or cursor
+  control, and MUST take the yes-answer to every question that is `archon`'s own, including installing a requirement (FR-011); it MUST still
+  refuse what no one has authorised, such as a program whose checksum differs. It MAY say what it is doing, as plain lines on standard
+  error, because showing progress nobody reads does no harm. An attended invocation MUST say, before an install that needs administrator
+  rights, what will be installed and that `sudo` will ask for the password; a person who declines moves the requirement to its next
+  source (FR-011).
+- **FR-021**: For an attended person, progress is a main feature, not an afterthought. At a terminal, a step that takes a while MUST show
+  a spinner with the seconds, what has come so far (megabytes of a download, packages of an install) and an emoji that says what kind of
+  step it is, in colour unless `NO_COLOR` is set (0006-onboarding FR-020); a step that took a while MUST leave one line behind saying that it
+  finished or failed. Wherever there is no terminal to draw on but a person is looking (the editor window, a web page), `archon` MUST
+  publish the same progress as events: with `ARCHON_PROGRESS=events` it writes one JSON object per line to standard error, each naming the
+  step, its state (`start`, `update`, `done`, `failed`), its label, its emoji, the amount done and the total when known, and the
+  surface draws them. The same steps feed every rendering, so a person sees the same story in a terminal, in the editor and on the web.
 - **FR-007**: `archon` MUST set `ARCHON_ATTENDANCE` to the decision in the environment of everything it starts, so that a command and the
   commands it starts agree, and MUST report the decision and the rule that made it.
 
@@ -75,13 +83,18 @@ line, the editor window, setting up a Linux machine) and is built on `archon`; `
   check, and a program from `PATH` by its probe. `archon` MUST NOT run a download's own installer script, and MUST NOT install a program
   that no entry names.
 
+- **FR-022**: When an entry lists shared libraries in `system` (a Chromium build links against them), `archon` MUST install the ones the
+  computer lacks through its package manager, as root or through `sudo` (FR-011), as part of making the entry available, and MUST end with
+  exit status 3 naming the packages when it cannot. `ws-host system ensure` MUST do the same ahead of time for a person, saying first what it
+  will run.
+
 ## Python environments
 
 - **FR-017**: `archon` MUST prepare the Python environment of a set of dependency groups of the repository's `pyproject.toml`
   (0025-tooling-environment FR-013) with `uv sync --frozen --only-group`, from the repository's `uv.lock`, into one environment per set of
   groups and lock inside the user's cache, and MUST NOT resolve, upgrade or install anything the lock does not hold. Offline, packages
   not already in `uv`'s cache MUST end the command with exit status 3 naming them.
-- **FR-018**: A command line that runs on `archon` (`agora`, `eid`) MUST get its profile, its environments and its programs from `archon`'s
+- **FR-018**: A command line that runs on `archon` (`agora` and the others) MUST get its profile, its environments and its programs from `archon`'s
   functions, and MUST NOT keep its own rules for them; the only thing it keeps is which groups and requirements each command names.
 
 ## Relation to ws-host

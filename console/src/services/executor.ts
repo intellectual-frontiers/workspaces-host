@@ -7,7 +7,7 @@ import { asString } from '../model/json';
 import { argvFromFields, collect, dest, type Fields, type FormUi, type Retry } from '../model/forms';
 import { changesOf, type Change } from '../model/preview';
 import { DECISION, WRITES, type CommandDetail, type Doc, type ErrorInfo } from '../model/wire';
-import type { Cancellation, RunResult } from './launcher';
+import type { Cancellation, ProgressEvent, RunResult } from './launcher';
 import type { Repository } from './repository';
 import { t } from '../l10n';
 
@@ -16,7 +16,7 @@ const MAX_RETRIES = 5;
 /** Everything the executor asks of the interface, made of VS Code's own parts in views/ui.ts. */
 export interface Ui extends FormUi {
   copy(text: string): Promise<void>;
-  progress<T>(title: string, fn: (token: Cancellation, report: (doc: Doc) => void) => Promise<T>): Promise<T>;
+  progress<T>(title: string, fn: (token: Cancellation, report: (doc: Doc) => void, onProgress: (event: ProgressEvent) => void) => Promise<T>): Promise<T>;
   showFailure(repo: Repository, detail: CommandDetail, r: RunResult): Promise<void>;
   /** A command's trouble in the Problems panel: the words when it failed, null when it worked (0009-workspaces-console FR-064). */
   problem?(repo: Repository, detail: CommandDetail, words: string | null, code?: string, exit?: number | null): void;
@@ -41,7 +41,7 @@ export interface Outcome {
  * A decision (trust, publishing, throwing work away) is the one thing a person must choose: the command line's own dry run says in words what it would do, and a modal asks. */
 export async function runWrite(ui: Ui, repo: Repository, detail: CommandDetail, argv: string[], { token }: { token?: Cancellation } = {}): Promise<Outcome> {
   if (detail.category !== DECISION) {
-    const real = await ui.progress(`${repo.name} ${detail.id}`, (tok, report) => repo.launcher.run(argv, { token: tok, onDocument: report }));
+    const real = await ui.progress(`${repo.name} ${detail.id}`, (tok, report, onProgress) => repo.launcher.run(argv, { token: tok, onDocument: report, onProgress }));
     return settle(ui, repo, detail, real);
   }
   const dry = await repo.launcher.run([...argv, '--dry-run'], { token });
@@ -55,7 +55,7 @@ export async function runWrite(ui: Ui, repo: Repository, detail: CommandDetail, 
   const changes = changesOf(dry.doc);
   const confirmed = await ui.confirmDecision({ repo, detail, argv, changes, line: repo.launcher.line(argv), plain: asString(dry.doc.data.plain) });
   if (confirmed !== true) return { ran: false, dry, reason: 'decision not confirmed' };   // exactly true: nothing else confirms
-  const real = await ui.progress(`${repo.name} ${detail.id}`, (tok, report) => repo.launcher.run(argv, { token: tok, onDocument: report }));
+  const real = await ui.progress(`${repo.name} ${detail.id}`, (tok, report, onProgress) => repo.launcher.run(argv, { token: tok, onDocument: report, onProgress }));
   return { ...(await settle(ui, repo, detail, real)), dry };
 }
 
@@ -70,7 +70,7 @@ async function settle(ui: Ui, repo: Repository, detail: CommandDetail, real: Run
 }
 
 export async function runRead(ui: Ui, repo: Repository, detail: CommandDetail, argv: string[]): Promise<Outcome> {
-  const real = await ui.progress(`${repo.name} ${detail.id}`, (token, report) => repo.launcher.run(argv, { token, onDocument: report }));
+  const real = await ui.progress(`${repo.name} ${detail.id}`, (token, report, onProgress) => repo.launcher.run(argv, { token, onDocument: report, onProgress }));
   return settle(ui, repo, detail, real);
 }
 

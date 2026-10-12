@@ -8,7 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ..core import machine, paths, presentation, registry as reg, types
+from archon import machine, paths
+from ..core import presentation, registry as reg, types
 from ..core.registry import Arg, section
 from ..core.resource import FAILED, MISSING, OK, Resource, WsError
 
@@ -110,7 +111,7 @@ def run_console_suite(suite: Path, folders: list[dict], report: Path | None = No
                "IF_CONSOLE_TEST_ELECTRON": str(ext / "node_modules" / "@vscode" / "test-electron"), "IF_CONSOLE_REAL_ROOT": str(first or root),
                "IF_CONSOLE_VSCODE_REPORT": str(tmp / "report.json"), "IF_CONSOLE_VSCODE_REPORT_DIR": str(tmp / "reports"),
                "IF_CONSOLE_VSCODE_SUITE": str(suite), "IF_CONSOLE_VSCODE_FOLDERS": json.dumps(folders)}
-        from ..core import progress
+        from archon import progress
         with progress.step("🧪 Running the Workspaces Console's tests in a real VS Code", announce=True):
             p = subprocess.run([shutil.which("xvfb-run"), "-a", "-s", "-screen 0 1280x800x24", shutil.which("node"), str(ext / "test" / "vscode" / "run.js")],
                                env=env, capture_output=True, text=True, timeout=1800)

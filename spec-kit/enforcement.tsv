@@ -259,6 +259,8 @@ requirement	mechanism	by	note
 0011-archon FR-015	check	workspaces-host: ws-host test	tests check exit status 3 names each source and why it failed, and the command is not started
 0011-archon FR-016	check	workspaces-host: ws-host test	tests check a pinned download is verified by SHA-256, no installer script runs and no unnamed program is installed
 0011-archon FR-017	check	workspaces-host: ws-host test	tests check groups are synced frozen from uv.lock into one environment per set and lock, and offline names the missing packages
-0011-archon FR-018	review	0011-archon FR-017	agora and eid keep no rules of their own for the profile, environments or programs; their tests call archon
+0011-archon FR-018	review	0011-archon FR-017	agora and the other command lines keep no rules of their own for the profile, environments or programs; their tests call archon
 0011-archon FR-019	check	workspaces-host: ws-host test	tests check ws-host's installs and decisions go through archon and a repository need not be enabled for archon to make its requirements available
 0011-archon FR-020	check	workspaces-host: ws-host test	tests check a command gives the same result with and without ws-host on PATH
+0011-archon FR-021	check	workspaces-host: ws-host test	tests check the spinner, colour, emoji, megabytes and the line left behind at a terminal, none of it unattended, and the JSON events with ARCHON_PROGRESS=events
+0011-archon FR-022	check	workspaces-host: ws-host test	tests check missing libraries are installed through the package manager as part of an entry, and exit status 3 names them when it cannot

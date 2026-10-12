@@ -6,7 +6,7 @@ import stat
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import env, paths
+from archon import env, paths
 
 
 # The keys a person's configuration may hold (0001-ws-host FR-008). The guide's file reference is generated from this.

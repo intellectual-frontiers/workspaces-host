@@ -9,7 +9,8 @@ import unittest
 from pathlib import Path
 
 from tests.helpers import Home, REPO
-from ws_host.lib import mise, provider as prov, toolchain as tc
+from archon import mise, provider as prov, toolchain as tc
+from ws_host.lib import inuse
 
 MISE_URL = "https://mise.jdx.dev/v2026.10.3/mise-v2026.10.3-linux-%s.tar.xz"
 SHA = {"x64": "ff0870ddad7f8c5ba673ceb3e7659f0353da8263eabe8b82220f5816a772c786", "arm64": "a5141f834d883239c2542b9a2136e75428779b2040206537399714d8c534d91f"}
@@ -119,13 +120,13 @@ class Translation(Home):
     def test_two_providers_declaring_one_name_and_version_differently_conflict_and_identically_do_not(self):
         a = prov.load(make_provider(self.home, "one"))
         same = prov.load(make_provider(self.home, "two"))
-        self.assertEqual(prov.conflicts([a, same]), [])
+        self.assertEqual(inuse.conflicts([a, same]), [])
         other = prov.load(make_provider(self.home, "three", entries={"minitool": archive(sha="0" * 64)}))
-        c = prov.conflicts([a, other])
+        c = inuse.conflicts([a, other])
         self.assertEqual(len(c), 1)
         self.assertIn("one and three", c[0])
         different_version = prov.load(make_provider(self.home, "four", entries={"minitool": archive(version="2026.10.4", sha="0" * 64)}))
-        self.assertEqual(prov.conflicts([a, different_version]), [])
+        self.assertEqual(inuse.conflicts([a, different_version]), [])
 
 
 class Environment(Home):
@@ -165,18 +166,18 @@ class Commands(Home):
         os.environ["WS_HOST_SURFACE"] = "cli"
         code, _ = self.run_json("provider", "add", str(root))
         self.assertNotEqual(code, 0)
-        self.assertEqual(prov.enabled(), [])
+        self.assertEqual(inuse.enabled(), [])
 
     def test_add_links_the_provider_and_remove_unlinks_it(self):
         root = make_provider(self.home)
         code, r = self.run_json("provider", "add", str(root), "--confirmed")
         self.assertEqual(code, 0, r)
-        self.assertTrue((prov.providers_dir() / "demo").is_symlink())
+        self.assertTrue((inuse.providers_dir() / "demo").is_symlink())
         code, r = self.run_json("provider", "show", "demo")
         self.assertEqual((code, r["data"]["entries"][0]["state"]), (0, "missing"))   # exit 0: a launcher may hand over to `provider run`
         code, r = self.run_json("provider", "remove", "demo", "--confirmed")
         self.assertEqual(code, 0)
-        self.assertEqual(prov.enabled(), [])
+        self.assertEqual(inuse.enabled(), [])
         code, _ = self.run_json("provider", "show", "demo")
         self.assertEqual(code, 3)   # exit 3: not in use, which a launcher takes as "run without me" (0008 FR-013)
 
@@ -374,12 +375,12 @@ class InUseWithoutEnabling(Home):
         return make_provider(base, name, entries={})
 
     def names(self):
-        return {p.name for p in prov.enabled()}
+        return {p.name for p in inuse.enabled()}
 
     def test_this_ws_host_is_in_use_with_no_step(self):
         self.paths.config_file().write_text('WS_HOST_REPOS=""\n')
         self.assertIn("ws-host", self.names())
-        self.assertEqual(prov.how_enabled("ws-host"), "this is the ws-host you are running")
+        self.assertEqual(inuse.how_enabled("ws-host"), "this is the ws-host you are running")
 
     def test_a_repository_of_the_default_organization_is_in_use_and_another_is_not(self):
         self.clone("intellectual-frontiers", "starter")
@@ -387,7 +388,7 @@ class InUseWithoutEnabling(Home):
         self.paths.config_file().write_text('WS_HOST_REPOS="github.com/intellectual-frontiers/starter github.com/acme/other"\n')
         self.assertIn("starter", self.names())
         self.assertNotIn("other", self.names())
-        self.assertIn("where ws-host itself comes from", prov.how_enabled("starter"))
+        self.assertIn("where ws-host itself comes from", inuse.how_enabled("starter"))
 
     def test_an_empty_trusted_list_trusts_nobody_and_a_named_organization_is_trusted(self):
         self.clone("intellectual-frontiers", "starter")

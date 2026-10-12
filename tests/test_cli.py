@@ -68,7 +68,7 @@ class Cli(Home):
         self.assertNotIn("Traceback", json.dumps(doc))
 
     def test_reads_are_not_logged_but_a_check_is_with_the_surface(self):
-        from ws_host.core import paths
+        from archon import paths
         self.run_cmd("command", "list")
         self.assertFalse(paths.logs_dir().exists())
         import os
@@ -85,7 +85,7 @@ class Cli(Home):
 
 class Doctor(Home):
     def test_doctor_passes_here_and_holds_no_secret(self):
-        from ws_host.core import paths
+        from archon import paths
         paths.config_dir().mkdir(parents=True)
         paths.secrets_file().write_text("GH_TOKEN=supersecretvalue\n")
         paths.secrets_file().chmod(0o600)
@@ -98,7 +98,7 @@ class Doctor(Home):
         self.assertIn("id", doc["data"]["distro"])
 
     def test_a_secrets_file_others_can_read_fails_doctor(self):
-        from ws_host.core import paths
+        from archon import paths
         paths.config_dir().mkdir(parents=True)
         paths.secrets_file().write_text("A=b\n")
         paths.secrets_file().chmod(0o644)
@@ -107,7 +107,7 @@ class Doctor(Home):
         self.assertTrue(any(c["name"] == "secrets file" and c["status"] == "fail" for c in doc["data"]["checks"]))
 
     def test_a_malformed_configuration_fails_doctor_with_the_line(self):
-        from ws_host.core import paths
+        from archon import paths
         paths.config_dir().mkdir(parents=True)
         paths.config_file().write_text("A=1\nbroken\n")
         code, doc = self.run_json("doctor")
@@ -125,7 +125,7 @@ class Doctor(Home):
         self.assertEqual(code, 1)
 
     def test_context_holds_no_secret_and_masks_secret_looking_keys(self):
-        from ws_host.core import paths
+        from archon import paths
         paths.config_dir().mkdir(parents=True)
         paths.config_file().write_text("WS_HOST_GIT_NAME=Ada\nWS_HOST_API_TOKEN=abc123\n")
         paths.secrets_file().write_text("GH=zzz\n")

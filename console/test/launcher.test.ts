@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Loose } from './support/fake-launcher';
 import * as fs from 'fs';
-import { Launcher } from '../src/services/launcher';
+import { Launcher, type ProgressEvent } from '../src/services/launcher';
 import { CancelSource } from '../src/services/cancellation';
 import { makeRepo, secondCommandLine } from './support/fake-launcher';
 
@@ -86,5 +86,20 @@ test('FR-003: every call asks for --json and nothing else is ever asked for', as
   const r = await launcherFor(repo, []).run(['widget', 'show', 'w1']);
   assert.equal(r.doc?.id, 'w1');
   assert.deepEqual(repo.invocations()[0].argv, ['widget', 'show', 'w1', '--json']);
+  repo.cleanup();
+});
+
+test('0011-archon FR-021: progress events on standard error reach onProgress and are logged as words, not as JSON', async () => {
+  const event = { event: 'progress', step: 1, state: 'update', emoji: '📥', label: 'Downloading jre', text: '1.0 of 4.0 MB', done: 1000000, total: 4000000 };
+  const repo = makeRepo({ docs: { doctor: { doc: k.doc('doctor', 'x', { status: 'ok' }), exit: 0, stderr: `${JSON.stringify(event)}\nan ordinary line\n` } } });
+  const log: Loose[] = [];
+  const seen: ProgressEvent[] = [];
+  const r = await launcherFor(repo, log).run(['doctor'], { onProgress: (p) => seen.push(p) });
+  assert.equal(r.exit, 0);
+  assert.equal(seen.length, 1);
+  assert.equal(seen[0]?.done, 1000000);
+  assert.ok(log.includes('📥 Downloading jre — 1.0 of 4.0 MB'));
+  assert.ok(log.includes('an ordinary line'));
+  assert.ok(!log.some((l: string) => l.startsWith('{"event"')));
   repo.cleanup();
 });

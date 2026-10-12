@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import time
 
-from . import paths
+from archon import paths
 
 
 def log(surface: str, command: str, args: dict, exit_code: int) -> None:

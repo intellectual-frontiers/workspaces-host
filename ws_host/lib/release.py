@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .. import NAME, VERSION
-from ..core import paths
+from archon import paths
 
 EPOCH = 1580601600                      # 2020-02-02T00:00:00Z, the time every file in a release is given
 ZIP_TIME = (2020, 2, 2, 0, 0, 0)
@@ -96,7 +96,7 @@ def need_program(name: str, hint: str) -> str:
 
 
 def run(argv: list[str], cwd: Path, what: str, env: dict[str, str] | None = None, timeout: int = 900) -> str:
-    from ..core import progress
+    from archon import progress
     try:
         with progress.step(f"🔨 {what[:1].upper() + what[1:]}", announce=True):
             p = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=timeout, env={**os.environ, **(env or {})})

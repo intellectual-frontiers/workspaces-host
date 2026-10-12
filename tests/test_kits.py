@@ -10,7 +10,7 @@ from pathlib import Path
 
 from ws_host.core import registry as reg
 from ws_host.core.kit import Check, Download, Kit
-from ws_host.install import fetch
+from archon import fetch
 from .helpers import REPO, Home
 
 
@@ -158,7 +158,7 @@ class Contract(Home):
             self.assertTrue(cls.plain.endswith("."), name)
 
     def test_every_download_has_a_checksum_per_architecture_it_claims_and_a_real_url(self):
-        from ws_host.core import machine
+        from archon import machine
         for name, cls in reg.discover().kits.items():
             for distro in ({"id": "debian", "codename": "trixie", "id_like": ""}, {"id": "ubuntu", "codename": "noble", "id_like": "debian"}):
                 for dl in cls().downloads(distro):
@@ -234,11 +234,11 @@ class Commands(Home):
         self.assertFalse(self.paths_exist())
 
     def paths_exist(self):
-        from ws_host.core import paths
+        from archon import paths
         return paths.tools_dir().exists()
 
     def test_offline_with_a_download_needed_is_exit_3_naming_it(self):
-        from ws_host.core import machine
+        from archon import machine
         import shutil
         os.environ["PATH"] = os.pathsep.join(p for p in os.environ["PATH"].split(os.pathsep) if ".cargo" not in p and ".local" not in p)
         code, out = self.run_cmd("kit", "add", "rust", "--offline", "--json")

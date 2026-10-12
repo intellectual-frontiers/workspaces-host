@@ -273,10 +273,10 @@ def discover() -> Registry:
 
 def module_level_imports(package_dirs=None) -> list[str]:
     """0041 FR-005: a command or kit module imports only the standard library at module level."""
-    from .paths import repo_root
+    from archon.paths import repo_root
     out = []
     dirs = package_dirs or [repo_root() / "ws_host" / "commands", repo_root() / "ws_host" / "kits", repo_root() / "ws_host" / "help"]
-    stdlib = set(sys.stdlib_module_names) | {"ws_host", "__future__"}
+    stdlib = set(sys.stdlib_module_names) | {"ws_host", "archon", "__future__"}
     for d in dirs:
         for f in sorted(Path(d).glob("*.py")):
             tree = ast.parse(f.read_text(encoding="utf-8"), str(f))

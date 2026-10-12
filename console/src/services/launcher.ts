@@ -1,6 +1,7 @@
 // Running a repository's launcher (0009-workspaces-console FR-003, FR-017, FR-020): every call is `<launcher> ... --json`, with
 // the repository's root as the working directory and IF_CONSOLE=1 in the environment, so that the launcher logs the surface `editor`
-// (0041-command-line FR-042). Nothing else is ever run.
+// (0041-command-line FR-042), and a person at the editor, so that progress comes as events the editor draws (0011-archon FR-005, FR-021).
+// Nothing else is ever run.
 import * as childProcess from 'child_process';
 import { commandLine } from '../model/forms';
 import { asString } from '../model/json';
@@ -14,11 +15,39 @@ export interface Cancellation {
   onCancellationRequested(listener: () => void): { dispose(): void };
 }
 
+/** One line of the progress `archon` publishes on standard error when `ARCHON_PROGRESS=events` (0011-archon FR-021). */
+export interface ProgressEvent {
+  event: 'progress' | 'message';
+  step?: number;
+  state?: 'start' | 'update' | 'done' | 'failed';
+  emoji?: string;
+  label?: string;
+  text?: string;
+  done?: number;
+  total?: number;
+  seconds?: number;
+}
+
+/** The words a person reads for a progress event: the emoji, what is happening, and how far it has come. */
+export const progressWords = (p: ProgressEvent): string =>
+  p.event === 'message' ? (p.text ?? '') : [p.emoji, p.label, p.text ? `— ${p.text}` : ''].filter(Boolean).join(' ');
+
+const readProgress = (line: string): ProgressEvent | null => {
+  if (!line.startsWith('{')) return null;
+  try {
+    const v: unknown = JSON.parse(line);
+    const e = (v as { event?: unknown } | null)?.event;
+    return e === 'progress' || e === 'message' ? (v as ProgressEvent) : null;
+  } catch { return null; }
+};
+
 export interface RunOptions {
   /** Ends the process (SIGTERM) when it is cancelled. */
   token?: Cancellation;
   /** Sees each complete document of a stream as it arrives. */
   onDocument?: (doc: Doc) => void;
+  /** Sees each step of progress `archon` publishes: an install, a download, a package set. */
+  onProgress?: (event: ProgressEvent) => void;
 }
 
 export interface RunResult {
@@ -63,14 +92,14 @@ export class Launcher {
   line(argv: string[]): string { return commandLine(this.program, argv); }
 
   /** Run one command. Resolves a result; never rejects for a non-zero exit. */
-  run(argv: string[], { token, onDocument }: RunOptions = {}): Promise<RunResult> {
+  run(argv: string[], { token, onDocument, onProgress }: RunOptions = {}): Promise<RunResult> {
     const full = [...argv, '--json'];
     const shown = commandLine(this.program, full);
     this.log(`$ ${shown}`);
     return new Promise<RunResult>((resolve) => {
       let child: ReturnType<typeof childProcess.spawn>;
       try {
-        child = this.spawn(this.file, full, { cwd: this.root, env: { ...this.env, IF_CONSOLE: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
+        child = this.spawn(this.file, full, { cwd: this.root, env: { ...this.env, IF_CONSOLE: '1', ARCHON_ATTENDANCE: 'attended', ARCHON_PROGRESS: 'events' }, stdio: ['ignore', 'pipe', 'pipe'] });
       } catch (e) {
         const why = e instanceof Error ? e.message : String(e);
         this.log(`could not start: ${why}`);
@@ -113,7 +142,11 @@ export class Launcher {
       child.stderr?.on('data', (b: Buffer) => {
         const text = b.toString('utf8');
         stderr += text;
-        for (const l of text.split(/\r?\n/)) if (l.trim()) this.log(l);
+        for (const l of text.split(/\r?\n/)) {
+          if (!l.trim()) continue;
+          const p = readProgress(l.trim());
+          if (p) { this.log(progressWords(p)); onProgress?.(p); } else this.log(l);
+        }
       });
       child.on('error', (e: NodeJS.ErrnoException) => finish(null, e.code === 'ENOENT' ? 'the launcher was not found' : asString(e.message)));
       child.on('close', (code: number | null) => finish(code));

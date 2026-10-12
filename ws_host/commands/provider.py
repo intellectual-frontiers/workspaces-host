@@ -8,26 +8,31 @@ from pathlib import Path
 from ..core import types
 from ..core.registry import Arg, command, section
 from ..core.resource import Action, FAILED, MISSING, OK, Resource, WsError
-from ..install import apt
-from ..lib import provider as prov, toolchain as tc
+from archon import apt
+from archon import provider as prov, requirements, toolchain as tc
+from ..lib import inuse
 
 PROVIDER_ARG = Arg("provider", "PROVIDER", positional=True, help="an enabled provider's name")
 PROVIDER_REQ = Arg("provider", "PROVIDER", positional=True, required=True, help="an enabled provider's name")
 types.PROVIDER = types.register(types.Type("PROVIDER", ("agora", "example"), lambda v, ctx: None if prov.NAME_RE.fullmatch(v) else f"{v!r} is not a provider name",
-                                           lambda ctx: [p.name for p in prov.enabled()]))
+                                           lambda ctx: [p.name for p in inuse.enabled()]))
 
 
 def _get(name: str | None) -> prov.Provider:
     if not name:
-        have = [p.name for p in prov.enabled()]
+        have = [p.name for p in inuse.enabled()]
         raise WsError("usage", "a provider is required", "Say which provider: " + (", ".join(have) if have else "none is enabled yet; add one with ws-host provider add PATH") + ".", exit_code=2)
-    p = prov.get(name)
+    p = inuse.get(name)
     if p is None:
-        have = [x.name for x in prov.enabled()]
+        have = [x.name for x in inuse.enabled()]
         raise WsError("unknown-provider", name, f"No enabled provider is called '{name}'. " + ("Enabled: " + ", ".join(have) + "." if have else "None is enabled yet.")
                       + " Enable the repository that holds it with: ws-host provider add PATH", [Action(("provider", "list"), "List providers")],
                       status="missing", exit_code=3)
     return p
+
+
+def _unavailable(e: requirements.Unavailable) -> WsError:
+    return WsError("unavailable", str(e), f"I could not get {e.name}. " + " ".join(f"From {src}: {why}." for src, why in e.reasons), exit_code=3, status="missing")
 
 
 def _wrap(e: tc.ToolchainError) -> WsError:
@@ -39,13 +44,13 @@ def _row(p: prov.Provider) -> dict:
     n_ready = sum(v["state"] == "ready" for v in st.values())
     status = "error" if p.problems else ("ok" if n_ready == len(st) else "warn")
     return {"name": p.name, "summary": p.summary, "launcher": p.launcher, "root": str(p.root), "entries": len(p.entries), "ready": n_ready,
-            "problems": [str(x) for x in p.problems], "status": status, "via": prov.how_enabled(p.name),
+            "problems": [str(x) for x in p.problems], "status": status, "via": inuse.how_enabled(p.name),
             "plain": p.summary + (f" ({n_ready} of {len(st)} programs installed)" if st else "")}
 
 
 @command("provider", "list", category="read", summary="List the providers you have enabled")
 def provider_list(ctx):
-    rows = [_row(p) for p in prov.enabled()]
+    rows = [_row(p) for p in inuse.enabled()]
     plain = (f"{len(rows)} provider{'s are' if len(rows) != 1 else ' is'} enabled: " + ", ".join(r["name"] for r in rows) + ".") if rows else \
         "No provider is enabled yet. Enable one with: ws-host provider add PATH"
     return Resource("provider-list", "providers", {"plain": plain, "providers": rows})
@@ -70,11 +75,11 @@ def provider_add(ctx, path):
         raise WsError("not-a-provider", str(root), f"{root} has no {prov.FOLDER}/provider.toml, so it is not a provider.", exit_code=1)
     if p.problems:
         raise WsError("invalid-provider", "; ".join(map(str, p.problems)), f"I did not enable {p.name or root.name}, because " + "; ".join(map(str, p.problems)) + ".", exit_code=1)
-    clash = prov.conflicts([x for x in prov.enabled() if x.name != p.name] + [p])
+    clash = inuse.conflicts([x for x in inuse.enabled() if x.name != p.name] + [p])
     if clash:
         raise WsError("provider-conflict", "; ".join(clash), "I did not enable " + p.name + ", because " + "; ".join(clash) + ".", exit_code=1)
-    link = prov.providers_dir() / p.name
-    already = prov.implicit().get(p.name)
+    link = inuse.providers_dir() / p.name
+    already = inuse.implicit().get(p.name)
     if already is not None and already[0].root.resolve() == root and not link.exists():
         return Resource("provider", p.name, {"plain": f"{p.name} is already in use and needs nothing from you: {already[1]}.", "name": p.name, "root": str(root)}, status=OK)
     if ctx.dry_run:
@@ -91,13 +96,13 @@ def provider_add(ctx, path):
 @command("provider", "remove", category="decision", summary="Stop using a provider (its programs stay until you prune them)", args=(Arg("provider", "PROVIDER", positional=True, required=True),))
 def provider_remove(ctx, provider):
     p = _get(provider)
-    if not (prov.providers_dir() / p.name).is_symlink():
-        raise WsError("not-enabled-by-hand", p.name, f"{p.name} is in use because {prov.how_enabled(p.name)}, not because you enabled it, so there is nothing to remove. "
+    if not (inuse.providers_dir() / p.name).is_symlink():
+        raise WsError("not-enabled-by-hand", p.name, f"{p.name} is in use because {inuse.how_enabled(p.name)}, not because you enabled it, so there is nothing to remove. "
                       "To stop using a repository's provider, stop trusting it: put WS_HOST_TRUSTED in ~/.config/workspaces-host/ws-host.env without its organization.", exit_code=1)
     if ctx.dry_run:
         return Resource("provider", p.name, {"plain": f"Nothing was changed. I would stop using {p.name}.", "name": p.name})
     ctx.confirm(f"This stops ws-host installing or running anything for {p.name}.")
-    (prov.providers_dir() / p.name).unlink()
+    (inuse.providers_dir() / p.name).unlink()
     return Resource("provider", p.name, {"plain": f"{p.name} is no longer enabled. Its installed programs stay until you run: ws-host toolchain remove --unused", "name": p.name},
                     status=OK, actions=[Action(("toolchain", "remove"), "Remove programs nothing needs", {"unused": True})])
 
@@ -112,10 +117,11 @@ def provider_run(ctx, provider, argv, ensure):
     if ctx.dry_run:
         return Resource("provider-run", p.name, {"plain": "Nothing was run. I would run: " + " ".join(argv), "argv": list(argv)})
     try:
-        missing = [n for n in tc.closure(p, ensure or []) if tc.install_path(p, p.entries[n]) is None]
-        if missing:
-            tc.ensure(p, missing, offline=ctx.offline)
+        if ensure:
+            requirements.ensure(p, list(ensure), offline=ctx.offline)
         env = tc.environment(p)
+    except requirements.Unavailable as e:
+        raise _unavailable(e)
     except tc.ToolchainError as e:
         raise _wrap(e)
     try:
@@ -147,7 +153,7 @@ def _wait(proc: subprocess.Popen) -> int:
 
 def _all_rows() -> list[dict]:
     rows = []
-    for p in prov.enabled():
+    for p in inuse.enabled():
         for v in (tc.state(p) if not p.problems else {}).values():
             rows.append({"provider": p.name, "name": v["name"], "version": v["version"], "state": v["state"], "status": "ok" if v["state"] == "ready" else "warn",
                          "plain": f"{p.name}: {v['summary']} ({v['version']}, {v['state']})"})
@@ -175,7 +181,7 @@ def toolchain_show(ctx, name, provider):
 
 
 def _only_provider(name: str) -> str | None:
-    have = [p.name for p in prov.enabled() if name in p.entries]
+    have = [p.name for p in inuse.enabled() if name in p.entries]
     if len(have) > 1:
         raise WsError("ambiguous", name, f"{', '.join(have)} all pin '{name}'. Say which with --provider.", exit_code=2)
     return have[0] if have else None
@@ -204,18 +210,23 @@ def toolchain_generate(ctx, provider, root):
 def toolchain_ensure(ctx, name, provider, all):
     if not name and not all:
         raise WsError("usage", "say a program or --all", "Say which program to install, or --all for everything the provider pins.", exit_code=2)
-    targets = [_get(provider)] if provider else ([p for p in prov.enabled() if name in p.entries] if name else prov.enabled())
+    targets = [_get(provider)] if provider else ([p for p in inuse.enabled() if name in p.entries] if name else inuse.enabled())
     if not targets:
         raise WsError("unknown-entry", name or "", f"No enabled provider pins '{name}'.", exit_code=1)
     if ctx.dry_run:
         return Resource("toolchain-ensure", "dry-run", {"plain": "Nothing was installed. I would install: " + ", ".join(f"{p.name}/{n}" for p in targets for n in (tc.closure(p, [name]) if name else sorted(p.entries))),})
-    done = []
+    done, sources = [], {}
     for p in targets:
         try:
-            done += [f"{p.name}/{n}" for n in tc.ensure(p, [name] if name else None, offline=ctx.offline)]
+            for r in requirements.ensure(p, [name] if name else sorted(p.entries), offline=ctx.offline):
+                done.append(f"{p.name}/{r.name}")
+                sources[f"{p.name}/{r.name}"] = r.source
+        except requirements.Unavailable as e:
+            raise _unavailable(e)
         except tc.ToolchainError as e:
             raise _wrap(e)
-    return Resource("toolchain-ensure", name or "all", {"plain": ("Installed and ready: " + ", ".join(done) + ".") if done else "There was nothing to install.", "installed": done}, status=OK)
+    ready = [f"{d} (from {'your PATH' if sources[d] == 'path' else 'the package manager' if sources[d] == 'system' else 'the lock'})" for d in done]
+    return Resource("toolchain-ensure", name or "all", {"plain": ("Ready: " + ", ".join(ready) + ".") if done else "There was nothing to install.", "installed": done, "sources": sources}, status=OK)
 
 
 @command("toolchain", "remove", category="setup", summary="Remove stored programs no enabled provider pins", args=(Arg("unused", flag=True, help="required: the programs nothing pins"),))
@@ -223,7 +234,7 @@ def toolchain_remove(ctx, unused):
     if not unused:
         raise WsError("usage", "say --unused", "I only remove programs nothing pins. Add --unused.", exit_code=2)
     try:
-        rows = tc.prune(prov.enabled(), ctx.dry_run, ctx.offline)
+        rows = tc.prune(inuse.enabled(), ctx.dry_run, ctx.offline)
     except tc.ToolchainError as e:
         raise _wrap(e)
     total = sum(r["bytes"] for r in rows)
@@ -236,7 +247,7 @@ def toolchain_remove(ctx, unused):
 
 @command("system", "ensure", category="setup", summary="Install the shared libraries enabled providers' programs need (uses sudo, and says so first)")
 def system_ensure(ctx):
-    specs = sorted({s for p in prov.enabled() for e in p.entries.values() for s in e.system})
+    specs = sorted({s for p in inuse.enabled() for e in p.entries.values() for s in e.system})
     if not specs:
         return Resource("system-ensure", "system", {"plain": "No enabled provider needs shared libraries.", "installed": [], "unavailable": []}, status=OK)
     names, missing = apt.resolve(specs)
@@ -259,11 +270,11 @@ def system_ensure(ctx):
 def providers_section(ctx):
     """0008-providers FR-005, FR-006, FR-009."""
     found = []
-    have = prov.enabled()
+    have = inuse.enabled()
     for p in have:
         found += [{"level": "error", "where": f"{p.name}: {x.where}", "message": x.message, "next": "fix the file"} for x in p.problems]
         if not p.problems:
             found += [{"level": "error", "where": f"{p.name}: {f}", "message": "is not what the entries say now", "next": f"run `ws-host toolchain generate {p.name}` and commit it"}
                       for f in prov.stale(p)]
-    found += [{"level": "error", "where": "providers", "message": c, "next": "rename or re-version one entry"} for c in prov.conflicts(have)]
+    found += [{"level": "error", "where": "providers", "message": c, "next": "rename or re-version one entry"} for c in inuse.conflicts(have)]
     return found

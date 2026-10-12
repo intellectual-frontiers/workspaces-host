@@ -5,7 +5,8 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from . import machine, registry as reg
+from archon import machine
+from . import registry as reg
 
 
 def program_present(program: str) -> bool:

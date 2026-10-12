@@ -5,7 +5,8 @@ Together with `doctor` it is the "Get help" report: bounded, deterministic in sh
 from __future__ import annotations
 
 from .. import VERSION
-from ..core import config, paths, registry as reg
+from archon import paths
+from ..core import config, registry as reg
 from ..core.registry import Arg
 from ..core.resource import Action, Resource, WsError
 from . import doctor as doctor_cmd, command as command_cmd

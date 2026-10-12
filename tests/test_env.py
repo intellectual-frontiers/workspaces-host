@@ -1,6 +1,6 @@
 import unittest
 
-from ws_host.core import env
+from archon import env
 
 
 class EnvFile(unittest.TestCase):

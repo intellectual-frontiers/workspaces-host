@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import os
 
-from ..core import kits_state, machine, registry as reg, types
+from archon import machine
+from ..core import kits_state, registry as reg, types
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, MISSING, OK, Resource, WsError
-from ..install import apt, fetch, floating
+from archon import apt, fetch
+from ..install import floating
 from ..lib import kitrun
 
 types.KIT.validate = lambda v, ctx: None if v in reg.discover().kits else f"{v!r} is not a kit I have ({', '.join(sorted(reg.discover().kits))})"

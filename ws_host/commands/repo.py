@@ -1,7 +1,8 @@
 """`repo list|status|add|sync|set` (0002-repositories-and-trust)."""
 from __future__ import annotations
 
-from ..core import config, paths, progress, registry as reg, types
+from archon import paths, progress
+from ..core import config, registry as reg, types
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
 from ..lib import git, repos, trust as trust_mod, updates

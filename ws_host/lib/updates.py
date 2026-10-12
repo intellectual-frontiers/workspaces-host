@@ -8,7 +8,7 @@ import json
 import subprocess
 import time
 
-from ..core import paths
+from archon import paths
 from . import git, repos, selfupdate
 
 FRESH_SECONDS = 300             # an answer this young is given again without asking the network

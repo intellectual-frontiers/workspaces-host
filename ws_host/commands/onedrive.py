@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..core import progress
+from archon import progress
 from ..core.registry import Arg, command
 from ..core.resource import Action, OK, Resource, WsError
 from ..lib import graph

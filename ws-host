@@ -36,7 +36,7 @@ case $data in /*) ;; *) data=$HOME/.local/share ;; esac
 data=$data/workspaces-host
 store=$data/mise/data/installs
 
-pin() { sed -n "s/^$1=//p" "$here/ws_host/bootstrap.env" | head -n 1; }
+pin() { sed -n "s/^$1=//p" "$here/archon/bootstrap.env" | head -n 1; }
 
 fail() {
   echo "ws-host cannot start: $1" >&2

@@ -21,8 +21,10 @@ def is_root() -> bool:
 
 
 def interactive() -> bool:
+    """True when a person is attended (0011-archon FR-005) and a terminal can take the password sudo asks for."""
     import sys
-    return sys.stdin.isatty() and sys.stdout.isatty()
+    from . import profile
+    return profile.current().attended and sys.stdin.isatty() and sys.stderr.isatty()
 
 
 def sudo_prefix() -> list[str] | None:
@@ -89,7 +91,7 @@ def authenticate(packages: list[str]) -> None:
         return
     if subprocess.run(["sudo", "-n", "true"], capture_output=True).returncode == 0:
         return
-    from ..core import progress
+    from . import progress
     with progress.paused():
         _say("\U0001F510 Administrator rights are needed to install: " + ", ".join(packages) + ".")
         _say("   sudo will ask for your password now. Nothing shows as you type; press Enter when done.")
@@ -98,7 +100,7 @@ def authenticate(packages: list[str]) -> None:
         raise AptError("sudo-denied", "sudo did not accept the password")
 
 
-def _stream(argv: list[str]):
+def stream(argv: list[str]):
     """Run a command and give its output line by line as it happens, and, when it says nothing for a while, a sign that it is still working. Returns (status, lines)."""
     import queue
     import threading
@@ -146,11 +148,11 @@ def install_events(packages: list[str]):
     lock = ["-o", f"DPkg::Lock::Timeout={LOCK_WAIT_SECONDS}"]
     started = time.monotonic()
     yield ("step", "\U0001F4CB Refreshing the package list")
-    status, lines = yield from _stream([*prefix, *env, "apt-get", "update", "-q", *lock])
+    status, lines = yield from stream([*prefix, *env, "apt-get", "update", "-q", *lock])
     if status != 0 and prefix == ["sudo", "-n"] and "password" in "\n".join(lines).lower():
         raise AptError("needs-password", "sudo needs a password and there is no terminal to ask it in")
     yield ("step", "\U0001F4E6 Installing " + ", ".join(packages))
-    status, lines = yield from _stream([*prefix, *env, "apt-get", "install", "-y", "--no-install-recommends", *lock, *packages])
+    status, lines = yield from stream([*prefix, *env, "apt-get", "install", "-y", "--no-install-recommends", *lock, *packages])
     if status != 0:
         if "password" in "\n".join(lines).lower() and prefix == ["sudo", "-n"]:
             raise AptError("needs-password", "sudo needs a password and there is no terminal to ask it in")
@@ -163,7 +165,7 @@ def install(packages: list[str], say=None) -> subprocess.CompletedProcess:
     """Install the packages, showing everything apt says as it says it (to `say`, by default standard error): a long install is never silent."""
     say = say or _say
     text: list[str] = []
-    from ..core import progress
+    from . import progress
     with progress.paused():            # a spinner would be drawn over the lines; apt's own words are the progress
         for kind, line in install_events(packages):
             text.append(line)

@@ -4,7 +4,7 @@ from .helpers import Home
 import subprocess
 import time
 
-from ws_host.core import paths
+from archon import paths
 from ws_host.lib import selfupdate, git as wgit
 from .helpers import Workspace, git
 

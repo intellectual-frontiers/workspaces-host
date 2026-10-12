@@ -198,7 +198,7 @@ def target(shell: str):
     """Where each shell looks for completions on its own, so no startup file needs a line."""
     import os
     from pathlib import Path
-    from ..core import paths
+    from archon import paths
     if shell == "bash":
         xdg = os.environ.get("XDG_DATA_HOME")
         return (Path(xdg) if xdg and os.path.isabs(xdg) else paths.home() / ".local" / "share") / "bash-completion" / "completions" / "ws-host"

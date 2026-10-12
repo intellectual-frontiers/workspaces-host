@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import shutil
 
-from ..core import config, env, paths, registry as reg
+from archon import env, paths
+from ..core import config, registry as reg
 from ..core.registry import Arg, command
 from ..core.resource import Action, FAILED, OK, Resource, WsError
 from ..lib import completion as completion_lib, git, kitrun, repos, selfupdate, trust as trust_mod, updates

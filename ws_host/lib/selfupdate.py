@@ -9,7 +9,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from ..core import paths
+from archon import paths
 from . import git
 
 CHECK_EVERY_MINUTES = 360       # a new window looks again in the background at most this often

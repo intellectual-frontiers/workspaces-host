@@ -16,10 +16,10 @@ import tempfile
 import urllib.request
 from pathlib import Path
 
-from ..core import paths, progress
-from ..core.kit import GOARCH, Download, Floating, Resolved
-from . import fetch
-from .fetch import FetchError
+from archon import fetch, paths, progress
+from archon.download import GOARCH, Download
+from archon.fetch import FetchError
+from ..core.kit import Floating, Resolved
 
 KEEP_VERSIONS = 2            # the one in use and the one before it
 
@@ -276,7 +276,7 @@ def looking_fresh():
 def _own_env() -> tuple[dict, str]:
     """ws-host's own Node and uv, which it pins, first on PATH; and the name of the provider that pins them. Where ws-host has no toolchain of its own to give
     (a wheel, a test), the Node and uv already on PATH are used, and nothing is lost but the guarantee of which version."""
-    from ..lib import provider as prov, toolchain as tc
+    from archon import provider as prov, toolchain as tc
     p = prov.load(paths.repo_root())
     if p is not None:
         wanted = [n for n in ("node", "uv", "python") if n in p.entries]

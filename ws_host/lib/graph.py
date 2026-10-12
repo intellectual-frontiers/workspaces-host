@@ -12,7 +12,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-from ..core import config, paths
+from archon import paths
+from ..core import config
 from ..core.resource import Action, WsError
 
 SIMPLE_LIMIT = 4 * 1024 * 1024          # a file up to this is sent in one request; a larger one through an upload session

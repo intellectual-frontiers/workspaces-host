@@ -11,9 +11,10 @@ import zipfile
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-from ws_host.core import paths
+from archon import paths
 from ws_host.core.kit import Floating, Resolved
-from ws_host.install import fetch, floating
+from archon import fetch
+from ws_host.install import floating
 from .helpers import Home
 
 
@@ -310,7 +311,7 @@ class Refresh(Home):
             seen.append((d.name, floating._FRESH))
             return {"outcome": "updated", "version": "2", "previous": "1"}
         ctx = type("C", (), {"offline": False})()
-        with mock.patch.object(fetch, "install", fake_install):
+        with mock.patch.object(floating, "install", fake_install):
             r = kitrun.refresh_installed(ctx)
         self.assertEqual(seen, [("wrangler", True)], "asked to look, and only about what is installed")
         self.assertEqual(r["tools"], 1)
@@ -326,7 +327,7 @@ class Refresh(Home):
         from unittest import mock
         from ws_host.lib import kitrun
         seen = []
-        with mock.patch.object(fetch, "install", lambda d, offline=False: seen.append(d.name) or {"outcome": "present", "version": "1", "previous": ""}):
+        with mock.patch.object(floating, "install", lambda d, offline=False: seen.append(d.name) or {"outcome": "present", "version": "1", "previous": ""}):
             kitrun.refresh_installed(type("C", (), {"offline": False})(), "aws")
             self.assertEqual(seen, [], "wrangler belongs to the cloudflare kit, not aws")
             kitrun.refresh_installed(type("C", (), {"offline": False})(), "cloud")
@@ -494,7 +495,7 @@ class SqlTools(Home):
             self.skipTest("sqlite.org builds the tools for x86-64 only")
         from ws_host.kits import base
         self.page(self.zip_of())
-        self.assertEqual(fetch.install(base.SQLITE)["outcome"], "installed")
+        self.assertEqual(floating.install(base.SQLITE)["outcome"], "installed")
         self.assertEqual(subprocess.run([str(paths.bin_dir() / "sqlite3")], capture_output=True, text=True).stdout.strip(), "3.99.0")
         self.assertTrue((paths.bin_dir() / "sqldiff").exists())
         shutil.rmtree(paths.tools_dir() / "sqlite")
@@ -502,7 +503,7 @@ class SqlTools(Home):
             (paths.bin_dir() / n).unlink()
         self.page(self.zip_of(), sha="1" * 64)
         with self.assertRaises(fetch.FetchError) as e:
-            fetch.install(base.SQLITE)
+            floating.install(base.SQLITE)
         self.assertEqual(e.exception.code, "checksum")
         self.assertFalse((paths.bin_dir() / "sqlite3").exists())
 

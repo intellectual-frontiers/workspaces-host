@@ -8,7 +8,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from ..core import config, paths
+from archon import paths
+from ..core import config
 from . import git, trust
 
 EMAIL_RX = re.compile(r"^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$")

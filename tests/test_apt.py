@@ -4,7 +4,7 @@ import os
 import stat
 from pathlib import Path
 
-from ws_host.install import apt
+from archon import apt
 from .helpers import Home
 
 

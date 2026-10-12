@@ -10,9 +10,11 @@ import types as _types
 from dataclasses import dataclass, field
 
 from .. import NAME, VERSION
-from . import logs, progress, registry as reg
+from archon import progress
+from . import logs, registry as reg
 from .registry import Command, Registry
-from .render import render, use_color
+from archon.style import use_color
+from .render import render
 from .resource import Action, Resource, WsError, usage_error
 from .types import TYPES
 
@@ -129,7 +131,7 @@ def _plan(cmd: Command, argv: list[str]) -> None:
 
 def _programs(cmd: Command, registry: Registry) -> None:
     """0041 FR-006: a command whose program is missing fails with a hint naming the kit that supplies it."""
-    from . import machine
+    from archon import machine
     gone = [p for p in cmd.programs if shutil.which(p) is None]
     if not gone:
         return
@@ -165,6 +167,9 @@ def run(argv: list[str], surface: str = "cli", out=None, err=None) -> int:
         return 1
     ctx = Ctx(registry, surface=os.environ.get("WS_HOST_SURFACE", surface),
               offline=os.environ.get("WS_HOST_OFFLINE") == "1", mode=mode)
+    if ctx.surface == "editor":     # a person is at the editor window, which draws progress from events (0011-archon FR-005, FR-021)
+        os.environ.setdefault("ARCHON_ATTENDANCE", "attended")
+        os.environ.setdefault("ARCHON_PROGRESS", "events")
     cmd, rest = None, []
     try:
         if not argv or argv[0] in ("-h", "--help"):

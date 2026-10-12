@@ -4,7 +4,8 @@ import re
 import unittest
 from pathlib import Path
 
-from ws_host.core import env, presentation, registry as reg
+from archon import env
+from ws_host.core import presentation, registry as reg
 from ws_host.core.registry import Arg, Command, Noun, Registry, View
 from .helpers import Home
 

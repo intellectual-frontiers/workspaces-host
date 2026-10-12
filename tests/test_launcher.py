@@ -44,7 +44,7 @@ class Launcher(Home):
                 "XDG_STATE_HOME": str(self.home / "state"), **extra}
 
     def pins(self):
-        return dict(l.split("=", 1) for l in (REPO / "ws_host" / "bootstrap.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
+        return dict(l.split("=", 1) for l in (REPO / "archon" / "bootstrap.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 
     def test_offline_with_no_runtime_it_exits_3_in_plain_words(self):
         p = subprocess.run(["sh", str(REPO / "ws-host"), "doctor"], capture_output=True, text=True, env=self.runtime_env(WS_HOST_OFFLINE="1"))
@@ -88,7 +88,7 @@ printf '#!/bin/sh\nexit 0\n' > "{store}/uv/{pins['UV_VERSION']}/.mise-bins/uv"; 
 
     def test_the_pins_agree_with_the_providers_entries_and_the_mise_in_the_code(self):
         import tomllib
-        from ws_host.lib import mise
+        from archon import mise
         pins = self.pins()
         self.assertEqual(mise.VERSION, pins["MISE_VERSION"])
         for tool in ("python", "uv"):
@@ -122,7 +122,7 @@ class PythonPin(unittest.TestCase):
         pinned = self.pin(REPO)
         floor = re.search(r'requires-python = ">=([0-9.]+)"', (REPO / "pyproject.toml").read_text()).group(1)
         self.assertEqual(floor, ".".join(pinned.split(".")[:2]))
-        self.assertIn(f"PYTHON_VERSION={pinned}", (REPO / "ws_host" / "bootstrap.env").read_text())
+        self.assertIn(f"PYTHON_VERSION={pinned}", (REPO / "archon" / "bootstrap.env").read_text())
 
     def test_every_sibling_repository_that_is_here_pins_the_same_python(self):
         pinned = self.pin(REPO)

@@ -34,7 +34,7 @@ def chezmoi_for_tests() -> str | None:
     found = os.environ.get("WS_HOST_CHEZMOI")
     if not found:
         import shutil
-        from ws_host.core import paths
+        from archon import paths
         from ws_host.lib import chezmoi
         shared = Path(tempfile.gettempdir()) / "ws-host-tests-shared"
         saved = {k: os.environ.get(k) for k in ("HOME", "XDG_DATA_HOME", "XDG_CACHE_HOME")}
@@ -76,7 +76,7 @@ class Home(unittest.TestCase):
         (stub / "code").chmod(0o755)
         os.environ["PATH"] = f"{stub}{os.pathsep}{os.environ.get('PATH', '')}"
         self.addCleanup(self._restore)
-        from ws_host.core import paths
+        from archon import paths
         self.paths = paths
 
     def _restore(self):

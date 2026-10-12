@@ -4,7 +4,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from ..core import config, env, paths
+from archon import env, paths
+from ..core import config
 from . import git
 from .repos import RepoId
 

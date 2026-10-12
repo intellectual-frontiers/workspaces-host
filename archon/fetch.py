@@ -13,8 +13,8 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-from ..core import paths, progress
-from ..core.kit import ARCHS, GOARCH, Download, Floating
+from . import paths, progress
+from .download import Download
 
 
 class FetchError(Exception):
@@ -37,9 +37,6 @@ def current_link(d: Download) -> Path:
 
 
 def is_installed(d) -> bool:
-    if isinstance(d, Floating):
-        from . import floating
-        return floating.is_installed(d)
     cur = current_link(d)
     return cur.is_symlink() and os.readlink(cur) == d.version and version_dir(d).is_dir()
 
@@ -65,7 +62,7 @@ def download(url: str, expected: str | None, offline: bool = False) -> Path:
                 h.update(chunk)
                 f.write(chunk)
                 done += len(chunk)
-                progress.detail(progress.megabytes(done, total))
+                progress.detail(progress.megabytes(done, total), done, total)
     except OSError as e:
         tmp.unlink(missing_ok=True)
         raise FetchError("unreachable", f"could not fetch {url}: {e}") from e
@@ -132,9 +129,6 @@ def _unpack(archive: Path, d: Download, dest: Path) -> None:
 
 def install(d: Download, offline: bool = False) -> dict:
     """Install one download for this machine. Returns what was done; raises FetchError and leaves nothing half-installed."""
-    if isinstance(d, Floating):
-        from . import floating
-        return floating.install(d, offline)
     a = arch()
     if not d.supports(a):
         raise FetchError("unsupported-arch", f"{d.name} {d.version} is not available for {a} in this kit")

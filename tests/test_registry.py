@@ -52,7 +52,7 @@ class Registry(unittest.TestCase):
 
     def test_the_core_uses_the_standard_library_only(self):
         import ast, sys
-        std = set(sys.stdlib_module_names) | {"ws_host", "__future__"}
+        std = set(sys.stdlib_module_names) | {"ws_host", "archon", "__future__"}
         core = Path(__file__).resolve().parents[1] / "ws_host" / "core"
         for f in core.glob("*.py"):
             for node in ast.walk(ast.parse(f.read_text())):

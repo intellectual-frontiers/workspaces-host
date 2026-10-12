@@ -11,7 +11,8 @@ import tempfile
 from pathlib import Path
 
 from .. import NAME, VERSION
-from ..core import config, paths, registry as reg
+from archon import paths
+from ..core import config, registry as reg
 from ..core.registry import Arg, command, generator, section
 from ..core.resource import Action, FAILED, MISSING, OK, Resource, WsError, command_line, wire_surfaces
 from . import command as command_cmd
@@ -238,7 +239,7 @@ def _have(program: str) -> bool:
 
 
 def _run(argv, cwd=None):
-    from ..core import progress
+    from archon import progress
     with progress.step(f"📚 Running {os.path.basename(argv[0])}", announce=False):
         return subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=900)
 

@@ -6,20 +6,24 @@ JSON, HTML, a pipe or a file, so a script's output stays clean. Standard library
 from __future__ import annotations
 
 import contextlib
+import itertools
+import json
 import os
 import sys
 import threading
 import time
 
-from .render import Style, use_color
+from .style import Style, use_color
 
 ENABLED = True            # the command line turns it off for --json and --html
+VARIABLE = "ARCHON_PROGRESS"   # `events`: JSON lines on standard error for an editor or a web page to draw (0011-archon FR-021); `never`: nothing drawn
 DELAY = 0.5               # seconds a step runs before anything shows
 LEFT_BEHIND = 2.0         # seconds a step must take to leave a line behind
 
 _BRAILLE = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
 _ASCII = "|/-\\"
 _current: "Working | None" = None
+_ids = itertools.count(1)
 
 
 def _utf8() -> bool:
@@ -27,10 +31,16 @@ def _utf8() -> bool:
     return "utf" in loc.lower()
 
 
+def events() -> bool:
+    """Whether progress is published as JSON lines for a surface to draw (0011-archon FR-021)."""
+    return ENABLED and os.environ.get(VARIABLE) == "events"
+
+
 def visible(stream=None) -> bool:
-    """Whether a spinner may be drawn: a person's terminal, not a dumb one, and not switched off."""
+    """Whether a spinner may be drawn: an attended person's terminal, not a dumb one, not switched off, and not published as events instead."""
+    from . import profile
     stream = stream or sys.stderr
-    if not ENABLED or os.environ.get("WS_HOST_PROGRESS") == "never" or os.environ.get("TERM") == "dumb":
+    if not ENABLED or os.environ.get(VARIABLE) in ("never", "events") or os.environ.get("TERM") == "dumb" or not profile.current().attended:
         return False
     try:
         return bool(stream.isatty())
@@ -44,20 +54,42 @@ class Working:
     def __init__(self, label: str, stream=None, probe=None):
         self.label, self.stream, self.text, self.probe = label, stream or sys.stderr, "", probe
         self.shown = False
+        self._events = False
+        self._id = 0
         self.started = 0.0
         self._stop = threading.Event()
         self._pause = threading.Event()
         self._thread: threading.Thread | None = None
         self._style = Style(use_color(self.stream))
 
-    def detail(self, text: str) -> None:
+    def detail(self, text: str, done: int | None = None, total: int | None = None) -> None:
         self.text = text
+        if self._events:
+            self._emit("update", done=done, total=total)
+
+    def _emit(self, state: str, **more) -> None:
+        """One JSON object on its own line of standard error (0011-archon FR-021)."""
+        label = self.label
+        emoji = ""
+        if label and ord(label[0]) > 0x2000:
+            emoji, _, label = label.partition(" ")
+        doc = {"event": "progress", "step": self._id, "state": state, "emoji": emoji, "label": label, "text": self.text,
+               "seconds": round(time.monotonic() - self.started, 1), **{k: v for k, v in more.items() if v is not None}}
+        try:
+            self.stream.write(json.dumps(doc, ensure_ascii=False) + "\n")
+            self.stream.flush()
+        except (OSError, ValueError):
+            pass
 
     def __enter__(self) -> "Working":
         global _current
         self.started = time.monotonic()
         self._previous, _current = _current, self
-        if visible(self.stream):
+        self._events = events()
+        if self._events:
+            self._id = next(_ids)
+            self._emit("start")
+        elif visible(self.stream):
             self._thread = threading.Thread(target=self._spin, daemon=True)
             self._thread.start()
         return self
@@ -87,6 +119,8 @@ class Working:
         if self._thread:
             self._thread.join()
         _current = self._previous
+        if self._events:
+            self._emit("failed" if exc_type is not None else "done")
         if self.shown:
             took = time.monotonic() - self.started
             self.stream.write("\r\033[K")
@@ -137,10 +171,22 @@ def folder_megabytes(path, what: str = "so far"):
     return probe
 
 
-def detail(text: str) -> None:
-    """Tell the spinner that is showing, if one is, how far along it is."""
+def detail(text: str, done: int | None = None, total: int | None = None) -> None:
+    """Tell the spinner that is showing, if one is, how far along it is; `done` and `total` (bytes, packages) go to a surface that draws a bar."""
     if _current is not None:
-        _current.detail(text)
+        _current.detail(text, done, total) if isinstance(_current, Working) else _current.detail(text)
+
+
+def say(line: str) -> None:
+    """A line of what is happening, for whoever is watching: standard error, or an event when a surface draws them. Nobody is harmed by one nobody reads."""
+    if events():
+        sys.stderr.write(json.dumps({"event": "message", "text": line}, ensure_ascii=False) + "\n")
+    else:
+        sys.stderr.write(line + "\n")
+    try:
+        sys.stderr.flush()
+    except (OSError, ValueError):
+        pass
 
 
 def megabytes(done: int, total: int | None) -> str:
@@ -186,7 +232,7 @@ class _Quiet:
             _current = self._previous
         return False
 
-    def detail(self, text: str) -> None:
+    def detail(self, text: str, *_) -> None:
         pass
 
 
@@ -195,6 +241,8 @@ def step(label: str, probe=None, announce: bool = False):
     anywhere else (a log, a pipe) so a long download never looks stuck. Inside another spinner it adds nothing: one line at a time."""
     if _current is not None:
         return _Quiet()
+    if events():
+        return Working(label, probe=probe)
     if announce and ENABLED and not visible():
         try:
             sys.stderr.write(label + "...\n")

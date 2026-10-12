@@ -9,7 +9,7 @@ import { asString } from '../model/json';
 import { sides, type Change } from '../model/preview';
 import type { CommandDetail, Doc } from '../model/wire';
 import type { Ui } from '../services/executor';
-import type { Cancellation, RunResult } from '../services/launcher';
+import { progressWords, type Cancellation, type ProgressEvent, type RunResult } from '../services/launcher';
 import type { Log } from '../services/log';
 import type { Running } from '../services/running';
 import type { Repository } from '../services/repository';
@@ -94,20 +94,30 @@ export function createUi({ log, showResult, where, running, review, reportProble
       say(t('The command line is on the clipboard.'));
     },
 
-    progress<T>(title: string, fn: (token: Cancellation, report: (doc: Doc) => void) => Promise<T>): Promise<T> {
+    progress<T>(title: string, fn: (token: Cancellation, report: (doc: Doc) => void, onProgress: (event: ProgressEvent) => void) => Promise<T>): Promise<T> {
       const view = where ? where() : null;
-      const said = (progress: vscode.Progress<{ message?: string }>) => (doc: Doc): void => { signInCode(doc); const w = streamWords(doc); if (w) progress.report({ message: w }); };
+      const said = (progress: vscode.Progress<{ message?: string; increment?: number }>) => (doc: Doc): void => { signInCode(doc); const w = streamWords(doc); if (w) progress.report({ message: w }); };
+      // An install or a download the runner publishes: the emoji and what it is doing, and, where the total is known, a bar that fills.
+      const shown = (progress: vscode.Progress<{ message?: string; increment?: number }>) => {
+        const last = new Map<number, number>();
+        return (p: ProgressEvent): void => {
+          const percent = p.total && p.done !== undefined ? Math.min(100, Math.round((p.done / p.total) * 100)) : undefined;
+          const before = last.get(p.step ?? 0) ?? 0;
+          if (percent !== undefined) last.set(p.step ?? 0, percent);
+          progress.report({ message: progressWords(p), ...(percent !== undefined && percent > before ? { increment: percent - before } : {}) });
+        };
+      };
       // Work a view started is shown in that view, and ended by the Stop action in its title; any other is a notification with its own Cancel.
       if (view && running) {
         const source = running.begin();
         return Promise.resolve(vscode.window.withProgress({ location: { viewId: view }, title }, (progress) => {
           const sub = source.token.onCancellationRequested(() => log.info('The person cancelled the command; its process was ended.'));
-          return fn(source.token, said(progress)).finally(() => { sub.dispose(); running.done(source); });
+          return fn(source.token, said(progress), shown(progress)).finally(() => { sub.dispose(); running.done(source); });
         }));
       }
       return Promise.resolve(vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title, cancellable: true }, (progress, token) => {
         const sub = token.onCancellationRequested(() => log.info('The person cancelled the command; its process was ended.'));
-        return fn(token, said(progress)).finally(() => { sub.dispose(); });
+        return fn(token, said(progress), shown(progress)).finally(() => { sub.dispose(); });
       }));
     },
 

@@ -4,7 +4,8 @@ from __future__ import annotations
 import io
 import unittest
 
-from ..core import paths, registry as reg
+from archon import paths
+from ..core import registry as reg
 from ..core.resource import FAILED, OK, Resource
 
 
